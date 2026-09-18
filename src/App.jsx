@@ -7,11 +7,12 @@ import RutinaDetalle from './pages/RutinaDetalle.jsx'
 import Suscripcion from './pages/Suscripcion.jsx'
 import Comunidad from './pages/Comunidad.jsx'
 import MisDatos from './pages/MisDatos.jsx'
+import Mas from './pages/Mas.jsx'
 import PanelProfe from './pages/PanelProfe.jsx'
 
 // Cada pantalla del plan tiene su propia carpeta/archivo en src/pages.
-// Por ahora cada una es solo un cartel de "en construcción": el contenido
-// real de cada pantalla se va a ir completando pantalla por pantalla.
+// Inicio, Rutinas, el detalle de una rutina y Login ya tienen su
+// contenido real; el resto se va a ir completando pantalla por pantalla.
 export default function App() {
   return (
     <BrowserRouter>
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/suscripcion" element={<Suscripcion />} />
         <Route path="/comunidad" element={<Comunidad />} />
         <Route path="/mis-datos" element={<MisDatos />} />
+        <Route path="/mas" element={<Mas />} />
         <Route path="/profe" element={<PanelProfe />} />
       </Routes>
     </BrowserRouter>

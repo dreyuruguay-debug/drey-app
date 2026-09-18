@@ -645,3 +645,318 @@ body {
 .cierre-rutina-gracias {
   font-weight: 600;
 }
+
+.rutina-detalle-volver {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  color: var(--drey-gray-light);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Estado de las filas de una serie: la próxima a hacer se resalta, las
+   ya hechas se atenúan */
+.fila-actual {
+  background: rgba(61, 220, 132, 0.08);
+}
+
+.fila-actual td:first-child {
+  border-left: 3px solid var(--drey-accent);
+}
+
+.fila-hecha {
+  opacity: 0.5;
+}
+
+/* Steppers +/- de Kg y Reps dentro de una rutina, en vez de un campo
+   numérico de teclado: más fácil de tocar desde el celular */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stepper-btn {
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid #555;
+  background: #222;
+  color: var(--drey-white);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepper-valor {
+  min-width: 2.4rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Barra fija de descanso (RutinaDetalle): aparece pegada abajo mientras
+   corre el temporizador, en vez de un número chico arriba de la pantalla */
+.screen-con-descanso {
+  padding-bottom: 9rem;
+}
+
+.rest-timer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--drey-accent);
+  color: var(--drey-black);
+  padding: 0.85rem 1.25rem calc(0.85rem + env(safe-area-inset-bottom));
+  z-index: 20;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.rest-timer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+}
+
+.rest-timer-label {
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.rest-timer-valor {
+  font-size: 1.3rem;
+}
+
+.rest-timer-progress {
+  margin: 0.5rem 0;
+  background: rgba(13, 13, 13, 0.25);
+}
+
+.rest-timer-progress .progress-fill {
+  background: var(--drey-black);
+}
+
+.rest-timer-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.rest-timer-btn {
+  background: none;
+  border: 1px solid rgba(13, 13, 13, 0.4);
+  border-radius: 999px;
+  color: var(--drey-black);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+
+/* Barra de navegación fija abajo (BottomNav), en las pantallas
+   principales del cliente */
+.has-bottom-nav {
+  padding-bottom: 5.5rem;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #161616;
+  border-top: 1px solid #262626;
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  color: #8a8a8a;
+  text-decoration: none;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+}
+
+.bottom-nav-item svg {
+  stroke: currentColor;
+}
+
+.bottom-nav-item-activo {
+  color: var(--drey-accent);
+}
+
+/* Encabezado de Inicio: avatar chico + saludo */
+.home-greeting {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.home-greeting-hola {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.home-greeting-plan {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+.home-progreso-texto {
+  text-align: center;
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+/* Puntos de la semana (WeekDots), reemplaza la barra fina de progreso
+   en Inicio por algo más legible de un vistazo */
+.week-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.week-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.week-dot {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--drey-white);
+}
+
+.week-dot-cumplido {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-black);
+}
+
+.week-dot-descanso {
+  border-style: dashed;
+  color: #555;
+}
+
+.week-dot-hoy {
+  box-shadow: 0 0 0 2px var(--drey-white);
+}
+
+.week-dot-letra {
+  font-size: 0.7rem;
+  color: var(--drey-gray-light);
+}
+
+/* Botón principal de Inicio: continuar la rutina de hoy */
+.home-cta-wrap {
+  padding: 1.5rem 1.5rem 0;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.cta-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--drey-accent);
+  color: var(--drey-black);
+  text-decoration: none;
+  border-radius: 24px;
+  padding: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.cta-button-sub {
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0.8;
+}
+
+.cta-descanso {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 24px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.cta-descanso-titulo {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cta-descanso-texto {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.home-secundarios {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.cta-secondary {
+  background: none;
+  border: none;
+  color: var(--drey-gray-light);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Pantalla "Más": lista simple de accesos */
+.mas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: 320px;
+  margin: 1.5rem auto 0;
+  padding: 0 1.5rem;
+}
+
+.mas-cerrar-sesion {
+  background: none;
+  border: 1px solid #444;
+  color: var(--drey-gray-light);
+}

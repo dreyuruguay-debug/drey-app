@@ -3,25 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import ClienteHeader from '../components/ClienteHeader.jsx'
 import RutinaCard from '../components/RutinaCard.jsx'
-
-// Las rutinas (Rutina A, B, C) y el calendario semanal los arma el profe
-// desde su panel — todavía no construido. Estos datos son de ejemplo
-// para mostrar cómo se va a ver la pantalla.
-const RUTINAS_EJEMPLO = [
-  { id: 'a', nombre: 'Rutina A', patron: 'Patrón de empuje', musculos: 'Pectorales, hombros y tríceps · zona media' },
-  { id: 'b', nombre: 'Rutina B', patron: 'Patrón de tracción', musculos: 'Espalda, bíceps y trapecios · zona media' },
-  { id: 'c', nombre: 'Rutina C', patron: 'Full piernas', musculos: 'Glúteos, cuádriceps y femorales · zona media + cardio' },
-]
-
-const CALENDARIO_EJEMPLO = [
-  { dia: 'Lunes', rutina: 'Rutina A' },
-  { dia: 'Martes', rutina: 'Rutina B' },
-  { dia: 'Miércoles', rutina: 'Descanso' },
-  { dia: 'Jueves', rutina: 'Rutina C' },
-  { dia: 'Viernes', rutina: 'Descanso' },
-  { dia: 'Sábado', rutina: 'Descanso' },
-  { dia: 'Domingo', rutina: 'Descanso' },
-]
+import BottomNav from '../components/BottomNav.jsx'
+import { RUTINAS, CALENDARIO } from '../data/rutinas.js'
 
 export default function Rutinas() {
   const navigate = useNavigate()
@@ -40,21 +23,22 @@ export default function Rutinas() {
   }
 
   const nombre = email ? email.split('@')[0].toUpperCase() : 'NOMBRE APELLIDO'
+  const diasPosibles = CALENDARIO.filter((item) => item.rutinaId).length
 
   return (
-    <div className="screen">
+    <div className="screen has-bottom-nav">
       <ClienteHeader
         semana={1}
         objetivo="Recomposición corporal"
         nombre={nombre}
         plan="Plan seguimiento"
         diasCumplidos={2}
-        diasPosibles={6}
+        diasPosibles={diasPosibles}
         onLogout={handleLogout}
       />
 
       <div className="rutinas-grid">
-        {RUTINAS_EJEMPLO.map((rutina) => (
+        {Object.values(RUTINAS).map((rutina) => (
           <RutinaCard key={rutina.id} {...rutina} />
         ))}
       </div>
@@ -69,22 +53,27 @@ export default function Rutinas() {
 
       {mostrarOrganizacion && (
         <div className="organizacion-calendario">
-          {CALENDARIO_EJEMPLO.map((item) => (
-            <div key={item.dia} className="organizacion-dia">
-              <span className="organizacion-dia-nombre">{item.dia}</span>
-              <span
-                className={
-                  item.rutina === 'Descanso'
-                    ? 'organizacion-dia-rutina organizacion-dia-descanso'
-                    : 'organizacion-dia-rutina'
-                }
-              >
-                {item.rutina}
-              </span>
-            </div>
-          ))}
+          {CALENDARIO.map((item) => {
+            const nombreRutina = item.rutinaId ? RUTINAS[item.rutinaId].nombre : 'Descanso'
+            return (
+              <div key={item.dia} className="organizacion-dia">
+                <span className="organizacion-dia-nombre">{item.dia}</span>
+                <span
+                  className={
+                    nombreRutina === 'Descanso'
+                      ? 'organizacion-dia-rutina organizacion-dia-descanso'
+                      : 'organizacion-dia-rutina'
+                  }
+                >
+                  {nombreRutina}
+                </span>
+              </div>
+            )
+          })}
         </div>
       )}
+
+      <BottomNav />
     </div>
   )
 }
