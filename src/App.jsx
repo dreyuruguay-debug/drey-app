@@ -3,6 +3,7 @@ import Login from './pages/Login.jsx'
 import Registro from './pages/Registro.jsx'
 import Home from './pages/Home.jsx'
 import Rutinas from './pages/Rutinas.jsx'
+import RutinaDetalle from './pages/RutinaDetalle.jsx'
 import Suscripcion from './pages/Suscripcion.jsx'
 import Comunidad from './pages/Comunidad.jsx'
 import MisDatos from './pages/MisDatos.jsx'
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/inicio" element={<Home />} />
         <Route path="/rutinas" element={<Rutinas />} />
+        <Route path="/rutinas/:id" element={<RutinaDetalle />} />
         <Route path="/suscripcion" element={<Suscripcion />} />
         <Route path="/comunidad" element={<Comunidad />} />
         <Route path="/mis-datos" element={<MisDatos />} />

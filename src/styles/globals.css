@@ -22,6 +22,71 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+.screen {
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+/* Botones tipo píldora, reutilizados en varias pantallas */
+.pill-button {
+  display: block;
+  text-align: center;
+  background: #4d4d4d;
+  color: var(--drey-white);
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.buttons-single {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.85rem;
+  padding: 0 1.5rem;
+}
+
+.buttons-single .pill-button {
+  max-width: 320px;
+}
+
+@media (min-width: 720px) {
+  .buttons-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 900px;
+  }
+}
+
+/* Barra de progreso, reutilizada en Inicio, Rutinas y dentro de una rutina */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #4a4a4a;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--drey-white);
+  border-radius: 999px;
+}
+
 /* Pantallas de login/registro: logo arriba, formulario centrado.
    La tipografía exacta del logo (ver diseño original) queda pendiente
    de confirmar (Fase 0); por ahora se aproxima con letter-spacing. */
@@ -134,13 +199,9 @@ body {
   padding: 0;
 }
 
-/* Pantalla de Inicio */
-.home-screen {
-  min-height: 100vh;
-  padding-bottom: 3rem;
-}
-
-.home-top-pattern {
+/* Franja decorativa DREY (TopPattern), arriba de todas las pantallas
+   del cliente */
+.top-pattern {
   display: flex;
   overflow: hidden;
   white-space: nowrap;
@@ -148,7 +209,7 @@ body {
   padding: 0.6rem 0;
 }
 
-.home-top-pattern-item {
+.top-pattern-item {
   flex: 0 0 auto;
   padding: 0 1rem;
   font-size: 0.8rem;
@@ -157,12 +218,12 @@ body {
   color: #333;
 }
 
-.home-top-pattern-icon {
+.top-pattern-icon {
   color: #333;
   letter-spacing: 0;
 }
 
-.home-logout {
+.header-logout {
   display: block;
   margin: 0.75rem 1.5rem 0 auto;
   background: none;
@@ -175,37 +236,8 @@ body {
   padding: 0;
 }
 
-.home-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 2rem 1.5rem;
-  text-align: center;
-}
-
-.home-header-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.home-week {
-  margin: 0;
-  font-weight: 600;
-}
-
-.home-goal {
-  margin: 0;
-  color: var(--drey-gray-light);
-  font-size: 0.9rem;
-}
-
-.home-header-center {
-  align-items: center;
-}
-
-.home-avatar {
+/* Ícono de perfil genérico (ProfileIcon) */
+.profile-avatar {
   position: relative;
   width: 72px;
   height: 72px;
@@ -215,7 +247,7 @@ body {
   margin: 0 auto;
 }
 
-.home-avatar-head {
+.profile-avatar-head {
   position: absolute;
   top: 14px;
   left: 50%;
@@ -226,7 +258,7 @@ body {
   background: var(--drey-black);
 }
 
-.home-avatar-body {
+.profile-avatar-body {
   position: absolute;
   bottom: -10px;
   left: 50%;
@@ -237,81 +269,62 @@ body {
   background: var(--drey-black);
 }
 
-.home-name {
+/* Encabezado compartido del cliente (ClienteHeader): Inicio y Rutinas */
+.cliente-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.cliente-header-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cliente-header-week {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cliente-header-goal {
+  margin: 0;
+  color: var(--drey-gray-light);
+  font-size: 0.9rem;
+}
+
+.cliente-header-center {
+  align-items: center;
+}
+
+.cliente-header-name {
   margin: 0.25rem 0 0;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
 
-.home-plan {
+.cliente-header-plan {
   margin: 0;
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   color: var(--drey-gray-light);
 }
 
-.home-header-right {
+.cliente-header-right {
   width: 100%;
   max-width: 240px;
 }
 
-.home-progress-label {
+.cliente-header-progress-label {
   margin: 0 0 0.4rem;
   font-size: 0.85rem;
 }
 
-.home-progress-bar {
-  width: 100%;
-  height: 6px;
-  border-radius: 999px;
-  background: #4a4a4a;
-  overflow: hidden;
-}
-
-.home-progress-fill {
-  height: 100%;
-  background: var(--drey-white);
-  border-radius: 999px;
-}
-
-.home-buttons-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.85rem;
-  max-width: 320px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.home-buttons-single {
-  display: flex;
-  justify-content: center;
-  margin-top: 0.85rem;
-  padding: 0 1.5rem;
-}
-
-.home-button {
-  display: block;
-  text-align: center;
-  background: #4d4d4d;
-  color: var(--drey-white);
-  border-radius: 999px;
-  padding: 0.95rem 1.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-decoration: none;
-  max-width: 320px;
-  width: 100%;
-}
-
-.home-buttons-single .home-button {
-  max-width: 320px;
-}
-
 @media (min-width: 720px) {
-  .home-header {
+  .cliente-header {
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-start;
@@ -320,21 +333,315 @@ body {
     margin: 0 auto;
   }
 
-  .home-header-center {
+  .cliente-header-center {
     align-items: center;
     text-align: center;
   }
 
-  .home-header-right {
+  .cliente-header-right {
     text-align: right;
   }
+}
 
-  .home-buttons-grid {
+/* Pantalla de Rutinas: tarjetas + Organización */
+.rutinas-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.rutina-card {
+  display: block;
+  border-radius: 20px;
+  background: linear-gradient(#4d4d4d, #202020);
+  text-decoration: none;
+  color: var(--drey-white);
+  overflow: hidden;
+}
+
+.rutina-card-title {
+  text-align: center;
+  padding: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rutina-card-body {
+  padding: 0.5rem 1.25rem 1.25rem;
+  text-align: center;
+}
+
+.rutina-card-patron {
+  margin: 0 0 0.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.rutina-card-musculos {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+.organizacion-toggle {
+  display: block;
+  margin: 1.5rem auto 0;
+  background: none;
+  border: none;
+  color: var(--drey-white);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.organizacion-calendario {
+  max-width: 400px;
+  margin: 0.5rem auto 0;
+  padding: 0 1.5rem;
+}
+
+.organizacion-dia {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #222;
+  font-size: 0.9rem;
+}
+
+.organizacion-dia-rutina {
+  font-weight: 600;
+}
+
+.organizacion-dia-descanso {
+  color: var(--drey-gray-light);
+  font-weight: 400;
+}
+
+@media (min-width: 720px) {
+  .rutinas-grid {
     grid-template-columns: repeat(3, 1fr);
     max-width: 900px;
   }
+}
 
-  .home-button {
-    max-width: none;
+/* Pantalla de una rutina en curso (RutinaDetalle) */
+.rutina-detalle-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.rutina-detalle-titulo {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.rutina-detalle-timer {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.rutina-detalle-descanso-label {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--drey-gray-light);
+}
+
+@media (min-width: 720px) {
+  .rutina-detalle-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+    max-width: 1100px;
+    margin: 0 auto;
   }
+}
+
+.ejercicio-bloque {
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
+  padding: 0 1.5rem;
+}
+
+.ejercicio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: #4d4d4d;
+  border-radius: 999px;
+  padding: 0.9rem 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.ejercicio-video-link {
+  background: none;
+  border: none;
+  color: var(--drey-white);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.ejercicio-objetivo {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.descanso-opciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.descanso-opciones-label {
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+  margin-right: 0.25rem;
+}
+
+.descanso-chip {
+  background: none;
+  border: 1px solid #555;
+  border-radius: 999px;
+  color: var(--drey-white);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.descanso-chip-activo {
+  background: var(--drey-white);
+  color: var(--drey-black);
+  border-color: var(--drey-white);
+  font-weight: 700;
+}
+
+.ejercicio-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ejercicio-tabla th {
+  text-align: left;
+  padding: 0.5rem 0.5rem;
+  color: var(--drey-gray-light);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+}
+
+.ejercicio-tabla td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #222;
+}
+
+.ejercicio-tabla-anterior {
+  color: var(--drey-gray-light);
+}
+
+.ejercicio-tabla-input {
+  width: 3.5rem;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: var(--drey-white);
+  padding: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.serie-check {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid #555;
+  background: #333;
+  color: var(--drey-white);
+  cursor: pointer;
+}
+
+.serie-check-hecha {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-black);
+}
+
+.cierre-rutina {
+  max-width: 400px;
+  margin: 1.5rem auto 0;
+  padding: 0 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.cierre-rutina-pregunta {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cierre-rutina-esfuerzo {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.esfuerzo-chip {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid #555;
+  background: none;
+  color: var(--drey-white);
+  cursor: pointer;
+}
+
+.esfuerzo-chip-activo {
+  background: var(--drey-white);
+  color: var(--drey-black);
+  border-color: var(--drey-white);
+  font-weight: 700;
+}
+
+.cierre-rutina-comentario {
+  width: 100%;
+  min-height: 70px;
+  border-radius: 12px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: var(--drey-white);
+  padding: 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.cierre-rutina-volver {
+  max-width: 260px;
+}
+
+.cierre-rutina-gracias {
+  font-weight: 600;
 }
