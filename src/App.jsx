@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './pages/Login.jsx'
+import Registro from './pages/Registro.jsx'
 import Home from './pages/Home.jsx'
 import Rutinas from './pages/Rutinas.jsx'
 import Suscripcion from './pages/Suscripcion.jsx'
@@ -15,6 +16,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
         <Route path="/inicio" element={<Home />} />
         <Route path="/rutinas" element={<Rutinas />} />
         <Route path="/suscripcion" element={<Suscripcion />} />
