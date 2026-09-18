@@ -1,0 +1,27 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Login from './pages/Login.jsx'
+import Home from './pages/Home.jsx'
+import Rutinas from './pages/Rutinas.jsx'
+import Suscripcion from './pages/Suscripcion.jsx'
+import Comunidad from './pages/Comunidad.jsx'
+import MisDatos from './pages/MisDatos.jsx'
+import PanelProfe from './pages/PanelProfe.jsx'
+
+// Cada pantalla del plan tiene su propia carpeta/archivo en src/pages.
+// Por ahora cada una es solo un cartel de "en construcción": el contenido
+// real de cada pantalla se va a ir completando pantalla por pantalla.
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/inicio" element={<Home />} />
+        <Route path="/rutinas" element={<Rutinas />} />
+        <Route path="/suscripcion" element={<Suscripcion />} />
+        <Route path="/comunidad" element={<Comunidad />} />
+        <Route path="/mis-datos" element={<MisDatos />} />
+        <Route path="/profe" element={<PanelProfe />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}

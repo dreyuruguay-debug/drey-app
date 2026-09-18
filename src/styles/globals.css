@@ -1,0 +1,23 @@
+/* Paleta de la marca DREY: negro, gris, blanco y un acento verde */
+:root {
+  --drey-black: #0d0d0d;
+  --drey-gray: #6b6b6b;
+  --drey-gray-light: #e5e5e5;
+  --drey-white: #ffffff;
+  --drey-green: #3ddc84;
+
+  --drey-bg: var(--drey-black);
+  --drey-text: var(--drey-white);
+  --drey-accent: var(--drey-green);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--drey-bg);
+  color: var(--drey-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
