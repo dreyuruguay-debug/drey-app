@@ -56,7 +56,7 @@ export default function Login() {
 
   return (
     <main className="auth-screen">
-      <h1 className="auth-logo">DREY</h1>
+      <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <input

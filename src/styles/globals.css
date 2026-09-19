@@ -108,6 +108,14 @@ body {
   letter-spacing: 0.25em;
 }
 
+.auth-logo-img {
+  display: block;
+  width: 220px;
+  max-width: 60vw;
+  height: auto;
+  margin: 0 auto;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -200,27 +208,31 @@ body {
 }
 
 /* Franja decorativa DREY (TopPattern), arriba de todas las pantallas
-   del cliente */
+   del cliente y del profe. Es una sola imagen (el logo recortado) que
+   se repite como fondo y se anima desplazándose todo el tiempo, a
+   velocidad lenta y pareja — un detalle visual, no interactivo. */
 .top-pattern {
-  display: flex;
-  overflow: hidden;
-  white-space: nowrap;
+  height: 32px;
   border-bottom: 1px solid #222;
-  padding: 0.6rem 0;
+  background-image: url('/drey-tile.png');
+  background-repeat: repeat-x;
+  background-size: 104px 32px;
+  animation: top-pattern-scroll 6s linear infinite;
 }
 
-.top-pattern-item {
-  flex: 0 0 auto;
-  padding: 0 1rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: #333;
+@keyframes top-pattern-scroll {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: -104px;
+  }
 }
 
-.top-pattern-icon {
-  color: #333;
-  letter-spacing: 0;
+@media (prefers-reduced-motion: reduce) {
+  .top-pattern {
+    animation: none;
+  }
 }
 
 .header-logout {

@@ -54,7 +54,22 @@ export default function ProfeEjercicios() {
 
   async function handleAgregar(event) {
     event.preventDefault()
-    if (!nombreNuevo.trim()) return
+    const nombreLimpio = nombreNuevo.trim()
+    if (!nombreLimpio) return
+
+    // Evita crear un ejercicio "duplicado" por error (por ejemplo, para
+    // agregarle una foto a uno que ya existe). Si ya hay uno con ese
+    // nombre, avisa y no lo crea: hay que usar "Editar" en el de la lista.
+    const yaExiste = ejercicios.some(
+      (ejercicio) => ejercicio.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
+    )
+    if (yaExiste) {
+      setMensaje(
+        `Ya existe un ejercicio llamado "${nombreLimpio}". Para agregarle foto o video, buscalo arriba y tocá "Editar" en vez de crear uno nuevo.`
+      )
+      return
+    }
+
     setGuardando(true)
     setMensaje('')
 

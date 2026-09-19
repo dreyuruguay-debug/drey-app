@@ -100,7 +100,7 @@ export default function Registro() {
   if (registrado) {
     return (
       <main className="auth-screen">
-        <h1 className="auth-logo">DREY</h1>
+        <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
         <p className="registro-gracias-titulo">¡Cuenta creada!</p>
         <p className="registro-gracias-texto">
           Tu cuenta queda pendiente hasta que confirmemos el pago y la habilitemos. Te
@@ -115,7 +115,7 @@ export default function Registro() {
 
   return (
     <main className="registro-screen">
-      <h1 className="auth-logo">DREY</h1>
+      <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
 
       <form className="registro-form" onSubmit={handleSubmit}>
         <p className="form-section-label">Tus datos</p>
