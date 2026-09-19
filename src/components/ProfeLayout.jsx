@@ -15,6 +15,8 @@ const SECCIONES = [
   { to: '/profe/cuentas', label: 'Cuentas y pagos' },
   { to: '/profe/ejercicios', label: 'Ejercicios' },
   { to: '/profe/clientes', label: 'Clientes y rutinas' },
+  { to: '/profe/calendario', label: 'Vista semanal' },
+  { to: '/profe/plantillas', label: 'Plantillas' },
 ]
 
 export default function ProfeLayout({ titulo, volverA, children }) {

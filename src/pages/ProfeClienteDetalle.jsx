@@ -28,6 +28,8 @@ export default function ProfeClienteDetalle() {
   const [patronNueva, setPatronNueva] = useState('')
   const [musculosNueva, setMusculosNueva] = useState('')
   const [creandoRutina, setCreandoRutina] = useState(false)
+  const [plantillas, setPlantillas] = useState([])
+  const [plantillaElegida, setPlantillaElegida] = useState('')
 
   const [selectorEnRutina, setSelectorEnRutina] = useState(null)
   const [grupoSelector, setGrupoSelector] = useState(GRUPOS_MUSCULARES[0])
@@ -40,23 +42,30 @@ export default function ProfeClienteDetalle() {
   async function cargarTodo() {
     setCargando(true)
 
-    const [{ data: perfil }, { data: listaRutinas }, { data: listaEjercicios }, { data: listaSesiones }] =
-      await Promise.all([
-        supabase.from('perfiles').select('*').eq('id', id).single(),
-        supabase.from('rutinas').select('*').eq('cliente_id', id).order('orden'),
-        supabase.from('ejercicios').select('*').order('nombre'),
-        supabase
-          .from('sesiones')
-          .select('*, rutinas(nombre)')
-          .eq('cliente_id', id)
-          .order('fecha', { ascending: false })
-          .limit(8),
-      ])
+    const [
+      { data: perfil },
+      { data: listaRutinas },
+      { data: listaEjercicios },
+      { data: listaSesiones },
+      { data: listaPlantillas },
+    ] = await Promise.all([
+      supabase.from('perfiles').select('*').eq('id', id).single(),
+      supabase.from('rutinas').select('*').eq('cliente_id', id).order('orden'),
+      supabase.from('ejercicios').select('*').order('nombre'),
+      supabase
+        .from('sesiones')
+        .select('*, rutinas(nombre)')
+        .eq('cliente_id', id)
+        .order('fecha', { ascending: false })
+        .limit(8),
+      supabase.from('plantillas').select('id, nombre, patron, musculos').order('creado_en'),
+    ])
 
     setCliente(perfil || null)
     setRutinas(listaRutinas || [])
     setEjerciciosDisponibles(listaEjercicios || [])
     setSesiones(listaSesiones || [])
+    setPlantillas(listaPlantillas || [])
 
     const rutinaIds = (listaRutinas || []).map((rutina) => rutina.id)
 
@@ -97,27 +106,105 @@ export default function ProfeClienteDetalle() {
     if (!nombreNueva.trim()) return
     setCreandoRutina(true)
     setMensaje('')
-    const { error } = await supabase.from('rutinas').insert({
-      cliente_id: id,
-      nombre: nombreNueva.trim(),
-      patron: patronNueva.trim(),
-      musculos: musculosNueva.trim(),
-      orden: rutinas.length,
-    })
-    setCreandoRutina(false)
+
+    const { data: rutinaCreada, error } = await supabase
+      .from('rutinas')
+      .insert({
+        cliente_id: id,
+        nombre: nombreNueva.trim(),
+        patron: patronNueva.trim(),
+        musculos: musculosNueva.trim(),
+        orden: rutinas.length,
+      })
+      .select()
+      .single()
+
     if (error) {
+      setCreandoRutina(false)
       setMensaje('No pudimos crear la rutina. Probá de nuevo.')
       return
     }
+
+    // Si eligió una plantilla, le copia sus ejercicios (series, reps,
+    // kg objetivo y descansos) a la rutina recién creada. De acá en
+    // adelante queda como una rutina normal: se puede seguir ajustando
+    // sin afectar a la plantilla ni a otros clientes que la usaron.
+    if (plantillaElegida) {
+      const { data: ejerciciosPlantilla } = await supabase
+        .from('plantilla_ejercicios')
+        .select('*')
+        .eq('plantilla_id', plantillaElegida)
+        .order('orden')
+
+      if (ejerciciosPlantilla?.length > 0) {
+        const filasNuevas = ejerciciosPlantilla.map((item) => ({
+          rutina_id: rutinaCreada.id,
+          ejercicio_id: item.ejercicio_id,
+          orden: item.orden,
+          series: item.series,
+          reps_objetivo: item.reps_objetivo,
+          kg_objetivo: item.kg_objetivo,
+          descansos: item.descansos,
+        }))
+        await supabase.from('rutina_ejercicios').insert(filasNuevas)
+      }
+    }
+
+    setCreandoRutina(false)
     setNombreNueva('')
     setPatronNueva('')
     setMusculosNueva('')
+    setPlantillaElegida('')
     cargarTodo()
+  }
+
+  function elegirPlantilla(plantillaId) {
+    setPlantillaElegida(plantillaId)
+    const plantilla = plantillas.find((item) => item.id === plantillaId)
+    if (plantilla) {
+      setPatronNueva(plantilla.patron || '')
+      setMusculosNueva(plantilla.musculos || '')
+      if (!nombreNueva.trim()) setNombreNueva(plantilla.nombre)
+    }
   }
 
   async function handleBorrarRutina(rutinaId) {
     const { error } = await supabase.from('rutinas').delete().eq('id', rutinaId)
     if (!error) cargarTodo()
+  }
+
+  // Guarda una rutina que ya armaste para este cliente como plantilla
+  // reutilizable, así la podés aplicar después a otros clientes desde
+  // "Nueva rutina" sin cargar los mismos ejercicios de nuevo.
+  async function handleGuardarComoPlantilla(rutina) {
+    setMensaje('')
+    const { data: plantillaCreada, error } = await supabase
+      .from('plantillas')
+      .insert({ nombre: rutina.nombre, patron: rutina.patron, musculos: rutina.musculos })
+      .select()
+      .single()
+
+    if (error) {
+      setMensaje('No pudimos guardar la plantilla. Probá de nuevo.')
+      return
+    }
+
+    const ejerciciosRutina = ejerciciosPorRutina[rutina.id] || []
+    if (ejerciciosRutina.length > 0) {
+      const filasNuevas = ejerciciosRutina.map((item) => ({
+        plantilla_id: plantillaCreada.id,
+        ejercicio_id: item.ejercicio_id,
+        orden: item.orden,
+        series: item.series,
+        reps_objetivo: item.reps_objetivo,
+        kg_objetivo: item.kg_objetivo,
+        descansos: item.descansos,
+      }))
+      await supabase.from('plantilla_ejercicios').insert(filasNuevas)
+    }
+
+    setMensaje(`Guardado como plantilla "${rutina.nombre}". Ya la podés usar en otros clientes.`)
+    cargarTodo()
   }
 
   // --- Ejercicios dentro de una rutina ---
@@ -255,13 +342,23 @@ export default function ProfeClienteDetalle() {
                     {rutina.patron} · {rutina.musculos}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="profe-ejercicio-borrar"
-                  onClick={() => handleBorrarRutina(rutina.id)}
-                >
-                  Borrar rutina
-                </button>
+                <div className="profe-cliente-acciones">
+                  <button
+                    type="button"
+                    className="profe-ejercicio-agregar"
+                    onClick={() => handleGuardarComoPlantilla(rutina)}
+                    disabled={(ejerciciosPorRutina[rutina.id] || []).length === 0}
+                  >
+                    Guardar como plantilla
+                  </button>
+                  <button
+                    type="button"
+                    className="profe-ejercicio-borrar"
+                    onClick={() => handleBorrarRutina(rutina.id)}
+                  >
+                    Borrar rutina
+                  </button>
+                </div>
               </div>
 
               {(ejerciciosPorRutina[rutina.id] || []).length === 0 ? (
@@ -447,6 +544,20 @@ export default function ProfeClienteDetalle() {
 
           <p className="profe-seccion-label">Nueva rutina</p>
           <form className="profe-form-rutina" onSubmit={handleCrearRutina}>
+            {plantillas.length > 0 && (
+              <select
+                className="profe-calendario-select profe-select-plantilla"
+                value={plantillaElegida}
+                onChange={(event) => elegirPlantilla(event.target.value)}
+              >
+                <option value="">Empezar de cero (sin plantilla)</option>
+                {plantillas.map((plantilla) => (
+                  <option key={plantilla.id} value={plantilla.id}>
+                    Usar plantilla: {plantilla.nombre}
+                  </option>
+                ))}
+              </select>
+            )}
             <input
               className="auth-input"
               type="text"

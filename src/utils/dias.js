@@ -28,3 +28,35 @@ export function obtenerFechaDeDiaEstaSemana(dia) {
 export function obtenerFechaHoyISO() {
   return new Date().toISOString().slice(0, 10)
 }
+
+// Devuelve el lunes (formato "YYYY-MM-DD") de la semana a la que
+// pertenece una fecha. Se usa para agrupar las sesiones por semana y
+// calcular la racha de constancia.
+export function obtenerLunesDeSemana(fechaISO) {
+  const fecha = new Date(`${fechaISO}T00:00:00`)
+  const diaJS = fecha.getDay() // 0 = domingo ... 6 = sábado
+  const diferencia = diaJS === 0 ? -6 : 1 - diaJS
+  fecha.setDate(fecha.getDate() + diferencia)
+  return fecha.toISOString().slice(0, 10)
+}
+
+// Cuenta cuántas semanas seguidas el cliente entrenó al menos una vez,
+// mirando hacia atrás desde hoy. Si esta semana todavía no entrenó, no
+// la corta de una: empieza a contar desde la semana pasada (recién se
+// corta la racha si pasa una semana ENTERA sin ninguna sesión).
+export function calcularRachaSemanas(fechasDeSesiones) {
+  const semanasConSesion = new Set(fechasDeSesiones.map(obtenerLunesDeSemana))
+  const lunesActual = obtenerLunesDeSemana(obtenerFechaHoyISO())
+
+  const cursor = new Date(`${lunesActual}T00:00:00`)
+  if (!semanasConSesion.has(lunesActual)) {
+    cursor.setDate(cursor.getDate() - 7)
+  }
+
+  let racha = 0
+  while (semanasConSesion.has(cursor.toISOString().slice(0, 10))) {
+    racha += 1
+    cursor.setDate(cursor.getDate() - 7)
+  }
+  return racha
+}

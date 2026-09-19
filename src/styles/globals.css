@@ -767,6 +767,33 @@ body {
   gap: 0.75rem;
 }
 
+/* Cartel de récord personal (RutinaDetalle): aparece pegado arriba,
+   debajo de la franja animada, cuando el cliente supera su mejor
+   marca histórica de un ejercicio. Se oculta solo a los pocos segundos. */
+.record-banner {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--drey-accent);
+  color: var(--drey-black);
+  font-weight: 700;
+  text-align: center;
+  animation: record-banner-entrada 0.25s ease-out;
+}
+
+@keyframes record-banner-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .rest-timer-btn {
   background: none;
   border: 1px solid rgba(13, 13, 13, 0.4);
@@ -845,6 +872,14 @@ body {
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
   color: var(--drey-gray-light);
+}
+
+.home-racha {
+  text-align: center;
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--drey-accent);
 }
 
 /* Aviso de cuenta pendiente en Inicio */
@@ -1535,14 +1570,49 @@ body {
   color: var(--drey-gray-light);
 }
 
+/* Resumen: tarjeta que necesita llamar la atención (ej. clientes
+   inactivos) se destaca con el borde en el acento verde */
+.profe-resumen-card-alerta {
+  border: 1px solid var(--drey-accent);
+}
+
 /* Clientes y rutinas: lista con acceso al detalle */
 .profe-cliente-card-link {
   text-decoration: none;
   color: var(--drey-white);
 }
 
+.profe-cliente-card-inactivo {
+  border: 1px solid var(--drey-accent);
+}
+
+.profe-cliente-inactivo-texto {
+  color: var(--drey-accent);
+  font-weight: 600;
+}
+
 .profe-cliente-flecha {
   font-size: 1.2rem;
+  color: var(--drey-gray-light);
+}
+
+.profe-aviso-inactivos {
+  background: #1a1a1a;
+  border: 1px solid var(--drey-accent);
+  border-radius: 16px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.profe-aviso-inactivos-titulo {
+  margin: 0;
+  font-weight: 700;
+  color: var(--drey-accent);
+}
+
+.profe-aviso-inactivos-lista {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
   color: var(--drey-gray-light);
 }
 
@@ -1693,6 +1763,11 @@ body {
   max-width: 360px;
 }
 
+.profe-select-plantilla {
+  width: 100%;
+  max-width: none;
+}
+
 /* Detalle de cliente: rutinas, ejercicios y calendario */
 .profe-rutina-bloque {
   background: #141414;
@@ -1780,6 +1855,30 @@ body {
   color: var(--drey-white);
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
+}
+
+/* Vista semanal de todos los clientes (ProfeCalendario) */
+.profe-tabla-calendario th,
+.profe-tabla-calendario td {
+  white-space: nowrap;
+}
+
+.profe-tabla-calendario .profe-calendario-select {
+  max-width: 8.5rem;
+}
+
+.profe-tabla-cliente-link {
+  color: var(--drey-white);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.profe-tabla-cliente-link:hover {
+  color: var(--drey-accent);
+}
+
+.profe-tabla-sin-rutinas {
+  color: var(--drey-gray-light);
 }
 
 /* Progreso reciente (detalle de cliente, panel del profe) */

@@ -12,10 +12,17 @@ import { obtenerFechaHoyISO } from '../utils/dias.js'
 // "sesiones", con el kg/reps de cada serie. La próxima vez que el
 // cliente entra a esta misma rutina, esos datos aparecen en la columna
 // "Anterior".
+//
+// Mientras el cliente entrena, la pantalla del celular se mantiene
+// encendida (Screen Wake Lock) para no tener que desbloquearla entre
+// serie y serie, y cada serie marcada se compara contra el mejor
+// resultado histórico de ese ejercicio (en cualquier rutina) para
+// avisar si es un récord personal nuevo.
 const DESCANSOS_POR_DEFECTO = [30, 60, 90, 120]
 const CANTIDAD_SERIES_POR_DEFECTO = 4
 const PASO_KG = 2.5
 const PASO_REPS = 1
+const DURACION_AVISO_RECORD_MS = 4000
 
 export default function RutinaDetalle() {
   const { id } = useParams()
@@ -25,6 +32,7 @@ export default function RutinaDetalle() {
   const [rutina, setRutina] = useState(null)
   const [ejercicios, setEjercicios] = useState([])
   const [anteriorPorEjercicio, setAnteriorPorEjercicio] = useState({})
+  const [mejoresPorEjercicio, setMejoresPorEjercicio] = useState({})
 
   const [descansoElegido, setDescansoElegido] = useState(60)
   const [tiempoRestante, setTiempoRestante] = useState(null)
@@ -34,10 +42,50 @@ export default function RutinaDetalle() {
   const [finalizada, setFinalizada] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
+  const [avisoRecord, setAvisoRecord] = useState(null)
 
   useEffect(() => {
     cargarRutina()
   }, [id])
+
+  // Pide que la pantalla no se apague sola mientras esta pantalla está
+  // abierta (el cliente entrenando). Si el navegador no lo soporta, o
+  // si el celular bloquea la pantalla igual (pasa cuando la pestaña
+  // pierde el foco), no rompe nada: el resto de la app sigue normal.
+  useEffect(() => {
+    let bloqueo = null
+    let cancelado = false
+
+    async function pedirBloqueo() {
+      if (!('wakeLock' in navigator)) return
+      try {
+        const nuevoBloqueo = await navigator.wakeLock.request('screen')
+        if (cancelado) {
+          nuevoBloqueo.release()
+          return
+        }
+        bloqueo = nuevoBloqueo
+      } catch {
+        // Algunos navegadores lo rechazan (por ejemplo con batería baja);
+        // no hace falta avisarle nada al cliente por esto.
+      }
+    }
+
+    function alVolverAVerLaPantalla() {
+      if (document.visibilityState === 'visible' && !bloqueo) {
+        pedirBloqueo()
+      }
+    }
+
+    pedirBloqueo()
+    document.addEventListener('visibilitychange', alVolverAVerLaPantalla)
+
+    return () => {
+      cancelado = true
+      document.removeEventListener('visibilitychange', alVolverAVerLaPantalla)
+      bloqueo?.release()
+    }
+  }, [])
 
   async function cargarRutina() {
     setCargando(true)
@@ -64,19 +112,42 @@ export default function RutinaDetalle() {
     // Busca la última vez que se hizo esta rutina, para mostrar el
     // kg/reps de cada serie en la columna "Anterior".
     if (usuario) {
-      const { data: sesionAnterior } = await supabase
-        .from('sesiones')
-        .select('detalle')
-        .eq('cliente_id', usuario.id)
-        .eq('rutina_id', id)
-        .order('fecha', { ascending: false })
-        .limit(1)
+      const [{ data: sesionAnterior }, { data: todasLasSesiones }] = await Promise.all([
+        supabase
+          .from('sesiones')
+          .select('detalle')
+          .eq('cliente_id', usuario.id)
+          .eq('rutina_id', id)
+          .order('fecha', { ascending: false })
+          .limit(1),
+        // Todas las sesiones del cliente (en cualquier rutina), para
+        // saber cuál es su mejor marca histórica de cada ejercicio y
+        // así poder avisarle si hoy hace un récord nuevo.
+        supabase.from('sesiones').select('detalle').eq('cliente_id', usuario.id),
+      ])
+
       const detalle = sesionAnterior?.[0]?.detalle || []
       const mapa = {}
       for (const item of detalle) {
         mapa[item.ejercicio_id] = item.series || []
       }
       setAnteriorPorEjercicio(mapa)
+
+      const mejores = {}
+      for (const sesion of todasLasSesiones || []) {
+        for (const item of sesion.detalle || []) {
+          for (const fila of item.series || []) {
+            const kg = Number(fila.kg) || 0
+            const reps = Number(fila.reps) || 0
+            const actual = mejores[item.ejercicio_id] || { kg: 0, reps: 0 }
+            mejores[item.ejercicio_id] = {
+              kg: Math.max(actual.kg, kg),
+              reps: Math.max(actual.reps, reps),
+            }
+          }
+        }
+      }
+      setMejoresPorEjercicio(mejores)
     }
 
     setCargando(false)
@@ -112,13 +183,58 @@ export default function RutinaDetalle() {
   }
 
   function marcarSerie(exIndex, serieIndex) {
+    let quedoHecha = false
     setSeries((actual) => {
       const copia = actual.map((filas) => filas.map((fila) => ({ ...fila })))
       copia[exIndex][serieIndex].hecha = !copia[exIndex][serieIndex].hecha
+      quedoHecha = copia[exIndex][serieIndex].hecha
       return copia
     })
+
+    if (!quedoHecha) return
+
     // Al marcar una serie arranca el temporizador de descanso elegido.
     setTiempoRestante(descansoElegido)
+    revisarRecord(exIndex, serieIndex)
+  }
+
+  // Compara la serie recién marcada contra el mejor resultado histórico
+  // de ese ejercicio y, si lo supera, muestra un cartel felicitando al
+  // cliente (y actualiza la marca para que el resto de la rutina
+  // compare contra el nuevo mejor).
+  function revisarRecord(exIndex, serieIndex) {
+    const ejercicio = ejercicios[exIndex]
+    const ejercicioId = ejercicio?.ejercicio_id
+    if (!ejercicioId) return
+    const fila = series[exIndex][serieIndex]
+    const kg = Number(fila.kg) || 0
+    const reps = Number(fila.reps) || 0
+    const mejorActual = mejoresPorEjercicio[ejercicioId]
+
+    // Si nunca hizo este ejercicio antes no hay marca previa con qué
+    // comparar: no tiene sentido "festejar" el primer intento.
+    if (!mejorActual) {
+      setMejoresPorEjercicio((actual) => ({ ...actual, [ejercicioId]: { kg, reps } }))
+      return
+    }
+
+    const nombreEjercicio = ejercicio.ejercicios?.nombre || 'este ejercicio'
+    let mensaje = null
+    if (kg > mejorActual.kg && kg > 0) {
+      mensaje = `🏆 ¡Récord de peso en ${nombreEjercicio}! ${kg} kg`
+    } else if (reps > mejorActual.reps && reps > 0) {
+      mensaje = `🏆 ¡Récord de repeticiones en ${nombreEjercicio}! ${reps} reps`
+    }
+
+    if (mensaje) {
+      setAvisoRecord(mensaje)
+      setTimeout(() => setAvisoRecord((actual) => (actual === mensaje ? null : actual)), DURACION_AVISO_RECORD_MS)
+    }
+
+    setMejoresPorEjercicio((actual) => ({
+      ...actual,
+      [ejercicioId]: { kg: Math.max(mejorActual.kg, kg), reps: Math.max(mejorActual.reps, reps) },
+    }))
   }
 
   function ajustarValor(exIndex, serieIndex, campo, delta) {
@@ -178,6 +294,12 @@ export default function RutinaDetalle() {
   return (
     <div className={mostrarTimer ? 'screen screen-con-descanso' : 'screen'}>
       <TopPattern />
+
+      {avisoRecord && (
+        <div className="record-banner" role="status">
+          {avisoRecord}
+        </div>
+      )}
 
       <div className="rutina-detalle-header">
         <div className="cliente-header-col">

@@ -6,7 +6,12 @@ import ProfileIcon from '../components/ProfileIcon.jsx'
 import WeekDots from '../components/WeekDots.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { obtenerPlan } from '../data/planes.js'
-import { DIAS_SEMANA, obtenerNombreDiaHoy, obtenerFechaDeDiaEstaSemana } from '../utils/dias.js'
+import {
+  DIAS_SEMANA,
+  obtenerNombreDiaHoy,
+  obtenerFechaDeDiaEstaSemana,
+  calcularRachaSemanas,
+} from '../utils/dias.js'
 
 // Inicio del cliente, pensado para abrirse todos los días desde el
 // celular: arriba un saludo corto, abajo el resumen de la semana en
@@ -23,6 +28,7 @@ export default function Home() {
   const [perfil, setPerfil] = useState(null)
   const [calendario, setCalendario] = useState({})
   const [fechasConSesion, setFechasConSesion] = useState(new Set())
+  const [racha, setRacha] = useState(0)
 
   useEffect(() => {
     cargarDatos()
@@ -39,7 +45,7 @@ export default function Home() {
 
     const fechasSemana = DIAS_SEMANA.map((dia) => obtenerFechaDeDiaEstaSemana(dia))
 
-    const [{ data: perfilData }, { data: calendarioData }, { data: sesionesData }] =
+    const [{ data: perfilData }, { data: calendarioData }, { data: sesionesData }, { data: todasLasFechas }] =
       await Promise.all([
         supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
         supabase
@@ -51,6 +57,9 @@ export default function Home() {
           .select('fecha')
           .eq('cliente_id', usuario.id)
           .in('fecha', fechasSemana),
+        // Todas las fechas entrenadas (no solo esta semana), para
+        // calcular cuántas semanas seguidas viene entrenando.
+        supabase.from('sesiones').select('fecha').eq('cliente_id', usuario.id),
       ])
 
     setPerfil(perfilData || null)
@@ -61,6 +70,7 @@ export default function Home() {
     }
     setCalendario(diasMap)
     setFechasConSesion(new Set((sesionesData || []).map((sesion) => sesion.fecha)))
+    setRacha(calcularRachaSemanas((todasLasFechas || []).map((sesion) => sesion.fecha)))
     setCargando(false)
   }
 
@@ -121,6 +131,11 @@ export default function Home() {
           ? `${diasCumplidos} de ${diasConEntrenamiento} entrenamientos esta semana`
           : 'Todavía no tenés días de entrenamiento programados'}
       </p>
+      {racha > 0 && (
+        <p className="home-racha">
+          🔥 {racha} {racha === 1 ? 'semana seguida entrenando' : 'semanas seguidas entrenando'}
+        </p>
+      )}
 
       <div className="home-cta-wrap">
         {cuentaPendiente ? (
