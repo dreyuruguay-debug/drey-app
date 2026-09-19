@@ -475,6 +475,15 @@ body {
   padding: 0 1.5rem;
 }
 
+.ejercicio-foto {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 0.75rem;
+}
+
 .ejercicio-header {
   display: flex;
   justify-content: space-between;
@@ -1565,11 +1574,83 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
   background: #1a1a1a;
   border-radius: 12px;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
+}
+
+.profe-ejercicio-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.profe-ejercicio-item-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profe-ejercicio-foto-mini {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profe-ejercicio-item-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+}
+
+.profe-ejercicio-edicion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: #1a1a1a;
+  border: 1px solid var(--drey-accent);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.profe-ejercicio-edicion-botones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profe-imagen-actual {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.profe-ejercicio-foto-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.profe-adjuntar-imagen {
+  display: block;
+  text-align: center;
+  background: none;
+  border: 1px dashed #555;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+  cursor: pointer;
 }
 
 .profe-ejercicio-borrar {

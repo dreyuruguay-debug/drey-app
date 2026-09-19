@@ -64,7 +64,7 @@ export default function ProfeClienteDetalle() {
       rutinaIds.length > 0
         ? supabase
             .from('rutina_ejercicios')
-            .select('*, ejercicios(nombre, grupo_muscular, video_url)')
+            .select('*, ejercicios(nombre, grupo_muscular, video_url, imagen_url)')
             .in('rutina_id', rutinaIds)
             .order('orden')
         : Promise.resolve({ data: [] }),
@@ -401,7 +401,16 @@ export default function ProfeClienteDetalle() {
                     <div className="profe-ejercicios-lista">
                       {ejerciciosDelSelector.map((ejercicio) => (
                         <div key={ejercicio.id} className="profe-ejercicio-item">
-                          <span>{ejercicio.nombre}</span>
+                          <div className="profe-ejercicio-item-info">
+                            {ejercicio.imagen_url && (
+                              <img
+                                src={ejercicio.imagen_url}
+                                alt={ejercicio.nombre}
+                                className="profe-ejercicio-foto-mini"
+                              />
+                            )}
+                            <span>{ejercicio.nombre}</span>
+                          </div>
                           <button
                             type="button"
                             className="profe-ejercicio-agregar"

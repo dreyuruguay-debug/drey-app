@@ -49,7 +49,7 @@ export default function RutinaDetalle() {
       supabase.from('rutinas').select('*').eq('id', id).single(),
       supabase
         .from('rutina_ejercicios')
-        .select('*, ejercicios(nombre, video_url)')
+        .select('*, ejercicios(nombre, video_url, imagen_url)')
         .eq('rutina_id', id)
         .order('orden'),
     ])
@@ -206,6 +206,13 @@ export default function RutinaDetalle() {
             : DESCANSOS_POR_DEFECTO
           return (
             <div key={ejercicio.id} className="ejercicio-bloque">
+              {ejercicio.ejercicios?.imagen_url && (
+                <img
+                  src={ejercicio.ejercicios.imagen_url}
+                  alt={ejercicio.ejercicios.nombre}
+                  className="ejercicio-foto"
+                />
+              )}
               <div className="ejercicio-header">
                 <span>{ejercicio.ejercicios?.nombre}</span>
                 {ejercicio.ejercicios?.video_url ? (
