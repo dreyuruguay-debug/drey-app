@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
@@ -12,6 +13,7 @@ import { calcularEdad } from '../utils/fechas.js'
 // llena Registro y que usa el panel del profe), así que guardar acá
 // ya es real y permanente.
 export default function MisDatos() {
+  const navigate = useNavigate()
   const [perfilId, setPerfilId] = useState(null)
   const [email, setEmail] = useState('')
   const [nombre, setNombre] = useState('')
@@ -34,7 +36,7 @@ export default function MisDatos() {
     const { data: userData } = await supabase.auth.getUser()
     const usuario = userData?.user
     if (!usuario) {
-      setCargando(false)
+      navigate('/')
       return
     }
     setEmail(usuario.email ?? '')

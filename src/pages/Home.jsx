@@ -6,7 +6,7 @@ import ProfileIcon from '../components/ProfileIcon.jsx'
 import WeekDots from '../components/WeekDots.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { obtenerPlan } from '../data/planes.js'
-import { DIAS_SEMANA, obtenerNombreDiaHoy } from '../utils/dias.js'
+import { DIAS_SEMANA, obtenerNombreDiaHoy, obtenerFechaDeDiaEstaSemana } from '../utils/dias.js'
 
 // Inicio del cliente, pensado para abrirse todos los días desde el
 // celular: arriba un saludo corto, abajo el resumen de la semana en
@@ -14,15 +14,15 @@ import { DIAS_SEMANA, obtenerNombreDiaHoy } from '../utils/dias.js'
 // para continuar la rutina de hoy (o el aviso de que hoy es descanso).
 //
 // El calendario semanal (qué rutina toca cada día) lo arma el profe
-// desde su panel, en la tabla "calendario_cliente". Todavía no hay una
-// tabla de sesiones completadas (eso es un paso más adelante del plan),
-// así que por ahora acá se muestran los días con entrenamiento
-// programado, no marcados como "hechos".
+// desde su panel, en la tabla "calendario_cliente". Los puntos verdes
+// de la semana salen de la tabla "sesiones": un día cuenta como
+// cumplido cuando existe una sesión guardada con la fecha de ese día.
 export default function Home() {
   const navigate = useNavigate()
   const [cargando, setCargando] = useState(true)
   const [perfil, setPerfil] = useState(null)
   const [calendario, setCalendario] = useState({})
+  const [fechasConSesion, setFechasConSesion] = useState(new Set())
 
   useEffect(() => {
     cargarDatos()
@@ -37,13 +37,21 @@ export default function Home() {
       return
     }
 
-    const [{ data: perfilData }, { data: calendarioData }] = await Promise.all([
-      supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
-      supabase
-        .from('calendario_cliente')
-        .select('*, rutinas(id, nombre, patron)')
-        .eq('cliente_id', usuario.id),
-    ])
+    const fechasSemana = DIAS_SEMANA.map((dia) => obtenerFechaDeDiaEstaSemana(dia))
+
+    const [{ data: perfilData }, { data: calendarioData }, { data: sesionesData }] =
+      await Promise.all([
+        supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
+        supabase
+          .from('calendario_cliente')
+          .select('*, rutinas(id, nombre, patron)')
+          .eq('cliente_id', usuario.id),
+        supabase
+          .from('sesiones')
+          .select('fecha')
+          .eq('cliente_id', usuario.id)
+          .in('fecha', fechasSemana),
+      ])
 
     setPerfil(perfilData || null)
 
@@ -52,6 +60,7 @@ export default function Home() {
       diasMap[fila.dia] = fila
     }
     setCalendario(diasMap)
+    setFechasConSesion(new Set((sesionesData || []).map((sesion) => sesion.fecha)))
     setCargando(false)
   }
 
@@ -74,12 +83,15 @@ export default function Home() {
   const nombrePlan = obtenerPlan(perfil?.plan)?.nombre || 'Sin plan'
   const diaHoy = obtenerNombreDiaHoy()
   const rutinaHoy = calendario[diaHoy]?.rutinas || null
+  const cuentaPendiente = perfil?.estado === 'pendiente'
 
-  const dias = DIAS_SEMANA.map((dia) => ({
-    dia,
-    cumplido: calendario[dia]?.rutina_id ? false : null,
-  }))
+  const dias = DIAS_SEMANA.map((dia) => {
+    if (!calendario[dia]?.rutina_id) return { dia, cumplido: null }
+    const fecha = obtenerFechaDeDiaEstaSemana(dia)
+    return { dia, cumplido: fechasConSesion.has(fecha) }
+  })
   const diasConEntrenamiento = dias.filter((item) => item.cumplido !== null).length
+  const diasCumplidos = dias.filter((item) => item.cumplido === true).length
 
   return (
     <div className="screen has-bottom-nav">
@@ -97,13 +109,28 @@ export default function Home() {
         </div>
       </div>
 
+      {cuentaPendiente && (
+        <Link to="/suscripcion" className="home-aviso-pendiente">
+          Tu cuenta está pendiente de habilitación. Tocá acá para ver los datos de pago.
+        </Link>
+      )}
+
       <WeekDots dias={dias} diaHoy={diaHoy} />
       <p className="home-progreso-texto">
-        {diasConEntrenamiento} entrenamientos programados esta semana
+        {diasConEntrenamiento > 0
+          ? `${diasCumplidos} de ${diasConEntrenamiento} entrenamientos esta semana`
+          : 'Todavía no tenés días de entrenamiento programados'}
       </p>
 
       <div className="home-cta-wrap">
-        {rutinaHoy ? (
+        {cuentaPendiente ? (
+          <div className="cta-descanso">
+            <p className="cta-descanso-titulo">Cuenta pendiente</p>
+            <p className="cta-descanso-texto">
+              En cuanto tu profe habilite tu cuenta vas a poder ver tus rutinas acá.
+            </p>
+          </div>
+        ) : rutinaHoy ? (
           <Link to={`/rutinas/${rutinaHoy.id}`} className="cta-button">
             Continuar rutina de hoy
             <span className="cta-button-sub">

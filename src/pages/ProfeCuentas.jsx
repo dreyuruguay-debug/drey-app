@@ -54,6 +54,18 @@ export default function ProfeCuentas() {
     cargarClientes()
   }
 
+  async function verComprobante(rutaArchivo) {
+    if (!rutaArchivo) return
+    const { data, error } = await supabase.storage
+      .from('comprobantes')
+      .createSignedUrl(rutaArchivo, 60)
+    if (!error && data?.signedUrl) {
+      window.open(data.signedUrl, '_blank', 'noopener')
+    } else {
+      setMensaje('No pudimos abrir el comprobante.')
+    }
+  }
+
   const pendientes = clientes.filter((cliente) => cliente.estado === 'pendiente')
   const avisaronPago = clientes.filter((cliente) => cliente.aviso_pago)
   const resto = clientes.filter((cliente) => cliente.estado !== 'pendiente')
@@ -114,13 +126,24 @@ export default function ProfeCuentas() {
                     {cliente.vencimiento || 'sin definir'}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="pill-button profe-boton-habilitar"
-                  onClick={() => confirmarPago(cliente.id, cliente.vencimiento)}
-                >
-                  Confirmar pago
-                </button>
+                <div className="profe-cliente-acciones">
+                  {cliente.comprobante_nombre && (
+                    <button
+                      type="button"
+                      className="profe-ver-comprobante"
+                      onClick={() => verComprobante(cliente.comprobante_nombre)}
+                    >
+                      Ver comprobante
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="pill-button profe-boton-habilitar"
+                    onClick={() => confirmarPago(cliente.id, cliente.vencimiento)}
+                  >
+                    Confirmar pago
+                  </button>
+                </div>
               </div>
             ))
           )}

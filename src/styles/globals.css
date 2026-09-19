@@ -826,6 +826,20 @@ body {
   color: var(--drey-gray-light);
 }
 
+/* Aviso de cuenta pendiente en Inicio */
+.home-aviso-pendiente {
+  display: block;
+  margin: 1rem 1.5rem 0;
+  padding: 0.85rem 1rem;
+  background: rgba(61, 220, 132, 0.12);
+  border: 1px solid var(--drey-accent);
+  border-radius: 14px;
+  color: var(--drey-white);
+  text-decoration: none;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
 /* Puntos de la semana (WeekDots), reemplaza la barra fina de progreso
    en Inicio por algo más legible de un vistazo */
 .week-dots {
@@ -1673,4 +1687,68 @@ body {
   color: var(--drey-white);
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
+}
+
+/* Progreso reciente (detalle de cliente, panel del profe) */
+.profe-progreso-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.profe-progreso-item {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.profe-progreso-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.profe-progreso-fecha {
+  font-size: 0.75rem;
+  color: var(--drey-gray-light);
+  text-transform: capitalize;
+}
+
+.profe-progreso-rutina {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.profe-progreso-esfuerzo {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--drey-accent);
+}
+
+.profe-progreso-comentario {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+  font-style: italic;
+}
+
+/* Botón "Ver comprobante" (Cuentas y pagos) */
+.profe-cliente-acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.profe-ver-comprobante {
+  background: none;
+  border: none;
+  color: var(--drey-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
 }

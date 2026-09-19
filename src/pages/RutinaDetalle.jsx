@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { obtenerFechaHoyISO } from '../utils/dias.js'
 
 // Pantalla de una rutina en curso (Rutina A, B o C). Los ejercicios, sus
 // series/reps/peso objetivo y las opciones de descanso los carga el
 // profe desde su panel, en las tablas "rutinas" y "rutina_ejercicios".
 //
-// La columna "Anterior" todavía muestra "—": vamos a poder completarla
-// cuando exista el historial de sesiones (un paso más adelante del
-// plan). Por ahora cada serie arranca en el peso/reps objetivo que dejó
-// el profe.
+// Al tocar "Finalizar rutina" se guarda una sesión real en la tabla
+// "sesiones", con el kg/reps de cada serie. La próxima vez que el
+// cliente entra a esta misma rutina, esos datos aparecen en la columna
+// "Anterior".
 const DESCANSOS_POR_DEFECTO = [30, 60, 90, 120]
 const CANTIDAD_SERIES_POR_DEFECTO = 4
 const PASO_KG = 2.5
@@ -20,8 +21,10 @@ export default function RutinaDetalle() {
   const { id } = useParams()
 
   const [cargando, setCargando] = useState(true)
+  const [usuarioId, setUsuarioId] = useState(null)
   const [rutina, setRutina] = useState(null)
   const [ejercicios, setEjercicios] = useState([])
+  const [anteriorPorEjercicio, setAnteriorPorEjercicio] = useState({})
 
   const [descansoElegido, setDescansoElegido] = useState(60)
   const [tiempoRestante, setTiempoRestante] = useState(null)
@@ -29,6 +32,8 @@ export default function RutinaDetalle() {
   const [esfuerzo, setEsfuerzo] = useState(null)
   const [comentario, setComentario] = useState('')
   const [finalizada, setFinalizada] = useState(false)
+  const [guardando, setGuardando] = useState(false)
+  const [errorGuardar, setErrorGuardar] = useState('')
 
   useEffect(() => {
     cargarRutina()
@@ -36,6 +41,10 @@ export default function RutinaDetalle() {
 
   async function cargarRutina() {
     setCargando(true)
+    const { data: userData } = await supabase.auth.getUser()
+    const usuario = userData?.user
+    setUsuarioId(usuario?.id || null)
+
     const [{ data: rutinaData }, { data: ejerciciosData }] = await Promise.all([
       supabase.from('rutinas').select('*').eq('id', id).single(),
       supabase
@@ -51,6 +60,25 @@ export default function RutinaDetalle() {
     if (lista[0]?.descansos?.[1]) {
       setDescansoElegido(lista[0].descansos[1])
     }
+
+    // Busca la última vez que se hizo esta rutina, para mostrar el
+    // kg/reps de cada serie en la columna "Anterior".
+    if (usuario) {
+      const { data: sesionAnterior } = await supabase
+        .from('sesiones')
+        .select('detalle')
+        .eq('cliente_id', usuario.id)
+        .eq('rutina_id', id)
+        .order('fecha', { ascending: false })
+        .limit(1)
+      const detalle = sesionAnterior?.[0]?.detalle || []
+      const mapa = {}
+      for (const item of detalle) {
+        mapa[item.ejercicio_id] = item.series || []
+      }
+      setAnteriorPorEjercicio(mapa)
+    }
+
     setCargando(false)
   }
 
@@ -111,7 +139,31 @@ export default function RutinaDetalle() {
     setTiempoRestante(null)
   }
 
-  function handleFinalizar() {
+  async function handleFinalizar() {
+    if (!usuarioId) return
+    setGuardando(true)
+    setErrorGuardar('')
+
+    const detalle = ejercicios.map((ejercicio, exIndex) => ({
+      ejercicio_id: ejercicio.ejercicio_id,
+      nombre: ejercicio.ejercicios?.nombre || '',
+      series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps })),
+    }))
+
+    const { error } = await supabase.from('sesiones').insert({
+      cliente_id: usuarioId,
+      rutina_id: rutina.id,
+      fecha: obtenerFechaHoyISO(),
+      esfuerzo,
+      comentario: comentario.trim() || null,
+      detalle,
+    })
+
+    setGuardando(false)
+    if (error) {
+      setErrorGuardar('No pudimos guardar la rutina. Probá de nuevo.')
+      return
+    }
     setFinalizada(true)
   }
 
@@ -213,10 +265,13 @@ export default function RutinaDetalle() {
                   {series[exIndex].map((fila, serieIndex) => {
                     const esActual = serieIndex === filaActual
                     const claseFila = fila.hecha ? 'fila-hecha' : esActual ? 'fila-actual' : ''
+                    const anterior = anteriorPorEjercicio[ejercicio.ejercicio_id]?.[serieIndex]
                     return (
                       <tr key={serieIndex} className={claseFila}>
                         <td>{serieIndex + 1}</td>
-                        <td className="ejercicio-tabla-anterior">—</td>
+                        <td className="ejercicio-tabla-anterior">
+                          {anterior ? `${anterior.kg}kg × ${anterior.reps}` : '—'}
+                        </td>
                         <td>
                           <div className="stepper">
                             <button
@@ -314,8 +369,14 @@ export default function RutinaDetalle() {
               value={comentario}
               onChange={(event) => setComentario(event.target.value)}
             />
-            <button type="button" className="pill-button" onClick={handleFinalizar}>
-              Finalizar rutina
+            {errorGuardar && <p className="auth-message">{errorGuardar}</p>}
+            <button
+              type="button"
+              className="pill-button"
+              onClick={handleFinalizar}
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando…' : 'Finalizar rutina'}
             </button>
           </>
         )}

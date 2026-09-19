@@ -21,6 +21,7 @@ export default function ProfeClienteDetalle() {
   const [ejerciciosPorRutina, setEjerciciosPorRutina] = useState({})
   const [calendario, setCalendario] = useState({})
   const [ejerciciosDisponibles, setEjerciciosDisponibles] = useState([])
+  const [sesiones, setSesiones] = useState([])
   const [mensaje, setMensaje] = useState('')
 
   const [nombreNueva, setNombreNueva] = useState('')
@@ -39,16 +40,23 @@ export default function ProfeClienteDetalle() {
   async function cargarTodo() {
     setCargando(true)
 
-    const [{ data: perfil }, { data: listaRutinas }, { data: listaEjercicios }] =
+    const [{ data: perfil }, { data: listaRutinas }, { data: listaEjercicios }, { data: listaSesiones }] =
       await Promise.all([
         supabase.from('perfiles').select('*').eq('id', id).single(),
         supabase.from('rutinas').select('*').eq('cliente_id', id).order('orden'),
         supabase.from('ejercicios').select('*').order('nombre'),
+        supabase
+          .from('sesiones')
+          .select('*, rutinas(nombre)')
+          .eq('cliente_id', id)
+          .order('fecha', { ascending: false })
+          .limit(8),
       ])
 
     setCliente(perfil || null)
     setRutinas(listaRutinas || [])
     setEjerciciosDisponibles(listaEjercicios || [])
+    setSesiones(listaSesiones || [])
 
     const rutinaIds = (listaRutinas || []).map((rutina) => rutina.id)
 
@@ -199,6 +207,39 @@ export default function ProfeClienteDetalle() {
             {obtenerPlan(cliente.plan)?.nombre || cliente.plan} · {cliente.celular}
           </p>
           {mensaje && <p className="auth-message">{mensaje}</p>}
+
+          <p className="profe-seccion-label">Progreso reciente</p>
+          {sesiones.length === 0 ? (
+            <p className="profe-vacio">Todavía no completó ninguna rutina.</p>
+          ) : (
+            <div className="profe-progreso-lista">
+              {sesiones.map((sesion) => (
+                <div key={sesion.id} className="profe-progreso-item">
+                  <div className="profe-progreso-item-header">
+                    <span className="profe-progreso-fecha">
+                      {new Date(`${sesion.fecha}T00:00:00`).toLocaleDateString('es-UY', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
+                    <span className="profe-progreso-rutina">
+                      {sesion.rutinas?.nombre || 'Rutina borrada'}
+                    </span>
+                    {sesion.esfuerzo && (
+                      <span className="profe-progreso-esfuerzo">Esfuerzo {sesion.esfuerzo}/5</span>
+                    )}
+                  </div>
+                  {sesion.comentario && (
+                    <p className="profe-progreso-comentario">"{sesion.comentario}"</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="profe-nota">
+            Si el cliente viene levantando fácil, subile el Kg objetivo del ejercicio en la
+            rutina de abajo.
+          </p>
 
           <p className="profe-seccion-label">Rutinas</p>
           {rutinas.length === 0 && (

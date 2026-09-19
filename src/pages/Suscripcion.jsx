@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { supabase } from '../services/supabaseClient.js'
@@ -12,14 +13,17 @@ import { obtenerPlan, formatearPrecio } from '../data/planes.js'
 // Registro y que usa el panel del profe para habilitar cuentas). El
 // link de Mercado Pago y los datos de transferencia todavía están
 // pendientes de la Fase 0 del plan. El comprobante que se adjunta acá
-// todavía no se sube a ningún lado: por ahora solo guardamos el
-// nombre del archivo para que el profe sepa que hay uno; falta
-// conectar el almacenamiento de archivos de Supabase.
+// se sube al almacenamiento de archivos de Supabase (bucket
+// "comprobantes"), en una carpeta con el id del cliente para que cada
+// uno solo pueda ver los suyos; el profe puede ver los de todos desde
+// "Cuentas y pagos".
 export default function Suscripcion() {
+  const navigate = useNavigate()
   const [perfil, setPerfil] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [comprobante, setComprobante] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  const [mensaje, setMensaje] = useState('')
 
   useEffect(() => {
     cargarPerfil()
@@ -30,7 +34,7 @@ export default function Suscripcion() {
     const { data: userData } = await supabase.auth.getUser()
     const usuario = userData?.user
     if (!usuario) {
-      setCargando(false)
+      navigate('/')
       return
     }
     const { data } = await supabase.from('perfiles').select('*').eq('id', usuario.id).single()
@@ -42,14 +46,32 @@ export default function Suscripcion() {
     event.preventDefault()
     if (!perfil) return
     setEnviando(true)
+    setMensaje('')
+
+    let comprobantePath = perfil.comprobante_nombre || null
+    if (comprobante) {
+      const rutaArchivo = `${perfil.id}/${Date.now()}-${comprobante.name}`
+      const { error: errorSubida } = await supabase.storage
+        .from('comprobantes')
+        .upload(rutaArchivo, comprobante)
+      if (errorSubida) {
+        setEnviando(false)
+        setMensaje('No pudimos subir el comprobante. Probá de nuevo.')
+        return
+      }
+      comprobantePath = rutaArchivo
+    }
+
     const { error } = await supabase
       .from('perfiles')
-      .update({ aviso_pago: true, comprobante_nombre: comprobante?.name || null })
+      .update({ aviso_pago: true, comprobante_nombre: comprobantePath })
       .eq('id', perfil.id)
     setEnviando(false)
-    if (!error) {
-      setPerfil((actual) => ({ ...actual, aviso_pago: true }))
+    if (error) {
+      setMensaje('No pudimos avisar el pago. Probá de nuevo.')
+      return
     }
+    setPerfil((actual) => ({ ...actual, aviso_pago: true, comprobante_nombre: comprobantePath }))
   }
 
   if (cargando) {
@@ -124,6 +146,7 @@ export default function Suscripcion() {
                   hidden
                 />
               </label>
+              {mensaje && <p className="auth-message">{mensaje}</p>}
               <button type="submit" className="pill-button" disabled={enviando}>
                 {enviando ? 'Enviando…' : 'Ya pagué'}
               </button>

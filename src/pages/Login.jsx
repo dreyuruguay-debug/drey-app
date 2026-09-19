@@ -18,9 +18,9 @@ export default function Login() {
     event.preventDefault()
     setMessage('')
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
+    const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
+      setLoading(false)
       setMessage(
         error.message.toLowerCase().includes('email not confirmed')
           ? 'Todavía no confirmaste tu email. Revisá tu correo (carpeta de spam incluida) y tocá el link que te mandamos.'
@@ -28,7 +28,16 @@ export default function Login() {
       )
       return
     }
-    navigate('/inicio')
+
+    // Si la cuenta es la del profe, entra directo a su panel en vez de
+    // a la pantalla de Inicio del cliente.
+    const { data: perfil } = await supabase
+      .from('perfiles')
+      .select('es_profe')
+      .eq('id', loginData.user.id)
+      .single()
+    setLoading(false)
+    navigate(perfil?.es_profe ? '/profe' : '/inicio')
   }
 
   async function handleForgotPassword() {
