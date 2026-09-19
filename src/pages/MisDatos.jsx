@@ -8,46 +8,82 @@ import { calcularEdad } from '../utils/fechas.js'
 // celular, email, objetivo y "Lesiones y/o limitaciones". Editable por
 // el cliente y por el profe.
 //
-// El email es el real de la cuenta (viene de Supabase). El resto son
-// datos de ejemplo hasta conectar esta pantalla con lo que se carga en
-// Registro: hoy viven en los metadatos del usuario y van a pasar a su
-// propia tabla cuando construyamos el panel del profe. Por eso "Guardar
-// cambios" todavía no guarda nada de forma permanente.
+// Estos datos viven en la tabla "perfiles" de Supabase (la misma que
+// llena Registro y que usa el panel del profe), así que guardar acá
+// ya es real y permanente.
 export default function MisDatos() {
+  const [perfilId, setPerfilId] = useState(null)
   const [email, setEmail] = useState('')
-  const [nombre, setNombre] = useState('Nombre Apellido')
-  const [fechaNacimiento, setFechaNacimiento] = useState('1998-01-01')
+  const [nombre, setNombre] = useState('')
+  const [apellido, setApellido] = useState('')
+  const [fechaNacimiento, setFechaNacimiento] = useState('')
   const [peso, setPeso] = useState('')
   const [celular, setCelular] = useState('')
-  const [objetivo, setObjetivo] = useState('Recomposición corporal')
+  const [objetivo, setObjetivo] = useState('')
   const [lesiones, setLesiones] = useState('')
-  const [guardado, setGuardado] = useState(false)
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  const [mensaje, setMensaje] = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const usuario = data?.user
-      if (!usuario) return
-      setEmail(usuario.email ?? '')
-
-      const metadatos = usuario.user_metadata || {}
-      if (metadatos.nombre) {
-        setNombre(`${metadatos.nombre} ${metadatos.apellido || ''}`.trim())
-      }
-      if (metadatos.fecha_nacimiento) setFechaNacimiento(metadatos.fecha_nacimiento)
-      if (metadatos.peso) setPeso(String(metadatos.peso))
-      if (metadatos.celular) setCelular(metadatos.celular)
-      if (metadatos.objetivo) setObjetivo(metadatos.objetivo)
-      if (metadatos.lesiones) setLesiones(metadatos.lesiones)
-    })
+    cargarPerfil()
   }, [])
+
+  async function cargarPerfil() {
+    setCargando(true)
+    const { data: userData } = await supabase.auth.getUser()
+    const usuario = userData?.user
+    if (!usuario) {
+      setCargando(false)
+      return
+    }
+    setEmail(usuario.email ?? '')
+
+    const { data } = await supabase.from('perfiles').select('*').eq('id', usuario.id).single()
+    if (data) {
+      setPerfilId(data.id)
+      setNombre(data.nombre || '')
+      setApellido(data.apellido || '')
+      setFechaNacimiento(data.fecha_nacimiento || '')
+      setPeso(data.peso != null ? String(data.peso) : '')
+      setCelular(data.celular || '')
+      setObjetivo(data.objetivo || '')
+      setLesiones(data.lesiones || '')
+    }
+    setCargando(false)
+  }
 
   const edad = calcularEdad(fechaNacimiento)
 
-  function handleGuardar(event) {
+  async function handleGuardar(event) {
     event.preventDefault()
-    // Por ahora esto no se guarda en ningún lado todavía: falta la
-    // tabla de clientes. Cuando exista, acá va un update a Supabase.
-    setGuardado(true)
+    if (!perfilId) return
+    setGuardando(true)
+    setMensaje('')
+    const { error } = await supabase
+      .from('perfiles')
+      .update({
+        nombre,
+        apellido,
+        fecha_nacimiento: fechaNacimiento || null,
+        peso: peso ? Number(peso) : null,
+        celular,
+        objetivo,
+        lesiones: lesiones || null,
+      })
+      .eq('id', perfilId)
+    setGuardando(false)
+    setMensaje(error ? 'No pudimos guardar los cambios. Probá de nuevo.' : 'Datos actualizados.')
+  }
+
+  if (cargando) {
+    return (
+      <div className="screen has-bottom-nav">
+        <TopPattern />
+        <p className="profe-mensaje-carga">Cargando…</p>
+        <BottomNav />
+      </div>
+    )
   }
 
   return (
@@ -57,13 +93,22 @@ export default function MisDatos() {
         <h1 className="misdatos-titulo">Mis datos</h1>
 
         <form className="registro-form" onSubmit={handleGuardar}>
-          <input
-            className="auth-input"
-            type="text"
-            placeholder="Nombre y apellido"
-            value={nombre}
-            onChange={(event) => setNombre(event.target.value)}
-          />
+          <div className="form-row">
+            <input
+              className="auth-input"
+              type="text"
+              placeholder="Nombre"
+              value={nombre}
+              onChange={(event) => setNombre(event.target.value)}
+            />
+            <input
+              className="auth-input"
+              type="text"
+              placeholder="Apellido"
+              value={apellido}
+              onChange={(event) => setApellido(event.target.value)}
+            />
+          </div>
 
           <div>
             <input
@@ -111,10 +156,10 @@ export default function MisDatos() {
             onChange={(event) => setLesiones(event.target.value)}
           />
 
-          {guardado && <p className="auth-message">Datos actualizados.</p>}
+          {mensaje && <p className="auth-message">{mensaje}</p>}
 
-          <button type="submit" className="auth-submit">
-            Guardar cambios
+          <button type="submit" className="auth-submit" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </form>
       </div>

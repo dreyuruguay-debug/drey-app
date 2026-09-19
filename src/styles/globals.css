@@ -1325,3 +1325,95 @@ body {
 .misdatos-titulo {
   margin: 0 0 1.25rem;
 }
+
+/* Panel del profe */
+.profe-mensaje-carga {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  color: var(--drey-gray-light);
+}
+
+.profe-contenido {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3rem;
+}
+
+.profe-titulo {
+  margin: 0 0 0.5rem;
+}
+
+.profe-nota {
+  margin: 0 0 1.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.profe-seccion-label {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--drey-gray-light);
+}
+
+.profe-vacio {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+  font-style: italic;
+}
+
+.profe-cliente-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.profe-cliente-nombre {
+  margin: 0;
+  font-weight: 700;
+}
+
+.profe-cliente-detalle {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+.profe-boton-habilitar {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 0.65rem 1.25rem;
+}
+
+.profe-tabla-wrap {
+  overflow-x: auto;
+}
+
+.profe-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.profe-tabla th {
+  text-align: left;
+  padding: 0.5rem;
+  color: var(--drey-gray-light);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+}
+
+.profe-tabla td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #222;
+}
