@@ -4,44 +4,84 @@ import { supabase } from '../services/supabaseClient.js'
 import ClienteHeader from '../components/ClienteHeader.jsx'
 import RutinaCard from '../components/RutinaCard.jsx'
 import BottomNav from '../components/BottomNav.jsx'
-import { RUTINAS, CALENDARIO } from '../data/rutinas.js'
+import { obtenerPlan } from '../data/planes.js'
+import { DIAS_SEMANA } from '../utils/dias.js'
 
 export default function Rutinas() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [perfil, setPerfil] = useState(null)
+  const [rutinas, setRutinas] = useState([])
+  const [calendario, setCalendario] = useState([])
   const [mostrarOrganizacion, setMostrarOrganizacion] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data?.user?.email ?? '')
-    })
+    cargarDatos()
   }, [])
+
+  async function cargarDatos() {
+    setCargando(true)
+    const { data: userData } = await supabase.auth.getUser()
+    const usuario = userData?.user
+    if (!usuario) {
+      navigate('/')
+      return
+    }
+
+    const [{ data: perfilData }, { data: rutinasData }, { data: calendarioData }] =
+      await Promise.all([
+        supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
+        supabase.from('rutinas').select('*').eq('cliente_id', usuario.id).order('orden'),
+        supabase
+          .from('calendario_cliente')
+          .select('*, rutinas(nombre)')
+          .eq('cliente_id', usuario.id),
+      ])
+
+    setPerfil(perfilData || null)
+    setRutinas(rutinasData || [])
+    setCalendario(calendarioData || [])
+    setCargando(false)
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/')
   }
 
-  const nombre = email ? email.split('@')[0].toUpperCase() : 'NOMBRE APELLIDO'
-  const diasPosibles = CALENDARIO.filter((item) => item.rutinaId).length
+  if (cargando) {
+    return (
+      <div className="screen has-bottom-nav">
+        <p className="profe-mensaje-carga">Cargando…</p>
+        <BottomNav />
+      </div>
+    )
+  }
+
+  const nombre = perfil ? `${perfil.nombre} ${perfil.apellido}` : 'Hola'
+  const diasEntrenamiento = calendario.filter((item) => item.rutina_id).length
 
   return (
     <div className="screen has-bottom-nav">
       <ClienteHeader
-        semana={1}
-        objetivo="Recomposición corporal"
+        objetivo={perfil?.objetivo}
         nombre={nombre}
-        plan="Plan seguimiento"
-        diasCumplidos={2}
-        diasPosibles={diasPosibles}
+        plan={obtenerPlan(perfil?.plan)?.nombre || 'Sin plan'}
+        diasEntrenamiento={diasEntrenamiento}
         onLogout={handleLogout}
       />
 
-      <div className="rutinas-grid">
-        {Object.values(RUTINAS).map((rutina) => (
-          <RutinaCard key={rutina.id} {...rutina} />
-        ))}
-      </div>
+      {rutinas.length === 0 ? (
+        <p className="profe-vacio" style={{ textAlign: 'center', margin: '2rem 1.5rem' }}>
+          Todavía no tenés rutinas asignadas. Tu profe te las va a armar pronto.
+        </p>
+      ) : (
+        <div className="rutinas-grid">
+          {rutinas.map((rutina) => (
+            <RutinaCard key={rutina.id} {...rutina} />
+          ))}
+        </div>
+      )}
 
       <button
         type="button"
@@ -53,11 +93,12 @@ export default function Rutinas() {
 
       {mostrarOrganizacion && (
         <div className="organizacion-calendario">
-          {CALENDARIO.map((item) => {
-            const nombreRutina = item.rutinaId ? RUTINAS[item.rutinaId].nombre : 'Descanso'
+          {DIAS_SEMANA.map((dia) => {
+            const item = calendario.find((fila) => fila.dia === dia)
+            const nombreRutina = item?.rutinas?.nombre || 'Descanso'
             return (
-              <div key={item.dia} className="organizacion-dia">
-                <span className="organizacion-dia-nombre">{item.dia}</span>
+              <div key={dia} className="organizacion-dia">
+                <span className="organizacion-dia-nombre">{dia}</span>
                 <span
                   className={
                     nombreRutina === 'Descanso'

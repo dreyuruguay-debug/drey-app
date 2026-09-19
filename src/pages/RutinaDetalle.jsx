@@ -1,28 +1,58 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
-import { RUTINAS } from '../data/rutinas.js'
+import { supabase } from '../services/supabaseClient.js'
 
 // Pantalla de una rutina en curso (Rutina A, B o C). Los ejercicios, sus
 // series/reps/peso objetivo y las opciones de descanso los carga el
-// profe desde su panel — todavía no construido. Los datos viven en
-// src/data/rutinas.js para que esta pantalla, Rutinas e Inicio usen
-// siempre la misma información.
-const OPCIONES_DESCANSO = [30, 60, 90, 120]
-const CANTIDAD_SERIES = 4
+// profe desde su panel, en las tablas "rutinas" y "rutina_ejercicios".
+//
+// La columna "Anterior" todavía muestra "—": vamos a poder completarla
+// cuando exista el historial de sesiones (un paso más adelante del
+// plan). Por ahora cada serie arranca en el peso/reps objetivo que dejó
+// el profe.
+const DESCANSOS_POR_DEFECTO = [30, 60, 90, 120]
+const CANTIDAD_SERIES_POR_DEFECTO = 4
 const PASO_KG = 2.5
 const PASO_REPS = 1
 
 export default function RutinaDetalle() {
   const { id } = useParams()
-  const rutina = RUTINAS[id]
+
+  const [cargando, setCargando] = useState(true)
+  const [rutina, setRutina] = useState(null)
+  const [ejercicios, setEjercicios] = useState([])
 
   const [descansoElegido, setDescansoElegido] = useState(60)
   const [tiempoRestante, setTiempoRestante] = useState(null)
-  const [series, setSeries] = useState(() => crearSeriesIniciales(rutina))
+  const [series, setSeries] = useState([])
   const [esfuerzo, setEsfuerzo] = useState(null)
   const [comentario, setComentario] = useState('')
   const [finalizada, setFinalizada] = useState(false)
+
+  useEffect(() => {
+    cargarRutina()
+  }, [id])
+
+  async function cargarRutina() {
+    setCargando(true)
+    const [{ data: rutinaData }, { data: ejerciciosData }] = await Promise.all([
+      supabase.from('rutinas').select('*').eq('id', id).single(),
+      supabase
+        .from('rutina_ejercicios')
+        .select('*, ejercicios(nombre, video_url)')
+        .eq('rutina_id', id)
+        .order('orden'),
+    ])
+    setRutina(rutinaData || null)
+    const lista = ejerciciosData || []
+    setEjercicios(lista)
+    setSeries(crearSeriesIniciales(lista))
+    if (lista[0]?.descansos?.[1]) {
+      setDescansoElegido(lista[0].descansos[1])
+    }
+    setCargando(false)
+  }
 
   // Cuenta regresiva del descanso.
   useEffect(() => {
@@ -32,6 +62,15 @@ export default function RutinaDetalle() {
     }, 1000)
     return () => clearInterval(intervalo)
   }, [tiempoRestante])
+
+  if (cargando) {
+    return (
+      <div className="screen">
+        <TopPattern />
+        <p className="profe-mensaje-carga">Cargando…</p>
+      </div>
+    )
+  }
 
   if (!rutina) {
     return (
@@ -100,125 +139,147 @@ export default function RutinaDetalle() {
 
         <div className="cliente-header-col cliente-header-center">
           <p className="rutina-detalle-titulo">{rutina.nombre}</p>
-          <p className="cliente-header-plan">Plan seguimiento</p>
         </div>
       </div>
 
-      {rutina.ejercicios.map((ejercicio, exIndex) => {
-        const filaActual = indiceFilaActual(exIndex)
-        return (
-          <div key={ejercicio.nombre} className="ejercicio-bloque">
-            <div className="ejercicio-header">
-              <span>{ejercicio.nombre}</span>
-              <button
-                type="button"
-                className="ejercicio-video-link"
-                onClick={() => window.alert('Acá va a ir el video o GIF del ejercicio.')}
-              >
-                Ver cómo se hace ▶
-              </button>
+      {ejercicios.length === 0 ? (
+        <p className="profe-vacio" style={{ textAlign: 'center', margin: '2rem 1.5rem' }}>
+          Tu profe todavía no le cargó ejercicios a esta rutina.
+        </p>
+      ) : (
+        ejercicios.map((ejercicio, exIndex) => {
+          const filaActual = indiceFilaActual(exIndex)
+          const opcionesDescanso = ejercicio.descansos?.length
+            ? ejercicio.descansos
+            : DESCANSOS_POR_DEFECTO
+          return (
+            <div key={ejercicio.id} className="ejercicio-bloque">
+              <div className="ejercicio-header">
+                <span>{ejercicio.ejercicios?.nombre}</span>
+                {ejercicio.ejercicios?.video_url ? (
+                  <a
+                    className="ejercicio-video-link"
+                    href={ejercicio.ejercicios.video_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ver cómo se hace ▶
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    className="ejercicio-video-link"
+                    onClick={() => window.alert('Tu profe todavía no cargó un video para este ejercicio.')}
+                  >
+                    Ver cómo se hace ▶
+                  </button>
+                )}
+              </div>
+
+              <p className="ejercicio-objetivo">
+                Objetivo: {ejercicio.series} × {ejercicio.reps_objetivo}
+                {ejercicio.kg_objetivo ? ` · ${ejercicio.kg_objetivo} kg` : ''}
+              </p>
+
+              <div className="descanso-opciones">
+                <span className="descanso-opciones-label">Descanso:</span>
+                {opcionesDescanso.map((segundos) => (
+                  <button
+                    key={segundos}
+                    type="button"
+                    className={
+                      segundos === descansoElegido
+                        ? 'descanso-chip descanso-chip-activo'
+                        : 'descanso-chip'
+                    }
+                    onClick={() => setDescansoElegido(segundos)}
+                  >
+                    {segundos}s
+                  </button>
+                ))}
+              </div>
+
+              <table className="ejercicio-tabla">
+                <thead>
+                  <tr>
+                    <th>Serie</th>
+                    <th>Anterior</th>
+                    <th>Kg</th>
+                    <th>Reps</th>
+                    <th>✓</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {series[exIndex].map((fila, serieIndex) => {
+                    const esActual = serieIndex === filaActual
+                    const claseFila = fila.hecha ? 'fila-hecha' : esActual ? 'fila-actual' : ''
+                    return (
+                      <tr key={serieIndex} className={claseFila}>
+                        <td>{serieIndex + 1}</td>
+                        <td className="ejercicio-tabla-anterior">—</td>
+                        <td>
+                          <div className="stepper">
+                            <button
+                              type="button"
+                              className="stepper-btn"
+                              onClick={() => ajustarValor(exIndex, serieIndex, 'kg', -PASO_KG)}
+                              aria-label="Restar kilos"
+                            >
+                              −
+                            </button>
+                            <span className="stepper-valor">{fila.kg}</span>
+                            <button
+                              type="button"
+                              className="stepper-btn"
+                              onClick={() => ajustarValor(exIndex, serieIndex, 'kg', PASO_KG)}
+                              aria-label="Sumar kilos"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="stepper">
+                            <button
+                              type="button"
+                              className="stepper-btn"
+                              onClick={() => ajustarValor(exIndex, serieIndex, 'reps', -PASO_REPS)}
+                              aria-label="Restar repeticiones"
+                            >
+                              −
+                            </button>
+                            <span className="stepper-valor">{fila.reps}</span>
+                            <button
+                              type="button"
+                              className="stepper-btn"
+                              onClick={() => ajustarValor(exIndex, serieIndex, 'reps', PASO_REPS)}
+                              aria-label="Sumar repeticiones"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className={
+                              fila.hecha ? 'serie-check serie-check-hecha' : 'serie-check'
+                            }
+                            onClick={() => marcarSerie(exIndex, serieIndex)}
+                            aria-label={`Marcar serie ${serieIndex + 1} como hecha`}
+                          >
+                            ✓
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
-
-            <p className="ejercicio-objetivo">Objetivo: {ejercicio.objetivoTexto}</p>
-
-            <div className="descanso-opciones">
-              <span className="descanso-opciones-label">Descanso:</span>
-              {OPCIONES_DESCANSO.map((segundos) => (
-                <button
-                  key={segundos}
-                  type="button"
-                  className={
-                    segundos === descansoElegido
-                      ? 'descanso-chip descanso-chip-activo'
-                      : 'descanso-chip'
-                  }
-                  onClick={() => setDescansoElegido(segundos)}
-                >
-                  {segundos}s
-                </button>
-              ))}
-            </div>
-
-            <table className="ejercicio-tabla">
-              <thead>
-                <tr>
-                  <th>Serie</th>
-                  <th>Anterior</th>
-                  <th>Kg</th>
-                  <th>Reps</th>
-                  <th>✓</th>
-                </tr>
-              </thead>
-              <tbody>
-                {series[exIndex].map((fila, serieIndex) => {
-                  const esActual = serieIndex === filaActual
-                  const claseFila = fila.hecha ? 'fila-hecha' : esActual ? 'fila-actual' : ''
-                  return (
-                    <tr key={serieIndex} className={claseFila}>
-                      <td>{serieIndex + 1}</td>
-                      <td className="ejercicio-tabla-anterior">{ejercicio.anterior}</td>
-                      <td>
-                        <div className="stepper">
-                          <button
-                            type="button"
-                            className="stepper-btn"
-                            onClick={() => ajustarValor(exIndex, serieIndex, 'kg', -PASO_KG)}
-                            aria-label="Restar kilos"
-                          >
-                            −
-                          </button>
-                          <span className="stepper-valor">{fila.kg}</span>
-                          <button
-                            type="button"
-                            className="stepper-btn"
-                            onClick={() => ajustarValor(exIndex, serieIndex, 'kg', PASO_KG)}
-                            aria-label="Sumar kilos"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="stepper">
-                          <button
-                            type="button"
-                            className="stepper-btn"
-                            onClick={() => ajustarValor(exIndex, serieIndex, 'reps', -PASO_REPS)}
-                            aria-label="Restar repeticiones"
-                          >
-                            −
-                          </button>
-                          <span className="stepper-valor">{fila.reps}</span>
-                          <button
-                            type="button"
-                            className="stepper-btn"
-                            onClick={() => ajustarValor(exIndex, serieIndex, 'reps', PASO_REPS)}
-                            aria-label="Sumar repeticiones"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className={
-                            fila.hecha ? 'serie-check serie-check-hecha' : 'serie-check'
-                          }
-                          onClick={() => marcarSerie(exIndex, serieIndex)}
-                          aria-label={`Marcar serie ${serieIndex + 1} como hecha`}
-                        >
-                          ✓
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )
-      })}
+          )
+        })
+      )}
 
       <div className="cierre-rutina">
         {finalizada ? (
@@ -286,12 +347,11 @@ export default function RutinaDetalle() {
   )
 }
 
-function crearSeriesIniciales(rutina) {
-  if (!rutina) return []
-  return rutina.ejercicios.map((ejercicio) =>
-    Array.from({ length: CANTIDAD_SERIES }, () => ({
-      kg: ejercicio.kgObjetivo,
-      reps: ejercicio.repsObjetivo,
+function crearSeriesIniciales(ejercicios) {
+  return ejercicios.map((ejercicio) =>
+    Array.from({ length: ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO }, () => ({
+      kg: ejercicio.kg_objetivo || 0,
+      reps: Number.parseInt(ejercicio.reps_objetivo, 10) || 0,
       hecha: false,
     }))
   )

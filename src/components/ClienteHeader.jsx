@@ -2,21 +2,12 @@ import TopPattern from './TopPattern.jsx'
 import ProfileIcon from './ProfileIcon.jsx'
 
 // Encabezado que comparten las pantallas del cliente (Inicio, Rutinas):
-// franja DREY arriba, semana/objetivo a la izquierda, foto/nombre/plan
-// al centro y la barra de progreso semanal a la derecha.
+// franja DREY arriba, objetivo a la izquierda, foto/nombre/plan al
+// centro y la cantidad de días de entrenamiento semanales a la derecha.
 //
-// diasPosibles debería ser la cantidad de días con rutina asignada en el
-// calendario semanal de ese cliente (lo arma el profe) — por ahora se
-// pasa como número fijo hasta conectar esa parte del panel del profe.
-export default function ClienteHeader({
-  semana,
-  objetivo,
-  nombre,
-  plan,
-  diasCumplidos,
-  diasPosibles,
-  onLogout,
-}) {
+// diasEntrenamiento es la cantidad de días con rutina asignada en el
+// calendario semanal de ese cliente, armado por el profe desde su panel.
+export default function ClienteHeader({ objetivo, nombre, plan, diasEntrenamiento, onLogout }) {
   return (
     <>
       <TopPattern />
@@ -27,8 +18,7 @@ export default function ClienteHeader({
 
       <div className="cliente-header">
         <div className="cliente-header-col">
-          <p className="cliente-header-week">Semana {semana}</p>
-          <p className="cliente-header-goal">Objetivo: {objetivo}</p>
+          <p className="cliente-header-goal">Objetivo: {objetivo || 'Sin definir'}</p>
         </div>
 
         <div className="cliente-header-col cliente-header-center">
@@ -39,12 +29,12 @@ export default function ClienteHeader({
 
         <div className="cliente-header-col cliente-header-right">
           <p className="cliente-header-progress-label">
-            {diasCumplidos} días de {diasPosibles} posibles
+            {diasEntrenamiento} días de entrenamiento por semana
           </p>
           <div className="progress-bar">
             <div
               className="progress-fill"
-              style={{ width: `${(diasCumplidos / diasPosibles) * 100}%` }}
+              style={{ width: `${(diasEntrenamiento / 7) * 100}%` }}
             />
           </div>
         </div>

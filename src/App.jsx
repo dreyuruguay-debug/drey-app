@@ -9,6 +9,10 @@ import Comunidad from './pages/Comunidad.jsx'
 import MisDatos from './pages/MisDatos.jsx'
 import Mas from './pages/Mas.jsx'
 import PanelProfe from './pages/PanelProfe.jsx'
+import ProfeCuentas from './pages/ProfeCuentas.jsx'
+import ProfeEjercicios from './pages/ProfeEjercicios.jsx'
+import ProfeClientes from './pages/ProfeClientes.jsx'
+import ProfeClienteDetalle from './pages/ProfeClienteDetalle.jsx'
 
 // Cada pantalla del plan tiene su propia carpeta/archivo en src/pages.
 // Inicio, Rutinas, el detalle de una rutina y Login ya tienen su
@@ -27,6 +31,10 @@ export default function App() {
         <Route path="/mis-datos" element={<MisDatos />} />
         <Route path="/mas" element={<Mas />} />
         <Route path="/profe" element={<PanelProfe />} />
+        <Route path="/profe/cuentas" element={<ProfeCuentas />} />
+        <Route path="/profe/ejercicios" element={<ProfeEjercicios />} />
+        <Route path="/profe/clientes" element={<ProfeClientes />} />
+        <Route path="/profe/clientes/:id" element={<ProfeClienteDetalle />} />
       </Routes>
     </BrowserRouter>
   )

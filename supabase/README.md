@@ -1,12 +1,17 @@
 # Base de datos (Supabase)
 
-Acá van a quedar, más adelante, las definiciones de las tablas:
+Tablas ya creadas (los scripts que las crean están en `supabase/sql/`, en el orden en que se fueron aplicando):
 
-- **usuarios** — clientes y profe, con su plan, estado (pendiente/activo/bloqueado) y vencimiento.
-- **ejercicios** — biblioteca por grupo muscular, con video/GIF.
-- **rutinas** — Rutina A, B, C... armadas por el profe, con sus ejercicios.
+- **perfiles** — clientes y profe, con su plan, estado (pendiente/activo), vencimiento y si es profe (`es_profe`). Se completa sola cuando alguien se registra, con un trigger (`handle_new_user`) sobre `auth.users`.
+- **ejercicios** — biblioteca por grupo muscular, con link a video. La carga el profe desde "Biblioteca de ejercicios".
+- **rutinas** — Rutina A, B, C... de cada cliente (`cliente_id`), armadas por el profe desde el detalle de cada cliente.
+- **rutina_ejercicios** — los ejercicios de cada rutina, con series, reps objetivo, kg objetivo y las opciones de descanso.
+- **calendario_cliente** — qué rutina le toca a cada cliente cada día de la semana.
+
+Pendientes (Fase 2 del plan):
+
 - **sesiones** — cada rutina que un cliente completó.
-- **series** — kg, reps y esfuerzo anotados en cada sesión.
+- **series** (historial) — kg, reps y esfuerzo anotados en cada sesión, para poder mostrar la columna "Anterior" con datos reales.
 - **codigos_descuento** — códigos de plan y de ropa creados por el profe.
 
-Todavía no hay tablas creadas; esto se hace cuando se cree el proyecto en Supabase (siguiente paso del plan).
+Todas las tablas usan Row Level Security: cada cliente solo ve lo suyo, y el profe (marcado con `es_profe = true` en `perfiles`) puede ver y administrar todo, a través de la función `public.es_profe()`.
