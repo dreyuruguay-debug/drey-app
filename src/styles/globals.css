@@ -960,3 +960,368 @@ body {
   border: 1px solid #444;
   color: var(--drey-gray-light);
 }
+
+.auth-input:disabled {
+  opacity: 0.6;
+}
+
+/* Pantalla de Registro: formulario largo, ya no centrado verticalmente */
+.registro-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem 1.5rem 3rem;
+  text-align: center;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: left;
+}
+
+.form-section-label {
+  margin: 0.5rem 0 -0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-gray-light);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+@media (min-width: 480px) {
+  .form-row {
+    flex-direction: row;
+  }
+
+  .form-row > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 70px;
+  border-radius: 16px;
+  border: none;
+  background: var(--drey-white);
+  color: #111;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.form-textarea::placeholder {
+  color: #888;
+}
+
+.registro-edad {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+/* Selector de plan (Registro) */
+.plan-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 0.9rem 1.1rem;
+  color: var(--drey-white);
+  cursor: pointer;
+}
+
+.plan-card-activo {
+  border-color: var(--drey-accent);
+  background: rgba(61, 220, 132, 0.08);
+}
+
+.plan-card-nombre {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.plan-card-descripcion {
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.plan-card-precio {
+  margin-top: 0.3rem;
+  font-weight: 700;
+}
+
+.plan-card-precio-siguiente {
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+.form-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+  text-align: left;
+  cursor: pointer;
+}
+
+.form-checkbox-row input {
+  margin-top: 0.2rem;
+  flex: 0 0 auto;
+}
+
+.registro-gracias-titulo {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.registro-gracias-texto {
+  margin: 0;
+  max-width: 320px;
+  color: var(--drey-gray-light);
+}
+
+.registro-gracias-boton {
+  max-width: 260px;
+}
+
+/* Pantalla de Suscripción */
+.suscripcion-contenido {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.suscripcion-titulo {
+  margin: 0 0 1rem;
+}
+
+.suscripcion-plan-card {
+  background: linear-gradient(#4d4d4d, #202020);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.suscripcion-plan-nombre {
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.suscripcion-plan-descripcion {
+  margin: 0.2rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.suscripcion-plan-precio {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--drey-accent);
+}
+
+.suscripcion-vencimiento {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.suscripcion-bloque {
+  margin-bottom: 1.25rem;
+}
+
+.suscripcion-bloque-titulo {
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.suscripcion-bloque-texto {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.suscripcion-pendiente {
+  font-style: italic;
+}
+
+.suscripcion-boton-desactivado {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.suscripcion-form-pago {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.suscripcion-adjuntar {
+  display: block;
+  text-align: center;
+  background: none;
+  border: 1px dashed #555;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+  cursor: pointer;
+}
+
+/* Pantalla de Comunidad y beneficios */
+.comunidad-contenido {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.comunidad-titulo {
+  margin: 0 0 1rem;
+}
+
+.comunidad-seccion-label {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-gray-light);
+}
+
+.comunidad-post {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.85rem;
+}
+
+.comunidad-post-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--drey-gray-light);
+  margin-bottom: 0.35rem;
+}
+
+.comunidad-post-autor {
+  font-weight: 700;
+  color: var(--drey-white);
+}
+
+.comunidad-post-texto {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.comunidad-comentario {
+  margin: 0.3rem 0 0;
+  padding: 0.4rem 0.6rem;
+  background: #262626;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.comunidad-comentar-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.comunidad-comentar-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  border: 1px solid #444;
+  background: #111;
+  color: var(--drey-white);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+}
+
+.comunidad-comentar-boton {
+  background: none;
+  border: none;
+  color: var(--drey-accent);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.comunidad-codigos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.comunidad-codigo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  background: #1a1a1a;
+  border: 1px dashed var(--drey-accent);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+}
+
+.comunidad-codigo-valor {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--drey-accent);
+}
+
+.comunidad-codigo-descripcion {
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+  text-align: right;
+}
+
+.comunidad-pendiente {
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+  font-style: italic;
+}
+
+/* Pantalla de Mis datos */
+.misdatos-contenido {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.misdatos-titulo {
+  margin: 0 0 1.25rem;
+}
