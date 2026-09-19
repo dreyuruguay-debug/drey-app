@@ -89,7 +89,10 @@ export default function Registro() {
       setMessage(
         error.message.includes('already registered')
           ? 'Ese email ya tiene una cuenta creada.'
-          : 'No pudimos crear la cuenta. Probá de nuevo.'
+          // TODO: una vez que identifiquemos la causa de los errores al
+          // registrarse, volver a un mensaje genérico en vez del detalle
+          // técnico (queda acá temporalmente para poder diagnosticarlo).
+          : `No pudimos crear la cuenta (detalle: ${error.message}).`
       )
       return
     }

@@ -21,7 +21,11 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) {
-      setMessage('Email o contraseña incorrectos.')
+      setMessage(
+        error.message.toLowerCase().includes('email not confirmed')
+          ? 'Todavía no confirmaste tu email. Revisá tu correo (carpeta de spam incluida) y tocá el link que te mandamos.'
+          : 'Email o contraseña incorrectos.'
+      )
       return
     }
     navigate('/inicio')
