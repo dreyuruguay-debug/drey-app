@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import DatosDePago from '../components/DatosDePago.jsx'
 import { obtenerPlan, formatearPrecio } from '../data/planes.js'
 
 // Suscripción: plan, precio, vencimiento, datos de pago y botón "Ya
@@ -10,9 +11,10 @@ import { obtenerPlan, formatearPrecio } from '../data/planes.js'
 //
 // El plan, el estado y el vencimiento son los reales del cliente:
 // vienen de la tabla "perfiles" de Supabase (la misma que llena
-// Registro y que usa el panel del profe para habilitar cuentas). El
-// link de Mercado Pago y los datos de transferencia todavía están
-// pendientes de la Fase 0 del plan. El comprobante que se adjunta acá
+// Registro y que usa el panel del profe para habilitar cuentas). Los
+// datos de transferencia y los links de Mercado Pago se cargan en
+// src/data/pagos.js y los muestra el componente DatosDePago.
+// El comprobante que se adjunta acá
 // se sube al almacenamiento de archivos de Supabase (bucket
 // "comprobantes"), en una carpeta con el id del cliente para que cada
 // uno solo pueda ver los suyos; el profe puede ver los de todos desde
@@ -114,26 +116,15 @@ export default function Suscripcion() {
           </p>
         </div>
 
-        <div className="suscripcion-bloque">
-          <p className="suscripcion-bloque-titulo">Datos para transferencia</p>
-          <p className="suscripcion-bloque-texto suscripcion-pendiente">
-            Pendiente: el profe todavía tiene que cargar los datos bancarios.
-          </p>
-        </div>
-
-        <div className="suscripcion-bloque">
-          <p className="suscripcion-bloque-titulo">Mercado Pago</p>
-          <button type="button" className="pill-button suscripcion-boton-desactivado" disabled>
-            Link disponible próximamente
-          </button>
-        </div>
+        <DatosDePago planId={perfil?.plan} />
 
         <div className="suscripcion-bloque">
           <p className="suscripcion-bloque-titulo">¿Ya pagaste?</p>
           {perfil?.aviso_pago ? (
             <p className="suscripcion-bloque-texto">
-              ¡Listo! Le avisamos al profe. En cuanto confirme tu pago vas a ver la fecha de
-              vencimiento actualizada acá.
+              {perfil?.estado === 'pendiente'
+                ? 'Avisaste tu pago. Esperando autorización del profesor.'
+                : '¡Listo! Le avisamos al profe. En cuanto confirme tu pago vas a ver la fecha de vencimiento actualizada acá.'}
             </p>
           ) : (
             <form className="suscripcion-form-pago" onSubmit={handleYaPague}>

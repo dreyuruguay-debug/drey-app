@@ -28,7 +28,10 @@ export default function PanelProfe() {
   async function cargarResumen() {
     setCargando(true)
     const [{ data: perfiles }, { count: ejerciciosCount }] = await Promise.all([
-      supabase.from('perfiles').select('id, estado, aviso_pago, creado_en'),
+      supabase
+        .from('perfiles')
+        .select('id, estado, aviso_pago, creado_en')
+        .eq('es_profe', false),
       supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
     ])
     const lista = perfiles || []

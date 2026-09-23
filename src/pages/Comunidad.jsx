@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
+import { WHATSAPP_GRUPO_URL } from '../data/comunidad.js'
 
 // Comunidad y beneficios: muro de novedades del profe, códigos de
-// descuento de la marca de ropa DREY y, más adelante (Fase 3), chat
-// entre miembros.
+// descuento de la marca de ropa DREY y el acceso al grupo de WhatsApp
+// de la comunidad (no hay chat dentro de la app).
 //
 // Las publicaciones y los códigos son de ejemplo por ahora: van a venir
 // de lo que cargue el profe desde su panel, todavía no construido. Los
-// comentarios que se escriban acá tampoco se guardan todavía.
+// comentarios que se escriban acá tampoco se guardan todavía. El link
+// del grupo de WhatsApp se carga en src/data/comunidad.js.
 const PUBLICACIONES_EJEMPLO = [
   {
     id: 1,
@@ -46,6 +48,21 @@ export default function Comunidad() {
       <TopPattern />
       <div className="comunidad-contenido">
         <h1 className="comunidad-titulo">Comunidad y beneficios</h1>
+
+        {WHATSAPP_GRUPO_URL ? (
+          <a
+            className="pill-button comunidad-whatsapp"
+            href={WHATSAPP_GRUPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Unirme al grupo de WhatsApp
+          </a>
+        ) : (
+          <button type="button" className="pill-button suscripcion-boton-desactivado" disabled>
+            Grupo de WhatsApp: link disponible próximamente
+          </button>
+        )}
 
         <p className="comunidad-seccion-label">Muro</p>
         {PUBLICACIONES_EJEMPLO.map((publicacion) => (
@@ -94,11 +111,6 @@ export default function Comunidad() {
             </div>
           ))}
         </div>
-
-        <p className="comunidad-seccion-label">Chat</p>
-        <p className="comunidad-pendiente">
-          El chat entre miembros llega más adelante, en la Fase 3 del plan.
-        </p>
       </div>
       <BottomNav />
     </div>

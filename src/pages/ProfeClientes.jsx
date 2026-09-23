@@ -30,6 +30,7 @@ export default function ProfeClientes() {
       .from('perfiles')
       .select('*')
       .eq('estado', 'activo')
+      .eq('es_profe', false)
       .order('nombre')
 
     const clientesData = listaClientes || []

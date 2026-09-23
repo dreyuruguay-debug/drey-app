@@ -4,9 +4,11 @@ import { supabase } from '../services/supabaseClient.js'
 import { obtenerPlan } from '../data/planes.js'
 
 // Cuentas y pagos: habilitar cuentas nuevas y confirmar los avisos de
-// pago, usando la tabla "perfiles" de Supabase.
+// pago, usando la tabla "perfiles" de Supabase. En cada cuenta nueva se
+// ve qué profe o gimnasio eligió la persona al registrarse.
 export default function ProfeCuentas() {
   const [clientes, setClientes] = useState([])
+  const [nombresProfeYGimnasio, setNombresProfeYGimnasio] = useState({})
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState('')
 
@@ -16,11 +18,23 @@ export default function ProfeCuentas() {
 
   async function cargarClientes() {
     setCargando(true)
-    const { data, error } = await supabase
-      .from('perfiles')
-      .select('*')
-      .order('creado_en', { ascending: false })
-    if (!error) setClientes(data || [])
+    const [{ data, error }, { data: gimnasios }] = await Promise.all([
+      supabase.from('perfiles').select('*').order('creado_en', { ascending: false }),
+      supabase.from('gimnasios').select('id, nombre'),
+    ])
+    if (!error) {
+      const lista = data || []
+      // Nombres de profes y gimnasios, para mostrar qué eligió cada cliente.
+      const nombres = {}
+      for (const persona of lista.filter((item) => item.es_profe)) {
+        nombres[persona.id] = `${persona.nombre} ${persona.apellido}`
+      }
+      for (const gimnasio of gimnasios || []) {
+        nombres[gimnasio.id] = gimnasio.nombre
+      }
+      setNombresProfeYGimnasio(nombres)
+      setClientes(lista.filter((item) => !item.es_profe))
+    }
     setCargando(false)
   }
 
@@ -67,7 +81,10 @@ export default function ProfeCuentas() {
   }
 
   const pendientes = clientes.filter((cliente) => cliente.estado === 'pendiente')
-  const avisaronPago = clientes.filter((cliente) => cliente.aviso_pago)
+  // Los pendientes que avisaron el pago ya aparecen arriba, en "Cuentas pendientes".
+  const avisaronPago = clientes.filter(
+    (cliente) => cliente.aviso_pago && cliente.estado !== 'pendiente'
+  )
   const resto = clientes.filter((cliente) => cliente.estado !== 'pendiente')
 
   return (
@@ -94,6 +111,14 @@ export default function ProfeCuentas() {
                     {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'} ·{' '}
                     {cliente.celular}
                   </p>
+                  {textoEleccion(cliente, nombresProfeYGimnasio) && (
+                    <p className="profe-cliente-detalle">
+                      Eligió: {textoEleccion(cliente, nombresProfeYGimnasio)}
+                    </p>
+                  )}
+                  {cliente.aviso_pago && (
+                    <p className="profe-cliente-detalle">Avisó que ya pagó</p>
+                  )}
                   {cliente.codigo_descuento && (
                     <p className="profe-cliente-detalle">Código: {cliente.codigo_descuento}</p>
                   )}
@@ -181,6 +206,14 @@ export default function ProfeCuentas() {
       )}
     </ProfeLayout>
   )
+}
+
+// Qué profe o gimnasio eligió el cliente al registrarse (texto para
+// mostrar), o '' si no eligió ninguno.
+function textoEleccion(cliente, nombres) {
+  if (cliente.profe_id) return nombres[cliente.profe_id] || 'Profe'
+  if (cliente.gimnasio_id) return nombres[cliente.gimnasio_id] || 'Gimnasio'
+  return ''
 }
 
 // Suma un mes a una fecha y devuelve "YYYY-MM-DD", el formato que usa

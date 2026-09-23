@@ -1165,6 +1165,75 @@ body {
   flex: 0 0 auto;
 }
 
+/* Pasos del registro (1 Tus datos · 2 Tu plan · 3 Tu profe · 4 Pago) */
+.registro-pasos {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registro-paso {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-gray);
+}
+
+.registro-paso-numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  border: 1px solid #444;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.registro-paso-actual {
+  color: var(--drey-white);
+}
+
+.registro-paso-actual .registro-paso-numero {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent);
+}
+
+.registro-paso-hecho .registro-paso-numero {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-black);
+}
+
+.registro-boton-secundario {
+  background: none;
+  border: none;
+  padding: 0.6rem;
+  color: var(--drey-gray-light);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.registro-boton-secundario:disabled {
+  opacity: 0.5;
+}
+
+.pago-etiqueta {
+  font-weight: 700;
+  color: var(--drey-white);
+  text-transform: capitalize;
+}
+
 .registro-gracias-titulo {
   margin: 0;
   font-size: 1.3rem;
@@ -1379,10 +1448,9 @@ body {
   text-align: right;
 }
 
-.comunidad-pendiente {
-  font-size: 0.85rem;
-  color: var(--drey-gray-light);
-  font-style: italic;
+.comunidad-whatsapp {
+  background: #25d366;
+  color: #0d0d0d;
 }
 
 /* Pantalla de Mis datos */

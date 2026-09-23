@@ -25,6 +25,7 @@ export default function ProfeCalendario() {
       .from('perfiles')
       .select('id, nombre, apellido')
       .eq('estado', 'activo')
+      .eq('es_profe', false)
       .order('nombre')
 
     const clientesData = listaClientes || []

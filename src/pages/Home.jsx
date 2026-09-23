@@ -121,7 +121,9 @@ export default function Home() {
 
       {cuentaPendiente && (
         <Link to="/suscripcion" className="home-aviso-pendiente">
-          Tu cuenta está pendiente de habilitación. Tocá acá para ver los datos de pago.
+          {perfil?.aviso_pago
+            ? 'Avisaste tu pago. Esperando autorización del profesor.'
+            : 'Tu cuenta está pendiente de habilitación. Tocá acá para ver los datos de pago.'}
         </Link>
       )}
 
