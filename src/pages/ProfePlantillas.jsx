@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 
@@ -9,13 +9,10 @@ import { supabase } from '../services/supabaseClient.js'
 // plantilla". Cada plantilla se edita en su propia pantalla, la misma
 // que se usa para las rutinas de los clientes (ProfeRutinaEditor).
 export default function ProfePlantillas() {
-  const navigate = useNavigate()
   const [cargando, setCargando] = useState(true)
   const [plantillas, setPlantillas] = useState([])
   const [cantidadPorPlantilla, setCantidadPorPlantilla] = useState({})
   const [mensaje, setMensaje] = useState('')
-  const [nombreNueva, setNombreNueva] = useState('')
-  const [creando, setCreando] = useState(false)
 
   useEffect(() => {
     cargarTodo()
@@ -36,28 +33,15 @@ export default function ProfePlantillas() {
     setCargando(false)
   }
 
-  async function handleCrear(event) {
-    event.preventDefault()
-    if (!nombreNueva.trim()) return
-    setCreando(true)
-    setMensaje('')
-    const { data, error } = await supabase
-      .from('plantillas')
-      .insert({ nombre: nombreNueva.trim() })
-      .select()
-      .single()
-    setCreando(false)
-    if (error) {
-      setMensaje('No pudimos crear la plantilla. Probá de nuevo.')
-      return
-    }
-    navigate(`/profe/plantillas/${data.id}`)
-  }
-
   async function handleBorrar(plantilla) {
     if (!window.confirm(`¿Borrar la plantilla "${plantilla.nombre}"? No se puede deshacer.`)) return
     const { error } = await supabase.from('plantillas').delete().eq('id', plantilla.id)
-    if (!error) cargarTodo()
+    if (error) {
+      setMensaje('No pudimos borrar la plantilla. Probá de nuevo.')
+      return
+    }
+    setMensaje('')
+    cargarTodo()
   }
 
   return (
@@ -81,8 +65,10 @@ export default function ProfePlantillas() {
               <Link to={`/profe/plantillas/${plantilla.id}`} className="profe-rutina-tarjeta-info">
                 <p className="profe-cliente-nombre">{plantilla.nombre}</p>
                 <p className="profe-cliente-detalle">
-                  {[plantilla.patron, plantilla.musculos].filter(Boolean).join(' · ') ||
-                    'Sin patrón'}
+                  {plantilla.grupos_musculares?.length
+                    ? plantilla.grupos_musculares.join(' · ')
+                    : [plantilla.patron, plantilla.musculos].filter(Boolean).join(' · ') ||
+                      'Sin grupos musculares'}
                 </p>
                 <p className="profe-cliente-detalle">
                   {cantidadPorPlantilla[plantilla.id] || 0} ejercicios
@@ -108,20 +94,9 @@ export default function ProfePlantillas() {
         </div>
       )}
 
-      <p className="profe-seccion-label">Agregar plantilla</p>
-      <form className="profe-form-rutina" onSubmit={handleCrear}>
-        <input
-          className="auth-input"
-          type="text"
-          placeholder="Nombre (ej: Empuje principiante)"
-          value={nombreNueva}
-          onChange={(event) => setNombreNueva(event.target.value)}
-          required
-        />
-        <button type="submit" className="pill-button" disabled={creando}>
-          {creando ? 'Creando…' : 'Crear y armar la plantilla →'}
-        </button>
-      </form>
+      <Link to="/profe/plantillas/nueva" className="profe-boton-agregar-ejercicio">
+        + Agregar plantilla
+      </Link>
     </ProfeLayout>
   )
 }

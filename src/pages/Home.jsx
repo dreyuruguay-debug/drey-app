@@ -55,7 +55,7 @@ export default function Home() {
       supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
       supabase
         .from('calendario_cliente')
-        .select('*, rutinas(id, nombre, patron)')
+        .select('*, rutinas(id, nombre, patron, musculos)')
         .eq('cliente_id', usuario.id),
       supabase
         .from('sesiones')
@@ -171,7 +171,9 @@ export default function Home() {
           <Link to={`/rutinas/${rutinaHoy.id}`} className="cta-button">
             Continuar rutina de hoy
             <span className="cta-button-sub">
-              {rutinaHoy.nombre} · {rutinaHoy.patron}
+              {[rutinaHoy.nombre, rutinaHoy.patron || rutinaHoy.musculos]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
           </Link>
         ) : (

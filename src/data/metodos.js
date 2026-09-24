@@ -7,22 +7,35 @@
 //   - instruccion(config): el texto que ve el cliente en el gimnasio.
 //   - relojPropio: true si en el futuro tendrá un reloj especial
 //     (EMOM, AMRAP...). Por ahora usa el temporizador de descanso común.
+//   - principal: true para los tipos de bloque que el asistente del profe
+//     muestra primero (Ejercicio único, Superserie, Triserie, Serie
+//     gigante, Circuito). El resto aparece en "Otros métodos".
+//   - resumen: cuántos ejercicios lleva, en pocas palabras (para las
+//     tarjetas del asistente).
+//
+// El nombre que se muestra arriba de cada bloque es lo que está antes de
+// " / " (por ejemplo "Superserie" en "Superserie / Biserie").
 
 export const METODOS = [
   {
     id: 'normal',
-    nombre: 'Serie normal',
+    nombre: 'Ejercicio único',
     ejercicios: 1,
-    explicacion: 'Serie convencional con repeticiones, carga y descanso establecidos.',
+    principal: true,
+    resumen: '1 ejercicio',
+    explicacion:
+      'Un solo ejercicio dentro del bloque, con sus series, repeticiones, carga y descanso (serie convencional). Ejemplo: Press banca.',
     campos: [],
     instruccion: () => '',
   },
   {
     id: 'biserie',
-    nombre: 'Biserie / Superset',
+    nombre: 'Superserie / Biserie',
     ejercicios: 2,
+    principal: true,
+    resumen: '2 ejercicios',
     explicacion:
-      'Dos ejercicios realizados consecutivamente, con poco o ningún descanso entre ellos. Después de completar ambos se realiza el descanso correspondiente.',
+      'Dos ejercicios realizados consecutivamente, con poco o ningún descanso entre ellos. Después de completar ambos se realiza el descanso correspondiente. Ejemplo: Press banca + Aperturas.',
     campos: [],
     instruccion: () => 'Hacé los 2 ejercicios seguidos y recién ahí descansá.',
   },
@@ -30,14 +43,19 @@ export const METODOS = [
     id: 'triserie',
     nombre: 'Triserie',
     ejercicios: 3,
-    explicacion: 'Tres ejercicios realizados consecutivamente antes del descanso.',
+    principal: true,
+    resumen: '3 ejercicios',
+    explicacion:
+      'Tres ejercicios realizados consecutivamente antes del descanso. Ejemplo: Press banca + Press inclinado + Aperturas.',
     campos: [],
     instruccion: () => 'Hacé los 3 ejercicios seguidos y recién ahí descansá.',
   },
   {
     id: 'giant_set',
-    nombre: 'Giant Set / Gran serie',
+    nombre: 'Serie gigante / Giant Set',
     ejercicios: { minimo: 4 },
+    principal: true,
+    resumen: '4 o más ejercicios',
     explicacion:
       'Cuatro o más ejercicios realizados consecutivamente, normalmente con descansos mínimos entre ejercicios y un descanso más largo al terminar la secuencia.',
     campos: [{ clave: 'pausa_entre', etiqueta: 'Pausa entre ejercicios (seg)', tipo: 'numero' }],
@@ -50,6 +68,8 @@ export const METODOS = [
     id: 'circuito',
     nombre: 'Circuito',
     ejercicios: { minimo: 2 },
+    principal: true,
+    resumen: '2 o más, por rondas',
     explicacion:
       'Secuencia de varios ejercicios realizados uno después de otro. Al completar todos los ejercicios se completa una ronda y puede repetirse durante varias rondas.',
     campos: [{ clave: 'rondas', etiqueta: 'Rondas', tipo: 'numero' }],
@@ -60,6 +80,7 @@ export const METODOS = [
   },
   {
     id: 'top_set',
+    resumen: '1 ejercicio',
     nombre: 'Top Set',
     ejercicios: 1,
     explicacion:
@@ -69,6 +90,7 @@ export const METODOS = [
   },
   {
     id: 'back_off',
+    resumen: '1 ejercicio',
     nombre: 'Back-off Sets',
     ejercicios: 1,
     explicacion:
@@ -81,6 +103,7 @@ export const METODOS = [
   },
   {
     id: 'drop_set',
+    resumen: '1 ejercicio',
     nombre: 'Drop Set',
     ejercicios: 1,
     explicacion:
@@ -99,6 +122,7 @@ export const METODOS = [
   },
   {
     id: 'rest_pause',
+    resumen: '1 ejercicio',
     nombre: 'Rest-Pause',
     ejercicios: 1,
     relojPropio: true,
@@ -115,6 +139,7 @@ export const METODOS = [
   },
   {
     id: 'myo_reps',
+    resumen: '1 ejercicio',
     nombre: 'Myo-Reps',
     ejercicios: 1,
     relojPropio: true,
@@ -131,6 +156,7 @@ export const METODOS = [
   },
   {
     id: 'amrap',
+    resumen: '1 ejercicio',
     nombre: 'AMRAP',
     ejercicios: 1,
     relojPropio: true,
@@ -144,6 +170,7 @@ export const METODOS = [
   },
   {
     id: 'emom',
+    resumen: '1 ejercicio',
     nombre: 'EMOM',
     ejercicios: 1,
     relojPropio: true,
@@ -166,12 +193,17 @@ export function esMetodoDeBloque(id) {
   return obtenerMetodo(id).ejercicios !== 1
 }
 
-// Cuántos ejercicios lleva el bloque de este método (para los de
-// cantidad variable usa lo que eligió el profe, o el mínimo).
-export function cantidadDeEjercicios(id, config = {}) {
+// Nombre corto de un método ("Superserie" en "Superserie / Biserie").
+export function nombreCortoDeMetodo(id) {
+  return obtenerMetodo(id).nombre.split(' / ')[0]
+}
+
+// Cuántos ejercicios se pueden elegir para un método:
+// { minimo, maximo } (maximo = null cuando no tiene tope).
+export function limitesDeEjercicios(id) {
   const { ejercicios } = obtenerMetodo(id)
-  if (typeof ejercicios === 'number') return ejercicios
-  return Math.max(ejercicios.minimo, Number(config.cantidad) || ejercicios.minimo)
+  if (typeof ejercicios === 'number') return { minimo: ejercicios, maximo: ejercicios }
+  return { minimo: ejercicios.minimo, maximo: null }
 }
 
 export function linkBusquedaGoogle(metodo) {

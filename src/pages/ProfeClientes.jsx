@@ -74,19 +74,20 @@ export default function ProfeClientes() {
     const texto = busqueda.trim().toLowerCase()
     if (!texto) return clientes
     return clientes.filter((cliente) =>
-      `${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(texto)
+      `${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(texto),
     )
   }, [clientes, busqueda])
 
   const inactivos = clientes.filter(
-    (cliente) => cliente.diasSinEntrenar !== null && cliente.diasSinEntrenar >= UMBRAL_DIAS_INACTIVO
+    (cliente) =>
+      cliente.diasSinEntrenar !== null && cliente.diasSinEntrenar >= UMBRAL_DIAS_INACTIVO,
   )
 
   return (
-    <ProfeLayout titulo="Clientes y rutinas">
+    <ProfeLayout titulo="Clientes">
       <p className="profe-nota">
-        Elegí un cliente para armarle las rutinas, el calendario semanal o actualizar su
-        progreso.
+        Elegí un cliente para ver su progreso, sus rutinas y su calendario semanal. Para armar
+        rutinas también podés usar la sección "Rutinas".
       </p>
 
       {!cargando && inactivos.length > 0 && (
@@ -120,7 +121,8 @@ export default function ProfeClientes() {
         </p>
       ) : (
         clientesFiltrados.map((cliente) => {
-          const esInactivo = cliente.diasSinEntrenar !== null && cliente.diasSinEntrenar >= UMBRAL_DIAS_INACTIVO
+          const esInactivo =
+            cliente.diasSinEntrenar !== null && cliente.diasSinEntrenar >= UMBRAL_DIAS_INACTIVO
           return (
             <Link
               key={cliente.id}

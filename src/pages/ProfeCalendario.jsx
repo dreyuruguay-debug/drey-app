@@ -40,8 +40,18 @@ export default function ProfeCalendario() {
     }
 
     const [{ data: rutinas }, { data: calendarioData }] = await Promise.all([
-      supabase.from('rutinas').select('id, cliente_id, nombre').in('cliente_id', ids).order('orden'),
-      supabase.from('calendario_cliente').select('cliente_id, dia, rutina_id').in('cliente_id', ids),
+      // Solo las rutinas ya guardadas: las que están en borrador el
+      // cliente todavía no las ve, así que no se pueden asignar.
+      supabase
+        .from('rutinas')
+        .select('id, cliente_id, nombre')
+        .in('cliente_id', ids)
+        .eq('publicada', true)
+        .order('orden'),
+      supabase
+        .from('calendario_cliente')
+        .select('cliente_id, dia, rutina_id')
+        .in('cliente_id', ids),
     ])
 
     const rutinasAgrupadas = {}
@@ -70,15 +80,15 @@ export default function ProfeCalendario() {
       .from('calendario_cliente')
       .upsert(
         { cliente_id: clienteId, dia, rutina_id: rutinaId || null },
-        { onConflict: 'cliente_id,dia' }
+        { onConflict: 'cliente_id,dia' },
       )
   }
 
   return (
     <ProfeLayout titulo="Vista semanal de todos los clientes">
       <p className="profe-nota">
-        Qué rutina le toca a cada cliente cada día. Tocá cualquier celda para cambiarla sin
-        tener que entrar a ese cliente.
+        Qué rutina le toca a cada cliente cada día. Tocá cualquier celda para cambiarla sin tener
+        que entrar a ese cliente.
       </p>
 
       {cargando ? (
@@ -103,7 +113,10 @@ export default function ProfeCalendario() {
                 return (
                   <tr key={cliente.id}>
                     <td>
-                      <Link to={`/profe/clientes/${cliente.id}`} className="profe-tabla-cliente-link">
+                      <Link
+                        to={`/profe/clientes/${cliente.id}`}
+                        className="profe-tabla-cliente-link"
+                      >
                         {cliente.nombre} {cliente.apellido}
                       </Link>
                     </td>
@@ -115,7 +128,9 @@ export default function ProfeCalendario() {
                           <select
                             className="profe-calendario-select"
                             value={calendarioCliente[dia] || ''}
-                            onChange={(event) => actualizarDia(cliente.id, dia, event.target.value || null)}
+                            onChange={(event) =>
+                              actualizarDia(cliente.id, dia, event.target.value || null)
+                            }
                           >
                             <option value="">Descanso</option>
                             {rutinasCliente.map((rutina) => (

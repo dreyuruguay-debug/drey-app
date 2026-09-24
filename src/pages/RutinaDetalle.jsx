@@ -4,8 +4,12 @@ import TopPattern from '../components/TopPattern.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
 import { agruparEnBloques, tituloDeBloque } from '../utils/bloques.js'
+import { descansosDeEjercicio, textoDescanso, textoRango } from '../utils/formatos.js'
 import { obtenerMetodo } from '../data/metodos.js'
+import { SECCIONES_ACTIVIDADES } from '../data/actividades.js'
 import InfoMetodo from '../components/InfoMetodo.jsx'
+import ObjetivoEjercicio from '../components/ObjetivoEjercicio.jsx'
+import SeccionActividades from '../components/SeccionActividades.jsx'
 
 // Pantalla de una rutina en curso (Rutina A, B o C). Los ejercicios, sus
 // series/reps/peso objetivo y las opciones de descanso los carga el
@@ -26,7 +30,10 @@ import InfoMetodo from '../components/InfoMetodo.jsx'
 // el profe (ver src/utils/bloques.js). En una biserie, triserie o
 // circuito, el descanso arranca recién al marcar el último ejercicio
 // del bloque; en los anteriores se le avisa que siga con el próximo.
-const DESCANSOS_POR_DEFECTO = [30, 60, 90, 120]
+//
+// Arriba se ve el calentamiento previo y abajo la pausa entre ejercicios
+// y la vuelta a la calma, si el profe los cargó. Es la misma estructura
+// que arma el profe en su editor (ProfeRutinaEditor).
 const CANTIDAD_SERIES_POR_DEFECTO = 4
 const PASO_KG = 2.5
 const PASO_REPS = 1
@@ -44,6 +51,7 @@ export default function RutinaDetalle() {
   const [mejoresPorEjercicio, setMejoresPorEjercicio] = useState({})
 
   const [descansoElegido, setDescansoElegido] = useState(60)
+  const [descansoTotal, setDescansoTotal] = useState(60)
   const [tiempoRestante, setTiempoRestante] = useState(null)
   const [series, setSeries] = useState([])
   const [esfuerzo, setEsfuerzo] = useState(null)
@@ -115,9 +123,7 @@ export default function RutinaDetalle() {
     const lista = ejerciciosData || []
     setEjercicios(lista)
     setSeries(crearSeriesIniciales(lista))
-    if (lista[0]?.descansos?.[1]) {
-      setDescansoElegido(lista[0].descansos[1])
-    }
+    if (lista.length) setDescansoElegido(descansoDelMedio(descansosDeEjercicio(lista[0])))
 
     // Busca la última vez que se hizo esta rutina, para mostrar el
     // kg/reps de cada serie en la columna "Anterior".
@@ -231,7 +237,16 @@ export default function RutinaDetalle() {
     }
 
     // Al marcar una serie arranca el temporizador de descanso elegido.
-    setTiempoRestante(descansoElegido)
+    const segundos = descansoPara(ejercicios[exIndex])
+    setDescansoTotal(segundos)
+    setTiempoRestante(segundos)
+  }
+
+  // El descanso que eligió el cliente, si es una de las opciones de este
+  // ejercicio; si no, el del medio del rango que puso el profe.
+  function descansoPara(ejercicio) {
+    const opciones = descansosDeEjercicio(ejercicio)
+    return opciones.includes(descansoElegido) ? descansoElegido : descansoDelMedio(opciones)
   }
 
   // Compara la serie recién marcada contra el mejor resultado histórico
@@ -288,6 +303,7 @@ export default function RutinaDetalle() {
 
   function agregarDescanso(segundos) {
     setTiempoRestante((valor) => (valor === null ? null : valor + segundos))
+    setDescansoTotal((valor) => valor + segundos)
   }
 
   function saltarDescanso() {
@@ -363,6 +379,12 @@ export default function RutinaDetalle() {
 
       {rutina.descripcion && <p className="rutina-descripcion">{rutina.descripcion}</p>}
 
+      {rutina.calentamiento?.length > 0 && (
+        <SeccionCliente seccion="calentamiento">
+          <SeccionActividades actividades={rutina.calentamiento} />
+        </SeccionCliente>
+      )}
+
       {ejercicios.length === 0 ? (
         <p className="profe-vacio" style={{ textAlign: 'center', margin: '2rem 1.5rem' }}>
           Tu profe todavía no le cargó ejercicios a esta rutina.
@@ -372,22 +394,21 @@ export default function RutinaDetalle() {
           const metodoBloque = obtenerMetodo(bloque.metodo)
           const instruccion = metodoBloque.instruccion(bloque.config || {})
           const esGrupo = bloque.items.length > 1
-          const cabecera =
-            bloque.metodo !== 'normal' ? (
-              <div className="bloque-cabecera">
-                <div className="bloque-cabecera-titulo">
-                  <span>{tituloDeBloque(bloque)}</span>
-                  <InfoMetodo metodoId={bloque.metodo} />
-                </div>
-                {instruccion && <p className="bloque-instruccion">{instruccion}</p>}
+          const cabecera = (
+            <div className="bloque-cabecera">
+              <div className="bloque-cabecera-titulo">
+                <span>{tituloDeBloque(bloque)}</span>
+                <InfoMetodo metodoId={bloque.metodo} />
               </div>
-            ) : null
+              {instruccion && <p className="bloque-instruccion">{instruccion}</p>}
+            </div>
+          )
           const tarjetas = bloque.items.map(({ item: ejercicio, indice: exIndex }, posicion) => {
             const esUltimoDelBloque = posicion === bloque.items.length - 1
             const filaActual = indiceFilaActual(exIndex)
-            const opcionesDescanso = ejercicio.descansos?.length
-              ? ejercicio.descansos
-              : DESCANSOS_POR_DEFECTO
+            const opcionesDescanso = descansosDeEjercicio(ejercicio)
+            const descansoActivo = descansoPara(ejercicio)
+            const rangoDescanso = textoDescanso(ejercicio)
             return (
               <div key={ejercicio.id} className="ejercicio-bloque">
                 {ejercicio.ejercicios?.imagen_url && (
@@ -421,23 +442,20 @@ export default function RutinaDetalle() {
                   )}
                 </div>
 
-                <p className="ejercicio-objetivo">
-                  Objetivo: {ejercicio.series} × {ejercicio.reps_objetivo}
-                  {ejercicio.kg_objetivo ? ` · ${ejercicio.kg_objetivo} kg` : ''}
-                  {ejercicio.rpe ? ` · RPE ${ejercicio.rpe}` : ''}
-                </p>
+                <ObjetivoEjercicio ejercicio={ejercicio} />
 
                 {esUltimoDelBloque && (
                   <div className="descanso-opciones">
                     <span className="descanso-opciones-label">
-                      {esGrupo ? 'Descanso al terminar el bloque:' : 'Descanso:'}
+                      {esGrupo ? 'Descanso al terminar el bloque' : 'Descanso'}
+                      {rangoDescanso ? ` (${rangoDescanso})` : ''}:
                     </span>
                     {opcionesDescanso.map((segundos) => (
                       <button
                         key={segundos}
                         type="button"
                         className={
-                          segundos === descansoElegido
+                          segundos === descansoActivo
                             ? 'descanso-chip descanso-chip-activo'
                             : 'descanso-chip'
                         }
@@ -548,6 +566,19 @@ export default function RutinaDetalle() {
         })
       )}
 
+      {ejercicios.length > 0 && textoRango(rutina.pausa_min, rutina.pausa_max) && (
+        <SeccionCliente seccion="pausa">
+          <p className="seccion-rutina-valor">{textoRango(rutina.pausa_min, rutina.pausa_max)}</p>
+          <p className="bloque-instruccion">Al pasar de un ejercicio o bloque al siguiente.</p>
+        </SeccionCliente>
+      )}
+
+      {rutina.vuelta_calma?.length > 0 && (
+        <SeccionCliente seccion="vuelta_calma">
+          <SeccionActividades actividades={rutina.vuelta_calma} />
+        </SeccionCliente>
+      )}
+
       <div className="cierre-rutina">
         {finalizada ? (
           <>
@@ -601,7 +632,7 @@ export default function RutinaDetalle() {
           <div className="progress-bar rest-timer-progress">
             <div
               className="progress-fill"
-              style={{ width: `${(tiempoRestante / descansoElegido) * 100}%` }}
+              style={{ width: `${Math.min(100, (tiempoRestante / descansoTotal) * 100)}%` }}
             />
           </div>
           <div className="rest-timer-acciones">
@@ -616,6 +647,26 @@ export default function RutinaDetalle() {
       )}
     </div>
   )
+}
+
+// Título de cada sección extra de la rutina (calentamiento, pausa entre
+// ejercicios, vuelta a la calma), con el mismo ícono que ve el profe.
+const TITULO_PAUSA = { icono: '⏱️', titulo: 'Pausa entre ejercicios' }
+
+function SeccionCliente({ seccion, children }) {
+  const { icono, titulo } = SECCIONES_ACTIVIDADES[seccion] || TITULO_PAUSA
+  return (
+    <section className="seccion-rutina seccion-rutina-cliente">
+      <p className="seccion-rutina-titulo">
+        {icono} {titulo}
+      </p>
+      {children}
+    </section>
+  )
+}
+
+function descansoDelMedio(opciones) {
+  return opciones[Math.floor((opciones.length - 1) / 2)] ?? 60
 }
 
 function crearSeriesIniciales(ejercicios) {

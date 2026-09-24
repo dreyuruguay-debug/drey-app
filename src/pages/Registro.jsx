@@ -4,6 +4,7 @@ import { supabase } from '../services/supabaseClient.js'
 import { obtenerOpcionesDeProfe } from '../services/profes.js'
 import EyeIcon from '../components/EyeIcon.jsx'
 import DatosDePago from '../components/DatosDePago.jsx'
+import PasosAsistente from '../components/PasosAsistente.jsx'
 import { PLANES, obtenerPlan, formatearPrecio } from '../data/planes.js'
 import { calcularEdad } from '../utils/fechas.js'
 
@@ -178,23 +179,7 @@ export default function Registro() {
     <main className="registro-screen">
       <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
 
-      <ol className="registro-pasos" aria-label="Pasos del registro">
-        {PASOS.map((titulo, indice) => (
-          <li
-            key={titulo}
-            className={
-              indice === paso
-                ? 'registro-paso registro-paso-actual'
-                : indice < paso
-                  ? 'registro-paso registro-paso-hecho'
-                  : 'registro-paso'
-            }
-          >
-            <span className="registro-paso-numero">{indice + 1}</span>
-            <span className="registro-paso-titulo">{titulo}</span>
-          </li>
-        ))}
-      </ol>
+      <PasosAsistente pasos={PASOS} actual={paso} etiqueta="Pasos del registro" />
 
       <form className="registro-form" onSubmit={irAlSiguiente}>
         {paso === 0 && (
