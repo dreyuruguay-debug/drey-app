@@ -1,8 +1,41 @@
 // Días de la semana, en el orden en que se arma el calendario (el
 // profe) y se muestra en la app (el cliente).
-export const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+export const DIAS_SEMANA = [
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+  'Domingo',
+]
 
 const NOMBRES_DIA_JS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+// Pasa una fecha a "YYYY-MM-DD" usando la hora del celular (la de
+// Uruguay), no la de Londres: con toISOString() un entrenamiento hecho
+// después de las 21:00 quedaba guardado con la fecha del día siguiente.
+export function fechaLocalISO(fecha) {
+  const anio = fecha.getFullYear()
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
+}
+
+// Suma (o resta, si es negativo) una cantidad de días a una fecha
+// "YYYY-MM-DD" y devuelve otra en el mismo formato.
+export function sumarDias(fechaISO, dias) {
+  const fecha = new Date(`${fechaISO}T00:00:00`)
+  fecha.setDate(fecha.getDate() + dias)
+  return fechaLocalISO(fecha)
+}
+
+// Cantidad de días entre dos fechas "YYYY-MM-DD" (hasta - desde).
+export function diasEntre(desdeISO, hastaISO) {
+  const desde = new Date(`${desdeISO}T12:00:00`)
+  const hasta = new Date(`${hastaISO}T12:00:00`)
+  return Math.round((hasta - desde) / (1000 * 60 * 60 * 24))
+}
 
 // Devuelve el nombre del día de hoy tal como se usa en el calendario.
 // Date.getDay() empieza en domingo = 0; acá lo pasamos a texto.
@@ -21,12 +54,12 @@ export function obtenerFechaDeDiaEstaSemana(dia) {
   const indiceHoy = indiceHoyJS === 0 ? 6 : indiceHoyJS - 1 // 0 = Lunes ... 6 = Domingo
   const fecha = new Date(hoy)
   fecha.setDate(hoy.getDate() + (indiceBuscado - indiceHoy))
-  return fecha.toISOString().slice(0, 10)
+  return fechaLocalISO(fecha)
 }
 
 // Fecha de hoy en formato "YYYY-MM-DD", para guardar y comparar sesiones.
 export function obtenerFechaHoyISO() {
-  return new Date().toISOString().slice(0, 10)
+  return fechaLocalISO(new Date())
 }
 
 // Devuelve el lunes (formato "YYYY-MM-DD") de la semana a la que
@@ -37,7 +70,7 @@ export function obtenerLunesDeSemana(fechaISO) {
   const diaJS = fecha.getDay() // 0 = domingo ... 6 = sábado
   const diferencia = diaJS === 0 ? -6 : 1 - diaJS
   fecha.setDate(fecha.getDate() + diferencia)
-  return fecha.toISOString().slice(0, 10)
+  return fechaLocalISO(fecha)
 }
 
 // Cuenta cuántas semanas seguidas el cliente entrenó al menos una vez,
@@ -54,7 +87,7 @@ export function calcularRachaSemanas(fechasDeSesiones) {
   }
 
   let racha = 0
-  while (semanasConSesion.has(cursor.toISOString().slice(0, 10))) {
+  while (semanasConSesion.has(fechaLocalISO(cursor))) {
     racha += 1
     cursor.setDate(cursor.getDate() - 7)
   }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerPlan } from '../data/planes.js'
+import { fechaLocalISO } from '../utils/dias.js'
 
 // Cuentas y pagos: habilitar cuentas nuevas y confirmar los avisos de
 // pago, usando la tabla "perfiles" de Supabase. En cada cuenta nueva se
@@ -83,7 +84,7 @@ export default function ProfeCuentas() {
   const pendientes = clientes.filter((cliente) => cliente.estado === 'pendiente')
   // Los pendientes que avisaron el pago ya aparecen arriba, en "Cuentas pendientes".
   const avisaronPago = clientes.filter(
-    (cliente) => cliente.aviso_pago && cliente.estado !== 'pendiente'
+    (cliente) => cliente.aviso_pago && cliente.estado !== 'pendiente',
   )
   const resto = clientes.filter((cliente) => cliente.estado !== 'pendiente')
 
@@ -116,9 +117,7 @@ export default function ProfeCuentas() {
                       Eligió: {textoEleccion(cliente, nombresProfeYGimnasio)}
                     </p>
                   )}
-                  {cliente.aviso_pago && (
-                    <p className="profe-cliente-detalle">Avisó que ya pagó</p>
-                  )}
+                  {cliente.aviso_pago && <p className="profe-cliente-detalle">Avisó que ya pagó</p>}
                   {cliente.codigo_descuento && (
                     <p className="profe-cliente-detalle">Código: {cliente.codigo_descuento}</p>
                   )}
@@ -221,5 +220,5 @@ function textoEleccion(cliente, nombres) {
 function sumarUnMes(fecha) {
   const resultado = new Date(fecha)
   resultado.setMonth(resultado.getMonth() + 1)
-  return resultado.toISOString().slice(0, 10)
+  return fechaLocalISO(resultado)
 }

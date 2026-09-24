@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { generarResumenesPendientes } from '../services/progreso.js'
 
 // A partir de esta cantidad de días sin entrenar, un cliente cuenta
 // como "inactivo" en el resumen (mismo criterio que en "Clientes y
@@ -19,6 +20,7 @@ export default function PanelProfe() {
     activos: 0,
     ejercicios: 0,
     inactivos: 0,
+    resumenes: 0,
   })
 
   useEffect(() => {
@@ -27,13 +29,18 @@ export default function PanelProfe() {
 
   async function cargarResumen() {
     setCargando(true)
-    const [{ data: perfiles }, { count: ejerciciosCount }] = await Promise.all([
-      supabase
-        .from('perfiles')
-        .select('id, estado, aviso_pago, creado_en')
-        .eq('es_profe', false),
-      supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
-    ])
+    // Arma solos los resúmenes de 4 semanas que ya correspondan, así el
+    // contador de "Resúmenes para revisar" siempre está al día.
+    await generarResumenesPendientes()
+    const [{ data: perfiles }, { count: ejerciciosCount }, { count: resumenesCount }] =
+      await Promise.all([
+        supabase.from('perfiles').select('id, estado, aviso_pago, creado_en').eq('es_profe', false),
+        supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('resumenes_progreso')
+          .select('*', { count: 'exact', head: true })
+          .eq('estado', 'borrador'),
+      ])
     const lista = perfiles || []
     const activos = lista.filter((perfil) => perfil.estado === 'activo')
 
@@ -42,7 +49,10 @@ export default function PanelProfe() {
       const { data: sesiones } = await supabase
         .from('sesiones')
         .select('cliente_id, fecha')
-        .in('cliente_id', activos.map((cliente) => cliente.id))
+        .in(
+          'cliente_id',
+          activos.map((cliente) => cliente.id),
+        )
         .order('fecha', { ascending: false })
       for (const sesion of sesiones || []) {
         if (!ultimaSesionPorCliente[sesion.cliente_id]) {
@@ -65,6 +75,7 @@ export default function PanelProfe() {
       activos: activos.length,
       ejercicios: ejerciciosCount || 0,
       inactivos,
+      resumenes: resumenesCount || 0,
     })
     setCargando(false)
   }
@@ -99,6 +110,17 @@ export default function PanelProfe() {
           >
             <span className="profe-resumen-numero">{resumen.inactivos}</span>
             <span className="profe-resumen-label">Sin entrenar hace días</span>
+          </Link>
+          <Link
+            to="/profe/progresion"
+            className={
+              resumen.resumenes > 0
+                ? 'profe-resumen-card profe-resumen-card-alerta'
+                : 'profe-resumen-card'
+            }
+          >
+            <span className="profe-resumen-numero">{resumen.resumenes}</span>
+            <span className="profe-resumen-label">Resúmenes para revisar</span>
           </Link>
           <Link to="/profe/ejercicios" className="profe-resumen-card">
             <span className="profe-resumen-numero">{resumen.ejercicios}</span>

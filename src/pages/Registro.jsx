@@ -74,7 +74,15 @@ export default function Registro() {
   // error a mostrar, o '' si se puede avanzar.
   function validarPaso(numeroPaso) {
     if (numeroPaso === 0) {
-      if (!nombre || !apellido || !email || !password || !fechaNacimiento || !celular || !objetivo) {
+      if (
+        !nombre ||
+        !apellido ||
+        !email ||
+        !password ||
+        !fechaNacimiento ||
+        !celular ||
+        !objetivo
+      ) {
         return 'Completá todos los campos obligatorios.'
       }
       if (!/^\S+@\S+\.\S+$/.test(email)) return 'Revisá el email: parece que tiene un error.'
@@ -135,7 +143,7 @@ export default function Registro() {
       setMessage(
         error.message.includes('already registered')
           ? 'Ese email ya tiene una cuenta creada.'
-          : 'No pudimos crear la cuenta. Probá de nuevo.'
+          : 'No pudimos crear la cuenta. Probá de nuevo.',
       )
       return
     }

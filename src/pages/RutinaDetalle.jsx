@@ -3,6 +3,9 @@ import { useParams, Link } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
+import { agruparEnBloques, tituloDeBloque } from '../utils/bloques.js'
+import { obtenerMetodo } from '../data/metodos.js'
+import InfoMetodo from '../components/InfoMetodo.jsx'
 
 // Pantalla de una rutina en curso (Rutina A, B o C). Los ejercicios, sus
 // series/reps/peso objetivo y las opciones de descanso los carga el
@@ -18,11 +21,17 @@ import { obtenerFechaHoyISO } from '../utils/dias.js'
 // serie y serie, y cada serie marcada se compara contra el mejor
 // resultado histórico de ese ejercicio (en cualquier rutina) para
 // avisar si es un récord personal nuevo.
+//
+// Los ejercicios vienen agrupados en bloques según el método que eligió
+// el profe (ver src/utils/bloques.js). En una biserie, triserie o
+// circuito, el descanso arranca recién al marcar el último ejercicio
+// del bloque; en los anteriores se le avisa que siga con el próximo.
 const DESCANSOS_POR_DEFECTO = [30, 60, 90, 120]
 const CANTIDAD_SERIES_POR_DEFECTO = 4
 const PASO_KG = 2.5
 const PASO_REPS = 1
 const DURACION_AVISO_RECORD_MS = 4000
+const DURACION_AVISO_BLOQUE_MS = 2500
 
 export default function RutinaDetalle() {
   const { id } = useParams()
@@ -43,6 +52,7 @@ export default function RutinaDetalle() {
   const [guardando, setGuardando] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
   const [avisoRecord, setAvisoRecord] = useState(null)
+  const [avisoBloque, setAvisoBloque] = useState(null)
 
   useEffect(() => {
     cargarRutina()
@@ -182,20 +192,46 @@ export default function RutinaDetalle() {
     )
   }
 
+  const bloques = agruparEnBloques(ejercicios)
+  // Para cada ejercicio (por su posición): su bloque y su lugar adentro.
+  const ubicacion = {}
+  for (const bloque of bloques) {
+    bloque.items.forEach(({ indice }, posicion) => {
+      ubicacion[indice] = { bloque, posicion }
+    })
+  }
+
   function marcarSerie(exIndex, serieIndex) {
-    let quedoHecha = false
+    // Se decide con el estado actual (no dentro de setSeries): React no
+    // garantiza cuándo corre esa función, y antes eso hacía que a veces
+    // el descanso no arrancara.
+    const quedoHecha = !series[exIndex][serieIndex].hecha
     setSeries((actual) => {
       const copia = actual.map((filas) => filas.map((fila) => ({ ...fila })))
-      copia[exIndex][serieIndex].hecha = !copia[exIndex][serieIndex].hecha
-      quedoHecha = copia[exIndex][serieIndex].hecha
+      copia[exIndex][serieIndex].hecha = quedoHecha
       return copia
     })
 
     if (!quedoHecha) return
 
+    revisarRecord(exIndex, serieIndex)
+
+    // En un bloque de varios ejercicios, solo se descansa al terminar el
+    // último; en los demás se avisa cuál sigue.
+    const { bloque, posicion } = ubicacion[exIndex]
+    if (posicion < bloque.items.length - 1) {
+      const siguiente = bloque.items[posicion + 1].item.ejercicios?.nombre || 'el próximo ejercicio'
+      const texto = `Sin descanso: seguí con ${siguiente}`
+      setAvisoBloque(texto)
+      setTimeout(
+        () => setAvisoBloque((actual) => (actual === texto ? null : actual)),
+        DURACION_AVISO_BLOQUE_MS,
+      )
+      return
+    }
+
     // Al marcar una serie arranca el temporizador de descanso elegido.
     setTiempoRestante(descansoElegido)
-    revisarRecord(exIndex, serieIndex)
   }
 
   // Compara la serie recién marcada contra el mejor resultado histórico
@@ -228,7 +264,10 @@ export default function RutinaDetalle() {
 
     if (mensaje) {
       setAvisoRecord(mensaje)
-      setTimeout(() => setAvisoRecord((actual) => (actual === mensaje ? null : actual)), DURACION_AVISO_RECORD_MS)
+      setTimeout(
+        () => setAvisoRecord((actual) => (actual === mensaje ? null : actual)),
+        DURACION_AVISO_RECORD_MS,
+      )
     }
 
     setMejoresPorEjercicio((actual) => ({
@@ -263,7 +302,8 @@ export default function RutinaDetalle() {
     const detalle = ejercicios.map((ejercicio, exIndex) => ({
       ejercicio_id: ejercicio.ejercicio_id,
       nombre: ejercicio.ejercicios?.nombre || '',
-      series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps })),
+      metodo: ejercicio.metodo || 'normal',
+      series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })),
     }))
 
     const { error } = await supabase.from('sesiones').insert({
@@ -300,6 +340,11 @@ export default function RutinaDetalle() {
           {avisoRecord}
         </div>
       )}
+      {avisoBloque && !avisoRecord && (
+        <div className="record-banner bloque-banner" role="status">
+          {avisoBloque}
+        </div>
+      )}
 
       <div className="rutina-detalle-header">
         <div className="cliente-header-col">
@@ -307,7 +352,7 @@ export default function RutinaDetalle() {
             ← Rutinas
           </Link>
           <p className="cliente-header-goal">
-            {rutina.patron} · {rutina.musculos}
+            {[rutina.patron, rutina.musculos].filter(Boolean).join(' · ')}
           </p>
         </div>
 
@@ -316,150 +361,188 @@ export default function RutinaDetalle() {
         </div>
       </div>
 
+      {rutina.descripcion && <p className="rutina-descripcion">{rutina.descripcion}</p>}
+
       {ejercicios.length === 0 ? (
         <p className="profe-vacio" style={{ textAlign: 'center', margin: '2rem 1.5rem' }}>
           Tu profe todavía no le cargó ejercicios a esta rutina.
         </p>
       ) : (
-        ejercicios.map((ejercicio, exIndex) => {
-          const filaActual = indiceFilaActual(exIndex)
-          const opcionesDescanso = ejercicio.descansos?.length
-            ? ejercicio.descansos
-            : DESCANSOS_POR_DEFECTO
-          return (
-            <div key={ejercicio.id} className="ejercicio-bloque">
-              {ejercicio.ejercicios?.imagen_url && (
-                <img
-                  src={ejercicio.ejercicios.imagen_url}
-                  alt={ejercicio.ejercicios.nombre}
-                  className="ejercicio-foto"
-                />
-              )}
-              <div className="ejercicio-header">
-                <span>{ejercicio.ejercicios?.nombre}</span>
-                {ejercicio.ejercicios?.video_url ? (
-                  <a
-                    className="ejercicio-video-link"
-                    href={ejercicio.ejercicios.video_url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Ver cómo se hace ▶
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    className="ejercicio-video-link"
-                    onClick={() => window.alert('Tu profe todavía no cargó un video para este ejercicio.')}
-                  >
-                    Ver cómo se hace ▶
-                  </button>
+        bloques.map((bloque) => {
+          const metodoBloque = obtenerMetodo(bloque.metodo)
+          const instruccion = metodoBloque.instruccion(bloque.config || {})
+          const esGrupo = bloque.items.length > 1
+          const cabecera =
+            bloque.metodo !== 'normal' ? (
+              <div className="bloque-cabecera">
+                <div className="bloque-cabecera-titulo">
+                  <span>{tituloDeBloque(bloque)}</span>
+                  <InfoMetodo metodoId={bloque.metodo} />
+                </div>
+                {instruccion && <p className="bloque-instruccion">{instruccion}</p>}
+              </div>
+            ) : null
+          const tarjetas = bloque.items.map(({ item: ejercicio, indice: exIndex }, posicion) => {
+            const esUltimoDelBloque = posicion === bloque.items.length - 1
+            const filaActual = indiceFilaActual(exIndex)
+            const opcionesDescanso = ejercicio.descansos?.length
+              ? ejercicio.descansos
+              : DESCANSOS_POR_DEFECTO
+            return (
+              <div key={ejercicio.id} className="ejercicio-bloque">
+                {ejercicio.ejercicios?.imagen_url && (
+                  <img
+                    src={ejercicio.ejercicios.imagen_url}
+                    alt={ejercicio.ejercicios.nombre}
+                    className="ejercicio-foto"
+                  />
                 )}
+                <div className="ejercicio-header">
+                  <span>{ejercicio.ejercicios?.nombre}</span>
+                  {ejercicio.ejercicios?.video_url ? (
+                    <a
+                      className="ejercicio-video-link"
+                      href={ejercicio.ejercicios.video_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ver cómo se hace ▶
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ejercicio-video-link"
+                      onClick={() =>
+                        window.alert('Tu profe todavía no cargó un video para este ejercicio.')
+                      }
+                    >
+                      Ver cómo se hace ▶
+                    </button>
+                  )}
+                </div>
+
+                <p className="ejercicio-objetivo">
+                  Objetivo: {ejercicio.series} × {ejercicio.reps_objetivo}
+                  {ejercicio.kg_objetivo ? ` · ${ejercicio.kg_objetivo} kg` : ''}
+                  {ejercicio.rpe ? ` · RPE ${ejercicio.rpe}` : ''}
+                </p>
+
+                {esUltimoDelBloque && (
+                  <div className="descanso-opciones">
+                    <span className="descanso-opciones-label">
+                      {esGrupo ? 'Descanso al terminar el bloque:' : 'Descanso:'}
+                    </span>
+                    {opcionesDescanso.map((segundos) => (
+                      <button
+                        key={segundos}
+                        type="button"
+                        className={
+                          segundos === descansoElegido
+                            ? 'descanso-chip descanso-chip-activo'
+                            : 'descanso-chip'
+                        }
+                        onClick={() => setDescansoElegido(segundos)}
+                      >
+                        {segundos}s
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <table className="ejercicio-tabla">
+                  <thead>
+                    <tr>
+                      <th>Serie</th>
+                      <th>Anterior</th>
+                      <th>Kg</th>
+                      <th>Reps</th>
+                      <th>✓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {series[exIndex].map((fila, serieIndex) => {
+                      const esActual = serieIndex === filaActual
+                      const claseFila = fila.hecha ? 'fila-hecha' : esActual ? 'fila-actual' : ''
+                      const anterior = anteriorPorEjercicio[ejercicio.ejercicio_id]?.[serieIndex]
+                      return (
+                        <tr key={serieIndex} className={claseFila}>
+                          <td>{serieIndex + 1}</td>
+                          <td className="ejercicio-tabla-anterior">
+                            {anterior ? `${anterior.kg}kg × ${anterior.reps}` : '—'}
+                          </td>
+                          <td>
+                            <div className="stepper">
+                              <button
+                                type="button"
+                                className="stepper-btn"
+                                onClick={() => ajustarValor(exIndex, serieIndex, 'kg', -PASO_KG)}
+                                aria-label="Restar kilos"
+                              >
+                                −
+                              </button>
+                              <span className="stepper-valor">{fila.kg}</span>
+                              <button
+                                type="button"
+                                className="stepper-btn"
+                                onClick={() => ajustarValor(exIndex, serieIndex, 'kg', PASO_KG)}
+                                aria-label="Sumar kilos"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="stepper">
+                              <button
+                                type="button"
+                                className="stepper-btn"
+                                onClick={() =>
+                                  ajustarValor(exIndex, serieIndex, 'reps', -PASO_REPS)
+                                }
+                                aria-label="Restar repeticiones"
+                              >
+                                −
+                              </button>
+                              <span className="stepper-valor">{fila.reps}</span>
+                              <button
+                                type="button"
+                                className="stepper-btn"
+                                onClick={() => ajustarValor(exIndex, serieIndex, 'reps', PASO_REPS)}
+                                aria-label="Sumar repeticiones"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className={
+                                fila.hecha ? 'serie-check serie-check-hecha' : 'serie-check'
+                              }
+                              onClick={() => marcarSerie(exIndex, serieIndex)}
+                              aria-label={`Marcar serie ${serieIndex + 1} como hecha`}
+                            >
+                              ✓
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
-
-              <p className="ejercicio-objetivo">
-                Objetivo: {ejercicio.series} × {ejercicio.reps_objetivo}
-                {ejercicio.kg_objetivo ? ` · ${ejercicio.kg_objetivo} kg` : ''}
-              </p>
-
-              <div className="descanso-opciones">
-                <span className="descanso-opciones-label">Descanso:</span>
-                {opcionesDescanso.map((segundos) => (
-                  <button
-                    key={segundos}
-                    type="button"
-                    className={
-                      segundos === descansoElegido
-                        ? 'descanso-chip descanso-chip-activo'
-                        : 'descanso-chip'
-                    }
-                    onClick={() => setDescansoElegido(segundos)}
-                  >
-                    {segundos}s
-                  </button>
-                ))}
-              </div>
-
-              <table className="ejercicio-tabla">
-                <thead>
-                  <tr>
-                    <th>Serie</th>
-                    <th>Anterior</th>
-                    <th>Kg</th>
-                    <th>Reps</th>
-                    <th>✓</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {series[exIndex].map((fila, serieIndex) => {
-                    const esActual = serieIndex === filaActual
-                    const claseFila = fila.hecha ? 'fila-hecha' : esActual ? 'fila-actual' : ''
-                    const anterior = anteriorPorEjercicio[ejercicio.ejercicio_id]?.[serieIndex]
-                    return (
-                      <tr key={serieIndex} className={claseFila}>
-                        <td>{serieIndex + 1}</td>
-                        <td className="ejercicio-tabla-anterior">
-                          {anterior ? `${anterior.kg}kg × ${anterior.reps}` : '—'}
-                        </td>
-                        <td>
-                          <div className="stepper">
-                            <button
-                              type="button"
-                              className="stepper-btn"
-                              onClick={() => ajustarValor(exIndex, serieIndex, 'kg', -PASO_KG)}
-                              aria-label="Restar kilos"
-                            >
-                              −
-                            </button>
-                            <span className="stepper-valor">{fila.kg}</span>
-                            <button
-                              type="button"
-                              className="stepper-btn"
-                              onClick={() => ajustarValor(exIndex, serieIndex, 'kg', PASO_KG)}
-                              aria-label="Sumar kilos"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="stepper">
-                            <button
-                              type="button"
-                              className="stepper-btn"
-                              onClick={() => ajustarValor(exIndex, serieIndex, 'reps', -PASO_REPS)}
-                              aria-label="Restar repeticiones"
-                            >
-                              −
-                            </button>
-                            <span className="stepper-valor">{fila.reps}</span>
-                            <button
-                              type="button"
-                              className="stepper-btn"
-                              onClick={() => ajustarValor(exIndex, serieIndex, 'reps', PASO_REPS)}
-                              aria-label="Sumar repeticiones"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className={
-                              fila.hecha ? 'serie-check serie-check-hecha' : 'serie-check'
-                            }
-                            onClick={() => marcarSerie(exIndex, serieIndex)}
-                            aria-label={`Marcar serie ${serieIndex + 1} como hecha`}
-                          >
-                            ✓
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+            )
+          })
+          return esGrupo ? (
+            <div key={bloque.items[0].item.id} className="bloque-grupo">
+              {cabecera}
+              {tarjetas}
+            </div>
+          ) : (
+            <div key={bloque.items[0].item.id}>
+              {cabecera}
+              {tarjetas}
             </div>
           )
         })
@@ -482,9 +565,7 @@ export default function RutinaDetalle() {
                   key={valor}
                   type="button"
                   className={
-                    esfuerzo === valor
-                      ? 'esfuerzo-chip esfuerzo-chip-activo'
-                      : 'esfuerzo-chip'
+                    esfuerzo === valor ? 'esfuerzo-chip esfuerzo-chip-activo' : 'esfuerzo-chip'
                   }
                   onClick={() => setEsfuerzo(valor)}
                 >
@@ -543,7 +624,7 @@ function crearSeriesIniciales(ejercicios) {
       kg: ejercicio.kg_objetivo || 0,
       reps: Number.parseInt(ejercicio.reps_objetivo, 10) || 0,
       hecha: false,
-    }))
+    })),
   )
 }
 

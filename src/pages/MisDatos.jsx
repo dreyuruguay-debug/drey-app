@@ -4,6 +4,7 @@ import { supabase } from '../services/supabaseClient.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { calcularEdad } from '../utils/fechas.js'
+import NotificacionAvance from '../components/NotificacionAvance.jsx'
 
 // Mis datos: nombre, fecha de nacimiento (con la edad calculada), peso,
 // celular, email, objetivo y "Lesiones y/o limitaciones". Editable por
@@ -12,6 +13,9 @@ import { calcularEdad } from '../utils/fechas.js'
 // Estos datos viven en la tabla "perfiles" de Supabase (la misma que
 // llena Registro y que usa el panel del profe), así que guardar acá
 // ya es real y permanente.
+//
+// Abajo está "Notificación de avance": los resúmenes de progreso que el
+// profe publicó (ver components/NotificacionAvance.jsx).
 export default function MisDatos() {
   const navigate = useNavigate()
   const [perfilId, setPerfilId] = useState(null)
@@ -164,6 +168,8 @@ export default function MisDatos() {
             {guardando ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </form>
+
+        <NotificacionAvance clienteId={perfilId} />
       </div>
       <BottomNav />
     </div>

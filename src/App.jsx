@@ -15,6 +15,9 @@ import ProfeClientes from './pages/ProfeClientes.jsx'
 import ProfeClienteDetalle from './pages/ProfeClienteDetalle.jsx'
 import ProfeCalendario from './pages/ProfeCalendario.jsx'
 import ProfePlantillas from './pages/ProfePlantillas.jsx'
+import ProfeRutinaEditor from './pages/ProfeRutinaEditor.jsx'
+import ProfeProgresion from './pages/ProfeProgresion.jsx'
+import ProfeClienteProgreso from './pages/ProfeClienteProgreso.jsx'
 
 // Cada pantalla del plan tiene su propia carpeta/archivo en src/pages.
 // Inicio, Rutinas, el detalle de una rutina y Login ya tienen su
@@ -37,8 +40,15 @@ export default function App() {
         <Route path="/profe/ejercicios" element={<ProfeEjercicios />} />
         <Route path="/profe/clientes" element={<ProfeClientes />} />
         <Route path="/profe/clientes/:id" element={<ProfeClienteDetalle />} />
+        <Route
+          path="/profe/clientes/:clienteId/rutinas/:id"
+          element={<ProfeRutinaEditor tipo="rutina" />}
+        />
+        <Route path="/profe/clientes/:id/progreso" element={<ProfeClienteProgreso />} />
+        <Route path="/profe/progresion" element={<ProfeProgresion />} />
         <Route path="/profe/calendario" element={<ProfeCalendario />} />
         <Route path="/profe/plantillas" element={<ProfePlantillas />} />
+        <Route path="/profe/plantillas/:id" element={<ProfeRutinaEditor tipo="plantilla" />} />
       </Routes>
     </BrowserRouter>
   )

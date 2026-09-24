@@ -29,6 +29,7 @@ export default function Home() {
   const [calendario, setCalendario] = useState({})
   const [fechasConSesion, setFechasConSesion] = useState(new Set())
   const [racha, setRacha] = useState(0)
+  const [avanceNuevo, setAvanceNuevo] = useState(false)
 
   useEffect(() => {
     cargarDatos()
@@ -45,22 +46,35 @@ export default function Home() {
 
     const fechasSemana = DIAS_SEMANA.map((dia) => obtenerFechaDeDiaEstaSemana(dia))
 
-    const [{ data: perfilData }, { data: calendarioData }, { data: sesionesData }, { data: todasLasFechas }] =
-      await Promise.all([
-        supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
-        supabase
-          .from('calendario_cliente')
-          .select('*, rutinas(id, nombre, patron)')
-          .eq('cliente_id', usuario.id),
-        supabase
-          .from('sesiones')
-          .select('fecha')
-          .eq('cliente_id', usuario.id)
-          .in('fecha', fechasSemana),
-        // Todas las fechas entrenadas (no solo esta semana), para
-        // calcular cuántas semanas seguidas viene entrenando.
-        supabase.from('sesiones').select('fecha').eq('cliente_id', usuario.id),
-      ])
+    const [
+      { data: perfilData },
+      { data: calendarioData },
+      { data: sesionesData },
+      { data: todasLasFechas },
+    ] = await Promise.all([
+      supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
+      supabase
+        .from('calendario_cliente')
+        .select('*, rutinas(id, nombre, patron)')
+        .eq('cliente_id', usuario.id),
+      supabase
+        .from('sesiones')
+        .select('fecha')
+        .eq('cliente_id', usuario.id)
+        .in('fecha', fechasSemana),
+      // Todas las fechas entrenadas (no solo esta semana), para
+      // calcular cuántas semanas seguidas viene entrenando.
+      supabase.from('sesiones').select('fecha').eq('cliente_id', usuario.id),
+    ])
+
+    // ¿Hay un resumen de avance publicado que todavía no vio?
+    const { count: resumenesSinVer } = await supabase
+      .from('resumenes_progreso')
+      .select('*', { count: 'exact', head: true })
+      .eq('cliente_id', usuario.id)
+      .eq('estado', 'publicado')
+      .eq('visto', false)
+    setAvanceNuevo((resumenesSinVer || 0) > 0)
 
     setPerfil(perfilData || null)
 
@@ -124,6 +138,12 @@ export default function Home() {
           {perfil?.aviso_pago
             ? 'Avisaste tu pago. Esperando autorización del profesor.'
             : 'Tu cuenta está pendiente de habilitación. Tocá acá para ver los datos de pago.'}
+        </Link>
+      )}
+
+      {avanceNuevo && (
+        <Link to="/mis-datos#avance" className="home-aviso-pendiente home-aviso-avance">
+          📈 Tu profe publicó tu resumen de avance. Tocá acá para verlo.
         </Link>
       )}
 

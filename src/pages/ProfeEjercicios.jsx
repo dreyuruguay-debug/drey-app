@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { GRUPOS_MUSCULARES } from '../data/gruposMusculares.js'
+import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 
-// Biblioteca de ejercicios, agrupada por músculo, con buscador dentro
-// de cada grupo. Estos son los ejercicios que después se usan para
+// Biblioteca de ejercicios, organizada en 7 categorías (Empuje,
+// Tracción, Multiarticulares, Piernas, Zona media, Cardiorrespiratorio y
+// Brazos), con buscador dentro de cada una. Un ejercicio puede estar en
+// varias categorías: se eligen al editarlo. Estos son los ejercicios que después se usan para
 // armar la rutina de cada cliente (ver "Clientes y rutinas" → un
 // cliente → "+ Agregar ejercicio" dentro de una rutina).
 //
@@ -15,7 +17,7 @@ export default function ProfeEjercicios() {
   const [ejercicios, setEjercicios] = useState([])
   const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
-  const [grupoActivo, setGrupoActivo] = useState(GRUPOS_MUSCULARES[0])
+  const [categoriaActiva, setCategoriaActiva] = useState(CATEGORIAS[0].nombre)
 
   const [nombreNuevo, setNombreNuevo] = useState('')
   const [videoNuevo, setVideoNuevo] = useState('')
@@ -27,6 +29,7 @@ export default function ProfeEjercicios() {
   const [nombreEdit, setNombreEdit] = useState('')
   const [videoEdit, setVideoEdit] = useState('')
   const [imagenEdit, setImagenEdit] = useState(null)
+  const [categoriasEdit, setCategoriasEdit] = useState([])
   const [guardandoEdicion, setGuardandoEdicion] = useState(false)
 
   useEffect(() => {
@@ -61,11 +64,11 @@ export default function ProfeEjercicios() {
     // agregarle una foto a uno que ya existe). Si ya hay uno con ese
     // nombre, avisa y no lo crea: hay que usar "Editar" en el de la lista.
     const yaExiste = ejercicios.some(
-      (ejercicio) => ejercicio.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase()
+      (ejercicio) => ejercicio.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase(),
     )
     if (yaExiste) {
       setMensaje(
-        `Ya existe un ejercicio llamado "${nombreLimpio}". Para agregarle foto o video, buscalo arriba y tocá "Editar" en vez de crear uno nuevo.`
+        `Ya existe un ejercicio llamado "${nombreLimpio}". Para agregarle foto o video, buscalo arriba y tocá "Editar" en vez de crear uno nuevo.`,
       )
       return
     }
@@ -80,7 +83,8 @@ export default function ProfeEjercicios() {
 
     const { error } = await supabase.from('ejercicios').insert({
       nombre: nombreNuevo.trim(),
-      grupo_muscular: grupoActivo,
+      grupo_muscular: categoriaActiva,
+      categorias: [categoriaActiva],
       video_url: videoNuevo.trim() || null,
       imagen_url: imagenUrl,
     })
@@ -105,7 +109,14 @@ export default function ProfeEjercicios() {
     setNombreEdit(ejercicio.nombre)
     setVideoEdit(ejercicio.video_url || '')
     setImagenEdit(null)
+    setCategoriasEdit(categoriasDeEjercicio(ejercicio))
     setMensaje('')
+  }
+
+  function alternarCategoriaEdit(nombre) {
+    setCategoriasEdit((actual) =>
+      actual.includes(nombre) ? actual.filter((item) => item !== nombre) : [...actual, nombre],
+    )
   }
 
   function cancelarEdicion() {
@@ -114,6 +125,10 @@ export default function ProfeEjercicios() {
 
   async function guardarEdicion(ejercicio) {
     if (!nombreEdit.trim()) return
+    if (categoriasEdit.length === 0) {
+      setMensaje('Elegí al menos una categoría para el ejercicio.')
+      return
+    }
     setGuardandoEdicion(true)
     setMensaje('')
 
@@ -129,6 +144,7 @@ export default function ProfeEjercicios() {
         nombre: nombreEdit.trim(),
         video_url: videoEdit.trim() || null,
         imagen_url: imagenUrl,
+        categorias: categoriasEdit,
       })
       .eq('id', ejercicio.id)
 
@@ -142,30 +158,31 @@ export default function ProfeEjercicios() {
   }
 
   const ejerciciosDelGrupo = ejercicios
-    .filter((ejercicio) => ejercicio.grupo_muscular === grupoActivo)
+    .filter((ejercicio) => categoriasDeEjercicio(ejercicio).includes(categoriaActiva))
     .filter((ejercicio) => ejercicio.nombre.toLowerCase().includes(busqueda.toLowerCase()))
 
   return (
     <ProfeLayout titulo="Biblioteca de ejercicios">
       <p className="profe-nota">
-        Elegí un grupo muscular, buscá, agregá o editá ejercicios (nombre, foto y link de video).
-        Para asignarle uno a un cliente, entrá a "Clientes y rutinas" → el cliente → su rutina →
-        "+ Agregar ejercicio".
+        Elegí una categoría, buscá, agregá o editá ejercicios (nombre, categorías, foto y link de
+        video). Para asignarle uno a un cliente, entrá a "Clientes y rutinas" → el cliente → su
+        rutina → "+ Agregar ejercicio".
       </p>
 
       <div className="profe-grupos-grid">
-        {GRUPOS_MUSCULARES.map((grupo) => (
+        {CATEGORIAS.map(({ nombre, musculos }) => (
           <button
-            key={grupo}
+            key={nombre}
             type="button"
             className={
-              grupo === grupoActivo
+              nombre === categoriaActiva
                 ? 'profe-grupo-card profe-grupo-card-activo'
                 : 'profe-grupo-card'
             }
-            onClick={() => setGrupoActivo(grupo)}
+            onClick={() => setCategoriaActiva(nombre)}
           >
-            {grupo}
+            {nombre}
+            <span className="profe-grupo-card-musculos">{musculos}</span>
           </button>
         ))}
       </div>
@@ -173,7 +190,7 @@ export default function ProfeEjercicios() {
       <input
         className="auth-input profe-buscador"
         type="text"
-        placeholder={`Buscar en ${grupoActivo}…`}
+        placeholder={`Buscar en ${categoriaActiva}…`}
         value={busqueda}
         onChange={(event) => setBusqueda(event.target.value)}
       />
@@ -183,7 +200,7 @@ export default function ProfeEjercicios() {
       {cargando ? (
         <p className="profe-vacio">Cargando…</p>
       ) : ejerciciosDelGrupo.length === 0 ? (
-        <p className="profe-vacio">Todavía no hay ejercicios de {grupoActivo}.</p>
+        <p className="profe-vacio">Todavía no hay ejercicios de {categoriaActiva}.</p>
       ) : (
         <div className="profe-ejercicios-lista">
           {ejerciciosDelGrupo.map((ejercicio) =>
@@ -204,6 +221,23 @@ export default function ProfeEjercicios() {
                   value={videoEdit}
                   onChange={(event) => setVideoEdit(event.target.value)}
                 />
+                <p className="editor-ejercicio-categorias">Categorías (podés elegir varias):</p>
+                <div className="categorias-chips">
+                  {CATEGORIAS.map(({ nombre }) => (
+                    <button
+                      key={nombre}
+                      type="button"
+                      className={
+                        categoriasEdit.includes(nombre)
+                          ? 'descanso-chip descanso-chip-activo'
+                          : 'descanso-chip'
+                      }
+                      onClick={() => alternarCategoriaEdit(nombre)}
+                    >
+                      {nombre}
+                    </button>
+                  ))}
+                </div>
                 <div className="profe-imagen-actual">
                   {ejercicio.imagen_url && (
                     <img
@@ -231,11 +265,7 @@ export default function ProfeEjercicios() {
                   >
                     {guardandoEdicion ? 'Guardando…' : 'Guardar'}
                   </button>
-                  <button
-                    type="button"
-                    className="profe-cerrar-selector"
-                    onClick={cancelarEdicion}
-                  >
+                  <button type="button" className="profe-cerrar-selector" onClick={cancelarEdicion}>
                     Cancelar
                   </button>
                 </div>
@@ -269,12 +299,12 @@ export default function ProfeEjercicios() {
                   </button>
                 </div>
               </div>
-            )
+            ),
           )}
         </div>
       )}
 
-      <p className="profe-seccion-label">Agregar ejercicio a {grupoActivo}</p>
+      <p className="profe-seccion-label">Agregar ejercicio a {categoriaActiva}</p>
       <form className="profe-form-ejercicio" onSubmit={handleAgregar}>
         <input
           className="auth-input"

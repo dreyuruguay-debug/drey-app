@@ -1837,20 +1837,7 @@ body {
 }
 
 /* Detalle de cliente: rutinas, ejercicios y calendario */
-.profe-rutina-bloque {
-  background: #141414;
-  border-radius: 16px;
-  padding: 1.1rem;
-  margin-bottom: 1.25rem;
-}
 
-.profe-rutina-encabezado {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
 
 .profe-input-tabla {
   width: 3.5rem;
@@ -2011,4 +1998,518 @@ body {
   cursor: pointer;
   padding: 0;
   text-decoration: underline;
+}
+
+/* Botón ⓘ y ventana con la explicación de un método de entrenamiento */
+.info-metodo-boton {
+  background: none;
+  border: 1px solid #555;
+  border-radius: 50%;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  color: var(--drey-gray-light);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.info-metodo-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1rem;
+}
+
+.info-metodo-caja {
+  width: 100%;
+  max-width: 420px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-metodo-titulo {
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.info-metodo-texto {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--drey-gray-light);
+  line-height: 1.45;
+}
+
+.info-metodo-google {
+  color: var(--drey-accent);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+/* Lista de rutinas / plantillas en el panel del profe ("Ver rutinas") */
+.rutinas-lista-profe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.profe-rutina-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+}
+
+.profe-rutina-tarjeta-info {
+  color: inherit;
+  text-decoration: none;
+  flex: 1 1 200px;
+}
+
+.profe-grupo-card-musculos {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--drey-gray);
+}
+
+.categorias-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Editor de rutina del profe: datos de arriba y bloques de ejercicios */
+.editor-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.editor-datos-nombre {
+  font-weight: 700;
+}
+
+.editor-bloque {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 0.9rem;
+  margin-bottom: 0.85rem;
+}
+
+.editor-bloque-grupo {
+  border-color: var(--drey-accent);
+}
+
+.editor-bloque-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.editor-bloque-titulo {
+  font-weight: 700;
+  color: var(--drey-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+}
+
+.editor-metodo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 220px;
+}
+
+.editor-metodo-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: #0d0d0d;
+  border-radius: 12px;
+}
+
+.editor-ejercicio {
+  padding: 0.6rem 0;
+  border-top: 1px solid #222;
+}
+
+.editor-ejercicio-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.editor-ejercicio-nombre {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.editor-ejercicio-categorias {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  color: var(--drey-gray);
+}
+
+.editor-ejercicio-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.editor-mover {
+  background: #262626;
+  border: none;
+  border-radius: 8px;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--drey-white);
+  cursor: pointer;
+}
+
+.editor-mover:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.editor-campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+}
+
+.editor-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--drey-gray-light);
+}
+
+.editor-campo-ancho {
+  flex: 1 1 160px;
+}
+
+.editor-campo-ancho .profe-input-descansos {
+  width: 100%;
+}
+
+/* Rutina del cliente: bloques de varios ejercicios (biserie, circuito...) */
+.rutina-descripcion {
+  max-width: 900px;
+  margin: 0 auto 1.25rem;
+  padding: 0 1.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.bloque-grupo {
+  max-width: 930px;
+  margin: 0 auto 1.5rem;
+  padding: 0.9rem 0 0.1rem;
+  border-left: 3px solid var(--drey-accent);
+  background: rgba(61, 220, 132, 0.04);
+  border-radius: 0 16px 16px 0;
+}
+
+.bloque-cabecera {
+  max-width: 900px;
+  margin: 0 auto 0.75rem;
+  padding: 0 1.5rem;
+}
+
+.bloque-cabecera-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--drey-accent);
+}
+
+.bloque-instruccion {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+.bloque-banner {
+  background: var(--drey-white);
+}
+
+/* Tabla de series en celulares: más compacta para que entre en pantalla
+   sin deslizar hacia los costados (los botones + y − siguen cómodos). */
+@media (max-width: 480px) {
+  .ejercicio-bloque,
+  .bloque-cabecera,
+  .rutina-descripcion {
+    padding: 0 0.75rem;
+  }
+
+  .ejercicio-tabla th,
+  .ejercicio-tabla td {
+    padding: 0.45rem 0.2rem;
+  }
+
+  .ejercicio-tabla th {
+    font-size: 0.65rem;
+  }
+
+  .ejercicio-tabla-anterior {
+    font-size: 0.7rem;
+  }
+
+  .stepper {
+    gap: 0.15rem;
+  }
+
+  .stepper-valor {
+    min-width: 1.9rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .stepper-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .stepper-valor {
+    min-width: 1.7rem;
+  }
+}
+
+/* Gráficos de progresión (GraficoProgreso) */
+.grafico {
+  margin: 0 0 1rem;
+  background: #141414;
+  border-radius: 16px;
+  padding: 0.75rem 0.5rem 0.25rem;
+}
+
+.grafico-titulo {
+  padding: 0 0.5rem 0.4rem;
+  font-size: 0.75rem;
+  color: var(--drey-gray-light);
+}
+
+.grafico-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grafico-guia {
+  stroke: #2a2a2a;
+  stroke-width: 1;
+}
+
+.grafico-eje {
+  fill: var(--drey-gray);
+  font-size: 9px;
+}
+
+.grafico-linea {
+  fill: none;
+  stroke: var(--drey-accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.grafico-punto {
+  fill: var(--drey-black);
+  stroke: var(--drey-accent);
+  stroke-width: 2;
+}
+
+.grafico-barra {
+  fill: var(--drey-accent);
+  opacity: 0.85;
+}
+
+/* Progresión en el panel del profe */
+.progreso-selector {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.progreso-acceso {
+  margin-bottom: 1rem;
+}
+
+.resumen-caja {
+  background: #141414;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.resumen-estado {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #f5c542;
+}
+
+.resumen-estado-publicado {
+  color: var(--drey-accent);
+}
+
+.resumen-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+/* Resumen de 4 semanas (profe y cliente) */
+.resumen-progreso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resumen-periodo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.resumen-cifras {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.resumen-cifra {
+  display: flex;
+  flex-direction: column;
+  background: #1f1f1f;
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+}
+
+.resumen-cifra-valor {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--drey-accent);
+}
+
+.resumen-cifra-etiqueta {
+  font-size: 0.7rem;
+  color: var(--drey-gray-light);
+}
+
+.resumen-tabla td,
+.resumen-tabla th {
+  font-size: 0.8rem;
+}
+
+.resumen-sube {
+  color: var(--drey-accent);
+  font-weight: 700;
+}
+
+.resumen-baja {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
+.resumen-comentario {
+  margin: 0;
+  padding: 0.75rem;
+  background: rgba(61, 220, 132, 0.08);
+  border-left: 3px solid var(--drey-accent);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.85rem;
+}
+
+.resumen-comentario span {
+  font-weight: 700;
+}
+
+/* "Notificación de avance" en Mis datos */
+.avance-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 2rem;
+}
+
+.avance-item {
+  background: #141414;
+  border-radius: 16px;
+  padding: 0.25rem 0.9rem 0.9rem;
+}
+
+.avance-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 0;
+  background: none;
+  border: none;
+  color: var(--drey-white);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.avance-nuevo {
+  background: var(--drey-accent);
+  color: var(--drey-black);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+
+.avance-flecha {
+  margin-left: auto;
+  color: var(--drey-gray);
+  font-size: 0.7rem;
+}
+
+.home-aviso-avance {
+  margin-top: 0.6rem;
 }

@@ -28,7 +28,12 @@ export default function DatosDePago({ planId }) {
       <div className="suscripcion-bloque">
         <p className="suscripcion-bloque-titulo">Mercado Pago</p>
         {linkMercadoPago ? (
-          <a className="pill-button" href={linkMercadoPago} target="_blank" rel="noopener noreferrer">
+          <a
+            className="pill-button"
+            href={linkMercadoPago}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Pagar con Mercado Pago
           </a>
         ) : (
