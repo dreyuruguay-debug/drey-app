@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { calcularEdad } from '../utils/fechas.js'
-import NotificacionAvance from '../components/NotificacionAvance.jsx'
+import { mostrarAviso } from '../services/avisos.js'
 
 // Mis datos: nombre, fecha de nacimiento (con la edad calculada), peso,
 // celular, email, objetivo y "Lesiones y/o limitaciones". Editable por
@@ -14,8 +14,8 @@ import NotificacionAvance from '../components/NotificacionAvance.jsx'
 // llena Registro y que usa el panel del profe), así que guardar acá
 // ya es real y permanente.
 //
-// Abajo está "Notificación de avance": los resúmenes de progreso que el
-// profe publicó (ver components/NotificacionAvance.jsx).
+// Se entra desde Perfil. Los resúmenes de avance del profe están en
+// "Progreso".
 export default function MisDatos() {
   const navigate = useNavigate()
   const [perfilId, setPerfilId] = useState(null)
@@ -79,7 +79,12 @@ export default function MisDatos() {
       })
       .eq('id', perfilId)
     setGuardando(false)
-    setMensaje(error ? 'No pudimos guardar los cambios. Probá de nuevo.' : 'Datos actualizados.')
+    if (error) {
+      setMensaje('No pudimos guardar los cambios. Probá de nuevo.')
+      return
+    }
+    setMensaje('')
+    mostrarAviso('Datos guardados')
   }
 
   if (cargando) {
@@ -96,6 +101,9 @@ export default function MisDatos() {
     <div className="screen has-bottom-nav">
       <TopPattern />
       <div className="misdatos-contenido">
+        <Link to="/perfil" className="volver-enlace">
+          ← Perfil
+        </Link>
         <h1 className="misdatos-titulo">Mis datos</h1>
 
         <form className="registro-form" onSubmit={handleGuardar}>
@@ -164,12 +172,10 @@ export default function MisDatos() {
 
           {mensaje && <p className="auth-message">{mensaje}</p>}
 
-          <button type="submit" className="auth-submit" disabled={guardando}>
+          <button type="submit" className="boton-principal" disabled={guardando}>
             {guardando ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </form>
-
-        <NotificacionAvance clienteId={perfilId} />
       </div>
       <BottomNav />
     </div>

@@ -97,7 +97,7 @@ export default function ProfeRutinaNueva({ tipo }) {
     })
   }
 
-  const volverA = esRutina ? `/profe/rutinas?cliente=${clienteId}` : '/profe/plantillas'
+  const volverA = esRutina ? `/profe/clientes/${clienteId}?tab=rutinas` : '/profe/plantillas'
   const titulo = esRutina ? 'Nueva rutina' : 'Nueva plantilla'
 
   return (

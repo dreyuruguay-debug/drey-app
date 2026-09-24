@@ -1,39 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
-import ListaRutinasCliente from '../components/ListaRutinasCliente.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { cargarRutinasDeCliente } from '../services/rutinas.js'
 import { obtenerPlan } from '../data/planes.js'
 
-// Sección "Rutinas" del panel del profe:
-//   1. Seleccionar cliente.
-//   2. Ver sus rutinas y tocar "+ Agregar rutina" (abre el asistente).
+// "+ Nueva rutina" (desde Inicio o Clientes): primero se elige para qué
+// cliente es y enseguida arranca el asistente paso a paso. Las rutinas
+// de cada cliente se ven y se editan en su ficha (Clientes → cliente).
 //
-// El cliente elegido queda en la dirección (/profe/rutinas?cliente=…),
-// así al volver de una rutina se vuelve directo a su listado.
+// Direcciones viejas (/profe/rutinas?cliente=…) llevan a la ficha.
 export default function ProfeRutinas() {
-  const [parametros, setParametros] = useSearchParams()
-  const clienteId = parametros.get('cliente')
-
+  const [parametros] = useSearchParams()
+  const clienteViejo = parametros.get('cliente')
   const [clientes, setClientes] = useState([])
-  const [cargandoClientes, setCargandoClientes] = useState(true)
+  const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
 
-  const [rutinas, setRutinas] = useState([])
-  const [cantidades, setCantidades] = useState({})
-  const [cargandoRutinas, setCargandoRutinas] = useState(false)
-
   useEffect(() => {
-    cargarClientes()
-  }, [])
-
-  useEffect(() => {
-    if (clienteId) cargarRutinas()
-  }, [clienteId])
+    if (!clienteViejo) cargarClientes()
+  }, [clienteViejo])
 
   async function cargarClientes() {
-    setCargandoClientes(true)
+    setCargando(true)
     const { data } = await supabase
       .from('perfiles')
       .select('id, nombre, apellido, plan')
@@ -41,23 +29,10 @@ export default function ProfeRutinas() {
       .eq('es_profe', false)
       .order('nombre')
     setClientes(data || [])
-    setCargandoClientes(false)
+    setCargando(false)
   }
 
-  async function cargarRutinas() {
-    setCargandoRutinas(true)
-    const resultado = await cargarRutinasDeCliente(clienteId)
-    setRutinas(resultado.rutinas)
-    setCantidades(resultado.cantidades)
-    setCargandoRutinas(false)
-  }
-
-  function elegirCliente(id) {
-    setBusqueda('')
-    setParametros(id ? { cliente: id } : {})
-  }
-
-  const clientesFiltrados = useMemo(() => {
+  const filtrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
     if (!texto) return clientes
     return clientes.filter((cliente) =>
@@ -65,84 +40,51 @@ export default function ProfeRutinas() {
     )
   }, [clientes, busqueda])
 
-  const cliente = clientes.find((item) => item.id === clienteId)
+  if (clienteViejo) return <Navigate to={`/profe/clientes/${clienteViejo}?tab=rutinas`} replace />
 
   return (
-    <ProfeLayout titulo="Rutinas">
-      {cargandoClientes ? (
+    <ProfeLayout titulo="Nueva rutina" volverA="/profe/clientes">
+      <p className="asistente-pregunta">¿Para quién es la rutina?</p>
+      <p className="profe-nota">Elegí el cliente y enseguida la empezás a armar.</p>
+
+      {cargando ? (
         <p className="profe-vacio">Cargando…</p>
-      ) : !clienteId || !cliente ? (
-        <>
-          <p className="profe-seccion-label">Seleccionar cliente</p>
-          <p className="profe-nota">
-            Elegí a qué cliente le querés ver, armar o asignar una rutina.
-          </p>
-          {clientes.length === 0 ? (
-            <p className="profe-vacio">
-              Todavía no tenés clientes activos. Habilitalos desde "Cuentas y pagos".
-            </p>
-          ) : (
-            <>
-              <input
-                className="auth-input profe-buscador"
-                type="search"
-                placeholder="Buscar cliente por nombre…"
-                value={busqueda}
-                onChange={(event) => setBusqueda(event.target.value)}
-              />
-              {clientesFiltrados.length === 0 ? (
-                <p className="profe-vacio">No hay ningún cliente que coincida con la búsqueda.</p>
-              ) : (
-                clientesFiltrados.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="profe-cliente-card profe-cliente-card-link profe-cliente-boton"
-                    onClick={() => elegirCliente(item.id)}
-                  >
-                    <span>
-                      <span className="profe-cliente-nombre">
-                        {item.nombre} {item.apellido}
-                      </span>
-                      <span className="profe-cliente-detalle">
-                        {obtenerPlan(item.plan)?.nombre || item.plan || 'Sin plan'}
-                      </span>
-                    </span>
-                    <span className="profe-cliente-flecha">→</span>
-                  </button>
-                ))
-              )}
-            </>
-          )}
-        </>
+      ) : clientes.length === 0 ? (
+        <p className="profe-vacio">Todavía no tenés clientes activos. Habilitalos desde "Pagos".</p>
       ) : (
         <>
-          <div className="profe-cliente-card cliente-elegido">
-            <div>
-              <p className="profe-cliente-detalle">Cliente</p>
-              <p className="profe-cliente-nombre">
-                {cliente.nombre} {cliente.apellido}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="profe-ejercicio-agregar"
-              onClick={() => elegirCliente(null)}
-            >
-              Cambiar cliente
-            </button>
-          </div>
-
-          <p className="profe-seccion-label">Rutinas</p>
-          {cargandoRutinas ? (
-            <p className="profe-vacio">Cargando…</p>
+          <input
+            className="auth-input profe-buscador"
+            type="search"
+            placeholder="Buscar cliente por nombre…"
+            value={busqueda}
+            onChange={(event) => setBusqueda(event.target.value)}
+          />
+          {filtrados.length === 0 ? (
+            <p className="profe-vacio">No hay ningún cliente que coincida con la búsqueda.</p>
           ) : (
-            <ListaRutinasCliente
-              clienteId={clienteId}
-              rutinas={rutinas}
-              cantidades={cantidades}
-              onCambio={cargarRutinas}
-            />
+            <div className="lista-tarjetas">
+              {filtrados.map((cliente) => (
+                <Link
+                  key={cliente.id}
+                  to={`/profe/rutinas/nueva/${cliente.id}`}
+                  className="tarjeta-rutina"
+                >
+                  <span className="avatar-chico" aria-hidden="true">
+                    {`${cliente.nombre?.[0] || ''}${cliente.apellido?.[0] || ''}`.toUpperCase()}
+                  </span>
+                  <span className="tarjeta-rutina-textos">
+                    <strong>
+                      {cliente.nombre} {cliente.apellido}
+                    </strong>
+                    <small>{obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}</small>
+                  </span>
+                  <span className="tarjeta-flecha" aria-hidden="true">
+                    ›
+                  </span>
+                </Link>
+              ))}
+            </div>
           )}
         </>
       )}

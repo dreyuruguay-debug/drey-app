@@ -93,3 +93,47 @@ export function calcularRachaSemanas(fechasDeSesiones) {
   }
   return racha
 }
+
+const MESES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'setiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+]
+
+// "Jueves 24 de setiembre", para los saludos de Inicio.
+export function textoFechaLarga(fecha = new Date()) {
+  return `${NOMBRES_DIA_JS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`
+}
+
+// "15/10" a partir de "YYYY-MM-DD" ('' si no hay fecha).
+export function textoFechaCorta(fechaISO) {
+  if (!fechaISO) return ''
+  const [, mes, dia] = fechaISO.slice(0, 10).split('-')
+  return `${Number(dia)}/${Number(mes)}`
+}
+
+// Días (en orden, empezando por mañana) hasta el próximo día que tiene
+// rutina en el calendario. Devuelve { dia, fila } o null si no hay.
+// "calendario" es un objeto { Lunes: fila, ... } con fila.rutina_id.
+export function proximoDiaConRutina(calendario, diaHoy) {
+  const inicio = DIAS_SEMANA.indexOf(diaHoy)
+  for (let salto = 1; salto <= 7; salto++) {
+    const dia = DIAS_SEMANA[(inicio + salto) % 7]
+    if (calendario[dia]?.rutina_id) return { dia, fila: calendario[dia] }
+  }
+  return null
+}
+
+// Abreviatura de 3 letras ("Lun", "Mié") para los chips de días.
+export function abreviaturaDia(dia) {
+  return dia.slice(0, 3)
+}

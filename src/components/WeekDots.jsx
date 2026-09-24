@@ -25,7 +25,9 @@ export default function WeekDots({ dias, diaHoy }) {
 
         return (
           <div key={item.dia} className="week-dot-col">
-            <span className={clases.join(' ')}>{item.cumplido === true ? '✓' : ''}</span>
+            <span className={clases.join(' ')}>
+              {item.cumplido === true ? '✓' : item.dia === diaHoy ? 'HOY' : ''}
+            </span>
             <span className="week-dot-letra">{LETRAS[item.dia]}</span>
           </div>
         )

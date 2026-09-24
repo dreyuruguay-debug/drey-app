@@ -3,7 +3,7 @@ import { supabase } from '../services/supabaseClient.js'
 import { marcarResumenVisto } from '../services/progreso.js'
 import ResumenProgreso from './ResumenProgreso.jsx'
 
-// "Notificación de avance" (dentro de Mis datos): los resúmenes de 4
+// Resúmenes de avance (en "Progreso"): los resúmenes de 4
 // semanas que el profe ya aprobó y publicó. La base de datos solo le
 // devuelve al cliente los suyos publicados. Al abrir uno nuevo se marca
 // como visto y deja de aparecer el aviso en Inicio.
@@ -51,7 +51,7 @@ export default function NotificacionAvance({ clienteId }) {
 
   return (
     <section id="avance" className="avance-seccion">
-      <p className="form-section-label">Notificación de avance</p>
+      <p className="seccion-etiqueta">Resúmenes de tu profe (cada 4 semanas)</p>
       {cargando ? (
         <p className="registro-edad">Cargando…</p>
       ) : resumenes.length === 0 ? (

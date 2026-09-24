@@ -6,8 +6,17 @@ import ObjetivoEjercicio from './ObjetivoEjercicio.jsx'
 
 // Un bloque de la rutina en el editor del profe. Se ve igual que en la
 // rutina del cliente (mismo título, mismos ejercicios y mismos datos),
-// pero con los controles para subirlo, bajarlo, editarlo o quitarlo.
-export default function BloqueProfe({ bloque, esPrimero, esUltimo, onMover, onEditar, onQuitar }) {
+// pero con los controles para subirlo, bajarlo, editarlo, duplicarlo o
+// quitarlo.
+export default function BloqueProfe({
+  bloque,
+  esPrimero,
+  esUltimo,
+  onMover,
+  onEditar,
+  onQuitar,
+  onDuplicar,
+}) {
   const metodo = obtenerMetodo(bloque.metodo)
   const instruccion = metodo.instruccion(bloque.config || {})
   const esGrupo = bloque.items.length > 1
@@ -42,6 +51,9 @@ export default function BloqueProfe({ bloque, esPrimero, esUltimo, onMover, onEd
           </button>
           <button type="button" className="profe-ejercicio-agregar" onClick={onEditar}>
             Editar
+          </button>
+          <button type="button" className="profe-ejercicio-agregar" onClick={onDuplicar}>
+            Duplicar
           </button>
           <button type="button" className="profe-ejercicio-borrar" onClick={onQuitar}>
             Quitar

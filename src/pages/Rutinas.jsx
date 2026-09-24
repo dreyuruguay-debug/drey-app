@@ -1,19 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
-import ClienteHeader from '../components/ClienteHeader.jsx'
-import RutinaCard from '../components/RutinaCard.jsx'
+import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
-import { obtenerPlan } from '../data/planes.js'
-import { DIAS_SEMANA } from '../utils/dias.js'
+import { DIAS_SEMANA, abreviaturaDia, obtenerNombreDiaHoy } from '../utils/dias.js'
 
+// "Mis rutinas" del cliente: cada rutina con los días en que le toca y,
+// abajo, su semana completa. Al tocar una rutina se ve entera y desde
+// ahí se empieza a entrenar.
 export default function Rutinas() {
   const navigate = useNavigate()
   const [cargando, setCargando] = useState(true)
-  const [perfil, setPerfil] = useState(null)
   const [rutinas, setRutinas] = useState([])
-  const [calendario, setCalendario] = useState([])
-  const [mostrarOrganizacion, setMostrarOrganizacion] = useState(false)
+  const [calendario, setCalendario] = useState({})
 
   useEffect(() => {
     cargarDatos()
@@ -27,91 +26,95 @@ export default function Rutinas() {
       navigate('/')
       return
     }
-
-    const [{ data: perfilData }, { data: rutinasData }, { data: calendarioData }] =
-      await Promise.all([
-        supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
-        supabase.from('rutinas').select('*').eq('cliente_id', usuario.id).order('orden'),
-        supabase
-          .from('calendario_cliente')
-          .select('*, rutinas(nombre)')
-          .eq('cliente_id', usuario.id),
-      ])
-
-    setPerfil(perfilData || null)
+    const [{ data: rutinasData }, { data: calendarioData }] = await Promise.all([
+      supabase.from('rutinas').select('*').eq('cliente_id', usuario.id).order('orden'),
+      supabase.from('calendario_cliente').select('*, rutinas(nombre)').eq('cliente_id', usuario.id),
+    ])
+    const porDia = {}
+    for (const fila of calendarioData || []) porDia[fila.dia] = fila
     setRutinas(rutinasData || [])
-    setCalendario(calendarioData || [])
+    setCalendario(porDia)
     setCargando(false)
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/')
-  }
-
-  if (cargando) {
-    return (
-      <div className="screen has-bottom-nav">
-        <p className="profe-mensaje-carga">Cargando…</p>
-        <BottomNav />
-      </div>
-    )
-  }
-
-  const nombre = perfil ? `${perfil.nombre} ${perfil.apellido}` : 'Hola'
-  const diasEntrenamiento = calendario.filter((item) => item.rutina_id).length
+  const diaHoy = obtenerNombreDiaHoy()
+  const diasDe = (rutinaId) => DIAS_SEMANA.filter((dia) => calendario[dia]?.rutina_id === rutinaId)
+  const hayDias = DIAS_SEMANA.some((dia) => calendario[dia]?.rutina_id)
 
   return (
-    <div className="screen has-bottom-nav">
-      <ClienteHeader
-        objetivo={perfil?.objetivo}
-        nombre={nombre}
-        plan={obtenerPlan(perfil?.plan)?.nombre || 'Sin plan'}
-        diasEntrenamiento={diasEntrenamiento}
-        onLogout={handleLogout}
-      />
+    <div className="screen has-bottom-nav pagina-cliente">
+      <TopPattern />
+      <h1 className="pagina-titulo">Mis rutinas</h1>
 
-      {rutinas.length === 0 ? (
-        <p className="profe-vacio" style={{ textAlign: 'center', margin: '2rem 1.5rem' }}>
-          Todavía no tenés rutinas asignadas. Tu profe te las va a armar pronto.
-        </p>
+      {cargando ? (
+        <p className="profe-mensaje-carga">Cargando…</p>
+      ) : rutinas.length === 0 ? (
+        <div className="hoy-tarjeta hoy-tarjeta-mensaje">
+          <h2 className="hoy-mensaje-titulo">Tu profe está armando tu rutina</h2>
+          <p className="hoy-mensaje-texto">
+            Apenas esté lista la vas a ver acá. Mientras tanto, completá tus datos para que te
+            conozca mejor.
+          </p>
+          <Link to="/mis-datos" className="boton-principal">
+            Completar mis datos
+          </Link>
+        </div>
       ) : (
-        <div className="rutinas-grid">
-          {rutinas.map((rutina) => (
-            <RutinaCard key={rutina.id} {...rutina} />
-          ))}
-        </div>
-      )}
-
-      <button
-        type="button"
-        className="organizacion-toggle"
-        onClick={() => setMostrarOrganizacion((value) => !value)}
-      >
-        Organización {mostrarOrganizacion ? '▲' : '▼'}
-      </button>
-
-      {mostrarOrganizacion && (
-        <div className="organizacion-calendario">
-          {DIAS_SEMANA.map((dia) => {
-            const item = calendario.find((fila) => fila.dia === dia)
-            const nombreRutina = item?.rutinas?.nombre || 'Descanso'
-            return (
-              <div key={dia} className="organizacion-dia">
-                <span className="organizacion-dia-nombre">{dia}</span>
-                <span
-                  className={
-                    nombreRutina === 'Descanso'
-                      ? 'organizacion-dia-rutina organizacion-dia-descanso'
-                      : 'organizacion-dia-rutina'
-                  }
+        <>
+          <div className="lista-tarjetas">
+            {rutinas.map((rutina) => {
+              const dias = diasDe(rutina.id)
+              const esHoy = dias.includes(diaHoy)
+              return (
+                <Link
+                  key={rutina.id}
+                  to={`/rutinas/${rutina.id}?vista=completa`}
+                  className={esHoy ? 'tarjeta-rutina tarjeta-rutina-hoy' : 'tarjeta-rutina'}
                 >
-                  {nombreRutina}
-                </span>
-              </div>
-            )
-          })}
-        </div>
+                  <span className="tarjeta-rutina-textos">
+                    {esHoy && <span className="hoy-etiqueta">Hoy</span>}
+                    <strong>{rutina.nombre}</strong>
+                    {(rutina.musculos || rutina.patron) && (
+                      <small>{rutina.musculos || rutina.patron}</small>
+                    )}
+                    {dias.length > 0 && (
+                      <span className="chips-lista">
+                        {dias.map((dia) => (
+                          <span key={dia} className="chip chip-dato chip-chico">
+                            {abreviaturaDia(dia)}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                  <span className="tarjeta-flecha" aria-hidden="true">
+                    ›
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+
+          {hayDias && (
+            <section className="tu-semana">
+              <p className="seccion-etiqueta">Tu semana</p>
+              {DIAS_SEMANA.map((dia) => {
+                const nombre = calendario[dia]?.rutinas?.nombre
+                return (
+                  <div
+                    key={dia}
+                    className={dia === diaHoy ? 'tu-semana-dia tu-semana-hoy' : 'tu-semana-dia'}
+                  >
+                    <span>{dia}</span>
+                    <span className={nombre ? '' : 'tu-semana-descanso'}>
+                      {nombre || 'Descanso'}
+                    </span>
+                  </div>
+                )
+              })}
+            </section>
+          )}
+        </>
       )}
 
       <BottomNav />

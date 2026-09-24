@@ -10,9 +10,8 @@ import { obtenerPlan } from '../data/planes.js'
 const UMBRAL_DIAS_INACTIVO = 5
 const MS_POR_DIA = 1000 * 60 * 60 * 24
 
-// Lista de clientes activos. Desde acá se entra al detalle de cada
-// uno para armarle las rutinas, el calendario semanal y actualizar su
-// progreso. Tiene un buscador (para cuando la lista crezca) y marca a
+// Lista de clientes activos. Desde acá se entra a la ficha de cada uno
+// (rutinas, semana, progreso y pagos). Tiene un buscador (para cuando la lista crezca) y marca a
 // los que no entrenan hace varios días, calculado a partir de su
 // última sesión guardada en la tabla "sesiones".
 export default function ProfeClientes() {
@@ -86,9 +85,16 @@ export default function ProfeClientes() {
   return (
     <ProfeLayout titulo="Clientes">
       <p className="profe-nota">
-        Elegí un cliente para ver su progreso, sus rutinas y su calendario semanal. Para armar
-        rutinas también podés usar la sección "Rutinas".
+        Tocá un cliente para ver sus rutinas, su semana, su progreso y sus pagos.
       </p>
+      <div className="acciones-fila">
+        <Link to="/profe/rutinas" className="boton-principal">
+          + Nueva rutina
+        </Link>
+        <Link to="/profe/calendario" className="boton-secundario">
+          La semana de todos
+        </Link>
+      </div>
 
       {!cargando && inactivos.length > 0 && (
         <div className="profe-aviso-inactivos">
@@ -116,7 +122,7 @@ export default function ProfeClientes() {
       ) : clientesFiltrados.length === 0 ? (
         <p className="profe-vacio">
           {clientes.length === 0
-            ? 'Todavía no tenés clientes activos. Habilitalos desde "Cuentas y pagos".'
+            ? 'Todavía no tenés clientes activos. Habilitalos desde "Pagos".'
             : 'No hay ningún cliente que coincida con la búsqueda.'}
         </p>
       ) : (

@@ -42,7 +42,7 @@ export default function ProfeProgresion() {
   )
 
   return (
-    <ProfeLayout titulo="Progresión">
+    <ProfeLayout titulo="Progresión" volverA="/profe">
       <p className="profe-nota">
         Cada 4 semanas de entrenamiento la app arma sola un resumen de cada cliente. Revisalo,
         sumale un comentario si querés y publicalo: el cliente lo ve en "Mis datos".

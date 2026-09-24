@@ -82,6 +82,21 @@ export function quitarBloque(items, indiceBloque) {
   return numerarOrden(bloques.flat())
 }
 
+// Copia un bloque entero y la pone justo debajo del original (las
+// copias no tienen id: se guardan como filas nuevas).
+export function duplicarBloque(items, indiceBloque) {
+  const bloques = filasPorBloque(items)
+  const original = bloques[indiceBloque]
+  if (!original) return items
+  const grupo = original[0].grupo ? nuevoIdDeGrupo() : null
+  const copia = original.map((fila) => {
+    const { id, ...resto } = fila
+    return { ...resto, grupo, config: { ...(fila.config || {}) } }
+  })
+  bloques.splice(indiceBloque + 1, 0, copia)
+  return numerarOrden(bloques.flat())
+}
+
 // Qué hay que hacer en la base para pasar de "antes" a "despues":
 // filas a borrar (ids), a insertar (sin id) y a actualizar (las que
 // cambiaron en alguno de los "campos").
@@ -123,12 +138,21 @@ export const VALORES_INICIALES_EJERCICIO = {
   calentamientoDetalle: '',
 }
 
-export function borradorNuevo(metodo = 'normal') {
-  return { metodo, config: {}, grupo: null, descansoMin: 60, descansoMax: 90, ejercicios: [] }
+export function borradorNuevo(metodo = 'normal', descanso = {}) {
+  return {
+    metodo,
+    config: {},
+    grupo: null,
+    descansoMin: descanso.descansoMin ?? 60,
+    descansoMax: descanso.descansoMax ?? 90,
+    ejercicios: [],
+  }
 }
 
-export function ejercicioParaBorrador(ejercicio) {
-  return { id: undefined, ejercicio, ...VALORES_INICIALES_EJERCICIO }
+// "valores" permite arrancar con los últimos números que usó el profe
+// (series, repeticiones) en vez de los de fábrica.
+export function ejercicioParaBorrador(ejercicio, valores = {}) {
+  return { id: undefined, ejercicio, ...VALORES_INICIALES_EJERCICIO, ...valores }
 }
 
 // Bloque ya guardado → borrador (para editarlo en el asistente).

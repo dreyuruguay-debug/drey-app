@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
@@ -47,6 +48,9 @@ export default function Comunidad() {
     <div className="screen has-bottom-nav">
       <TopPattern />
       <div className="comunidad-contenido">
+        <Link to="/perfil" className="volver-enlace">
+          ← Perfil
+        </Link>
         <h1 className="comunidad-titulo">Comunidad y beneficios</h1>
 
         {WHATSAPP_GRUPO_URL ? (

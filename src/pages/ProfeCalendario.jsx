@@ -85,7 +85,7 @@ export default function ProfeCalendario() {
   }
 
   return (
-    <ProfeLayout titulo="Vista semanal de todos los clientes">
+    <ProfeLayout titulo="La semana de todos" volverA="/profe/clientes">
       <p className="profe-nota">
         Qué rutina le toca a cada cliente cada día. Tocá cualquier celda para cambiarla sin tener
         que entrar a ese cliente.

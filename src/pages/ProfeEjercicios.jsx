@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 
@@ -162,7 +163,8 @@ export default function ProfeEjercicios() {
     .filter((ejercicio) => ejercicio.nombre.toLowerCase().includes(busqueda.toLowerCase()))
 
   return (
-    <ProfeLayout titulo="Biblioteca de ejercicios">
+    <ProfeLayout titulo="Biblioteca">
+      <BibliotecaTabs activa="ejercicios" />
       <p className="profe-nota">
         Elegí una categoría, buscá, agregá o editá ejercicios (nombre, categorías, foto y link de
         video). Para asignarle uno a un cliente, entrá a "Clientes y rutinas" → el cliente → su

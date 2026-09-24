@@ -1,23 +1,47 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import Pestanas from '../components/Pestanas.jsx'
 import ListaRutinasCliente from '../components/ListaRutinasCliente.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { cargarRutinasDeCliente } from '../services/rutinas.js'
+import {
+  asignarDia,
+  cargarCalendarioCliente,
+  cargarRutinasDeCliente,
+  diasPorRutina,
+} from '../services/rutinas.js'
+import {
+  abrirComprobante,
+  confirmarPago,
+  estadoDeCuenta,
+  habilitarCliente,
+} from '../services/cuentas.js'
+import { mostrarAviso } from '../services/avisos.js'
 import { obtenerPlan } from '../data/planes.js'
-import { DIAS_SEMANA } from '../utils/dias.js'
+import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import { linkWhatsApp } from '../utils/whatsapp.js'
 
-// Detalle de un cliente: su progreso reciente, sus rutinas (el mismo
-// listado que en la sección "Rutinas", con "+ Agregar rutina") y el
-// calendario semanal. Cada rutina se arma con el asistente paso a paso
-// (ProfeRutinaNueva → ProfeRutinaEditor).
+const PESTANAS = [
+  { id: 'rutinas', label: 'Rutinas' },
+  { id: 'semana', label: 'Semana' },
+  { id: 'progreso', label: 'Progreso' },
+  { id: 'pagos', label: 'Pagos' },
+]
+
+// Ficha del cliente: todo lo de esa persona en un solo lugar, en 4
+// pestañas (Rutinas · Semana · Progreso · Pagos). La pestaña elegida
+// queda en la dirección (?tab=semana), así se puede entrar directo.
 export default function ProfeClienteDetalle() {
   const { id } = useParams()
+  const [parametros, setParametros] = useSearchParams()
+  const pestana = PESTANAS.some((item) => item.id === parametros.get('tab'))
+    ? parametros.get('tab')
+    : 'rutinas'
 
   const [cargando, setCargando] = useState(true)
   const [cliente, setCliente] = useState(null)
   const [rutinas, setRutinas] = useState([])
-  const [cantidadPorRutina, setCantidadPorRutina] = useState({})
+  const [cantidades, setCantidades] = useState({})
   const [calendario, setCalendario] = useState({})
   const [sesiones, setSesiones] = useState([])
 
@@ -25,11 +49,10 @@ export default function ProfeClienteDetalle() {
     cargarTodo()
   }, [id])
 
-  async function cargarTodo() {
-    setCargando(true)
-
-    const [{ data: perfil }, resultadoRutinas, { data: listaSesiones }, { data: listaCalendario }] =
-      await Promise.all([
+  async function cargarTodo({ silencioso = false } = {}) {
+    if (!silencioso) setCargando(true)
+    const [{ data: perfil }, resultadoRutinas, { data: listaSesiones }, porDia] = await Promise.all(
+      [
         supabase.from('perfiles').select('*').eq('id', id).single(),
         cargarRutinasDeCliente(id),
         supabase
@@ -38,124 +61,225 @@ export default function ProfeClienteDetalle() {
           .eq('cliente_id', id)
           .order('fecha', { ascending: false })
           .limit(8),
-        supabase.from('calendario_cliente').select('*, rutinas(nombre)').eq('cliente_id', id),
-      ])
-
+        cargarCalendarioCliente(id),
+      ],
+    )
     setCliente(perfil || null)
     setRutinas(resultadoRutinas.rutinas)
-    setCantidadPorRutina(resultadoRutinas.cantidades)
+    setCantidades(resultadoRutinas.cantidades)
     setSesiones(listaSesiones || [])
-
-    const diasMap = {}
-    for (const fila of listaCalendario || []) {
-      diasMap[fila.dia] = fila
-    }
-    setCalendario(diasMap)
-
+    setCalendario(porDia)
     setCargando(false)
   }
 
-  // --- Calendario semanal ---
-
-  async function actualizarDiaCalendario(dia, rutinaId) {
-    setCalendario((actual) => ({
-      ...actual,
-      [dia]: rutinaId ? { ...actual[dia], dia, rutina_id: rutinaId } : { dia, rutina_id: null },
-    }))
-    await supabase
-      .from('calendario_cliente')
-      .upsert(
-        { cliente_id: id, dia, rutina_id: rutinaId || null },
-        { onConflict: 'cliente_id,dia' },
-      )
+  function cambiarPestana(nueva) {
+    setParametros({ tab: nueva }, { replace: true })
   }
 
-  const nombreCliente = cliente ? `${cliente.nombre} ${cliente.apellido}` : 'Cliente'
-  // En el calendario solo se pueden asignar rutinas ya guardadas (las que
-  // están en borrador el cliente todavía no las ve).
+  async function cambiarDia(dia, rutinaId) {
+    const nombre = rutinas.find((rutina) => rutina.id === rutinaId)?.nombre
+    setCalendario((actual) => ({
+      ...actual,
+      [dia]: {
+        ...actual[dia],
+        dia,
+        rutina_id: rutinaId || null,
+        rutinas: nombre ? { nombre } : null,
+      },
+    }))
+    const error = await asignarDia(id, dia, rutinaId)
+    mostrarAviso(
+      error ? 'No pudimos guardar el día' : `${dia}: ${nombre || 'descanso'}`,
+      error ? 'error' : 'ok',
+    )
+  }
+
+  async function accionDePago(accion) {
+    const error = await accion()
+    if (error) {
+      mostrarAviso('No pudimos guardar el cambio', 'error')
+      return
+    }
+    mostrarAviso('Pago registrado')
+    cargarTodo({ silencioso: true })
+  }
+
+  if (cargando || !cliente) {
+    return (
+      <ProfeLayout titulo="Cliente" volverA="/profe/clientes">
+        <p className="profe-vacio">{cargando ? 'Cargando…' : 'No encontramos ese cliente.'}</p>
+      </ProfeLayout>
+    )
+  }
+
+  const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`
+  const estado = estadoDeCuenta(cliente, obtenerFechaHoyISO())
   const rutinasGuardadas = rutinas.filter((rutina) => rutina.publicada !== false)
+  const whatsapp = linkWhatsApp(cliente.celular, `Hola ${cliente.nombre}!`)
 
   return (
-    <ProfeLayout titulo={cargando ? 'Cliente' : nombreCliente} volverA="/profe/clientes">
-      {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
-      ) : !cliente ? (
-        <p className="profe-vacio">No encontramos ese cliente.</p>
-      ) : (
-        <>
-          <p className="profe-nota">
-            {obtenerPlan(cliente.plan)?.nombre || cliente.plan} · {cliente.celular}
+    <ProfeLayout volverA="/profe/clientes">
+      <header className="ficha-cabecera">
+        <span className="inicio-avatar inicio-avatar-grande" aria-hidden="true">
+          {`${cliente.nombre?.[0] || ''}${cliente.apellido?.[0] || ''}`.toUpperCase()}
+        </span>
+        <div className="ficha-datos">
+          <h1 className="pagina-titulo pagina-titulo-sin-margen">{nombreCompleto}</h1>
+          <p className="inicio-plan">
+            {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
+            {cliente.vencimiento ? ` · vence ${textoFechaCorta(cliente.vencimiento)}` : ''}
           </p>
+        </div>
+        <span className={`estado-chip estado-${estado.tono}`}>{estado.texto}</span>
+      </header>
 
-          <p className="profe-seccion-label">Progreso reciente</p>
-          <Link to={`/profe/clientes/${id}/progreso`} className="pill-button progreso-acceso">
-            Ver gráficas y resúmenes de progresión →
-          </Link>
-          {sesiones.length === 0 ? (
-            <p className="profe-vacio">Todavía no completó ninguna rutina.</p>
-          ) : (
-            <div className="profe-progreso-lista">
-              {sesiones.map((sesion) => (
-                <div key={sesion.id} className="profe-progreso-item">
-                  <div className="profe-progreso-item-header">
-                    <span className="profe-progreso-fecha">
-                      {new Date(`${sesion.fecha}T00:00:00`).toLocaleDateString('es-UY', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </span>
-                    <span className="profe-progreso-rutina">
-                      {sesion.rutinas?.nombre || 'Rutina borrada'}
-                    </span>
-                    {sesion.esfuerzo && (
-                      <span className="profe-progreso-esfuerzo">Esfuerzo {sesion.esfuerzo}/5</span>
-                    )}
-                  </div>
-                  {sesion.comentario && (
-                    <p className="profe-progreso-comentario">"{sesion.comentario}"</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          <p className="profe-nota">
-            Si el cliente viene levantando fácil, subile el peso objetivo del ejercicio en la rutina
-            (botón Editar).
-          </p>
+      <Pestanas
+        etiqueta="Secciones del cliente"
+        opciones={PESTANAS}
+        activa={pestana}
+        onCambiar={cambiarPestana}
+      />
 
-          <p className="profe-seccion-label">Rutinas</p>
+      <div className="ficha-contenido">
+        {pestana === 'rutinas' && (
           <ListaRutinasCliente
             clienteId={id}
+            clienteNombre={cliente.nombre}
             rutinas={rutinas}
-            cantidades={cantidadPorRutina}
-            onCambio={cargarTodo}
+            cantidades={cantidades}
+            diasPorRutina={diasPorRutina(calendario)}
+            onCambio={() => cargarTodo({ silencioso: true })}
           />
+        )}
 
-          <p className="profe-seccion-label">Calendario semanal</p>
-          <p className="profe-nota">
-            Elegí qué rutina le toca a este cliente cada día de la semana.
-          </p>
-          <div className="profe-calendario">
-            {DIAS_SEMANA.map((dia) => (
-              <div key={dia} className="profe-calendario-dia">
-                <span className="profe-calendario-dia-nombre">{dia}</span>
-                <select
-                  className="profe-calendario-select"
-                  value={calendario[dia]?.rutina_id || ''}
-                  onChange={(event) => actualizarDiaCalendario(dia, event.target.value || null)}
-                >
-                  <option value="">Descanso</option>
-                  {rutinasGuardadas.map((rutina) => (
-                    <option key={rutina.id} value={rutina.id}>
-                      {rutina.nombre}
-                    </option>
-                  ))}
-                </select>
+        {pestana === 'semana' && (
+          <>
+            <p className="profe-nota">Elegí qué rutina le toca cada día. Se guarda solo.</p>
+            {rutinasGuardadas.length === 0 && (
+              <p className="profe-vacio">
+                Primero armale una rutina (pestaña Rutinas) y después elegí sus días acá.
+              </p>
+            )}
+            <div className="lista-tarjetas">
+              {DIAS_SEMANA.map((dia) => (
+                <label key={dia} className="dia-fila">
+                  <strong>{dia}</strong>
+                  <select
+                    className="profe-calendario-select"
+                    value={calendario[dia]?.rutina_id || ''}
+                    onChange={(event) => cambiarDia(dia, event.target.value || null)}
+                  >
+                    <option value="">Descanso</option>
+                    {rutinasGuardadas.map((rutina) => (
+                      <option key={rutina.id} value={rutina.id}>
+                        {rutina.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+
+        {pestana === 'progreso' && (
+          <>
+            <Link to={`/profe/clientes/${id}/progreso`} className="boton-principal">
+              Ver gráficas y resúmenes
+            </Link>
+            <p className="seccion-etiqueta">Últimos entrenamientos</p>
+            {sesiones.length === 0 ? (
+              <p className="profe-vacio">Todavía no completó ningún entrenamiento.</p>
+            ) : (
+              <div className="profe-progreso-lista">
+                {sesiones.map((sesion) => (
+                  <div key={sesion.id} className="profe-progreso-item">
+                    <div className="profe-progreso-item-header">
+                      <span className="profe-progreso-fecha">{textoFechaCorta(sesion.fecha)}</span>
+                      <span className="profe-progreso-rutina">
+                        {sesion.rutinas?.nombre || 'Rutina borrada'}
+                      </span>
+                      {sesion.esfuerzo && (
+                        <span className="profe-progreso-esfuerzo">
+                          Esfuerzo {sesion.esfuerzo}/5
+                        </span>
+                      )}
+                    </div>
+                    {sesion.comentario && (
+                      <p className="profe-progreso-comentario">"{sesion.comentario}"</p>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </>
-      )}
+            )}
+            <p className="profe-nota">
+              Si viene levantando fácil, subile el peso objetivo en su rutina (Rutinas → Editar).
+            </p>
+          </>
+        )}
+
+        {pestana === 'pagos' && (
+          <>
+            <dl className="ficha-datos-lista">
+              <div>
+                <dt>Plan</dt>
+                <dd>{obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}</dd>
+              </div>
+              <div>
+                <dt>Estado</dt>
+                <dd>{estado.texto}</dd>
+              </div>
+              <div>
+                <dt>Vence</dt>
+                <dd>
+                  {cliente.vencimiento ? textoFechaCorta(cliente.vencimiento) : 'Sin definir'}
+                </dd>
+              </div>
+              <div>
+                <dt>Celular</dt>
+                <dd>{cliente.celular || '—'}</dd>
+              </div>
+            </dl>
+            <div className="acciones-columna">
+              {cliente.estado === 'pendiente' ? (
+                <button
+                  type="button"
+                  className="boton-principal"
+                  onClick={() => accionDePago(() => habilitarCliente(id))}
+                >
+                  Habilitar cuenta
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={cliente.aviso_pago ? 'boton-principal' : 'boton-secundario'}
+                  onClick={() => accionDePago(() => confirmarPago(id, cliente.vencimiento))}
+                >
+                  {cliente.aviso_pago ? 'Confirmar pago (+1 mes)' : 'Registrar un pago (+1 mes)'}
+                </button>
+              )}
+              {cliente.comprobante_nombre && (
+                <button
+                  type="button"
+                  className="boton-secundario"
+                  onClick={async () => {
+                    if (!(await abrirComprobante(cliente.comprobante_nombre))) {
+                      mostrarAviso('No pudimos abrir el comprobante', 'error')
+                    }
+                  }}
+                >
+                  Ver comprobante
+                </button>
+              )}
+              {whatsapp && (
+                <a href={whatsapp} className="boton-secundario" target="_blank" rel="noreferrer">
+                  Escribirle por WhatsApp
+                </a>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </ProfeLayout>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { supabase } from '../services/supabaseClient.js'
@@ -99,6 +99,9 @@ export default function Suscripcion() {
     <div className="screen has-bottom-nav">
       <TopPattern />
       <div className="suscripcion-contenido">
+        <Link to="/perfil" className="volver-enlace">
+          ← Perfil
+        </Link>
         <h1 className="suscripcion-titulo">Suscripción</h1>
 
         <div className="suscripcion-plan-card">

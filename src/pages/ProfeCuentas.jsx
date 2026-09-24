@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerPlan } from '../data/planes.js'
-import { fechaLocalISO } from '../utils/dias.js'
+import { abrirComprobante, confirmarPago, habilitarCliente } from '../services/cuentas.js'
+import { mostrarAviso } from '../services/avisos.js'
 
-// Cuentas y pagos: habilitar cuentas nuevas y confirmar los avisos de
+// Pagos: habilitar cuentas nuevas y confirmar los avisos de
 // pago, usando la tabla "perfiles" de Supabase. En cada cuenta nueva se
 // ve qué profe o gimnasio eligió la persona al registrarse.
 export default function ProfeCuentas() {
@@ -39,46 +41,28 @@ export default function ProfeCuentas() {
     setCargando(false)
   }
 
-  async function habilitarCliente(id) {
+  async function habilitar(id) {
     setMensaje('')
-    const vencimiento = sumarUnMes(new Date())
-    const { error } = await supabase
-      .from('perfiles')
-      .update({ estado: 'activo', vencimiento, aviso_pago: false })
-      .eq('id', id)
-    if (error) {
+    if (await habilitarCliente(id)) {
       setMensaje('No pudimos habilitar esa cuenta. Probá de nuevo.')
       return
     }
+    mostrarAviso('Cuenta habilitada')
     cargarClientes()
   }
 
-  async function confirmarPago(id, vencimientoActual) {
+  async function confirmar(id, vencimientoActual) {
     setMensaje('')
-    const hoy = new Date()
-    const base = vencimientoActual ? new Date(`${vencimientoActual}T00:00:00`) : hoy
-    const vencimiento = sumarUnMes(base < hoy ? hoy : base)
-    const { error } = await supabase
-      .from('perfiles')
-      .update({ estado: 'activo', vencimiento, aviso_pago: false })
-      .eq('id', id)
-    if (error) {
+    if (await confirmarPago(id, vencimientoActual)) {
       setMensaje('No pudimos confirmar ese pago. Probá de nuevo.')
       return
     }
+    mostrarAviso('Pago confirmado')
     cargarClientes()
   }
 
   async function verComprobante(rutaArchivo) {
-    if (!rutaArchivo) return
-    const { data, error } = await supabase.storage
-      .from('comprobantes')
-      .createSignedUrl(rutaArchivo, 60)
-    if (!error && data?.signedUrl) {
-      window.open(data.signedUrl, '_blank', 'noopener')
-    } else {
-      setMensaje('No pudimos abrir el comprobante.')
-    }
+    if (!(await abrirComprobante(rutaArchivo))) setMensaje('No pudimos abrir el comprobante.')
   }
 
   const pendientes = clientes.filter((cliente) => cliente.estado === 'pendiente')
@@ -89,7 +73,7 @@ export default function ProfeCuentas() {
   const resto = clientes.filter((cliente) => cliente.estado !== 'pendiente')
 
   return (
-    <ProfeLayout titulo="Cuentas y pagos">
+    <ProfeLayout titulo="Pagos">
       {mensaje && <p className="auth-message">{mensaje}</p>}
 
       {cargando ? (
@@ -125,7 +109,7 @@ export default function ProfeCuentas() {
                 <button
                   type="button"
                   className="pill-button profe-boton-habilitar"
-                  onClick={() => habilitarCliente(cliente.id)}
+                  onClick={() => habilitar(cliente.id)}
                 >
                   Habilitar
                 </button>
@@ -163,7 +147,7 @@ export default function ProfeCuentas() {
                   <button
                     type="button"
                     className="pill-button profe-boton-habilitar"
-                    onClick={() => confirmarPago(cliente.id, cliente.vencimiento)}
+                    onClick={() => confirmar(cliente.id, cliente.vencimiento)}
                   >
                     Confirmar pago
                   </button>
@@ -190,7 +174,12 @@ export default function ProfeCuentas() {
                   {resto.map((cliente) => (
                     <tr key={cliente.id}>
                       <td>
-                        {cliente.nombre} {cliente.apellido}
+                        <Link
+                          to={`/profe/clientes/${cliente.id}?tab=pagos`}
+                          className="enlace-tabla"
+                        >
+                          {cliente.nombre} {cliente.apellido}
+                        </Link>
                       </td>
                       <td>{obtenerPlan(cliente.plan)?.nombre || cliente.plan || '—'}</td>
                       <td>{cliente.estado}</td>
@@ -213,12 +202,4 @@ function textoEleccion(cliente, nombres) {
   if (cliente.profe_id) return nombres[cliente.profe_id] || 'Profe'
   if (cliente.gimnasio_id) return nombres[cliente.gimnasio_id] || 'Gimnasio'
   return ''
-}
-
-// Suma un mes a una fecha y devuelve "YYYY-MM-DD", el formato que usa
-// la columna "vencimiento" en Supabase.
-function sumarUnMes(fecha) {
-  const resultado = new Date(fecha)
-  resultado.setMonth(resultado.getMonth() + 1)
-  return fechaLocalISO(resultado)
 }

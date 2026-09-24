@@ -1,28 +1,36 @@
 import { Link, useLocation } from 'react-router-dom'
 
-// Barra de navegación fija abajo de la pantalla, presente en las
-// pantallas principales del cliente (Inicio, Rutinas, Suscripción,
-// Más). No aparece dentro de una rutina en curso, para no distraer
-// mientras el cliente está entrenando.
+// Barra de navegación fija abajo en las pantallas del cliente: Inicio,
+// Rutinas, Progreso y Perfil. No aparece mientras entrena (modo
+// entrenar), para no distraer.
+//
+// "rutas": las direcciones que marcan esa sección como activa (por
+// ejemplo, Mis datos y Suscripción se abren desde Perfil).
 const ITEMS = [
-  { to: '/inicio', label: 'Inicio', Icono: IconoInicio },
-  { to: '/rutinas', label: 'Rutinas', Icono: IconoRutinas },
-  { to: '/suscripcion', label: 'Suscripción', Icono: IconoSuscripcion },
-  { to: '/mas', label: 'Más', Icono: IconoMas },
+  { to: '/inicio', label: 'Inicio', rutas: ['/inicio'], Icono: IconoInicio },
+  { to: '/rutinas', label: 'Rutinas', rutas: ['/rutinas'], Icono: IconoRutinas },
+  { to: '/progreso', label: 'Progreso', rutas: ['/progreso'], Icono: IconoProgreso },
+  {
+    to: '/perfil',
+    label: 'Perfil',
+    rutas: ['/perfil', '/mas', '/mis-datos', '/suscripcion', '/comunidad'],
+    Icono: IconoPerfil,
+  },
 ]
 
 export default function BottomNav() {
-  const location = useLocation()
+  const { pathname } = useLocation()
 
   return (
-    <nav className="bottom-nav">
-      {ITEMS.map(({ to, label, Icono }) => {
-        const activo = location.pathname === to
+    <nav className="bottom-nav" aria-label="Menú">
+      {ITEMS.map(({ to, label, rutas, Icono }) => {
+        const activo = rutas.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`))
         return (
           <Link
             key={to}
             to={to}
             className={activo ? 'bottom-nav-item bottom-nav-item-activo' : 'bottom-nav-item'}
+            aria-current={activo ? 'page' : undefined}
           >
             <Icono />
             <span>{label}</span>
@@ -33,39 +41,52 @@ export default function BottomNav() {
   )
 }
 
+function Svg({ children }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  )
+}
+
 function IconoInicio() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5.5 10v9a1 1 0 0 0 1 1H9.5v-6h5v6H17.5a1 1 0 0 0 1-1v-9" />
-    </svg>
+    <Svg>
+      <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
+    </Svg>
   )
 }
 
 function IconoRutinas() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 4v16M18 4v16" />
-      <path d="M3 9h6M3 15h6M15 9h6M15 15h6" />
-    </svg>
+    <Svg>
+      <path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12" />
+    </Svg>
   )
 }
 
-function IconoSuscripcion() {
+function IconoProgreso() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3 10h18" />
-    </svg>
+    <Svg>
+      <path d="M4 19V9M10 19V5M16 19v-7M22 19H2" />
+    </Svg>
   )
 }
 
-function IconoMas() {
+function IconoPerfil() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" />
-    </svg>
+    <Svg>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+    </Svg>
   )
 }

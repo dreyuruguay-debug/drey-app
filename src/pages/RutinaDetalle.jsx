@@ -1,47 +1,53 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
+import Cronometro from '../components/entrenar/Cronometro.jsx'
+import PantallaCalentamiento from '../components/entrenar/PantallaCalentamiento.jsx'
+import PantallaEjercicio from '../components/entrenar/PantallaEjercicio.jsx'
+import PantallaDescanso from '../components/entrenar/PantallaDescanso.jsx'
+import PantallaFinal from '../components/entrenar/PantallaFinal.jsx'
+import VistaGeneral from '../components/entrenar/VistaGeneral.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { obtenerFechaHoyISO } from '../utils/dias.js'
-import { agruparEnBloques, tituloDeBloque } from '../utils/bloques.js'
-import { descansosDeEjercicio, textoDescanso, textoRango } from '../utils/formatos.js'
+import { cargarRutinaCompleta } from '../services/rutinas.js'
+import { agruparEnBloques } from '../utils/bloques.js'
 import { obtenerMetodo } from '../data/metodos.js'
-import { SECCIONES_ACTIVIDADES } from '../data/actividades.js'
-import InfoMetodo from '../components/InfoMetodo.jsx'
-import ObjetivoEjercicio from '../components/ObjetivoEjercicio.jsx'
-import SeccionActividades from '../components/SeccionActividades.jsx'
+import { obtenerFechaHoyISO } from '../utils/dias.js'
+import {
+  construirTurnos,
+  crearSeriesIniciales,
+  descansoDespuesDe,
+  estadoDeEjercicio,
+  mejorSerieAnterior,
+  turnoPendiente,
+} from '../utils/entrenamiento.js'
+import { borrarEnCurso, guardarEnCurso, leerEnCurso } from '../utils/entrenamientoEnCurso.js'
+import { formatearNumero } from '../utils/progreso.js'
 
-// Pantalla de una rutina en curso (Rutina A, B o C). Los ejercicios, sus
-// series/reps/peso objetivo y las opciones de descanso los carga el
-// profe desde su panel, en las tablas "rutinas" y "rutina_ejercicios".
-//
-// Al tocar "Finalizar rutina" se guarda una sesión real en la tabla
-// "sesiones", con el kg/reps de cada serie. La próxima vez que el
-// cliente entra a esta misma rutina, esos datos aparecen en la columna
-// "Anterior".
-//
-// Mientras el cliente entrena, la pantalla del celular se mantiene
-// encendida (Screen Wake Lock) para no tener que desbloquearla entre
-// serie y serie, y cada serie marcada se compara contra el mejor
-// resultado histórico de ese ejercicio (en cualquier rutina) para
-// avisar si es un récord personal nuevo.
-//
-// Los ejercicios vienen agrupados en bloques según el método que eligió
-// el profe (ver src/utils/bloques.js). En una biserie, triserie o
-// circuito, el descanso arranca recién al marcar el último ejercicio
-// del bloque; en los anteriores se le avisa que siga con el próximo.
-//
-// Arriba se ve el calentamiento previo y abajo la pausa entre ejercicios
-// y la vuelta a la calma, si el profe los cargó. Es la misma estructura
-// que arma el profe en su editor (ProfeRutinaEditor).
-const CANTIDAD_SERIES_POR_DEFECTO = 4
-const PASO_KG = 2.5
-const PASO_REPS = 1
-const DURACION_AVISO_RECORD_MS = 4000
-const DURACION_AVISO_BLOQUE_MS = 2500
+const DURACION_AVISO_MS = 3000
+const VIBRACION_FIN_DESCANSO = [300, 150, 300]
 
-export default function RutinaDetalle() {
+// "Modo entrenar": la rutina del cliente de a un ejercicio por vez.
+//
+//   1. Calentamiento (si el profe lo cargó).
+//   2. Un ejercicio por pantalla, con la serie que toca bien grande. Al
+//      marcarla arranca solo el descanso (pantalla completa, con vibración
+//      al terminar) y después pasa al ejercicio que sigue. En una
+//      superserie o circuito alterna los ejercicios y recién descansa al
+//      terminar la vuelta (ver construirTurnos en utils/entrenamiento.js).
+//   3. Final: vuelta a la calma, "¿Cómo te sentiste?" y guardar.
+//
+// Lo que va haciendo se guarda en el celular: si toca "Pausar" o se le
+// cierra la app, al volver sigue donde estaba (el mismo día).
+// Al guardar, queda una sesión en la tabla "sesiones" con el kg/reps de
+// cada serie (de ahí salen "La vez pasada", los récords y las gráficas).
+//
+// modoPrevia: el profe ve la rutina como la verá el alumno (desde su
+// editor). No guarda nada. tipo = 'rutina' o 'plantilla'.
+export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const [parametros] = useSearchParams()
+  const hoy = obtenerFechaHoyISO()
 
   const [cargando, setCargando] = useState(true)
   const [usuarioId, setUsuarioId] = useState(null)
@@ -50,133 +56,314 @@ export default function RutinaDetalle() {
   const [anteriorPorEjercicio, setAnteriorPorEjercicio] = useState({})
   const [mejoresPorEjercicio, setMejoresPorEjercicio] = useState({})
 
-  const [descansoElegido, setDescansoElegido] = useState(60)
-  const [descansoTotal, setDescansoTotal] = useState(60)
-  const [tiempoRestante, setTiempoRestante] = useState(null)
   const [series, setSeries] = useState([])
+  const [calentamientoHecho, setCalentamientoHecho] = useState(false)
+  const [inicio, setInicio] = useState(() => Date.now())
+  const [visible, setVisible] = useState(0)
+  const [records, setRecords] = useState(0)
+  const [descanso, setDescanso] = useState(null)
+  const [ahora, setAhora] = useState(() => Date.now())
+  const [aviso, setAviso] = useState(null)
+  const [vistaGeneral, setVistaGeneral] = useState(parametros.get('vista') === 'completa')
+
+  const [fase, setFase] = useState('entrenando')
   const [esfuerzo, setEsfuerzo] = useState(null)
   const [comentario, setComentario] = useState('')
-  const [finalizada, setFinalizada] = useState(false)
   const [guardando, setGuardando] = useState(false)
-  const [errorGuardar, setErrorGuardar] = useState('')
-  const [avisoRecord, setAvisoRecord] = useState(null)
-  const [avisoBloque, setAvisoBloque] = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    cargarRutina()
+    cargar()
   }, [id])
 
-  // Pide que la pantalla no se apague sola mientras esta pantalla está
-  // abierta (el cliente entrenando). Si el navegador no lo soporta, o
-  // si el celular bloquea la pantalla igual (pasa cuando la pestaña
-  // pierde el foco), no rompe nada: el resto de la app sigue normal.
+  // La pantalla no se apaga sola mientras entrena (si el navegador lo
+  // permite; si no, no pasa nada).
   useEffect(() => {
     let bloqueo = null
     let cancelado = false
-
     async function pedirBloqueo() {
       if (!('wakeLock' in navigator)) return
       try {
-        const nuevoBloqueo = await navigator.wakeLock.request('screen')
-        if (cancelado) {
-          nuevoBloqueo.release()
-          return
-        }
-        bloqueo = nuevoBloqueo
+        const nuevo = await navigator.wakeLock.request('screen')
+        if (cancelado) nuevo.release()
+        else bloqueo = nuevo
       } catch {
-        // Algunos navegadores lo rechazan (por ejemplo con batería baja);
-        // no hace falta avisarle nada al cliente por esto.
+        // Algunos navegadores lo rechazan (por ejemplo con batería baja).
       }
     }
-
-    function alVolverAVerLaPantalla() {
-      if (document.visibilityState === 'visible' && !bloqueo) {
-        pedirBloqueo()
-      }
+    function alVolver() {
+      if (document.visibilityState === 'visible') pedirBloqueo()
     }
-
     pedirBloqueo()
-    document.addEventListener('visibilitychange', alVolverAVerLaPantalla)
-
+    document.addEventListener('visibilitychange', alVolver)
     return () => {
       cancelado = true
-      document.removeEventListener('visibilitychange', alVolverAVerLaPantalla)
+      document.removeEventListener('visibilitychange', alVolver)
       bloqueo?.release()
     }
   }, [])
 
-  async function cargarRutina() {
+  // Reloj del descanso: se calcula contra la hora de fin, así no se
+  // atrasa si el celular bloquea la pantalla un rato.
+  useEffect(() => {
+    if (!descanso) return undefined
+    const intervalo = setInterval(() => setAhora(Date.now()), 250)
+    return () => clearInterval(intervalo)
+  }, [descanso])
+
+  const restante = descanso ? Math.max(0, Math.ceil((descanso.fin - ahora) / 1000)) : 0
+  useEffect(() => {
+    if (descanso && restante === 0) {
+      navigator.vibrate?.(VIBRACION_FIN_DESCANSO)
+      setDescanso(null)
+    }
+  }, [descanso, restante])
+
+  // Guarda en el celular lo que lleva hecho (solo si ya empezó).
+  useEffect(() => {
+    if (cargando || modoPrevia || fase !== 'entrenando') return
+    const empezo = series.some((filas) => filas.some((serie) => serie.hecha))
+    if (!empezo) return
+    guardarEnCurso(id, { fecha: hoy, series, calentamientoHecho, inicio, visible, records })
+  }, [series, calentamientoHecho, visible, records, cargando, fase])
+
+  async function cargar() {
     setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
-    setUsuarioId(usuario?.id || null)
+    let datos = null
+    let lista = []
+    let mejores = {}
 
-    const [{ data: rutinaData }, { data: ejerciciosData }] = await Promise.all([
-      supabase.from('rutinas').select('*').eq('id', id).single(),
-      supabase
-        .from('rutina_ejercicios')
-        .select('*, ejercicios(nombre, video_url, imagen_url)')
-        .eq('rutina_id', id)
-        .order('orden'),
-    ])
-    setRutina(rutinaData || null)
-    const lista = ejerciciosData || []
-    setEjercicios(lista)
-    setSeries(crearSeriesIniciales(lista))
-    if (lista.length) setDescansoElegido(descansoDelMedio(descansosDeEjercicio(lista[0])))
-
-    // Busca la última vez que se hizo esta rutina, para mostrar el
-    // kg/reps de cada serie en la columna "Anterior".
-    if (usuario) {
-      const [{ data: sesionAnterior }, { data: todasLasSesiones }] = await Promise.all([
-        supabase
-          .from('sesiones')
-          .select('detalle')
-          .eq('cliente_id', usuario.id)
-          .eq('rutina_id', id)
-          .order('fecha', { ascending: false })
-          .limit(1),
-        // Todas las sesiones del cliente (en cualquier rutina), para
-        // saber cuál es su mejor marca histórica de cada ejercicio y
-        // así poder avisarle si hoy hace un récord nuevo.
-        supabase.from('sesiones').select('detalle').eq('cliente_id', usuario.id),
-      ])
-
-      const detalle = sesionAnterior?.[0]?.detalle || []
-      const mapa = {}
-      for (const item of detalle) {
-        mapa[item.ejercicio_id] = item.series || []
+    if (modoPrevia) {
+      const resultado = await cargarRutinaCompleta(tipo, id)
+      datos = resultado.datos
+      lista = resultado.ejercicios
+    } else {
+      const { data: userData } = await supabase.auth.getUser()
+      const usuario = userData?.user
+      if (!usuario) {
+        navigate('/')
+        return
       }
-      setAnteriorPorEjercicio(mapa)
+      setUsuarioId(usuario.id)
+      const [{ data: rutinaData }, { data: ejerciciosData }, { data: sesiones }] =
+        await Promise.all([
+          supabase.from('rutinas').select('*').eq('id', id).single(),
+          supabase
+            .from('rutina_ejercicios')
+            .select('*, ejercicios(nombre, video_url, imagen_url)')
+            .eq('rutina_id', id)
+            .order('orden'),
+          supabase
+            .from('sesiones')
+            .select('rutina_id, fecha, detalle')
+            .eq('cliente_id', usuario.id)
+            .order('fecha', { ascending: false }),
+        ])
+      datos = rutinaData
+      lista = ejerciciosData || []
 
-      const mejores = {}
-      for (const sesion of todasLasSesiones || []) {
+      // "La vez pasada": la última vez que hizo ESTA rutina.
+      const ultima = (sesiones || []).find((sesion) => sesion.rutina_id === id)
+      const anterior = {}
+      for (const item of ultima?.detalle || []) anterior[item.ejercicio_id] = item.series || []
+      setAnteriorPorEjercicio(anterior)
+
+      // Mejor marca histórica de cada ejercicio (en cualquier rutina),
+      // para avisar si hoy hace un récord.
+      mejores = {}
+      for (const sesion of sesiones || []) {
         for (const item of sesion.detalle || []) {
           for (const fila of item.series || []) {
-            const kg = Number(fila.kg) || 0
-            const reps = Number(fila.reps) || 0
+            if (fila.hecha === false) continue
             const actual = mejores[item.ejercicio_id] || { kg: 0, reps: 0 }
             mejores[item.ejercicio_id] = {
-              kg: Math.max(actual.kg, kg),
-              reps: Math.max(actual.reps, reps),
+              kg: Math.max(actual.kg, Number(fila.kg) || 0),
+              reps: Math.max(actual.reps, Number(fila.reps) || 0),
             }
           }
         }
       }
-      setMejoresPorEjercicio(mejores)
     }
 
+    setRutina(datos || null)
+    setEjercicios(lista)
+
+    const iniciales = crearSeriesIniciales(lista)
+    const enCurso = modoPrevia ? null : leerEnCurso(id, hoy)
+    if (enCurso && mismaForma(enCurso.series, iniciales)) {
+      setSeries(enCurso.series)
+      setCalentamientoHecho(Boolean(enCurso.calentamientoHecho))
+      setInicio(enCurso.inicio || Date.now())
+      setVisible(Math.min(enCurso.visible || 0, Math.max(0, lista.length - 1)))
+      setRecords(enCurso.records || 0)
+      // Lo que ya hizo hoy también cuenta como marca, así no se festeja
+      // dos veces el mismo récord al volver de una pausa.
+      lista.forEach((ejercicio, indice) => {
+        for (const serie of enCurso.series[indice]) {
+          if (!serie.hecha) continue
+          const actual = mejores[ejercicio.ejercicio_id] || { kg: 0, reps: 0 }
+          mejores[ejercicio.ejercicio_id] = {
+            kg: Math.max(actual.kg, Number(serie.kg) || 0),
+            reps: Math.max(actual.reps, Number(serie.reps) || 0),
+          }
+        }
+      })
+    } else {
+      setSeries(iniciales)
+      setCalentamientoHecho(!datos?.calentamiento?.length)
+      setInicio(Date.now())
+      setVisible(0)
+    }
+    setMejoresPorEjercicio(mejores)
     setCargando(false)
   }
 
-  // Cuenta regresiva del descanso.
-  useEffect(() => {
-    if (tiempoRestante === null || tiempoRestante <= 0) return undefined
-    const intervalo = setInterval(() => {
-      setTiempoRestante((valor) => (valor === null ? null : valor - 1))
-    }, 1000)
-    return () => clearInterval(intervalo)
-  }, [tiempoRestante])
+  const bloques = useMemo(() => agruparEnBloques(ejercicios), [ejercicios])
+  const turnos = useMemo(() => construirTurnos(ejercicios), [ejercicios])
+
+  function mostrarAvisoTemporal(texto, tipoAviso) {
+    setAviso({ texto, tipo: tipoAviso })
+    setTimeout(
+      () => setAviso((actual) => (actual?.texto === texto ? null : actual)),
+      DURACION_AVISO_MS,
+    )
+  }
+
+  function ajustarValor(exIndex, serieIndex, campo, delta) {
+    setSeries((actual) =>
+      actual.map((filas, i) =>
+        i !== exIndex
+          ? filas
+          : filas.map((fila, j) =>
+              j !== serieIndex
+                ? fila
+                : { ...fila, [campo]: Math.max(0, Number(fila[campo]) + delta) },
+            ),
+      ),
+    )
+  }
+
+  function marcarSerie(exIndex, serieIndex) {
+    const hecha = !series[exIndex][serieIndex].hecha
+    const nuevas = series.map((filas, i) =>
+      i !== exIndex
+        ? filas
+        : filas.map((fila, j) => (j !== serieIndex ? fila : { ...fila, hecha })),
+    )
+    setSeries(nuevas)
+    if (!hecha) return
+
+    revisarRecord(exIndex, serieIndex)
+
+    const turno = turnos.find((item) => item.exIndex === exIndex && item.serieIndex === serieIndex)
+    const siguiente = turnoPendiente(turnos, nuevas)
+    if (!siguiente) {
+      setDescanso(null)
+      setFase('final')
+      return
+    }
+
+    // Superserie o circuito: sin descanso, se pasa al próximo de la vuelta.
+    if (turno && !turno.finDeRonda) {
+      const proximo = turnos[turnos.indexOf(turno) + 1]
+      const destino =
+        proximo && !nuevas[proximo.exIndex][proximo.serieIndex].hecha ? proximo : siguiente
+      setVisible(destino.exIndex)
+      mostrarAvisoTemporal(
+        `Sin descanso: seguí con ${ejercicios[destino.exIndex].ejercicios?.nombre || 'el próximo'}`,
+        'bloque',
+      )
+      return
+    }
+
+    const { opciones, segundos } = descansoDespuesDe(
+      turno || { exIndex, finDeBloque: false },
+      ejercicios,
+      rutina,
+    )
+    setVisible(siguiente.exIndex)
+    setAhora(Date.now())
+    setDescanso({
+      fin: Date.now() + segundos * 1000,
+      total: segundos,
+      opciones,
+      titulo: turno?.finDeBloque ? 'Cambio de ejercicio' : 'Descansá',
+      loQueSigue: textoDelTurno(siguiente),
+    })
+  }
+
+  function textoDelTurno(turno) {
+    const ejercicio = ejercicios[turno.exIndex]
+    const serie = series[turno.exIndex]?.[turno.serieIndex]
+    const total = series[turno.exIndex]?.length || ejercicio.series
+    return {
+      titulo: `${ejercicio.ejercicios?.nombre || 'Ejercicio'} · Serie ${turno.serieIndex + 1} de ${total}`,
+      detalle: `${formatearNumero(Number(serie?.kg))} kg × ${ejercicio.reps_objetivo || serie?.reps} reps`,
+    }
+  }
+
+  // Compara la serie recién marcada contra su mejor marca histórica.
+  function revisarRecord(exIndex, serieIndex) {
+    if (modoPrevia) return
+    const ejercicio = ejercicios[exIndex]
+    const ejercicioId = ejercicio?.ejercicio_id
+    if (!ejercicioId) return
+    const fila = series[exIndex][serieIndex]
+    const kg = Number(fila.kg) || 0
+    const reps = Number(fila.reps) || 0
+    const mejor = mejoresPorEjercicio[ejercicioId]
+    setMejoresPorEjercicio((actual) => ({
+      ...actual,
+      [ejercicioId]: { kg: Math.max(mejor?.kg || 0, kg), reps: Math.max(mejor?.reps || 0, reps) },
+    }))
+    // El primer intento de un ejercicio no cuenta como récord.
+    if (!mejor) return
+    const nombre = ejercicio.ejercicios?.nombre || 'este ejercicio'
+    let texto = null
+    if (kg > mejor.kg && kg > 0) {
+      texto = `🏆 ¡Récord de peso en ${nombre}! ${formatearNumero(kg)} kg`
+    } else if (reps > mejor.reps && reps > 0) {
+      texto = `🏆 ¡Récord de repeticiones en ${nombre}! ${reps} reps`
+    }
+    if (texto) {
+      setRecords((cantidad) => cantidad + 1)
+      mostrarAvisoTemporal(texto, 'record')
+    }
+  }
+
+  function salir() {
+    if (modoPrevia) navigate(-1)
+    else navigate('/inicio')
+  }
+
+  async function finalizar() {
+    if (!usuarioId || modoPrevia) return
+    setGuardando(true)
+    setError('')
+    const detalle = ejercicios.map((ejercicio, exIndex) => ({
+      ejercicio_id: ejercicio.ejercicio_id,
+      nombre: ejercicio.ejercicios?.nombre || '',
+      metodo: ejercicio.metodo || 'normal',
+      series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })),
+    }))
+    const { error: errorGuardar } = await supabase.from('sesiones').insert({
+      cliente_id: usuarioId,
+      rutina_id: rutina.id,
+      fecha: hoy,
+      esfuerzo,
+      comentario: comentario.trim() || null,
+      detalle,
+    })
+    setGuardando(false)
+    if (errorGuardar) {
+      setError('No pudimos guardar el entrenamiento. Revisá tu conexión y probá de nuevo.')
+      return
+    }
+    borrarEnCurso(id)
+    setFase('guardado')
+  }
+
+  // --- Pantallas ---
 
   if (cargando) {
     return (
@@ -189,498 +376,261 @@ export default function RutinaDetalle() {
 
   if (!rutina) {
     return (
-      <div className="screen">
-        <p style={{ padding: '2rem' }}>No encontramos esa rutina.</p>
-        <Link to="/rutinas" className="auth-switch">
-          Volver a rutinas
-        </Link>
+      <div className="screen entrenar">
+        <div className="entrenar-pantalla entrenar-pantalla-centrada">
+          <p className="entrenar-objetivo">No encontramos esa rutina.</p>
+          <Link to="/rutinas" className="boton-principal">
+            Volver a mis rutinas
+          </Link>
+        </div>
       </div>
     )
   }
 
-  const bloques = agruparEnBloques(ejercicios)
-  // Para cada ejercicio (por su posición): su bloque y su lugar adentro.
-  const ubicacion = {}
-  for (const bloque of bloques) {
-    bloque.items.forEach(({ indice }, posicion) => {
-      ubicacion[indice] = { bloque, posicion }
-    })
+  const avisoPrevia = modoPrevia && (
+    <div className="entrenar-previa">
+      <span>Vista previa · así lo ve el alumno</span>
+      <button type="button" className="boton-texto" onClick={salir}>
+        Salir
+      </button>
+    </div>
+  )
+
+  if (ejercicios.length === 0) {
+    return (
+      <div className="screen entrenar">
+        {avisoPrevia}
+        <div className="entrenar-pantalla entrenar-pantalla-centrada">
+          <h1 className="entrenar-titulo">{rutina.nombre}</h1>
+          <p className="entrenar-objetivo">
+            Tu profe todavía no le cargó ejercicios a esta rutina.
+          </p>
+          {!modoPrevia && (
+            <Link to="/rutinas" className="boton-principal">
+              Volver a mis rutinas
+            </Link>
+          )}
+        </div>
+      </div>
+    )
   }
 
-  function marcarSerie(exIndex, serieIndex) {
-    // Se decide con el estado actual (no dentro de setSeries): React no
-    // garantiza cuándo corre esa función, y antes eso hacía que a veces
-    // el descanso no arrancara.
-    const quedoHecha = !series[exIndex][serieIndex].hecha
-    setSeries((actual) => {
-      const copia = actual.map((filas) => filas.map((fila) => ({ ...fila })))
-      copia[exIndex][serieIndex].hecha = quedoHecha
-      return copia
-    })
+  const totalSeries = series.reduce((total, filas) => total + filas.length, 0)
+  const seriesHechas = series.reduce(
+    (total, filas) => total + filas.filter((serie) => serie.hecha).length,
+    0,
+  )
 
-    if (!quedoHecha) return
-
-    revisarRecord(exIndex, serieIndex)
-
-    // En un bloque de varios ejercicios, solo se descansa al terminar el
-    // último; en los demás se avisa cuál sigue.
-    const { bloque, posicion } = ubicacion[exIndex]
-    if (posicion < bloque.items.length - 1) {
-      const siguiente = bloque.items[posicion + 1].item.ejercicios?.nombre || 'el próximo ejercicio'
-      const texto = `Sin descanso: seguí con ${siguiente}`
-      setAvisoBloque(texto)
-      setTimeout(
-        () => setAvisoBloque((actual) => (actual === texto ? null : actual)),
-        DURACION_AVISO_BLOQUE_MS,
-      )
-      return
-    }
-
-    // Al marcar una serie arranca el temporizador de descanso elegido.
-    const segundos = descansoPara(ejercicios[exIndex])
-    setDescansoTotal(segundos)
-    setTiempoRestante(segundos)
+  if (fase !== 'entrenando') {
+    return (
+      <div className="screen entrenar">
+        {avisoPrevia}
+        <PantallaFinal
+          vueltaCalma={rutina.vuelta_calma}
+          resumen={{
+            series: seriesHechas,
+            total: totalSeries,
+            segundos: (Date.now() - inicio) / 1000,
+            records,
+          }}
+          esfuerzo={esfuerzo}
+          comentario={comentario}
+          onEsfuerzo={setEsfuerzo}
+          onComentario={setComentario}
+          onFinalizar={finalizar}
+          onVolver={() => setFase('entrenando')}
+          guardando={guardando}
+          guardado={fase === 'guardado'}
+          error={error}
+          modoPrevia={modoPrevia}
+        />
+      </div>
+    )
   }
 
-  // El descanso que eligió el cliente, si es una de las opciones de este
-  // ejercicio; si no, el del medio del rango que puso el profe.
-  function descansoPara(ejercicio) {
-    const opciones = descansosDeEjercicio(ejercicio)
-    return opciones.includes(descansoElegido) ? descansoElegido : descansoDelMedio(opciones)
-  }
-
-  // Compara la serie recién marcada contra el mejor resultado histórico
-  // de ese ejercicio y, si lo supera, muestra un cartel felicitando al
-  // cliente (y actualiza la marca para que el resto de la rutina
-  // compare contra el nuevo mejor).
-  function revisarRecord(exIndex, serieIndex) {
-    const ejercicio = ejercicios[exIndex]
-    const ejercicioId = ejercicio?.ejercicio_id
-    if (!ejercicioId) return
-    const fila = series[exIndex][serieIndex]
-    const kg = Number(fila.kg) || 0
-    const reps = Number(fila.reps) || 0
-    const mejorActual = mejoresPorEjercicio[ejercicioId]
-
-    // Si nunca hizo este ejercicio antes no hay marca previa con qué
-    // comparar: no tiene sentido "festejar" el primer intento.
-    if (!mejorActual) {
-      setMejoresPorEjercicio((actual) => ({ ...actual, [ejercicioId]: { kg, reps } }))
-      return
-    }
-
-    const nombreEjercicio = ejercicio.ejercicios?.nombre || 'este ejercicio'
-    let mensaje = null
-    if (kg > mejorActual.kg && kg > 0) {
-      mensaje = `🏆 ¡Récord de peso en ${nombreEjercicio}! ${kg} kg`
-    } else if (reps > mejorActual.reps && reps > 0) {
-      mensaje = `🏆 ¡Récord de repeticiones en ${nombreEjercicio}! ${reps} reps`
-    }
-
-    if (mensaje) {
-      setAvisoRecord(mensaje)
-      setTimeout(
-        () => setAvisoRecord((actual) => (actual === mensaje ? null : actual)),
-        DURACION_AVISO_RECORD_MS,
-      )
-    }
-
-    setMejoresPorEjercicio((actual) => ({
-      ...actual,
-      [ejercicioId]: { kg: Math.max(mejorActual.kg, kg), reps: Math.max(mejorActual.reps, reps) },
-    }))
-  }
-
-  function ajustarValor(exIndex, serieIndex, campo, delta) {
-    setSeries((actual) => {
-      const copia = actual.map((filas) => filas.map((fila) => ({ ...fila })))
-      const fila = copia[exIndex][serieIndex]
-      const nuevoValor = Number(fila[campo]) + delta
-      fila[campo] = nuevoValor < 0 ? 0 : nuevoValor
-      return copia
-    })
-  }
-
-  function agregarDescanso(segundos) {
-    setTiempoRestante((valor) => (valor === null ? null : valor + segundos))
-    setDescansoTotal((valor) => valor + segundos)
-  }
-
-  function saltarDescanso() {
-    setTiempoRestante(null)
-  }
-
-  async function handleFinalizar() {
-    if (!usuarioId) return
-    setGuardando(true)
-    setErrorGuardar('')
-
-    const detalle = ejercicios.map((ejercicio, exIndex) => ({
-      ejercicio_id: ejercicio.ejercicio_id,
-      nombre: ejercicio.ejercicios?.nombre || '',
-      metodo: ejercicio.metodo || 'normal',
-      series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })),
-    }))
-
-    const { error } = await supabase.from('sesiones').insert({
-      cliente_id: usuarioId,
-      rutina_id: rutina.id,
-      fecha: obtenerFechaHoyISO(),
-      esfuerzo,
-      comentario: comentario.trim() || null,
-      detalle,
-    })
-
-    setGuardando(false)
-    if (error) {
-      setErrorGuardar('No pudimos guardar la rutina. Probá de nuevo.')
-      return
-    }
-    setFinalizada(true)
-  }
-
-  // Primera serie sin marcar de cada ejercicio: es la "fila actual", la
-  // próxima que el cliente tiene que hacer.
-  function indiceFilaActual(exIndex) {
-    return series[exIndex].findIndex((fila) => !fila.hecha)
-  }
-
-  const mostrarTimer = tiempoRestante !== null && tiempoRestante > 0
+  const ejercicio = ejercicios[visible]
+  const bloque = bloques.find((item) => item.items.some(({ indice }) => indice === visible))
+  const posicionEnBloque = bloque.items.findIndex(({ indice }) => indice === visible)
+  const siguienteEjercicio = ejercicios[visible + 1]
+  const empezado = seriesHechas > 0
 
   return (
-    <div className={mostrarTimer ? 'screen screen-con-descanso' : 'screen'}>
-      <TopPattern />
-
-      {avisoRecord && (
-        <div className="record-banner" role="status">
-          {avisoRecord}
-        </div>
-      )}
-      {avisoBloque && !avisoRecord && (
-        <div className="record-banner bloque-banner" role="status">
-          {avisoBloque}
+    <div className="screen entrenar">
+      {avisoPrevia}
+      {aviso && !descanso && (
+        <div
+          className={aviso.tipo === 'record' ? 'record-banner' : 'record-banner bloque-banner'}
+          role="status"
+        >
+          {aviso.texto}
         </div>
       )}
 
-      <div className="rutina-detalle-header">
-        <div className="cliente-header-col">
-          <Link to="/rutinas" className="rutina-detalle-volver">
-            ← Rutinas
-          </Link>
-          <p className="cliente-header-goal">
-            {[rutina.patron, rutina.musculos].filter(Boolean).join(' · ')}
-          </p>
-        </div>
+      <header className="entrenar-barra">
+        <button type="button" className="boton-secundario boton-chico" onClick={salir}>
+          {modoPrevia ? 'Salir' : 'Pausar'}
+        </button>
+        <span className="entrenar-barra-titulo">
+          {calentamientoHecho
+            ? `Ejercicio ${visible + 1} de ${ejercicios.length}`
+            : 'Calentamiento'}
+        </span>
+        <span className="entrenar-barra-derecha">
+          <Cronometro desde={inicio} />
+          <button
+            type="button"
+            className="entrenar-ver-todo"
+            onClick={() => setVistaGeneral(true)}
+            aria-label="Ver toda la rutina"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+            </svg>
+          </button>
+        </span>
+      </header>
 
-        <div className="cliente-header-col cliente-header-center">
-          <p className="rutina-detalle-titulo">{rutina.nombre}</p>
-        </div>
+      <div className="entrenar-avance" aria-hidden="true">
+        {series.map((filas, indice) => {
+          const estado = estadoDeEjercicio(filas)
+          let clase = 'entrenar-avance-tramo'
+          if (estado.completo) clase += ' hecho'
+          else if (estado.hechas) clase += ' parcial'
+          if (indice === visible && calentamientoHecho) clase += ' actual'
+          return <span key={indice} className={clase} />
+        })}
       </div>
 
-      {rutina.descripcion && <p className="rutina-descripcion">{rutina.descripcion}</p>}
-
-      {rutina.calentamiento?.length > 0 && (
-        <SeccionCliente seccion="calentamiento">
-          <SeccionActividades actividades={rutina.calentamiento} />
-        </SeccionCliente>
-      )}
-
-      {ejercicios.length === 0 ? (
-        <p className="profe-vacio" style={{ textAlign: 'center', margin: '2rem 1.5rem' }}>
-          Tu profe todavía no le cargó ejercicios a esta rutina.
-        </p>
+      {!calentamientoHecho ? (
+        <PantallaCalentamiento
+          actividades={rutina.calentamiento}
+          onListo={() => {
+            setCalentamientoHecho(true)
+            if (!empezado) setInicio(Date.now())
+          }}
+        />
       ) : (
-        bloques.map((bloque) => {
-          const metodoBloque = obtenerMetodo(bloque.metodo)
-          const instruccion = metodoBloque.instruccion(bloque.config || {})
-          const esGrupo = bloque.items.length > 1
-          const cabecera = (
-            <div className="bloque-cabecera">
-              <div className="bloque-cabecera-titulo">
-                <span>{tituloDeBloque(bloque)}</span>
-                <InfoMetodo metodoId={bloque.metodo} />
-              </div>
-              {instruccion && <p className="bloque-instruccion">{instruccion}</p>}
-            </div>
-          )
-          const tarjetas = bloque.items.map(({ item: ejercicio, indice: exIndex }, posicion) => {
-            const esUltimoDelBloque = posicion === bloque.items.length - 1
-            const filaActual = indiceFilaActual(exIndex)
-            const opcionesDescanso = descansosDeEjercicio(ejercicio)
-            const descansoActivo = descansoPara(ejercicio)
-            const rangoDescanso = textoDescanso(ejercicio)
-            return (
-              <div key={ejercicio.id} className="ejercicio-bloque">
-                {ejercicio.ejercicios?.imagen_url && (
-                  <img
-                    src={ejercicio.ejercicios.imagen_url}
-                    alt={ejercicio.ejercicios.nombre}
-                    className="ejercicio-foto"
-                  />
-                )}
-                <div className="ejercicio-header">
-                  <span>{ejercicio.ejercicios?.nombre}</span>
-                  {ejercicio.ejercicios?.video_url ? (
-                    <a
-                      className="ejercicio-video-link"
-                      href={ejercicio.ejercicios.video_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ver cómo se hace ▶
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      className="ejercicio-video-link"
-                      onClick={() =>
-                        window.alert('Tu profe todavía no cargó un video para este ejercicio.')
-                      }
-                    >
-                      Ver cómo se hace ▶
-                    </button>
-                  )}
-                </div>
+        <>
+          <PantallaEjercicio
+            key={visible}
+            ejercicio={ejercicio}
+            bloque={{
+              metodo: bloque.metodo,
+              cantidad: bloque.items.length,
+              posicion: posicionEnBloque + 1,
+              instruccion: obtenerMetodo(bloque.metodo).instruccion(bloque.config || {}),
+            }}
+            series={series[visible]}
+            anterior={mejorSerieAnterior(anteriorPorEjercicio[ejercicio.ejercicio_id])}
+            onAjustar={(serieIndex, campo, delta) =>
+              ajustarValor(visible, serieIndex, campo, delta)
+            }
+            onMarcar={(serieIndex) => marcarSerie(visible, serieIndex)}
+          />
 
-                <ObjetivoEjercicio ejercicio={ejercicio} />
-
-                {esUltimoDelBloque && (
-                  <div className="descanso-opciones">
-                    <span className="descanso-opciones-label">
-                      {esGrupo ? 'Descanso al terminar el bloque' : 'Descanso'}
-                      {rangoDescanso ? ` (${rangoDescanso})` : ''}:
-                    </span>
-                    {opcionesDescanso.map((segundos) => (
-                      <button
-                        key={segundos}
-                        type="button"
-                        className={
-                          segundos === descansoActivo
-                            ? 'descanso-chip descanso-chip-activo'
-                            : 'descanso-chip'
-                        }
-                        onClick={() => setDescansoElegido(segundos)}
-                      >
-                        {segundos}s
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <table className="ejercicio-tabla">
-                  <thead>
-                    <tr>
-                      <th>Serie</th>
-                      <th>Anterior</th>
-                      <th>Kg</th>
-                      <th>Reps</th>
-                      <th>✓</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {series[exIndex].map((fila, serieIndex) => {
-                      const esActual = serieIndex === filaActual
-                      const claseFila = fila.hecha ? 'fila-hecha' : esActual ? 'fila-actual' : ''
-                      const anterior = anteriorPorEjercicio[ejercicio.ejercicio_id]?.[serieIndex]
-                      return (
-                        <tr key={serieIndex} className={claseFila}>
-                          <td>{serieIndex + 1}</td>
-                          <td className="ejercicio-tabla-anterior">
-                            {anterior ? `${anterior.kg}kg × ${anterior.reps}` : '—'}
-                          </td>
-                          <td>
-                            <div className="stepper">
-                              <button
-                                type="button"
-                                className="stepper-btn"
-                                onClick={() => ajustarValor(exIndex, serieIndex, 'kg', -PASO_KG)}
-                                aria-label="Restar kilos"
-                              >
-                                −
-                              </button>
-                              <span className="stepper-valor">{fila.kg}</span>
-                              <button
-                                type="button"
-                                className="stepper-btn"
-                                onClick={() => ajustarValor(exIndex, serieIndex, 'kg', PASO_KG)}
-                                aria-label="Sumar kilos"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="stepper">
-                              <button
-                                type="button"
-                                className="stepper-btn"
-                                onClick={() =>
-                                  ajustarValor(exIndex, serieIndex, 'reps', -PASO_REPS)
-                                }
-                                aria-label="Restar repeticiones"
-                              >
-                                −
-                              </button>
-                              <span className="stepper-valor">{fila.reps}</span>
-                              <button
-                                type="button"
-                                className="stepper-btn"
-                                onClick={() => ajustarValor(exIndex, serieIndex, 'reps', PASO_REPS)}
-                                aria-label="Sumar repeticiones"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              className={
-                                fila.hecha ? 'serie-check serie-check-hecha' : 'serie-check'
-                              }
-                              onClick={() => marcarSerie(exIndex, serieIndex)}
-                              aria-label={`Marcar serie ${serieIndex + 1} como hecha`}
-                            >
-                              ✓
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )
-          })
-          return esGrupo ? (
-            <div key={bloque.items[0].item.id} className="bloque-grupo">
-              {cabecera}
-              {tarjetas}
-            </div>
-          ) : (
-            <div key={bloque.items[0].item.id}>
-              {cabecera}
-              {tarjetas}
-            </div>
-          )
-        })
-      )}
-
-      {ejercicios.length > 0 && textoRango(rutina.pausa_min, rutina.pausa_max) && (
-        <SeccionCliente seccion="pausa">
-          <p className="seccion-rutina-valor">{textoRango(rutina.pausa_min, rutina.pausa_max)}</p>
-          <p className="bloque-instruccion">Al pasar de un ejercicio o bloque al siguiente.</p>
-        </SeccionCliente>
-      )}
-
-      {rutina.vuelta_calma?.length > 0 && (
-        <SeccionCliente seccion="vuelta_calma">
-          <SeccionActividades actividades={rutina.vuelta_calma} />
-        </SeccionCliente>
-      )}
-
-      <div className="cierre-rutina">
-        {finalizada ? (
-          <>
-            <p className="cierre-rutina-gracias">¡Rutina guardada! Nos vemos la próxima.</p>
-            <Link to="/rutinas" className="pill-button cierre-rutina-volver">
-              Volver a rutinas
-            </Link>
-          </>
-        ) : (
-          <>
-            <p className="cierre-rutina-pregunta">¿Cómo te sentiste?</p>
-            <div className="cierre-rutina-esfuerzo">
-              {[1, 2, 3, 4, 5].map((valor) => (
-                <button
-                  key={valor}
-                  type="button"
-                  className={
-                    esfuerzo === valor ? 'esfuerzo-chip esfuerzo-chip-activo' : 'esfuerzo-chip'
-                  }
-                  onClick={() => setEsfuerzo(valor)}
-                >
-                  {valor}
-                </button>
-              ))}
-            </div>
-            <textarea
-              className="cierre-rutina-comentario"
-              placeholder="Comentario (opcional)"
-              value={comentario}
-              onChange={(event) => setComentario(event.target.value)}
-            />
-            {errorGuardar && <p className="auth-message">{errorGuardar}</p>}
+          <footer className="entrenar-pie">
             <button
               type="button"
-              className="pill-button"
-              onClick={handleFinalizar}
-              disabled={guardando}
+              className="entrenar-flecha"
+              onClick={() => setVisible(visible - 1)}
+              disabled={visible === 0}
+              aria-label="Ejercicio anterior"
             >
-              {guardando ? 'Guardando…' : 'Finalizar rutina'}
+              ‹
             </button>
-          </>
-        )}
-      </div>
+            <div className="entrenar-pie-texto">
+              <small>{siguienteEjercicio ? 'Sigue' : 'Es el último'}</small>
+              <strong>
+                {siguienteEjercicio
+                  ? siguienteEjercicio.ejercicios?.nombre || 'Ejercicio'
+                  : 'Después, terminar'}
+              </strong>
+            </div>
+            {siguienteEjercicio ? (
+              <button
+                type="button"
+                className="entrenar-flecha"
+                onClick={() => setVisible(visible + 1)}
+                aria-label="Ejercicio siguiente"
+              >
+                ›
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="boton-principal boton-chico"
+                onClick={() => setFase('final')}
+              >
+                Terminar
+              </button>
+            )}
+          </footer>
+        </>
+      )}
 
-      {mostrarTimer && (
-        <div className="rest-timer-bar">
-          <div className="rest-timer-info">
-            <span className="rest-timer-label">Descanso</span>
-            <span className="rest-timer-valor">{formatearTiempo(tiempoRestante)}</span>
-          </div>
-          <div className="progress-bar rest-timer-progress">
-            <div
-              className="progress-fill"
-              style={{ width: `${Math.min(100, (tiempoRestante / descansoTotal) * 100)}%` }}
-            />
-          </div>
-          <div className="rest-timer-acciones">
-            <button type="button" className="rest-timer-btn" onClick={() => agregarDescanso(15)}>
-              +15s
-            </button>
-            <button type="button" className="rest-timer-btn" onClick={saltarDescanso}>
-              Saltar
-            </button>
-          </div>
-        </div>
+      {vistaGeneral && (
+        <VistaGeneral
+          rutina={rutina}
+          bloques={bloques}
+          series={series}
+          empezado={empezado}
+          onElegir={(indice) => {
+            setVisible(indice)
+            setCalentamientoHecho(true)
+            setVistaGeneral(false)
+          }}
+          onCerrar={() => setVistaGeneral(false)}
+          onTerminar={() => {
+            setVistaGeneral(false)
+            setFase('final')
+          }}
+        />
+      )}
+
+      {descanso && (
+        <PantallaDescanso
+          restante={restante}
+          total={descanso.total}
+          opciones={descanso.opciones}
+          titulo={descanso.titulo}
+          loQueSigue={descanso.loQueSigue}
+          aviso={aviso?.tipo === 'record' ? aviso.texto : null}
+          onElegir={(segundos) =>
+            setDescanso((actual) => ({
+              ...actual,
+              total: segundos,
+              fin: Date.now() + segundos * 1000,
+            }))
+          }
+          onSumar={(segundos) =>
+            setDescanso((actual) => ({
+              ...actual,
+              total: actual.total + segundos,
+              fin: actual.fin + segundos * 1000,
+            }))
+          }
+          onListo={() => setDescanso(null)}
+        />
       )}
     </div>
   )
 }
 
-// Título de cada sección extra de la rutina (calentamiento, pausa entre
-// ejercicios, vuelta a la calma), con el mismo ícono que ve el profe.
-const TITULO_PAUSA = { icono: '⏱️', titulo: 'Pausa entre ejercicios' }
-
-function SeccionCliente({ seccion, children }) {
-  const { icono, titulo } = SECCIONES_ACTIVIDADES[seccion] || TITULO_PAUSA
+// true si el progreso guardado corresponde a esta misma rutina (mismos
+// ejercicios y series); si el profe la cambió, se arranca de cero.
+function mismaForma(guardadas, iniciales) {
   return (
-    <section className="seccion-rutina seccion-rutina-cliente">
-      <p className="seccion-rutina-titulo">
-        {icono} {titulo}
-      </p>
-      {children}
-    </section>
+    Array.isArray(guardadas) &&
+    guardadas.length === iniciales.length &&
+    guardadas.every((filas, i) => filas?.length === iniciales[i].length)
   )
-}
-
-function descansoDelMedio(opciones) {
-  return opciones[Math.floor((opciones.length - 1) / 2)] ?? 60
-}
-
-function crearSeriesIniciales(ejercicios) {
-  return ejercicios.map((ejercicio) =>
-    Array.from({ length: ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO }, () => ({
-      kg: ejercicio.kg_objetivo || 0,
-      reps: Number.parseInt(ejercicio.reps_objetivo, 10) || 0,
-      hecha: false,
-    })),
-  )
-}
-
-function formatearTiempo(segundos) {
-  const mm = String(Math.floor(segundos / 60)).padStart(2, '0')
-  const ss = String(segundos % 60).padStart(2, '0')
-  return `${mm}:${ss}`
 }

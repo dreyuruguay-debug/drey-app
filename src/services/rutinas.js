@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js'
 import { cambiosEntre } from '../utils/bloques.js'
+import { DIAS_SEMANA } from '../utils/dias.js'
 
 // Dónde vive cada tipo de rutina en la base de datos.
 export const ORIGENES = {
@@ -138,14 +139,12 @@ export async function sincronizarEjercicios(tipo, padreId, anteriores, nuevos) {
   }
   if (insertar.length) {
     pedidos.push(
-      supabase
-        .from(origen.tablaEjercicios)
-        .insert(
-          insertar.map((fila) => ({
-            ...soloCampos(fila, CAMPOS_EJERCICIO),
-            [origen.campo]: padreId,
-          })),
-        ),
+      supabase.from(origen.tablaEjercicios).insert(
+        insertar.map((fila) => ({
+          ...soloCampos(fila, CAMPOS_EJERCICIO),
+          [origen.campo]: padreId,
+        })),
+      ),
     )
   }
   const respuestas = await Promise.all(pedidos)
@@ -199,4 +198,71 @@ export async function guardarComoPlantilla(rutina) {
 export async function cargarPlantilla(plantillaId) {
   const { data } = await supabase.from('plantillas').select('*').eq('id', plantillaId).single()
   return data ? soloCampos(data, CAMPOS_RUTINA) : null
+}
+
+// Copia una rutina entera (datos y ejercicios) como una rutina nueva en
+// borrador, para el mismo cliente (una variante) o para otro.
+// Devuelve { data: la rutina nueva, error }.
+export async function duplicarRutina(rutina, clienteDestinoId, nombre) {
+  const { data, error } = await crearRutina(
+    'rutina',
+    { ...soloCampos(rutina, CAMPOS_RUTINA), nombre: nombre || rutina.nombre },
+    clienteDestinoId,
+  )
+  if (error) return { data: null, error }
+  const errorCopia = await copiarEjercicios('rutina', rutina.id, 'rutina', data.id)
+  return { data, error: errorCopia }
+}
+
+// --- Calendario semanal (qué rutina toca cada día) ---
+
+// Calendario de un cliente como { Lunes: fila, ... }; cada fila trae el
+// nombre de su rutina en fila.rutinas.nombre.
+export async function cargarCalendarioCliente(clienteId) {
+  const { data } = await supabase
+    .from('calendario_cliente')
+    .select('*, rutinas(nombre)')
+    .eq('cliente_id', clienteId)
+  const porDia = {}
+  for (const fila of data || []) porDia[fila.dia] = fila
+  return porDia
+}
+
+export async function asignarDia(clienteId, dia, rutinaId) {
+  const { error } = await supabase
+    .from('calendario_cliente')
+    .upsert(
+      { cliente_id: clienteId, dia, rutina_id: rutinaId || null },
+      { onConflict: 'cliente_id,dia' },
+    )
+  return error || null
+}
+
+// Deja la rutina asignada exactamente en "diasElegidos": la pone en los
+// días marcados (reemplazando lo que hubiera) y la saca de los que se
+// desmarcaron. Devuelve el primer error, o null.
+export async function guardarDiasDeRutina(clienteId, rutinaId, diasElegidos, calendarioActual) {
+  const pedidos = []
+  for (const [dia, fila] of Object.entries(calendarioActual)) {
+    if (fila?.rutina_id === rutinaId && !diasElegidos.includes(dia)) {
+      pedidos.push(asignarDia(clienteId, dia, null))
+    }
+  }
+  for (const dia of diasElegidos) {
+    if (calendarioActual[dia]?.rutina_id !== rutinaId)
+      pedidos.push(asignarDia(clienteId, dia, rutinaId))
+  }
+  const errores = await Promise.all(pedidos)
+  return errores.find(Boolean) || null
+}
+
+// Días de la semana en que cada rutina está asignada: { rutinaId: ['Lunes', ...] }.
+export function diasPorRutina(calendario) {
+  const resultado = {}
+  for (const dia of DIAS_SEMANA) {
+    const fila = calendario[dia]
+    if (!fila?.rutina_id) continue
+    ;(resultado[fila.rutina_id] ||= []).push(dia)
+  }
+  return resultado
 }

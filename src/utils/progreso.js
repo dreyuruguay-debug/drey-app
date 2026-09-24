@@ -201,3 +201,48 @@ export function formatearCambio(valor, unidad = ' kg') {
   const signo = valor > 0 ? '+' : valor < 0 ? '−' : ''
   return `${signo}${formatearNumero(Math.abs(valor))}${unidad}`
 }
+
+// Récords personales: la mejor serie (más kilos; a igual peso, más
+// repeticiones) de cada ejercicio, con la fecha en que la hizo.
+// Devuelve [{ ejercicio_id, nombre, kg, reps, fecha }], los más nuevos primero.
+export function recordsPorEjercicio(sesiones) {
+  const mejores = new Map()
+  for (const sesion of ordenarPorFecha(sesiones)) {
+    for (const item of sesion.detalle || []) {
+      const numeros = item.ejercicio_id ? numerosDeEjercicio(item) : null
+      if (!numeros) continue
+      const actual = mejores.get(item.ejercicio_id)
+      const serie = numeros.mejorSerie
+      if (!actual || serie.kg > actual.kg || (serie.kg === actual.kg && serie.reps > actual.reps)) {
+        mejores.set(item.ejercicio_id, {
+          ejercicio_id: item.ejercicio_id,
+          nombre: item.nombre || 'Ejercicio',
+          kg: serie.kg,
+          reps: serie.reps,
+          fecha: sesion.fecha,
+        })
+      }
+    }
+  }
+  return [...mejores.values()].sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0))
+}
+
+// El último récord de peso que superó una marca anterior (el primer
+// intento de un ejercicio no cuenta como récord). null si todavía no hay.
+export function ultimoRecord(sesiones) {
+  const mejorKg = new Map()
+  let ultimo = null
+  for (const sesion of ordenarPorFecha(sesiones)) {
+    for (const item of sesion.detalle || []) {
+      const numeros = item.ejercicio_id ? numerosDeEjercicio(item) : null
+      if (!numeros) continue
+      const previo = mejorKg.get(item.ejercicio_id)
+      if (previo !== undefined && numeros.kgMax > previo) {
+        ultimo = { nombre: item.nombre || 'Ejercicio', kg: numeros.kgMax, fecha: sesion.fecha }
+      }
+      if (previo === undefined || numeros.kgMax > previo)
+        mejorKg.set(item.ejercicio_id, numeros.kgMax)
+    }
+  }
+  return ultimo
+}

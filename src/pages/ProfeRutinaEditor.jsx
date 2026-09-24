@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
 import SelectorGrupos from '../components/SelectorGrupos.jsx'
@@ -19,6 +19,7 @@ import {
   agruparEnBloques,
   bloqueABorrador,
   borradorAFilas,
+  duplicarBloque,
   moverBloque,
   quitarBloque,
   reemplazarBloque,
@@ -27,6 +28,7 @@ import { textoRango } from '../utils/formatos.js'
 import { textoGrupos } from '../data/gruposMusculares.js'
 import { SECCIONES_ACTIVIDADES } from '../data/actividades.js'
 import { PASOS_RUTINA } from '../data/asistente.js'
+import { mostrarAviso } from '../services/avisos.js'
 
 const ERROR_GUARDAR = 'No pudimos guardar el cambio. Revisá tu conexión y probá de nuevo.'
 
@@ -107,6 +109,7 @@ export default function ProfeRutinaEditor({ tipo }) {
       return false
     }
     setMensaje('')
+    mostrarAviso('Guardado')
     return true
   }
 
@@ -166,7 +169,12 @@ export default function ProfeRutinaEditor({ tipo }) {
     setItems(nuevaLista)
     const error = await sincronizarEjercicios(tipo, id, anteriores, nuevaLista)
     setItems(await cargarEjercicios(tipo, id))
+    if (!error) mostrarAviso('Guardado')
     return error ? ERROR_GUARDAR : ''
+  }
+
+  async function duplicarUnBloque(indiceBloque) {
+    setMensaje(await aplicarLista(duplicarBloque(items, indiceBloque)))
   }
 
   async function guardarBloque(borrador) {
@@ -190,8 +198,8 @@ export default function ProfeRutinaEditor({ tipo }) {
 
   const volverA = esRutina
     ? datos?.cliente_id
-      ? `/profe/rutinas?cliente=${datos.cliente_id}`
-      : '/profe/rutinas'
+      ? `/profe/clientes/${datos.cliente_id}?tab=rutinas`
+      : '/profe/clientes'
     : '/profe/plantillas'
 
   async function finalizar() {
@@ -199,11 +207,15 @@ export default function ProfeRutinaEditor({ tipo }) {
       setMensaje(`Agregá al menos un ejercicio antes de guardar la ${nombreTipo}.`)
       return
     }
+    // Rutina nueva: se publica (el cliente ya la ve) y se pasa al último
+    // paso, elegir qué días la hace.
     if (esRutina && datos.publicada === false) {
       setGuardandoRutina(true)
       const ok = await guardarCampos({ publicada: true })
       setGuardandoRutina(false)
       if (!ok) return
+      navigate(`/profe/rutinas/${id}/dias`, { state: { recienGuardada: true } })
+      return
     }
     navigate(volverA)
   }
@@ -244,6 +256,22 @@ export default function ProfeRutinaEditor({ tipo }) {
       )}
 
       {mensaje && <p className="auth-message">{mensaje}</p>}
+
+      <div className="acciones-fila">
+        <Link
+          to={
+            esRutina ? `/profe/rutinas/${id}/vista-previa` : `/profe/plantillas/${id}/vista-previa`
+          }
+          className="boton-secundario boton-chico"
+        >
+          👁 Ver como alumno
+        </Link>
+        {esRutina && !esBorrador && (
+          <Link to={`/profe/rutinas/${id}/dias`} className="boton-secundario boton-chico">
+            Asignar días
+          </Link>
+        )}
+      </div>
 
       <div className="rutina-vista">
         {/* Encabezado: nombre y grupos musculares */}
@@ -337,6 +365,7 @@ export default function ProfeRutinaEditor({ tipo }) {
                 onMover={(direccion) => moverUnBloque(indiceBloque, direccion)}
                 onEditar={() => setAsistente({ indiceBloque, borrador: bloqueABorrador(bloque) })}
                 onQuitar={() => quitarUnBloque(bloque, indiceBloque)}
+                onDuplicar={() => duplicarUnBloque(indiceBloque)}
               />
             ))
           )}
@@ -412,16 +441,16 @@ export default function ProfeRutinaEditor({ tipo }) {
       <div className="editor-guardar-rutina">
         <p className="profe-nota">
           {esBorrador
-            ? 'Los cambios se guardan solos. Tocá "Guardar rutina" cuando esté lista y el cliente la va a ver.'
+            ? 'Los cambios se guardan solos. Cuando esté lista, guardala: el cliente la va a ver y elegís qué días la hace.'
             : 'Los cambios se guardan solos, al momento.'}
         </p>
         <button
           type="button"
-          className="pill-button"
+          className="boton-principal"
           onClick={finalizar}
           disabled={guardandoRutina || Boolean(editando)}
         >
-          {guardandoRutina ? 'Guardando…' : esBorrador ? 'Guardar rutina' : 'Listo'}
+          {guardandoRutina ? 'Guardando…' : esBorrador ? 'Guardar rutina y elegir días' : 'Listo'}
         </button>
       </div>
 

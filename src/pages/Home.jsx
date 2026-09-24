@@ -1,35 +1,44 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import TopPattern from '../components/TopPattern.jsx'
-import ProfileIcon from '../components/ProfileIcon.jsx'
 import WeekDots from '../components/WeekDots.jsx'
 import BottomNav from '../components/BottomNav.jsx'
+import Bienvenida from '../components/Bienvenida.jsx'
 import { obtenerPlan } from '../data/planes.js'
 import {
   DIAS_SEMANA,
   obtenerNombreDiaHoy,
   obtenerFechaDeDiaEstaSemana,
+  obtenerFechaHoyISO,
   calcularRachaSemanas,
+  proximoDiaConRutina,
+  textoFechaLarga,
 } from '../utils/dias.js'
+import { estimarMinutos } from '../utils/entrenamiento.js'
+import { leerEnCurso } from '../utils/entrenamientoEnCurso.js'
+import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
+import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 
-// Inicio del cliente, pensado para abrirse todos los días desde el
-// celular: arriba un saludo corto, abajo el resumen de la semana en
-// puntos (WeekDots) y, como acción principal bien grande, el botón
-// para continuar la rutina de hoy (o el aviso de que hoy es descanso).
+// Inicio del cliente: una sola acción clara. Arriba el saludo y la
+// semana en puntos; en el medio, "Hoy te toca" con el botón verde grande
+// para empezar (o seguir) el entrenamiento; abajo la racha y el último
+// récord. La primera vez que entra se muestra la bienvenida.
 //
-// El calendario semanal (qué rutina toca cada día) lo arma el profe
-// desde su panel, en la tabla "calendario_cliente". Los puntos verdes
-// de la semana salen de la tabla "sesiones": un día cuenta como
-// cumplido cuando existe una sesión guardada con la fecha de ese día.
+// El calendario (qué rutina toca cada día) lo arma el profe. Los días
+// cumplidos salen de la tabla "sesiones".
 export default function Home() {
   const navigate = useNavigate()
+  const [parametros, setParametros] = useSearchParams()
   const [cargando, setCargando] = useState(true)
+  const [usuarioId, setUsuarioId] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [calendario, setCalendario] = useState({})
-  const [fechasConSesion, setFechasConSesion] = useState(new Set())
-  const [racha, setRacha] = useState(0)
+  const [sesiones, setSesiones] = useState([])
+  const [cantidadRutinas, setCantidadRutinas] = useState(0)
+  const [ejerciciosHoy, setEjerciciosHoy] = useState([])
   const [avanceNuevo, setAvanceNuevo] = useState(false)
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(false)
 
   useEffect(() => {
     cargarDatos()
@@ -43,54 +52,61 @@ export default function Home() {
       navigate('/')
       return
     }
-
-    const fechasSemana = DIAS_SEMANA.map((dia) => obtenerFechaDeDiaEstaSemana(dia))
+    setUsuarioId(usuario.id)
 
     const [
       { data: perfilData },
       { data: calendarioData },
       { data: sesionesData },
-      { data: todasLasFechas },
+      { count: rutinasCount },
+      { count: resumenesSinVer },
     ] = await Promise.all([
       supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
       supabase
         .from('calendario_cliente')
-        .select('*, rutinas(id, nombre, patron, musculos)')
+        .select('*, rutinas(id, nombre, patron, musculos, calentamiento)')
+        .eq('cliente_id', usuario.id),
+      supabase.from('sesiones').select('fecha, detalle').eq('cliente_id', usuario.id),
+      supabase
+        .from('rutinas')
+        .select('*', { count: 'exact', head: true })
         .eq('cliente_id', usuario.id),
       supabase
-        .from('sesiones')
-        .select('fecha')
+        .from('resumenes_progreso')
+        .select('*', { count: 'exact', head: true })
         .eq('cliente_id', usuario.id)
-        .in('fecha', fechasSemana),
-      // Todas las fechas entrenadas (no solo esta semana), para
-      // calcular cuántas semanas seguidas viene entrenando.
-      supabase.from('sesiones').select('fecha').eq('cliente_id', usuario.id),
+        .eq('estado', 'publicado')
+        .eq('visto', false),
     ])
 
-    // ¿Hay un resumen de avance publicado que todavía no vio?
-    const { count: resumenesSinVer } = await supabase
-      .from('resumenes_progreso')
-      .select('*', { count: 'exact', head: true })
-      .eq('cliente_id', usuario.id)
-      .eq('estado', 'publicado')
-      .eq('visto', false)
-    setAvanceNuevo((resumenesSinVer || 0) > 0)
+    const diasMap = {}
+    for (const fila of calendarioData || []) diasMap[fila.dia] = fila
+
+    // Datos de la rutina de hoy, para "6 ejercicios · ~50 min".
+    const rutinaHoy = diasMap[obtenerNombreDiaHoy()]?.rutinas
+    let ejercicios = []
+    if (rutinaHoy) {
+      const { data } = await supabase
+        .from('rutina_ejercicios')
+        .select('series, descansos, descanso_min, descanso_max')
+        .eq('rutina_id', rutinaHoy.id)
+      ejercicios = data || []
+    }
 
     setPerfil(perfilData || null)
-
-    const diasMap = {}
-    for (const fila of calendarioData || []) {
-      diasMap[fila.dia] = fila
-    }
     setCalendario(diasMap)
-    setFechasConSesion(new Set((sesionesData || []).map((sesion) => sesion.fecha)))
-    setRacha(calcularRachaSemanas((todasLasFechas || []).map((sesion) => sesion.fecha)))
+    setSesiones(sesionesData || [])
+    setCantidadRutinas(rutinasCount || 0)
+    setEjerciciosHoy(ejercicios)
+    setAvanceNuevo((resumenesSinVer || 0) > 0)
+    setMostrarBienvenida(parametros.get('bienvenida') === '1' || !yaVioBienvenida(usuario.id))
     setCargando(false)
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/')
+  function cerrarBienvenida() {
+    marcarBienvenidaVista(usuarioId)
+    setMostrarBienvenida(false)
+    if (parametros.get('bienvenida')) setParametros({}, { replace: true })
   }
 
   if (cargando) {
@@ -103,94 +119,173 @@ export default function Home() {
     )
   }
 
-  const nombre = perfil ? `${perfil.nombre} ${perfil.apellido}` : 'Hola'
-  const nombrePlan = obtenerPlan(perfil?.plan)?.nombre || 'Sin plan'
+  if (mostrarBienvenida) return <Bienvenida onTerminar={cerrarBienvenida} />
+
+  const hoy = obtenerFechaHoyISO()
   const diaHoy = obtenerNombreDiaHoy()
   const rutinaHoy = calendario[diaHoy]?.rutinas || null
   const cuentaPendiente = perfil?.estado === 'pendiente'
+  const enCurso = rutinaHoy ? leerEnCurso(rutinaHoy.id, hoy) : null
 
+  const fechasConSesion = new Set(sesiones.map((sesion) => sesion.fecha))
   const dias = DIAS_SEMANA.map((dia) => {
     if (!calendario[dia]?.rutina_id) return { dia, cumplido: null }
-    const fecha = obtenerFechaDeDiaEstaSemana(dia)
-    return { dia, cumplido: fechasConSesion.has(fecha) }
+    return { dia, cumplido: fechasConSesion.has(obtenerFechaDeDiaEstaSemana(dia)) }
   })
   const diasConEntrenamiento = dias.filter((item) => item.cumplido !== null).length
   const diasCumplidos = dias.filter((item) => item.cumplido === true).length
+  const entrenoHoy = fechasConSesion.has(hoy)
+  const racha = calcularRachaSemanas(sesiones.map((sesion) => sesion.fecha))
+  const record = ultimoRecord(sesiones)
+  const proximo = proximoDiaConRutina(calendario, diaHoy)
 
   return (
-    <div className="screen has-bottom-nav">
+    <div className="screen has-bottom-nav inicio">
       <TopPattern />
 
-      <button type="button" className="header-logout" onClick={handleLogout}>
-        Cerrar sesión
-      </button>
-
-      <div className="home-greeting">
-        <ProfileIcon size={56} />
+      <header className="inicio-saludo">
         <div>
-          <p className="home-greeting-hola">Hola, {nombre}</p>
-          <p className="home-greeting-plan">{nombrePlan}</p>
+          <p className="inicio-fecha">{textoFechaLarga()}</p>
+          <h1 className="inicio-hola">Hola, {perfil?.nombre || 'crack'}</h1>
+          <p className="inicio-plan">{obtenerPlan(perfil?.plan)?.nombre || 'Sin plan'}</p>
         </div>
-      </div>
+        <Link to="/perfil" className="inicio-avatar" aria-label="Mi perfil">
+          {iniciales(perfil)}
+        </Link>
+      </header>
 
       {cuentaPendiente && (
         <Link to="/suscripcion" className="home-aviso-pendiente">
           {perfil?.aviso_pago
-            ? 'Avisaste tu pago. Esperando autorización del profesor.'
-            : 'Tu cuenta está pendiente de habilitación. Tocá acá para ver los datos de pago.'}
+            ? 'Avisaste tu pago. Tu profe lo está revisando.'
+            : 'Tu cuenta está pendiente. Tocá acá para ver cómo pagar y activarla.'}
         </Link>
       )}
 
       {avanceNuevo && (
-        <Link to="/mis-datos#avance" className="home-aviso-pendiente home-aviso-avance">
+        <Link to="/progreso#avance" className="home-aviso-pendiente home-aviso-avance">
           📈 Tu profe publicó tu resumen de avance. Tocá acá para verlo.
         </Link>
       )}
 
-      <WeekDots dias={dias} diaHoy={diaHoy} />
-      <p className="home-progreso-texto">
-        {diasConEntrenamiento > 0
-          ? `${diasCumplidos} de ${diasConEntrenamiento} entrenamientos esta semana`
-          : 'Todavía no tenés días de entrenamiento programados'}
-      </p>
-      {racha > 0 && (
-        <p className="home-racha">
-          🔥 {racha} {racha === 1 ? 'semana seguida entrenando' : 'semanas seguidas entrenando'}
-        </p>
+      {diasConEntrenamiento > 0 && (
+        <section className="inicio-semana">
+          <p className="seccion-etiqueta">
+            Esta semana · {diasCumplidos} de {diasConEntrenamiento}
+          </p>
+          <WeekDots dias={dias} diaHoy={diaHoy} />
+        </section>
       )}
 
-      <div className="home-cta-wrap">
+      <section className="inicio-hoy">
         {cuentaPendiente ? (
-          <div className="cta-descanso">
-            <p className="cta-descanso-titulo">Cuenta pendiente</p>
-            <p className="cta-descanso-texto">
-              En cuanto tu profe habilite tu cuenta vas a poder ver tus rutinas acá.
-            </p>
-          </div>
+          <TarjetaMensaje
+            titulo="Cuenta pendiente"
+            texto="En cuanto tu profe habilite tu cuenta vas a ver acá tu entrenamiento del día."
+          />
         ) : rutinaHoy ? (
-          <Link to={`/rutinas/${rutinaHoy.id}`} className="cta-button">
-            Continuar rutina de hoy
-            <span className="cta-button-sub">
-              {[rutinaHoy.nombre, rutinaHoy.patron || rutinaHoy.musculos]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
-          </Link>
-        ) : (
-          <div className="cta-descanso">
-            <p className="cta-descanso-titulo">Hoy es día de descanso</p>
-            <p className="cta-descanso-texto">Aprovechá para recuperar. Mañana seguimos.</p>
+          <div className="hoy-tarjeta">
+            <span className="hoy-etiqueta">{entrenoHoy ? 'Ya entrenaste hoy' : 'Hoy te toca'}</span>
+            <h2 className="hoy-nombre">{rutinaHoy.nombre}</h2>
+            <div className="chips-lista">
+              {ejerciciosHoy.length > 0 && (
+                <span className="chip chip-dato">
+                  {ejerciciosHoy.length} {ejerciciosHoy.length === 1 ? 'ejercicio' : 'ejercicios'}
+                </span>
+              )}
+              {ejerciciosHoy.length > 0 && (
+                <span className="chip chip-dato">
+                  ~{estimarMinutos(rutinaHoy, ejerciciosHoy)} min
+                </span>
+              )}
+              {rutinaHoy.calentamiento?.length > 0 && (
+                <span className="chip chip-dato">Con calentamiento</span>
+              )}
+            </div>
+            <Link to={`/rutinas/${rutinaHoy.id}`} className="boton-principal boton-grande">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {enCurso
+                ? 'Seguir entrenamiento'
+                : entrenoHoy
+                  ? 'Entrenar de nuevo'
+                  : 'Empezar entrenamiento'}
+            </Link>
+            <Link to={`/rutinas/${rutinaHoy.id}?vista=completa`} className="boton-texto">
+              Ver la rutina antes de empezar
+            </Link>
           </div>
+        ) : cantidadRutinas === 0 ? (
+          <TarjetaMensaje
+            titulo="Tu profe está armando tu rutina"
+            texto="Te va a aparecer acá apenas esté lista. Mientras tanto, completá tus datos para que te conozca mejor."
+            accion={{ texto: 'Completar mis datos', to: '/mis-datos' }}
+          />
+        ) : diasConEntrenamiento === 0 ? (
+          <TarjetaMensaje
+            titulo="Elegí qué entrenar hoy"
+            texto="Tu profe todavía no te asignó días. Entrá a tus rutinas y elegí una."
+            accion={{ texto: 'Ver mis rutinas', to: '/rutinas' }}
+          />
+        ) : (
+          <TarjetaMensaje
+            titulo="Hoy es día de descanso"
+            texto={
+              proximo
+                ? `Recuperá bien. Próximo entrenamiento: ${proximo.dia}${
+                    proximo.fila.rutinas?.nombre ? ` · ${proximo.fila.rutinas.nombre}` : ''
+                  }.`
+                : 'Aprovechá para recuperar. Mañana seguimos.'
+            }
+            accion={{ texto: 'Quiero entrenar igual', to: '/rutinas', secundaria: true }}
+          />
         )}
-      </div>
+      </section>
 
-      <div className="home-secundarios">
-        <Link to="/rutinas" className="cta-secondary">
-          Ver todas mis rutinas
-        </Link>
-      </div>
+      {sesiones.length > 0 && (
+        <section className="inicio-datos">
+          <div className="dato-tarjeta">
+            <span className="dato-etiqueta">Racha</span>
+            <strong className="dato-valor">
+              {racha} {racha === 1 ? 'semana' : 'semanas'}
+            </strong>
+          </div>
+          <Link to="/progreso" className="dato-tarjeta">
+            <span className="dato-etiqueta">{record ? 'Último récord' : 'Entrenamientos'}</span>
+            <strong className="dato-valor">
+              {record ? `${record.nombre} ${formatearNumero(record.kg)} kg` : sesiones.length}
+            </strong>
+          </Link>
+        </section>
+      )}
 
       <BottomNav />
     </div>
   )
+}
+
+function TarjetaMensaje({ titulo, texto, accion }) {
+  return (
+    <div className="hoy-tarjeta hoy-tarjeta-mensaje">
+      <h2 className="hoy-mensaje-titulo">{titulo}</h2>
+      <p className="hoy-mensaje-texto">{texto}</p>
+      {accion && (
+        <Link to={accion.to} className={accion.secundaria ? 'boton-secundario' : 'boton-principal'}>
+          {accion.texto}
+        </Link>
+      )}
+    </div>
+  )
+}
+
+function iniciales(perfil) {
+  const letras = `${perfil?.nombre?.[0] || ''}${perfil?.apellido?.[0] || ''}`.toUpperCase()
+  return letras || '·'
 }

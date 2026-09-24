@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
 
 // Plantillas de rutina: se arman una sola vez (con sus ejercicios,
@@ -45,7 +46,8 @@ export default function ProfePlantillas() {
   }
 
   return (
-    <ProfeLayout titulo="Plantillas de rutina">
+    <ProfeLayout titulo="Biblioteca">
+      <BibliotecaTabs activa="plantillas" />
       <p className="profe-nota">
         Armá acá una rutina reutilizable. Después, al crear una rutina para cualquier cliente, elegí
         "Usar plantilla" para copiarle todo de entrada y ajustar lo particular.
@@ -77,7 +79,7 @@ export default function ProfePlantillas() {
               <div className="profe-cliente-acciones">
                 <Link
                   to={`/profe/plantillas/${plantilla.id}`}
-                  className="pill-button profe-boton-habilitar"
+                  className="boton-secundario boton-chico"
                 >
                   Editar
                 </Link>

@@ -6,6 +6,7 @@ import {
   nombreCortoDeMetodo,
 } from '../data/metodos.js'
 import { borradorNuevo, ejercicioParaBorrador, validarBorrador } from '../utils/bloques.js'
+import { guardarUltimosValores, leerUltimosValores } from '../utils/ultimosValores.js'
 import PasosAsistente from './PasosAsistente.jsx'
 import SelectorEjercicios from './SelectorEjercicios.jsx'
 import EditorRango from './EditorRango.jsx'
@@ -41,7 +42,11 @@ export default function AsistenteBloque({
 }) {
   const editando = Boolean(borradorInicial)
   const [paso, setPaso] = useState(editando ? PASO_CONFIGURAR : PASO_TIPO)
-  const [borrador, setBorrador] = useState(() => borradorInicial || borradorNuevo())
+  // Los últimos números que usó el profe, para proponerlos de entrada.
+  const [ultimos] = useState(() => leerUltimosValores())
+  const [borrador, setBorrador] = useState(
+    () => borradorInicial || borradorNuevo('normal', ultimos.descanso),
+  )
   const [mostrarOtros, setMostrarOtros] = useState(
     () => Boolean(borradorInicial) && !obtenerMetodo(borradorInicial.metodo).principal,
   )
@@ -84,8 +89,12 @@ export default function AsistenteBloque({
         }
       }
       // En un ejercicio único, elegir otro reemplaza al anterior.
-      if (maximo === 1) return { ...actual, ejercicios: [ejercicioParaBorrador(ejercicio)] }
-      return { ...actual, ejercicios: [...actual.ejercicios, ejercicioParaBorrador(ejercicio)] }
+      if (maximo === 1)
+        return { ...actual, ejercicios: [ejercicioParaBorrador(ejercicio, ultimos.ejercicio)] }
+      return {
+        ...actual,
+        ejercicios: [...actual.ejercicios, ejercicioParaBorrador(ejercicio, ultimos.ejercicio)],
+      }
     })
     setError('')
   }
@@ -123,6 +132,7 @@ export default function AsistenteBloque({
     const resultado = await onGuardar(borrador)
     setGuardando(false)
     if (resultado) setError(resultado)
+    else guardarUltimosValores(borrador)
   }
 
   const esGrupo = cantidad > 1

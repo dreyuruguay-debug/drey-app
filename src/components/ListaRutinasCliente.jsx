@@ -1,99 +1,157 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
-import { guardarComoPlantilla } from '../services/rutinas.js'
+import { duplicarRutina, guardarComoPlantilla } from '../services/rutinas.js'
+import { mostrarAviso } from '../services/avisos.js'
+import { abreviaturaDia } from '../utils/dias.js'
+import MenuAcciones from './MenuAcciones.jsx'
+import CopiarRutina from './CopiarRutina.jsx'
 
-// Listado de las rutinas de un cliente, con el botón "+ Agregar rutina".
-// Lo usan la sección "Rutinas" del panel del profe y el detalle de cada
-// cliente, así se ven y funcionan igual en los dos lugares.
+// Las rutinas de un cliente (pestaña "Rutinas" de su ficha): cada una con
+// sus días, su estado y el menú ⋯ (Editar, Asignar días, Ver como alumno,
+// Duplicar, Guardar como plantilla, Borrar). Abajo, el botón verde para
+// armar una nueva y la opción de copiar una rutina de otro cliente.
 //
-// Las rutinas que el profe todavía no terminó de armar aparecen como
-// "Borrador" (el cliente no las ve hasta que el profe toca "Guardar rutina").
-// onCambio: se llama después de borrar una rutina, para recargar la lista.
-export default function ListaRutinasCliente({ clienteId, rutinas, cantidades, onCambio }) {
-  const [mensaje, setMensaje] = useState('')
+// Las rutinas que el profe todavía no terminó aparecen como "Borrador":
+// el cliente no las ve hasta que se guardan.
+// onCambio: se llama después de un cambio, para recargar la ficha.
+export default function ListaRutinasCliente({
+  clienteId,
+  clienteNombre,
+  rutinas,
+  cantidades,
+  diasPorRutina = {},
+  onCambio,
+}) {
+  const navigate = useNavigate()
+  const [copiando, setCopiando] = useState(false)
 
-  async function handleBorrar(rutina) {
+  async function borrar(rutina) {
     if (!window.confirm(`¿Borrar "${rutina.nombre}"? No se puede deshacer.`)) return
     const { error } = await supabase.from('rutinas').delete().eq('id', rutina.id)
     if (error) {
-      setMensaje('No pudimos borrar la rutina. Probá de nuevo.')
+      mostrarAviso('No pudimos borrar la rutina', 'error')
       return
     }
-    setMensaje('')
+    mostrarAviso('Rutina borrada')
     onCambio?.()
   }
 
-  // Guarda una rutina ya armada como plantilla reutilizable, así se puede
-  // usar después con otros clientes sin cargar todo de nuevo.
-  async function handleGuardarComoPlantilla(rutina) {
+  async function plantilla(rutina) {
     const error = await guardarComoPlantilla(rutina)
-    setMensaje(
-      error
-        ? 'No pudimos guardar la plantilla. Probá de nuevo.'
-        : `Guardado como plantilla "${rutina.nombre}". Ya la podés usar en otros clientes.`,
+    mostrarAviso(
+      error ? 'No pudimos guardar la plantilla' : `"${rutina.nombre}" guardada como plantilla`,
+      error ? 'error' : 'ok',
     )
+  }
+
+  async function duplicar(rutina, destinoId = clienteId) {
+    const { data, error } = await duplicarRutina(
+      rutina,
+      destinoId,
+      destinoId === clienteId ? `${rutina.nombre} (copia)` : rutina.nombre,
+    )
+    if (error || !data) {
+      mostrarAviso('No pudimos copiar la rutina', 'error')
+      return
+    }
+    mostrarAviso('Copia creada: revisala y guardala')
+    navigate(`/profe/rutinas/${data.id}`)
   }
 
   return (
     <div className="lista-rutinas-cliente">
-      {mensaje && <p className="auth-message">{mensaje}</p>}
-
       {rutinas.length === 0 ? (
-        <p className="profe-vacio lista-rutinas-vacia">Este cliente todavía no tiene rutinas.</p>
+        <div className="tarjeta-vacia">
+          <strong>Todavía no tiene rutinas</strong>
+          <span>Armale la primera con el asistente paso a paso.</span>
+        </div>
       ) : (
-        <div className="rutinas-lista-profe">
+        <div className="lista-tarjetas">
           {rutinas.map((rutina) => {
             const cantidad = cantidades[rutina.id] || 0
-            const grupos = rutina.grupos_musculares?.length
-              ? rutina.grupos_musculares.join(' · ')
-              : [rutina.patron, rutina.musculos].filter(Boolean).join(' · ')
+            const dias = diasPorRutina[rutina.id] || []
+            const borrador = rutina.publicada === false
             return (
-              <div key={rutina.id} className="profe-rutina-tarjeta">
-                <Link to={`/profe/rutinas/${rutina.id}`} className="profe-rutina-tarjeta-info">
-                  <p className="profe-cliente-nombre">
-                    {rutina.nombre}
-                    {rutina.publicada === false && (
-                      <span className="etiqueta-borrador">Borrador</span>
-                    )}
-                  </p>
-                  {grupos && <p className="profe-cliente-detalle">{grupos}</p>}
-                  <p className="profe-cliente-detalle">
-                    {cantidad === 1 ? '1 ejercicio' : `${cantidad} ejercicios`}
-                  </p>
+              <div
+                key={rutina.id}
+                className={borrador ? 'tarjeta-rutina tarjeta-borrador' : 'tarjeta-rutina'}
+              >
+                <Link to={`/profe/rutinas/${rutina.id}`} className="tarjeta-rutina-textos">
+                  <strong>{rutina.nombre}</strong>
+                  {borrador ? (
+                    <small className="texto-alerta">Borrador · todavía no la ve</small>
+                  ) : (
+                    <small>
+                      {cantidad === 1 ? '1 ejercicio' : `${cantidad} ejercicios`}
+                      {rutina.calentamiento?.length ? ' · con calentamiento' : ''}
+                    </small>
+                  )}
+                  {!borrador && (
+                    <span className="chips-lista">
+                      {dias.length ? (
+                        dias.map((dia) => (
+                          <span key={dia} className="chip chip-dato chip-chico">
+                            {abreviaturaDia(dia)}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="chip chip-chico chip-alerta">Sin días asignados</span>
+                      )}
+                    </span>
+                  )}
                 </Link>
-                <div className="profe-cliente-acciones">
-                  <Link
-                    to={`/profe/rutinas/${rutina.id}`}
-                    className="pill-button profe-boton-habilitar"
-                  >
-                    {rutina.publicada === false ? 'Seguir armando' : 'Editar'}
+                {borrador ? (
+                  <Link to={`/profe/rutinas/${rutina.id}`} className="boton-secundario boton-chico">
+                    Seguir
                   </Link>
-                  <button
-                    type="button"
-                    className="profe-ejercicio-agregar"
-                    onClick={() => handleGuardarComoPlantilla(rutina)}
-                    disabled={!cantidad}
-                  >
-                    Guardar como plantilla
-                  </button>
-                  <button
-                    type="button"
-                    className="profe-ejercicio-borrar"
-                    onClick={() => handleBorrar(rutina)}
-                  >
-                    Borrar
-                  </button>
-                </div>
+                ) : (
+                  !dias.length && (
+                    <Link
+                      to={`/profe/rutinas/${rutina.id}/dias`}
+                      className="boton-secundario boton-chico"
+                    >
+                      Asignar
+                    </Link>
+                  )
+                )}
+                <MenuAcciones
+                  etiqueta={`Opciones de ${rutina.nombre}`}
+                  opciones={[
+                    { texto: 'Editar', to: `/profe/rutinas/${rutina.id}` },
+                    ...(borrador
+                      ? []
+                      : [{ texto: 'Asignar días', to: `/profe/rutinas/${rutina.id}/dias` }]),
+                    { texto: 'Ver como alumno', to: `/profe/rutinas/${rutina.id}/vista-previa` },
+                    { texto: 'Duplicar', onClick: () => duplicar(rutina) },
+                    ...(cantidad
+                      ? [{ texto: 'Guardar como plantilla', onClick: () => plantilla(rutina) }]
+                      : []),
+                    { texto: 'Borrar', onClick: () => borrar(rutina), peligro: true },
+                  ]}
+                />
               </div>
             )
           })}
         </div>
       )}
 
-      <Link to={`/profe/rutinas/nueva/${clienteId}`} className="profe-boton-agregar-ejercicio">
-        + Agregar rutina
-      </Link>
+      <div className="acciones-columna">
+        <Link to={`/profe/rutinas/nueva/${clienteId}`} className="boton-principal">
+          + Nueva rutina{clienteNombre ? ` para ${clienteNombre}` : ''}
+        </Link>
+        <button type="button" className="boton-secundario" onClick={() => setCopiando(true)}>
+          Copiar una rutina de otro cliente
+        </button>
+      </div>
+
+      {copiando && (
+        <CopiarRutina
+          clienteId={clienteId}
+          onElegir={(rutina) => duplicar(rutina, clienteId)}
+          onCerrar={() => setCopiando(false)}
+        />
+      )}
     </div>
   )
 }

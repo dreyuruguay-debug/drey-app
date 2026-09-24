@@ -90,7 +90,10 @@ export default function ProfeClienteProgreso() {
   const nombreCliente = cliente ? `${cliente.nombre} ${cliente.apellido}` : 'Cliente'
 
   return (
-    <ProfeLayout titulo={`Progresión · ${nombreCliente}`} volverA={`/profe/clientes/${id}`}>
+    <ProfeLayout
+      titulo={`Progresión · ${nombreCliente}`}
+      volverA={`/profe/clientes/${id}?tab=progreso`}
+    >
       {mensaje && <p className="auth-message">{mensaje}</p>}
       {cargando ? (
         <p className="profe-vacio">Cargando…</p>
