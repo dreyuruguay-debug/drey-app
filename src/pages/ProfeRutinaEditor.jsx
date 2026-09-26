@@ -31,6 +31,7 @@ import { PASOS_RUTINA } from '../data/asistente.js'
 import { mostrarAviso } from '../services/avisos.js'
 import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 const OPCIONES_SEMANAS = [2, 3, 4, 5, 6, 8, 10, 12]
 
@@ -267,9 +268,11 @@ export default function ProfeRutinaEditor({ tipo }) {
   if (cargando || !datos) {
     return (
       <ProfeLayout titulo={esRutina ? 'Rutina' : 'Plantilla'} volverA={volverA}>
-        <p className="profe-vacio">
-          {cargando ? 'Cargando…' : `No encontramos esta ${nombreTipo}.`}
-        </p>
+        {cargando ? (
+          <Esqueleto filas={4} />
+        ) : (
+          <p className="profe-vacio">No encontramos esta {nombreTipo}.</p>
+        )}
       </ProfeLayout>
     )
   }

@@ -13,14 +13,14 @@ import { clavesConPrefijo, leerJSON } from '../utils/almacenLocal.js'
 export async function obtenerUsuarioActual() {
   // Sin señal no se intenta nada: si la sesión venció, Supabase se
   // quedaría reintentando renovarla durante ~30 segundos.
-  if (sinSenal()) return usuarioGuardadoEnElCelular()
+  if (sinSenal()) return usuarioGuardado()
   try {
     const { data } = await conLimiteDeTiempo(supabase.auth.getSession(), ESPERA_SESION_MS)
     if (data?.session?.user) return data.session.user
   } catch {
     // Sin señal o muy lenta: se usa lo guardado en el celular (abajo).
   }
-  return usuarioGuardadoEnElCelular()
+  return usuarioGuardado()
 }
 
 const ESPERA_SESION_MS = 4000
@@ -39,8 +39,11 @@ export function conLimiteDeTiempo(promesa, milisegundos) {
   return Promise.race([promesa, limite]).finally(() => clearTimeout(temporizador))
 }
 
-// Supabase guarda la sesión en una clave "sb-<proyecto>-auth-token".
-function usuarioGuardadoEnElCelular() {
+// El usuario de la sesión guardada en el celular, al instante y sin
+// preguntarle a nadie (Supabase la guarda en "sb-<proyecto>-auth-token").
+// Sirve para mostrar enseguida lo último guardado de ese usuario mientras
+// se confirma la sesión. Devuelve null si no hay sesión guardada.
+export function usuarioGuardado() {
   for (const clave of clavesConPrefijo('sb-')) {
     if (!clave.endsWith('-auth-token')) continue
     const sesion = leerJSON(clave)

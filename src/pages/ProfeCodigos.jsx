@@ -10,6 +10,7 @@ import {
 import { mostrarAviso } from '../services/avisos.js'
 import { PLANES, formatearPrecio } from '../data/planes.js'
 import { textoFechaCorta } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 const TIPOS = [
   { id: 'plan', label: 'Del plan' },
@@ -132,7 +133,7 @@ export default function ProfeCodigos() {
       </p>
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : lista.length === 0 ? (
         <p className="profe-vacio">Todavía no creaste códigos {tipo === 'plan' ? 'del plan' : 'de ropa'}.</p>
       ) : (

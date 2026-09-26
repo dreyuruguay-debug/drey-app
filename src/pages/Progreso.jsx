@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { obtenerUsuarioActual } from '../services/sesion.js'
-import { cargarHistorial } from '../services/datosCliente.js'
+import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
+import { cargarHistorial, historialGuardado } from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
@@ -14,6 +14,7 @@ import {
   recordsPorEjercicio,
   volumenPorSemana,
 } from '../utils/progreso.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 const RECORDS_A_MOSTRAR = 5
 
@@ -23,9 +24,14 @@ const RECORDS_A_MOSTRAR = 5
 // entrenamientos guardados en el celular que esperan señal).
 export default function Progreso() {
   const navigate = useNavigate()
-  const [cargando, setCargando] = useState(true)
-  const [usuarioId, setUsuarioId] = useState(null)
-  const [sesiones, setSesiones] = useState([])
+  // Lo último guardado se muestra al instante y se actualiza por detrás.
+  const [guardado] = useState(() => {
+    const usuario = usuarioGuardado()
+    return usuario ? { usuarioId: usuario.id, ...historialGuardado(usuario.id) } : null
+  })
+  const [cargando, setCargando] = useState(!guardado?.sesiones)
+  const [usuarioId, setUsuarioId] = useState(guardado?.usuarioId || null)
+  const [sesiones, setSesiones] = useState(guardado?.sesiones || [])
   const [ejercicioElegido, setEjercicioElegido] = useState('')
 
   useEffect(() => {
@@ -33,7 +39,6 @@ export default function Progreso() {
   }, [])
 
   async function cargar() {
-    setCargando(true)
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
@@ -71,7 +76,7 @@ export default function Progreso() {
       </Link>
 
       {cargando ? (
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto filas={4} />
       ) : sesiones.length === 0 ? (
         <div className="hoy-tarjeta hoy-tarjeta-mensaje">
           <h2 className="hoy-mensaje-titulo">Todavía no hay datos</h2>

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import Registro from './pages/Registro.jsx'
@@ -13,68 +13,37 @@ import Progreso from './pages/Progreso.jsx'
 import AvisoGlobal from './components/AvisoGlobal.jsx'
 import EstadoConexion from './components/EstadoConexion.jsx'
 import PantallaError from './components/PantallaError.jsx'
-
-// Las pantallas del panel del profe se cargan recién cuando se entra a
-// ellas (lazy): así los clientes, que nunca las usan, descargan una web
-// más liviana y la app abre más rápido en el celular.
-//
-// Si justo se publicó una versión nueva de la web mientras el profe la
-// tenía abierta, el archivo viejo de la pantalla ya no existe: en ese
-// caso se recarga la página una vez para traer la versión nueva.
-function pantallaDiferida(importar) {
-  return lazy(() =>
-    importar()
-      .then((modulo) => {
-        try {
-          sessionStorage.removeItem('drey-recarga')
-        } catch {
-          // Sin sessionStorage no hay nada que limpiar.
-        }
-        return modulo
-      })
-      .catch((error) => {
-        let yaRecargo = false
-        try {
-          yaRecargo = sessionStorage.getItem('drey-recarga') === '1'
-          sessionStorage.setItem('drey-recarga', '1')
-        } catch {
-          // Sin sessionStorage (modo privado): se intenta recargar igual.
-        }
-        if (!yaRecargo) {
-          window.location.reload()
-          return new Promise(() => {})
-        }
-        throw error
-      }),
-  )
-}
-
-const PanelProfe = pantallaDiferida(() => import('./pages/PanelProfe.jsx'))
-const ProfeCuentas = pantallaDiferida(() => import('./pages/ProfeCuentas.jsx'))
-const ProfeEjercicios = pantallaDiferida(() => import('./pages/ProfeEjercicios.jsx'))
-const ProfeClientes = pantallaDiferida(() => import('./pages/ProfeClientes.jsx'))
-const ProfeClienteDetalle = pantallaDiferida(() => import('./pages/ProfeClienteDetalle.jsx'))
-const ProfeCalendario = pantallaDiferida(() => import('./pages/ProfeCalendario.jsx'))
-const ProfePlantillas = pantallaDiferida(() => import('./pages/ProfePlantillas.jsx'))
-const ProfeRutinas = pantallaDiferida(() => import('./pages/ProfeRutinas.jsx'))
-const ProfeRutinaNueva = pantallaDiferida(() => import('./pages/ProfeRutinaNueva.jsx'))
-const ProfeRutinaEditor = pantallaDiferida(() => import('./pages/ProfeRutinaEditor.jsx'))
-const ProfeRutinaDias = pantallaDiferida(() => import('./pages/ProfeRutinaDias.jsx'))
-const ProfeProgresion = pantallaDiferida(() => import('./pages/ProfeProgresion.jsx'))
-const ProfeClienteProgreso = pantallaDiferida(() => import('./pages/ProfeClienteProgreso.jsx'))
-const ProfeCodigos = pantallaDiferida(() => import('./pages/ProfeCodigos.jsx'))
-
-// Textos legales: se leen poco, así que también se cargan aparte.
-const Legal = pantallaDiferida(() => import('./pages/Legal.jsx'))
-const PrivacidadYDatos = pantallaDiferida(() => import('./pages/PrivacidadYDatos.jsx'))
-const ProfeEstadisticas = pantallaDiferida(() => import('./pages/ProfeEstadisticas.jsx'))
-const ProfeEquipo = pantallaDiferida(() => import('./pages/ProfeEquipo.jsx'))
-const NuevaContrasena = pantallaDiferida(() => import('./pages/NuevaContrasena.jsx'))
-const Medidas = pantallaDiferida(() => import('./pages/Medidas.jsx'))
-const ProfeClienteMedidas = pantallaDiferida(() => import('./pages/ProfeClienteMedidas.jsx'))
+import {
+  Legal,
+  Medidas,
+  NuevaContrasena,
+  PanelProfe,
+  PrivacidadYDatos,
+  ProfeCalendario,
+  ProfeClienteDetalle,
+  ProfeClienteMedidas,
+  ProfeClienteProgreso,
+  ProfeClientes,
+  ProfeCodigos,
+  ProfeCuentas,
+  ProfeEjercicios,
+  ProfeEquipo,
+  ProfeEstadisticas,
+  ProfePlantillas,
+  ProfeProgresion,
+  ProfeRutinaDias,
+  ProfeRutinaEditor,
+  ProfeRutinaNueva,
+  ProfeRutinas,
+} from './pantallasDiferidas.js'
+import Esqueleto from './components/Esqueleto.jsx'
 
 function CargandoPantalla() {
-  return <p className="profe-mensaje-carga">Cargando…</p>
+  return (
+    <div className="screen">
+      <Esqueleto tipo="pantalla" />
+    </div>
+  )
 }
 
 // Cada pantalla tiene su propio archivo en src/pages.

@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { cargarActividadClientes } from '../services/actividad.js'
+import { recordado, recordar } from '../services/memoriaSesion.js'
 import { obtenerPlan } from '../data/planes.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // A partir de esta cantidad de días sin entrenar, el cliente aparece
 // marcado como "inactivo" en la lista, para que el profe lo note sin
@@ -10,13 +13,17 @@ import { obtenerPlan } from '../data/planes.js'
 const UMBRAL_DIAS_INACTIVO = 5
 const MS_POR_DIA = 1000 * 60 * 60 * 24
 
+// Lo último que se cargó queda en memoria (services/memoriaSesion.js).
+const MEMORIA_CLIENTES = 'profe-clientes'
+
 // Lista de clientes activos. Desde acá se entra a la ficha de cada uno
 // (rutinas, semana, progreso y pagos). Tiene un buscador (para cuando la lista crezca) y marca a
 // los que no entrenan hace varios días, calculado a partir de su
 // última sesión guardada en la tabla "sesiones".
 export default function ProfeClientes() {
-  const [clientes, setClientes] = useState([])
-  const [cargando, setCargando] = useState(true)
+  // Lo último cargado se ve al instante; se actualiza por detrás.
+  const [clientes, setClientes] = useState(() => recordado(MEMORIA_CLIENTES) || [])
+  const [cargando, setCargando] = useState(() => !recordado(MEMORIA_CLIENTES))
   const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
@@ -24,34 +31,20 @@ export default function ProfeClientes() {
   }, [])
 
   async function cargarClientes() {
-    setCargando(true)
-    const { data: listaClientes } = await supabase
-      .from('perfiles')
-      .select('*')
-      .eq('estado', 'activo')
-      .eq('es_profe', false)
-      .order('nombre')
+    // Los clientes y cuándo entrenó cada uno, en un solo viaje.
+    const [{ data: listaClientes }, actividad] = await Promise.all([
+      supabase
+        .from('perfiles')
+        .select('*')
+        .eq('estado', 'activo')
+        .eq('es_profe', false)
+        .order('nombre'),
+      cargarActividadClientes(),
+    ])
 
     const clientesData = listaClientes || []
-    const ids = clientesData.map((cliente) => cliente.id)
-
-    // Última fecha entrenada de cada cliente: se pide ordenado por
-    // fecha descendente y nos quedamos con la primera aparición de
-    // cada cliente_id (Supabase no tiene un "group by" directo desde
-    // acá, así que el agrupado se hace en el navegador).
-    let ultimaSesionPorCliente = {}
-    if (ids.length > 0) {
-      const { data: sesiones } = await supabase
-        .from('sesiones')
-        .select('cliente_id, fecha')
-        .in('cliente_id', ids)
-        .order('fecha', { ascending: false })
-      for (const sesion of sesiones || []) {
-        if (!ultimaSesionPorCliente[sesion.cliente_id]) {
-          ultimaSesionPorCliente[sesion.cliente_id] = sesion.fecha
-        }
-      }
-    }
+    const ultimaSesionPorCliente = {}
+    for (const [clienteId, registro] of actividad) ultimaSesionPorCliente[clienteId] = registro.ultima
 
     const hoy = new Date()
     const conActividad = clientesData.map((cliente) => {
@@ -65,6 +58,7 @@ export default function ProfeClientes() {
       return { ...cliente, diasSinEntrenar }
     })
 
+    recordar(MEMORIA_CLIENTES, conActividad)
     setClientes(conActividad)
     setCargando(false)
   }
@@ -118,7 +112,7 @@ export default function ProfeClientes() {
       />
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : clientesFiltrados.length === 0 ? (
         <p className="profe-vacio">
           {clientes.length === 0

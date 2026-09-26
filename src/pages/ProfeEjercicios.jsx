@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { recordado, recordar } from '../services/memoriaSesion.js'
+import { traerTodasLasFilas } from '../services/paginado.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 import { comprimirImagen } from '../utils/imagenes.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Filtros para encontrar rápido lo que falta cargar.
 const FILTROS = [
@@ -11,6 +14,9 @@ const FILTROS = [
   { id: 'sin-foto', label: 'Sin foto' },
   { id: 'sin-video', label: 'Sin video' },
 ]
+
+// Lo último que se cargó queda en memoria (services/memoriaSesion.js).
+const MEMORIA_EJERCICIOS = 'profe-ejercicios'
 
 // Biblioteca de ejercicios, organizada en 7 categorías (Empuje,
 // Tracción, Multiarticulares, Piernas, Zona media, Cardiorrespiratorio y
@@ -27,8 +33,9 @@ const FILTROS = [
 // video) y borrar. Asignarle series/reps/peso a un cliente puntual se
 // hace en el detalle de ese cliente, no acá.
 export default function ProfeEjercicios() {
-  const [ejercicios, setEjercicios] = useState([])
-  const [cargando, setCargando] = useState(true)
+  // Lo último cargado se ve al instante; se actualiza por detrás.
+  const [ejercicios, setEjercicios] = useState(() => recordado(MEMORIA_EJERCICIOS) || [])
+  const [cargando, setCargando] = useState(() => !recordado(MEMORIA_EJERCICIOS))
   const [busqueda, setBusqueda] = useState('')
   const [categoriaActiva, setCategoriaActiva] = useState(CATEGORIAS[0].nombre)
   const [filtro, setFiltro] = useState('todos')
@@ -51,8 +58,10 @@ export default function ProfeEjercicios() {
   }, [])
 
   async function cargarEjercicios() {
-    setCargando(true)
-    const { data } = await supabase.from('ejercicios').select('*').order('nombre')
+    const { data, error } = await traerTodasLasFilas(() =>
+      supabase.from('ejercicios').select('*').order('nombre').order('id'),
+    )
+    if (!error) recordar(MEMORIA_EJERCICIOS, data)
     setEjercicios(data || [])
     setCargando(false)
   }
@@ -239,7 +248,7 @@ export default function ProfeEjercicios() {
       {mensaje && <p className="auth-message">{mensaje}</p>}
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : ejerciciosDelGrupo.length === 0 ? (
         <p className="profe-vacio">
           {filtro === 'todos'

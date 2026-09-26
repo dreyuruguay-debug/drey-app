@@ -5,6 +5,7 @@ import { supabase } from '../services/supabaseClient.js'
 import { mostrarAviso } from '../services/avisos.js'
 import { estadoDelPlan } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, obtenerLunesDeSemana } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Equipo y gimnasios (supabase/sql/018).
 //
@@ -86,7 +87,7 @@ export default function ProfeEquipo() {
   if (cargando) {
     return (
       <ProfeLayout titulo="Equipo y gimnasios" volverA="/profe">
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       </ProfeLayout>
     )
   }

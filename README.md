@@ -24,6 +24,20 @@ Web Push: `src/services/notificaciones.js` (activar en el celular),
 `datosCliente.js` y `colaEntrenamientos.js` guardan las rutinas y los
 entrenamientos hechos sin señal, que se envían solos al volver la conexión.
 
+## Rendimiento (que cambiar de pantalla sea instantáneo)
+
+- Las pantallas muestran al instante lo último cargado y se actualizan por
+  detrás: el alumno con la copia del celular (`services/datosCliente.js`),
+  el profe con la memoria de la sesión (`services/memoriaSesion.js`).
+- "¿Es profe?" se consulta una vez por sesión (`services/accesoProfe.js`).
+- Mientras llegan los datos se ven siluetas grises (`components/Esqueleto.jsx`).
+- Las pantallas diferidas se descargan por adelantado (`pantallasDiferidas.js`).
+- Supabase corta en 1000 filas: las consultas que pueden crecer usan
+  `services/paginado.js`. El historial del alumno se baja una vez y
+  después solo lo nuevo.
+- La actividad de los clientes la calcula la base (`services/actividad.js`
+  + función `actividad_clientes`, SQL 019, que también agrega índices).
+
 ## Estructura de carpetas
 
 - `src/pages` — una carpeta por pantalla completa (Login, Inicio, Rutinas, Suscripción, Comunidad, Mis datos, Panel del profe).

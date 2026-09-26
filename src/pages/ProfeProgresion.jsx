@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Progresión: los resúmenes de 4 semanas que esperan revisión del profe
 // y el acceso a las gráficas de cada cliente. Al abrir esta pantalla se
@@ -49,7 +50,7 @@ export default function ProfeProgresion() {
       </p>
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : (
         <>
           <p className="profe-seccion-label">

@@ -12,6 +12,7 @@ import { MERCADO_PAGO_AUTOMATICO } from '../data/pagos.js'
 import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { comprimirImagen } from '../utils/imagenes.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 const REVISAR_PAGO_CADA_MS = 3000
 const REVISAR_PAGO_VECES = 10
@@ -118,7 +119,7 @@ export default function Suscripcion() {
     return (
       <div className="screen has-bottom-nav">
         <TopPattern />
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto filas={3} />
         <BottomNav />
       </div>
     )

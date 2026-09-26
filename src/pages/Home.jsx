@@ -6,12 +6,15 @@ import BottomNav from '../components/BottomNav.jsx'
 import Bienvenida from '../components/Bienvenida.jsx'
 import ConsentimientoPendiente from '../components/ConsentimientoPendiente.jsx'
 import InvitacionNotificaciones from '../components/InvitacionNotificaciones.jsx'
-import { obtenerUsuarioActual } from '../services/sesion.js'
+import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import {
   cargarHistorial,
   cargarInicioCliente,
+  historialGuardado,
+  inicioGuardado,
   precargarRutinasSinConexion,
 } from '../services/datosCliente.js'
+import { precargarPantallas } from '../pantallasDiferidas.js'
 import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
 import { necesitaAceptarTerminos } from '../data/versionLegal.js'
 import { tocaMedirse } from '../utils/medidas.js'
@@ -31,6 +34,18 @@ import { estimarMinutos } from '../utils/entrenamiento.js'
 import { leerEnCurso } from '../utils/entrenamientoEnCurso.js'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
+import Esqueleto from '../components/Esqueleto.jsx'
+
+// Inicio e historial guardados en el celular del usuario de la sesión
+// guardada (o null si falta alguno: entonces se espera al servidor).
+function leerGuardado() {
+  const usuario = usuarioGuardado()
+  if (!usuario) return null
+  const inicio = inicioGuardado(usuario.id)
+  const historial = historialGuardado(usuario.id)
+  if (!inicio || !historial) return null
+  return { usuarioId: usuario.id, inicio, historial }
+}
 
 // Inicio del cliente: una sola acción clara. Arriba el saludo y la
 // semana en puntos; en el medio, "Hoy te toca" con el botón verde grande
@@ -41,8 +56,9 @@ import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 // cumplidos salen de la tabla "sesiones" (más los entrenamientos que
 // quedaron guardados en el celular esperando señal).
 //
-// Funciona sin señal: muestra lo último que se cargó (ver
-// services/datosCliente.js) y, con señal, deja guardadas en el celular
+// Se abre al instante con lo último guardado en el celular y se
+// actualiza apenas contesta el servidor. Funciona sin señal: muestra lo
+// último que se cargó (ver services/datosCliente.js) y, con señal, deja guardadas en el celular
 // todas las rutinas para poder entrenar sin conexión.
 //
 // También avisa cuándo vence el plan y, si ya pasaron los días de
@@ -51,19 +67,27 @@ import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 export default function Home() {
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
-  const [cargando, setCargando] = useState(true)
-  const [usuarioId, setUsuarioId] = useState(null)
-  const [datos, setDatos] = useState(null)
-  const [sesiones, setSesiones] = useState([])
+  // Lo último guardado en el celular se muestra al instante (sin
+  // "Cargando…") y se actualiza apenas contesta el servidor.
+  const [guardado] = useState(() => leerGuardado())
+  const [cargando, setCargando] = useState(!guardado)
+  const [usuarioId, setUsuarioId] = useState(guardado?.usuarioId || null)
+  const [datos, setDatos] = useState(guardado?.inicio || null)
+  const [sesiones, setSesiones] = useState(guardado?.historial.sesiones || [])
   const [sinConexion, setSinConexion] = useState(false)
-  const [mostrarBienvenida, setMostrarBienvenida] = useState(false)
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(
+    () => Boolean(guardado) && debeVerBienvenida(guardado.usuarioId),
+  )
 
   useEffect(() => {
     cargarDatos()
   }, [])
 
+  function debeVerBienvenida(id) {
+    return parametros.get('bienvenida') === '1' || !yaVioBienvenida(id)
+  }
+
   async function cargarDatos() {
-    setCargando(true)
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
@@ -79,12 +103,16 @@ export default function Home() {
     setDatos(inicio)
     setSesiones(historial.sesiones)
     setSinConexion(inicio.sinConexion)
-    setMostrarBienvenida(parametros.get('bienvenida') === '1' || !yaVioBienvenida(usuario.id))
+    // Si ya se mostró lo guardado, la bienvenida ya se decidió (y no se
+    // vuelve a abrir si la cerró mientras se actualizaba).
+    if (!guardado) setMostrarBienvenida(debeVerBienvenida(usuario.id))
     setCargando(false)
 
     if (!inicio.sinConexion && inicio.acceso?.acceso !== false) {
       precargarRutinasSinConexion(usuario.id)
     }
+    // Deja descargadas las pantallas que se abren desde acá (Medidas…).
+    precargarPantallas('cliente')
   }
 
   function cerrarBienvenida() {
@@ -97,7 +125,7 @@ export default function Home() {
     return (
       <div className="screen has-bottom-nav">
         <TopPattern />
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto tipo="inicio" />
         <BottomNav />
       </div>
     )

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { DIAS_SEMANA } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Vista semanal de todos los clientes juntos: una sola tabla con qué
 // rutina le toca a cada uno cada día, para no tener que entrar
@@ -92,7 +93,7 @@ export default function ProfeCalendario() {
       </p>
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : clientes.length === 0 ? (
         <p className="profe-vacio">Todavía no tenés clientes activos.</p>
       ) : (

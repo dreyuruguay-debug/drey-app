@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerPlan } from '../data/planes.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // "+ Nueva rutina" (desde Inicio o Clientes): primero se elige para qué
 // cliente es y enseguida arranca el asistente paso a paso. Las rutinas
@@ -48,7 +49,7 @@ export default function ProfeRutinas() {
       <p className="profe-nota">Elegí el cliente y enseguida la empezás a armar.</p>
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : clientes.length === 0 ? (
         <p className="profe-vacio">Todavía no tenés clientes activos. Habilitalos desde "Pagos".</p>
       ) : (

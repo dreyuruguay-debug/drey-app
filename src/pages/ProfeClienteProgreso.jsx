@@ -4,6 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import ResumenProgreso from '../components/ResumenProgreso.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { traerTodasLasFilas } from '../services/paginado.js'
 import {
   generarResumenesPendientes,
   publicarResumen,
@@ -16,6 +17,7 @@ import {
   formatearNumero,
   formatearCambio,
 } from '../utils/progreso.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Progresión de un cliente, para el profe:
 //   1. Por ejercicio: carga máxima semana a semana (gráfico) y el
@@ -43,11 +45,14 @@ export default function ProfeClienteProgreso() {
     const [{ data: perfil }, { data: listaSesiones }, { data: listaResumenes }] = await Promise.all(
       [
         supabase.from('perfiles').select('id, nombre, apellido').eq('id', id).single(),
-        supabase
-          .from('sesiones')
-          .select('fecha, esfuerzo, detalle')
-          .eq('cliente_id', id)
-          .order('fecha'),
+        traerTodasLasFilas(() =>
+          supabase
+            .from('sesiones')
+            .select('id, fecha, esfuerzo, detalle')
+            .eq('cliente_id', id)
+            .order('fecha')
+            .order('id'),
+        ),
         supabase
           .from('resumenes_progreso')
           .select('*')
@@ -96,7 +101,7 @@ export default function ProfeClienteProgreso() {
     >
       {mensaje && <p className="auth-message">{mensaje}</p>}
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : sesiones.length === 0 ? (
         <p className="profe-vacio">
           Todavía no completó ninguna rutina. Las gráficas aparecen con el primer entrenamiento.

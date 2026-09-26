@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../services/supabaseClient.js'
+import Esqueleto from './Esqueleto.jsx'
 
 // Ventana para copiar una rutina de otro cliente: se busca, se elige y
 // se crea una copia en borrador para este cliente (ver duplicarRutina).
@@ -68,7 +69,7 @@ export default function CopiarRutina({ clienteId, onElegir, onCerrar }) {
           onChange={(event) => setBusqueda(event.target.value)}
         />
         {cargando ? (
-          <p className="profe-vacio">Cargando…</p>
+          <Esqueleto filas={2} />
         ) : visibles.length === 0 ? (
           <p className="profe-vacio">No hay rutinas de otros clientes para copiar.</p>
         ) : (

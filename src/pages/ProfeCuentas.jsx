@@ -12,6 +12,7 @@ import {
 import { mostrarAviso } from '../services/avisos.js'
 import { TEXTO_ESTADO_PAGO, TEXTO_METODO_PAGO } from '../services/pagos.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Pagos: habilitar cuentas nuevas y confirmar los avisos de pago por
 // transferencia, usando la tabla "perfiles" de Supabase. En cada cuenta
@@ -107,7 +108,7 @@ export default function ProfeCuentas() {
       </Link>
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : (
         <>
           <p className="profe-seccion-label">

@@ -5064,3 +5064,97 @@ div.tarjeta-rutina {
 .codigo-item > select {
   max-width: 45%;
 }
+
+/* ------------------------------------------------------------------ */
+/* Siluetas de carga (components/Esqueleto.jsx): bloques grises con la */
+/* forma de la pantalla y un brillo suave que pasa de izquierda a     */
+/* derecha mientras llegan los datos.                                  */
+/* ------------------------------------------------------------------ */
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.screen > .esqueleto {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.pagina-cliente > .esqueleto {
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+}
+
+.esqueleto-bloque {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.esqueleto-bloque::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: esqueleto-brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes esqueleto-brillo {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.esqueleto-tarjeta {
+  height: 4rem;
+}
+
+.esqueleto-tarjeta-grande {
+  height: 12rem;
+  border-radius: 24px;
+}
+
+.esqueleto-titulo {
+  width: 60%;
+  height: 2rem;
+  border-radius: 10px;
+}
+
+.esqueleto-linea {
+  width: 80%;
+  height: 0.9rem;
+  border-radius: 8px;
+}
+
+.esqueleto-corta {
+  width: 40%;
+}
+
+.esqueleto-semana {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.esqueleto-punto {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+}
+
+.esqueleto-inicio {
+  padding-top: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloque::after {
+    animation: none;
+  }
+}

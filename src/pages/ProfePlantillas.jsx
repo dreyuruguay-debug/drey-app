@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Plantillas de rutina: se arman una sola vez (con sus ejercicios,
 // métodos, series, reps, kg objetivo y descansos) y después, desde el
@@ -57,7 +58,7 @@ export default function ProfePlantillas() {
 
       <p className="profe-seccion-label">Ver plantillas</p>
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : plantillas.length === 0 ? (
         <p className="profe-vacio">Todavía no armaste ninguna plantilla.</p>
       ) : (

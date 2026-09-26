@@ -6,6 +6,7 @@ import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { calcularEdad } from '../utils/fechas.js'
 import { mostrarAviso } from '../services/avisos.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Mis datos: nombre, fecha de nacimiento (con la edad calculada), peso,
 // celular, email, objetivo y "Lesiones y/o limitaciones". Editable por
@@ -91,7 +92,7 @@ export default function MisDatos() {
     return (
       <div className="screen has-bottom-nav">
         <TopPattern />
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto filas={5} />
         <BottomNav />
       </div>
     )

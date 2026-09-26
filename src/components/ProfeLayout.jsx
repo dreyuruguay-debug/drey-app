@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient.js'
+import {
+  contarPagosPendientes,
+  esProfeConocido,
+  ultimosPagosPendientes,
+  verificarProfe,
+} from '../services/accesoProfe.js'
+import { precargarPantallas } from '../pantallasDiferidas.js'
 import TopPattern from './TopPattern.jsx'
+import Esqueleto from './Esqueleto.jsx'
 
 // Layout que comparten todas las pantallas del panel del profe: revisa
-// que quien entra sea profe, muestra el menú fijo de abajo con 4
-// secciones (Inicio, Clientes, Biblioteca, Pagos) y un "← Volver" cuando
+// que quien entra sea profe (una sola vez por sesión, ver
+// services/accesoProfe.js: cambiar de pantalla no espera nada), muestra
+// el menú fijo de abajo con 4 secciones (Inicio, Clientes, Biblioteca, Pagos) y un "← Volver" cuando
 // la pantalla lo necesita. Cada pantalla pone su contenido adentro de
 // <ProfeLayout>, así la revisión de acceso y la navegación no se repiten.
 //
@@ -42,48 +50,37 @@ const SECCIONES = [
 export default function ProfeLayout({ titulo, volverA, children, sinMenu = false }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const [cargando, setCargando] = useState(true)
-  const [esProfe, setEsProfe] = useState(false)
-  const [pagosPendientes, setPagosPendientes] = useState(0)
+  // null = todavía no se sabe (solo la primera vez en este celular).
+  const [esProfe, setEsProfe] = useState(esProfeConocido)
+  const [pagosPendientes, setPagosPendientes] = useState(ultimosPagosPendientes)
 
   useEffect(() => {
-    verificarAcceso()
+    let activo = true
+    verificarProfe().then(({ usuarioId, esProfe: profe }) => {
+      if (!activo) return
+      if (!usuarioId) {
+        navigate('/')
+        return
+      }
+      setEsProfe(profe)
+      if (!profe) return
+      contarPagosPendientes().then((cantidad) => activo && setPagosPendientes(cantidad))
+      // Deja descargadas las demás pantallas del panel, así la primera
+      // vez que se abre cada una no hay que esperar su código.
+      precargarPantallas('profe')
+    })
+    return () => {
+      activo = false
+    }
   }, [])
 
-  async function verificarAcceso() {
-    setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
-    if (!usuario) {
-      navigate('/')
-      return
-    }
-    const { data } = await supabase
-      .from('perfiles')
-      .select('es_profe')
-      .eq('id', usuario.id)
-      .single()
-    const profe = Boolean(data?.es_profe)
-    setEsProfe(profe)
-    setCargando(false)
-    if (profe) {
-      // Número rojo sobre "Pagos": cuentas nuevas + avisos de pago.
-      const { data: clientes } = await supabase
-        .from('perfiles')
-        .select('estado, aviso_pago')
-        .eq('es_profe', false)
-      setPagosPendientes(
-        (clientes || []).filter((cliente) => cliente.estado === 'pendiente' || cliente.aviso_pago)
-          .length,
-      )
-    }
-  }
+  const cargando = esProfe === null
 
   if (cargando) {
     return (
       <div className="screen">
         <TopPattern />
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto tipo="pantalla" />
       </div>
     )
   }

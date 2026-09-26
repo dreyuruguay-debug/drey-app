@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import Cronometro from '../components/entrenar/Cronometro.jsx'
@@ -8,8 +8,13 @@ import PantallaDescanso from '../components/entrenar/PantallaDescanso.jsx'
 import PantallaFinal from '../components/entrenar/PantallaFinal.jsx'
 import VistaGeneral from '../components/entrenar/VistaGeneral.jsx'
 import { cargarRutinaCompleta } from '../services/rutinas.js'
-import { obtenerUsuarioActual } from '../services/sesion.js'
-import { cargarHistorial, cargarRutinaParaEntrenar } from '../services/datosCliente.js'
+import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
+import {
+  cargarHistorial,
+  cargarRutinaParaEntrenar,
+  historialGuardado,
+  rutinaGuardada,
+} from '../services/datosCliente.js'
 import { guardarEntrenamiento, nuevaFilaDeEntrenamiento } from '../services/colaEntrenamientos.js'
 import { agruparEnBloques } from '../utils/bloques.js'
 import { obtenerMetodo } from '../data/metodos.js'
@@ -25,6 +30,7 @@ import {
 import { borrarEnCurso, guardarEnCurso, leerEnCurso } from '../utils/entrenamientoEnCurso.js'
 import { formatearNumero } from '../utils/progreso.js'
 import { semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 const DURACION_AVISO_MS = 3000
 const VIBRACION_FIN_DESCANSO = [300, 150, 300]
@@ -44,6 +50,8 @@ const VIBRACION_FIN_DESCANSO = [300, 150, 300]
 // Al guardar, queda una sesión en la tabla "sesiones" con el kg/reps de
 // cada serie (de ahí salen "La vez pasada", los récords y las gráficas).
 //
+// Se abre al instante con la copia guardada en el celular y se actualiza
+// con lo del servidor (si el alumno todavía no empezó a entrenar).
 // Funciona sin señal: la rutina sale de la copia guardada en el celular
 // y, si al guardar no hay conexión, el entrenamiento queda en el celular
 // y se envía solo cuando vuelve la señal (services/colaEntrenamientos.js).
@@ -135,35 +143,85 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     guardarEnCurso(id, { fecha: hoy, series, calentamientoHecho, inicio, visible, records })
   }, [series, calentamientoHecho, visible, records, cargando, fase])
 
+  // Para que una carga vieja (de otra rutina) no pise a la nueva.
+  const cargaActual = useRef(0)
+  // Cómo quedó la pantalla recién armada. Si el alumno ya tocó algo (o
+  // se retomó un entrenamiento pausado) vale null.
+  const estadoInicial = useRef(null)
+  const estadoActual = useRef(null)
+  estadoActual.current = { series, calentamientoHecho, visible, fase }
+
+  // Primero muestra al instante la rutina guardada en el celular; después
+  // la actualiza con lo del servidor, pero solo si cambió algo y el
+  // alumno todavía no empezó (nunca se le cambia la pantalla mientras
+  // entrena).
   async function cargar() {
-    setCargando(true)
-    let datos = null
-    let lista = []
+    const numero = ++cargaActual.current
+    const vigente = () => numero === cargaActual.current
+
+    if (modoPrevia) {
+      setCargando(true)
+      const resultado = await cargarRutinaCompleta(tipo, id)
+      if (!vigente()) return
+      armarPantalla(resultado.datos, resultado.ejercicios, [])
+      return
+    }
+
+    let huellaMostrada = null
+    const usuarioLocal = usuarioGuardado()
+    const rutinaLocal = usuarioLocal ? rutinaGuardada(usuarioLocal.id, id) : null
+    const historialLocal = usuarioLocal ? historialGuardado(usuarioLocal.id) : null
+    if (rutinaLocal && historialLocal) {
+      setUsuarioId(usuarioLocal.id)
+      huellaMostrada = huella(rutinaLocal, historialLocal.sesiones)
+      armarPantalla(rutinaLocal.rutina, rutinaLocal.ejercicios, historialLocal.sesiones)
+    } else {
+      setCargando(true)
+    }
+
+    const usuario = await obtenerUsuarioActual()
+    if (!vigente()) return
+    if (!usuario) {
+      navigate('/')
+      return
+    }
+    setUsuarioId(usuario.id)
+    const [datosRutina, historial] = await Promise.all([
+      cargarRutinaParaEntrenar(usuario.id, id),
+      cargarHistorial(usuario.id),
+    ])
+    if (!vigente()) return
+    if (huellaMostrada !== null) {
+      if (huella(datosRutina, historial.sesiones) === huellaMostrada) return
+      if (alumnoYaEmpezo()) return
+    }
+    armarPantalla(datosRutina.rutina, datosRutina.ejercicios, historial.sesiones)
+  }
+
+  function alumnoYaEmpezo() {
+    const inicial = estadoInicial.current
+    const actual = estadoActual.current
+    return (
+      !inicial ||
+      actual.series !== inicial.series ||
+      actual.calentamientoHecho !== inicial.calentamientoHecho ||
+      actual.visible !== inicial.visible ||
+      actual.fase !== inicial.fase
+    )
+  }
+
+  // Arma la pantalla con la rutina, sus ejercicios y el historial de
+  // entrenamientos (del más viejo al más nuevo).
+  function armarPantalla(datos, lista, historialSesiones) {
     let mejores = {}
     let anteriores = {}
 
-    if (modoPrevia) {
-      const resultado = await cargarRutinaCompleta(tipo, id)
-      datos = resultado.datos
-      lista = resultado.ejercicios
-    } else {
-      const usuario = await obtenerUsuarioActual()
-      if (!usuario) {
-        navigate('/')
-        return
-      }
-      setUsuarioId(usuario.id)
-      const [datosRutina, historial] = await Promise.all([
-        cargarRutinaParaEntrenar(usuario.id, id),
-        cargarHistorial(usuario.id),
-      ])
-      datos = datosRutina.rutina
-      lista = datosRutina.ejercicios
+    if (!modoPrevia) {
       // Del más nuevo al más viejo.
-      const sesiones = [...historial.sesiones].reverse()
+      const sesiones = [...historialSesiones].reverse()
 
       // "La vez pasada": la última vez que hizo ESTA rutina.
-      const ultima = (sesiones || []).find((sesion) => sesion.rutina_id === id)
+      const ultima = sesiones.find((sesion) => sesion.rutina_id === id)
       const anterior = {}
       for (const item of ultima?.detalle || []) anterior[item.ejercicio_id] = item.series || []
       setAnteriorPorEjercicio(anterior)
@@ -172,7 +230,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       // Mejor marca histórica de cada ejercicio (en cualquier rutina),
       // para avisar si hoy hace un récord.
       mejores = {}
-      for (const sesion of sesiones || []) {
+      for (const sesion of sesiones) {
         for (const item of sesion.detalle || []) {
           for (const fila of item.series || []) {
             if (fila.hecha === false) continue
@@ -202,6 +260,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       setInicio(enCurso.inicio || Date.now())
       setVisible(Math.min(enCurso.visible || 0, Math.max(0, lista.length - 1)))
       setRecords(enCurso.records || 0)
+      // Retomó un entrenamiento pausado: cuenta como "ya empezó".
+      estadoInicial.current = null
       // Lo que ya hizo hoy también cuenta como marca, así no se festeja
       // dos veces el mismo récord al volver de una pausa.
       lista.forEach((ejercicio, indice) => {
@@ -215,10 +275,17 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
         }
       })
     } else {
+      const calentamiento = !datos?.calentamiento?.length
       setSeries(iniciales)
-      setCalentamientoHecho(!datos?.calentamiento?.length)
+      setCalentamientoHecho(calentamiento)
       setInicio(Date.now())
       setVisible(0)
+      estadoInicial.current = {
+        series: iniciales,
+        calentamientoHecho: calentamiento,
+        visible: 0,
+        fase: 'entrenando',
+      }
     }
     setMejoresPorEjercicio(mejores)
     setCargando(false)
@@ -374,7 +441,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     return (
       <div className="screen">
         <TopPattern />
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto tipo="pantalla" filas={4} />
       </div>
     )
   }
@@ -638,6 +705,12 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       )}
     </div>
   )
+}
+
+// Resumen de lo que se muestra (rutina, ejercicios y entrenamientos),
+// para saber si lo que llegó del servidor es distinto a lo guardado.
+function huella({ rutina, ejercicios }, sesiones) {
+  return JSON.stringify([rutina, ejercicios, sesiones.map((sesion) => sesion.id)])
 }
 
 // true si el progreso guardado corresponde a esta misma rutina (mismos

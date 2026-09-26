@@ -18,6 +18,7 @@ import {
 } from '../utils/medidas.js'
 import { formatearNumero } from '../utils/progreso.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import Esqueleto from './Esqueleto.jsx'
 
 // Todo lo de las medidas de un cliente: resumen (cuánto cambió cada
 // medida desde el inicio), gráfica, fotos de antes y ahora, historial y
@@ -66,7 +67,7 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
   const fotoAntes = conFoto[0]
   const fotoAhora = conFoto.length > 1 ? conFoto[conFoto.length - 1] : null
 
-  if (cargando) return <p className="profe-vacio">Cargando…</p>
+  if (cargando) return <Esqueleto filas={2} />
 
   return (
     <div className="medidas">

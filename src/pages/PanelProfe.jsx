@@ -3,62 +3,85 @@ import { Link, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
+import { recordado, recordar } from '../services/memoriaSesion.js'
+import { traerTodasLasFilas } from '../services/paginado.js'
+import { cargarActividadClientes } from '../services/actividad.js'
 import { armarTareas, primerosPasos } from '../utils/tareasProfe.js'
 import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
+import Esqueleto from '../components/Esqueleto.jsx'
+
+// Lo último que se mostró queda en memoria (services/memoriaSesion.js):
+// al volver a Inicio se ve al instante y se actualiza por detrás.
+const MEMORIA_PANEL = 'panel-profe'
 
 // Inicio del profe: una lista de tareas "Para hacer hoy", ordenada por
 // urgencia (pagos, clientes sin rutina, rutinas sin guardar, clientes que
 // no entrenan, resúmenes para aprobar...). Cada tarea tiene su botón para
 // resolverla en un toque. Si el profe recién empieza, arriba aparecen los
 // primeros pasos. La lógica de qué tareas mostrar está en
-// utils/tareasProfe.js.
+// utils/tareasProfe.js. Al volver a Inicio se muestra al instante lo
+// último cargado (MEMORIA_PANEL) y se actualiza por detrás.
 export default function PanelProfe() {
   const navigate = useNavigate()
-  const [cargando, setCargando] = useState(true)
-  const [nombre, setNombre] = useState('')
-  const [tareas, setTareas] = useState([])
-  const [pasos, setPasos] = useState(null)
-  const [armaEquipo, setArmaEquipo] = useState(false)
+  const guardado = recordado(MEMORIA_PANEL)
+  const [cargando, setCargando] = useState(!guardado)
+  const [nombre, setNombre] = useState(guardado?.nombre || '')
+  const [tareas, setTareas] = useState(guardado?.tareas || [])
+  const [pasos, setPasos] = useState(guardado?.pasos || null)
+  const [armaEquipo, setArmaEquipo] = useState(guardado?.armaEquipo || false)
 
   useEffect(() => {
-    cargar()
+    let activo = true
+    cargar(() => activo)
+    // Los resúmenes de 4 semanas se arman por detrás (no frenan la
+    // pantalla). Si se creó alguno, se actualiza la lista de tareas.
+    generarResumenesPendientes()
+      .then((nuevos) => {
+        if (nuevos > 0 && activo) cargar(() => activo)
+      })
+      .catch(() => {})
+    return () => {
+      activo = false
+    }
   }, [])
 
-  async function cargar() {
-    setCargando(true)
-    // Arma solos los resúmenes de 4 semanas que ya correspondan.
-    await generarResumenesPendientes()
-    const { data: userData } = await supabase.auth.getUser()
+  // "sigueAbierta": si el profe ya se fue de la pantalla, no se toca nada.
+  async function cargar(sigueAbierta) {
+    const usuario = await obtenerUsuarioActual()
+    // Todo junto, en un solo viaje al servidor.
     const [
       { data: yo },
       { data: clientes },
       { data: rutinas },
       { data: calendario },
-      { data: sesiones },
+      actividad,
       { data: resumenes },
       { count: ejercicios },
+      { data: rol },
+      { data: mediciones, error: errorMediciones },
     ] = await Promise.all([
-      supabase.from('perfiles').select('nombre').eq('id', userData?.user?.id).single(),
-      supabase
-        .from('perfiles')
-        .select('*')
-        .eq('es_profe', false),
-      supabase.from('rutinas').select('*'),
-      supabase.from('calendario_cliente').select('cliente_id, rutina_id'),
-      supabase.from('sesiones').select('cliente_id, fecha').order('fecha', { ascending: false }),
+      supabase.from('perfiles').select('nombre').eq('id', usuario?.id).single(),
+      traerTodasLasFilas(() =>
+        supabase.from('perfiles').select('*').eq('es_profe', false).order('id'),
+      ),
+      traerTodasLasFilas(() => supabase.from('rutinas').select('*').order('id')),
+      traerTodasLasFilas(() =>
+        supabase.from('calendario_cliente').select('id, cliente_id, rutina_id').order('id'),
+      ),
+      // Cuándo entrenó cada cliente por última vez (una fila por cliente).
+      cargarActividadClientes(),
       supabase.from('resumenes_progreso').select('id, cliente_id').eq('estado', 'borrador'),
       supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
+      // ¿Es administrador o dueño de gimnasio? (para "Equipo y gimnasios")
+      supabase.rpc('mi_rol'),
+      // Clientes con medidas (si la tabla todavía no existe, se ignora).
+      supabase.from('mediciones').select('cliente_id'),
     ])
-    // ¿Es administrador o dueño de gimnasio? (para "Equipo y gimnasios")
-    const { data: rol } = await supabase.rpc('mi_rol')
-    setArmaEquipo(Boolean(rol?.es_admin || rol?.gimnasios?.length))
+    if (!sigueAbierta()) return
 
-    // Clientes con medidas (si la tabla todavía no existe, se ignora).
-    const { data: mediciones, error: errorMediciones } = await supabase
-      .from('mediciones')
-      .select('cliente_id')
     const hoy = obtenerFechaHoyISO()
     const ciclosTerminados = (rutinas || [])
       .filter((rutina) => rutina.publicada !== false && semanaDelCiclo(rutina, hoy)?.terminado)
@@ -69,13 +92,12 @@ export default function PanelProfe() {
       .filter((item) => item.cliente?.estado === 'activo')
 
     const ultimaSesion = {}
-    for (const sesion of sesiones || []) {
-      if (!ultimaSesion[sesion.cliente_id]) ultimaSesion[sesion.cliente_id] = sesion.fecha
-    }
+    for (const [clienteId, registro] of actividad) ultimaSesion[clienteId] = registro.ultima
 
-    setNombre(yo?.nombre || '')
-    setTareas(
-      armarTareas({
+    const panel = {
+      nombre: yo?.nombre || '',
+      armaEquipo: Boolean(rol?.es_admin || rol?.gimnasios?.length),
+      tareas: armarTareas({
         clientes: clientes || [],
         rutinas: rutinas || [],
         calendario: calendario || [],
@@ -87,14 +109,17 @@ export default function PanelProfe() {
         ciclosTerminados,
         hoy,
       }),
-    )
-    setPasos(
-      primerosPasos({
+      pasos: primerosPasos({
         ejercicios: ejercicios || 0,
         clientesActivos: (clientes || []).filter((cliente) => cliente.estado === 'activo').length,
         rutinas: (rutinas || []).length,
       }),
-    )
+    }
+    recordar(MEMORIA_PANEL, panel)
+    setNombre(panel.nombre)
+    setArmaEquipo(panel.armaEquipo)
+    setTareas(panel.tareas)
+    setPasos(panel.pasos)
     setCargando(false)
   }
 
@@ -123,7 +148,7 @@ export default function PanelProfe() {
       </header>
 
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : (
         <>
           {pasos && (

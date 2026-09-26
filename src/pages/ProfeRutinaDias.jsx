@@ -6,6 +6,7 @@ import { cargarCalendarioCliente, guardarDiasDeRutina } from '../services/rutina
 import { mostrarAviso } from '../services/avisos.js'
 import { DIAS_SEMANA } from '../utils/dias.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Último paso al guardar una rutina: "¿Qué días hace Juan esta rutina?".
 // Se marcan los días (se ve qué tiene ya cada día) y con "Listo" se
@@ -91,7 +92,7 @@ export default function ProfeRutinaDias() {
   return (
     <ProfeLayout volverA={fichaCliente}>
       {cargando ? (
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       ) : !rutina ? (
         <p className="profe-vacio">No encontramos esta rutina.</p>
       ) : (

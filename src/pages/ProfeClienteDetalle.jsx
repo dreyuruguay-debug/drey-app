@@ -21,6 +21,7 @@ import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import { formatearPrecio, obtenerPlan } from '../data/planes.js'
 import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 const PESTANAS = [
   { id: 'rutinas', label: 'Rutinas' },
@@ -110,7 +111,11 @@ export default function ProfeClienteDetalle() {
   if (cargando || !cliente) {
     return (
       <ProfeLayout titulo="Cliente" volverA="/profe/clientes">
-        <p className="profe-vacio">{cargando ? 'Cargando…' : 'No encontramos ese cliente.'}</p>
+        {cargando ? (
+          <Esqueleto filas={4} />
+        ) : (
+          <p className="profe-vacio">No encontramos ese cliente.</p>
+        )}
       </ProfeLayout>
     )
   }

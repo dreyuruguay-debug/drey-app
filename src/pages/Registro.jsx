@@ -12,6 +12,7 @@ import { VERSION_TERMINOS } from '../data/versionLegal.js'
 import { cargarPlanesConPrecios } from '../services/planes.js'
 import { validarCodigo } from '../services/pagos.js'
 import { calcularEdad } from '../utils/fechas.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Registro en 4 pasos, en este orden:
 //   1. Tus datos      (datos personales, objetivo, lesiones y las dos
@@ -392,7 +393,7 @@ export default function Registro() {
             <p className="form-section-label">Elegí tu profe o gimnasio</p>
 
             {cargandoOpciones ? (
-              <p className="registro-edad">Cargando…</p>
+              <Esqueleto tipo="linea" />
             ) : opcionesProfe.length === 0 ? (
               <p className="registro-edad">
                 Todavía no hay profes para elegir. Podés seguir: el profe te asigna después.

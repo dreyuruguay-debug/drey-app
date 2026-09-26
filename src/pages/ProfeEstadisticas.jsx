@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { traerTodasLasFilas } from '../services/paginado.js'
 import { cargarPlanesConPrecios } from '../services/planes.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
 import { formatearPrecio } from '../data/planes.js'
 import { calcularEstadisticas, desdeParaPagos, desdeParaSesiones } from '../utils/estadisticas.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // Estadísticas del negocio: clientes activos, nuevos, los que se fueron,
 // ingresos del mes (Mercado Pago + pagos confirmados por el profe),
@@ -29,18 +32,27 @@ export default function ProfeEstadisticas() {
   async function cargar() {
     setCargando(true)
     const [{ data: perfiles }, { data: pagos }, { data: sesiones }, planes] = await Promise.all([
-      supabase.from('perfiles').select('*'),
-      supabase
-        .from('pagos')
-        .select('cliente_id, monto, estado, primer_mes, creado_en, aprobado_en')
-        .eq('estado', 'aprobado')
-        .gte('creado_en', desdeParaPagos(hoy)),
-      supabase.from('sesiones').select('cliente_id, fecha').gte('fecha', desdeParaSesiones(hoy)),
+      traerTodasLasFilas(() => supabase.from('perfiles').select('*').order('id')),
+      traerTodasLasFilas(() =>
+        supabase
+          .from('pagos')
+          .select('id, cliente_id, monto, estado, primer_mes, creado_en, aprobado_en')
+          .eq('estado', 'aprobado')
+          .gte('creado_en', desdeParaPagos(hoy))
+          .order('id'),
+      ),
+      traerTodasLasFilas(() =>
+        supabase
+          .from('sesiones')
+          .select('id, cliente_id, fecha')
+          .gte('fecha', desdeParaSesiones(hoy))
+          .order('id'),
+      ),
       cargarPlanesConPrecios(),
     ])
-    const { data: usuario } = await supabase.auth.getUser()
+    const usuario = await obtenerUsuarioActual()
     setDatos({
-      yo: usuario?.user?.id,
+      yo: usuario?.id,
       clientes: (perfiles || []).filter((perfil) => !perfil.es_profe),
       profes: (perfiles || []).filter((perfil) => perfil.es_profe),
       pagos: pagos || [],
@@ -68,7 +80,7 @@ export default function ProfeEstadisticas() {
   if (cargando || !numeros) {
     return (
       <ProfeLayout titulo="Estadísticas" volverA="/profe">
-        <p className="profe-vacio">Cargando…</p>
+        <Esqueleto />
       </ProfeLayout>
     )
   }

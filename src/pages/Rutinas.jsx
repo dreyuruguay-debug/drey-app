@@ -1,26 +1,32 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { obtenerUsuarioActual } from '../services/sesion.js'
-import { cargarMisRutinas } from '../services/datosCliente.js'
+import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
+import { cargarMisRutinas, misRutinasGuardadas } from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { DIAS_SEMANA, abreviaturaDia, obtenerNombreDiaHoy } from '../utils/dias.js'
+import Esqueleto from '../components/Esqueleto.jsx'
 
 // "Mis rutinas" del cliente: cada rutina con los días en que le toca y,
 // abajo, su semana completa. Al tocar una rutina se ve entera y desde
-// ahí se empieza a entrenar. Sin señal muestra lo último guardado.
+// ahí se empieza a entrenar. Se abre al instante con lo último guardado
+// en el celular y se actualiza por detrás (sin señal, queda lo guardado).
 export default function Rutinas() {
   const navigate = useNavigate()
-  const [cargando, setCargando] = useState(true)
-  const [rutinas, setRutinas] = useState([])
-  const [calendario, setCalendario] = useState({})
+  // Lo último guardado se muestra al instante y se actualiza por detrás.
+  const [guardado] = useState(() => {
+    const usuario = usuarioGuardado()
+    return usuario ? misRutinasGuardadas(usuario.id) : null
+  })
+  const [cargando, setCargando] = useState(!guardado)
+  const [rutinas, setRutinas] = useState(guardado?.rutinas || [])
+  const [calendario, setCalendario] = useState(guardado?.calendario || {})
 
   useEffect(() => {
     cargarDatos()
   }, [])
 
   async function cargarDatos() {
-    setCargando(true)
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
@@ -42,7 +48,7 @@ export default function Rutinas() {
       <h1 className="pagina-titulo">Mis rutinas</h1>
 
       {cargando ? (
-        <p className="profe-mensaje-carga">Cargando…</p>
+        <Esqueleto filas={3} />
       ) : rutinas.length === 0 ? (
         <div className="hoy-tarjeta hoy-tarjeta-mensaje">
           <h2 className="hoy-mensaje-titulo">Todavía no hay rutinas para mostrar</h2>
