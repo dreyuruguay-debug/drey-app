@@ -1,20 +1,26 @@
 import { diasEntre, sumarDias } from '../utils/dias.js'
+import { configuracion } from './configuracion.js'
 
 // Qué pasa cuando vence el plan de un cliente. La misma regla la usan
 // el Inicio del alumno, Suscripción, la ficha del cliente y el Inicio
 // del profe, así todos dicen lo mismo.
 //
-//   · Hasta DIAS_AVISO antes del vencimiento: todo normal.
-//   · Los últimos DIAS_AVISO días: aviso "Tu plan vence en X días".
-//   · Vencido, durante DIAS_DE_GRACIA días: puede seguir entrenando, con
+//   · Hasta diasAviso() antes del vencimiento: todo normal.
+//   · Los últimos diasAviso() días: aviso "Tu plan vence en X días".
+//   · Vencido, durante diasDeGracia() días: puede seguir entrenando, con
 //     un aviso de que tiene que pagar.
 //   · Después: no ve sus rutinas hasta que pague (su historial queda).
 //
-// IMPORTANTE: DIAS_DE_GRACIA tiene que ser igual al número de la función
-// dias_de_gracia() de supabase/sql/012_vencimiento_y_acceso.sql, que es
-// la que de verdad bloquea el acceso en la base de datos.
-export const DIAS_DE_GRACIA = 3
-export const DIAS_AVISO = 5
+// Los dos números los elige el Admin en Ajustes (tabla "ajustes",
+// supabase/sql/022). La base usa el mismo número de días de gracia
+// (función dias_de_gracia()) para bloquear el acceso de verdad.
+export function diasDeGracia() {
+  return configuracion().diasDeGracia
+}
+
+export function diasAviso() {
+  return configuracion().diasAviso
+}
 
 // Devuelve { tipo, dias, hasta }:
 //   tipo: 'pendiente' | 'al-dia' | 'por-vencer' | 'gracia' | 'vencido'
@@ -26,10 +32,10 @@ export function estadoDelPlan(perfil, hoyISO) {
   if (!perfil.vencimiento) return { tipo: 'al-dia', dias: null }
 
   const faltan = diasEntre(hoyISO, perfil.vencimiento)
-  if (faltan > DIAS_AVISO) return { tipo: 'al-dia', dias: faltan }
+  if (faltan > diasAviso()) return { tipo: 'al-dia', dias: faltan }
   if (faltan >= 0) return { tipo: 'por-vencer', dias: faltan }
 
-  const bloqueo = sumarDias(perfil.vencimiento, DIAS_DE_GRACIA)
+  const bloqueo = sumarDias(perfil.vencimiento, diasDeGracia())
   const quedan = diasEntre(hoyISO, bloqueo)
   if (quedan >= 0) return { tipo: 'gracia', dias: quedan, hasta: bloqueo }
   return { tipo: 'vencido', dias: -quedan }

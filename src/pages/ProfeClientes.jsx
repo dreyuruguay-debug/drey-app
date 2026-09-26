@@ -4,6 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { cargarActividadClientes } from '../services/actividad.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
+import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
 import { obtenerPlan } from '../data/planes.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { SOLO_CLIENTES } from '../utils/roles.js'
@@ -21,15 +22,38 @@ const MEMORIA_CLIENTES = 'profe-clientes'
 // (rutinas, semana, progreso y pagos). Tiene un buscador (para cuando la lista crezca) y marca a
 // los que no entrenan hace varios días, calculado a partir de su
 // última sesión guardada en la tabla "sesiones".
+//
+// El Admin ve a todos los clientes y puede filtrarlos por profe (o "sin
+// profe") y por gimnasio; en cada cliente ve quién es su profe.
 export default function ProfeClientes() {
   // Lo último cargado se ve al instante; se actualiza por detrás.
   const [clientes, setClientes] = useState(() => recordado(MEMORIA_CLIENTES) || [])
   const [cargando, setCargando] = useState(() => !recordado(MEMORIA_CLIENTES))
   const [busqueda, setBusqueda] = useState('')
+  const [esAdmin, setEsAdmin] = useState(esAdminConocido)
+  const [equipo, setEquipo] = useState({ profes: [], gimnasios: [] })
+  const [filtroProfe, setFiltroProfe] = useState('')
+  const [filtroGimnasio, setFiltroGimnasio] = useState('')
 
   useEffect(() => {
     cargarClientes()
+    verificarProfe().then(({ esAdmin: admin }) => setEsAdmin(Boolean(admin)))
   }, [])
+
+  // Solo el Admin: profes y gimnasios para los filtros.
+  useEffect(() => {
+    if (!esAdmin) return
+    Promise.all([
+      supabase
+        .from('perfiles')
+        .select('id, nombre, apellido, gimnasio_id')
+        .eq('es_profe', true)
+        .order('nombre'),
+      supabase.from('gimnasios').select('id, nombre').order('nombre'),
+    ]).then(([{ data: profes }, { data: gimnasios }]) =>
+      setEquipo({ profes: profes || [], gimnasios: gimnasios || [] }),
+    )
+  }, [esAdmin])
 
   async function cargarClientes() {
     // Los clientes y cuándo entrenó cada uno, en un solo viaje.
@@ -45,7 +69,8 @@ export default function ProfeClientes() {
 
     const clientesData = listaClientes || []
     const ultimaSesionPorCliente = {}
-    for (const [clienteId, registro] of actividad) ultimaSesionPorCliente[clienteId] = registro.ultima
+    for (const [clienteId, registro] of actividad)
+      ultimaSesionPorCliente[clienteId] = registro.ultima
 
     const hoy = new Date()
     const conActividad = clientesData.map((cliente) => {
@@ -64,13 +89,33 @@ export default function ProfeClientes() {
     setCargando(false)
   }
 
+  const profePorId = useMemo(
+    () => new Map(equipo.profes.map((profe) => [profe.id, profe])),
+    [equipo.profes],
+  )
+
   const clientesFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
-    if (!texto) return clientes
-    return clientes.filter((cliente) =>
-      `${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(texto),
-    )
-  }, [clientes, busqueda])
+    return clientes.filter((cliente) => {
+      if (texto && !`${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(texto)) {
+        return false
+      }
+      if (filtroProfe === 'sin' && cliente.profe_id) return false
+      if (filtroProfe && filtroProfe !== 'sin' && cliente.profe_id !== filtroProfe) return false
+      if (filtroGimnasio) {
+        const gimnasioDelProfe = profePorId.get(cliente.profe_id)?.gimnasio_id
+        if (cliente.gimnasio_id !== filtroGimnasio && gimnasioDelProfe !== filtroGimnasio) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [clientes, busqueda, filtroProfe, filtroGimnasio, profePorId])
+
+  function nombreDelProfe(id) {
+    const profe = profePorId.get(id)
+    return profe ? `${profe.nombre} ${profe.apellido || ''}`.trim() : 'Sin profe'
+  }
 
   const inactivos = clientes.filter(
     (cliente) =>
@@ -112,13 +157,52 @@ export default function ProfeClientes() {
         onChange={(event) => setBusqueda(event.target.value)}
       />
 
+      {esAdmin && (
+        <div className="codigo-fila clientes-filtros">
+          <select
+            className="profe-calendario-select"
+            value={filtroProfe}
+            onChange={(event) => setFiltroProfe(event.target.value)}
+            aria-label="Filtrar por profe"
+          >
+            <option value="">Todos los profes</option>
+            <option value="sin">Sin profe</option>
+            {equipo.profes.map((profe) => (
+              <option key={profe.id} value={profe.id}>
+                {profe.nombre} {profe.apellido}
+              </option>
+            ))}
+          </select>
+          {equipo.gimnasios.length > 0 && (
+            <select
+              className="profe-calendario-select"
+              value={filtroGimnasio}
+              onChange={(event) => setFiltroGimnasio(event.target.value)}
+              aria-label="Filtrar por gimnasio"
+            >
+              <option value="">Todos los gimnasios</option>
+              {equipo.gimnasios.map((gimnasio) => (
+                <option key={gimnasio.id} value={gimnasio.id}>
+                  {gimnasio.nombre}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+      {esAdmin && !cargando && (
+        <p className="profe-nota">
+          {clientesFiltrados.length} de {clientes.length} clientes activos
+        </p>
+      )}
+
       {cargando ? (
         <Esqueleto />
       ) : clientesFiltrados.length === 0 ? (
         <p className="profe-vacio">
           {clientes.length === 0
             ? 'Todavía no tenés clientes activos. Habilitalos desde "Pagos".'
-            : 'No hay ningún cliente que coincida con la búsqueda.'}
+            : 'No hay ningún cliente que coincida con la búsqueda o los filtros.'}
         </p>
       ) : (
         clientesFiltrados.map((cliente) => {
@@ -140,6 +224,7 @@ export default function ProfeClientes() {
                 </p>
                 <p className="profe-cliente-detalle">
                   {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
+                  {esAdmin && ` · ${nombreDelProfe(cliente.profe_id)}`}
                   {cliente.diasSinEntrenar !== null && (
                     <>
                       {' · '}

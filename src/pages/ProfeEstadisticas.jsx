@@ -11,6 +11,7 @@ import { calcularEstadisticas, desdeParaPagos, desdeParaSesiones } from '../util
 import { obtenerFechaHoyISO } from '../utils/dias.js'
 import { esCliente, esProfe } from '../utils/roles.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import Numero from '../components/Numero.jsx'
 
 // Estadísticas del negocio: clientes activos, nuevos, los que se fueron,
 // ingresos del mes (Mercado Pago + pagos confirmados por el profe),
@@ -49,7 +50,7 @@ export default function ProfeEstadisticas() {
           .gte('fecha', desdeParaSesiones(hoy))
           .order('id'),
       ),
-      cargarPlanesConPrecios(),
+      cargarPlanesConPrecios({ incluirOcultos: true }),
     ])
     const usuario = await obtenerUsuarioActual()
     setDatos({
@@ -87,7 +88,9 @@ export default function ProfeEstadisticas() {
   }
 
   const variacion = numeros.ingresosMesPasado
-    ? Math.round(((numeros.ingresosMes - numeros.ingresosMesPasado) / numeros.ingresosMesPasado) * 100)
+    ? Math.round(
+        ((numeros.ingresosMes - numeros.ingresosMesPasado) / numeros.ingresosMesPasado) * 100,
+      )
     : null
 
   return (
@@ -125,9 +128,7 @@ export default function ProfeEstadisticas() {
           etiqueta="Ingresos este mes"
           valor={formatearPrecio(numeros.ingresosMes)}
           detalle={
-            variacion === null
-              ? ''
-              : `${variacion >= 0 ? '+' : ''}${variacion}% vs. el mes pasado`
+            variacion === null ? '' : `${variacion >= 0 ? '+' : ''}${variacion}% vs. el mes pasado`
           }
         />
         <Numero
@@ -136,7 +137,11 @@ export default function ProfeEstadisticas() {
         />
       </section>
 
-      <GraficoProgreso titulo="Ingresos por mes ($U)" tipo="barras" puntos={numeros.ingresosPorMes} />
+      <GraficoProgreso
+        titulo="Ingresos por mes ($U)"
+        tipo="barras"
+        puntos={numeros.ingresosPorMes}
+      />
       <p className="profe-nota">
         Suma los pagos con Mercado Pago y los que confirmás en Pagos (desde el 25/09/2026).
       </p>
@@ -180,15 +185,5 @@ export default function ProfeEstadisticas() {
         </section>
       )}
     </ProfeLayout>
-  )
-}
-
-function Numero({ etiqueta, valor, detalle, alerta }) {
-  return (
-    <div className={alerta ? 'dato-tarjeta estadistica estadistica-alerta' : 'dato-tarjeta estadistica'}>
-      <span className="dato-etiqueta">{etiqueta}</span>
-      <strong className="dato-valor">{valor}</strong>
-      {detalle && <small>{detalle}</small>}
-    </div>
   )
 }

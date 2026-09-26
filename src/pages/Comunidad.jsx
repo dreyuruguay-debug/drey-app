@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
-import { WHATSAPP_GRUPO_URL } from '../data/comunidad.js'
+import { linkGrupoWhatsapp } from '../data/comunidad.js'
+import { useConfiguracion } from '../services/configuracion.js'
 import { cargarCodigosDeRopa } from '../services/codigos.js'
 import { textoFechaCorta } from '../utils/dias.js'
 
@@ -13,8 +14,8 @@ import { textoFechaCorta } from '../utils/dias.js'
 // Los códigos de ropa son reales: los crea el profe en Pagos → Códigos
 // de descuento → "De ropa" (solo los ven los clientes con el plan al
 // día). Las publicaciones del muro son de ejemplo por ahora y los
-// comentarios todavía no se guardan. El link del grupo de WhatsApp se
-// carga en src/data/comunidad.js.
+// comentarios todavía no se guardan. El link del grupo de WhatsApp lo
+// carga el Admin en Ajustes → WhatsApp.
 const PUBLICACIONES_EJEMPLO = [
   {
     id: 1,
@@ -31,6 +32,8 @@ const PUBLICACIONES_EJEMPLO = [
 ]
 
 export default function Comunidad() {
+  useConfiguracion() // el link del grupo lo carga el Admin en Ajustes
+  const whatsappGrupoUrl = linkGrupoWhatsapp()
   const [comentarios, setComentarios] = useState({})
   const [textoNuevo, setTextoNuevo] = useState({})
   const [codigos, setCodigos] = useState([])
@@ -59,10 +62,10 @@ export default function Comunidad() {
         </Link>
         <h1 className="comunidad-titulo">Comunidad y beneficios</h1>
 
-        {WHATSAPP_GRUPO_URL ? (
+        {whatsappGrupoUrl ? (
           <a
             className="pill-button comunidad-whatsapp"
-            href={WHATSAPP_GRUPO_URL}
+            href={whatsappGrupoUrl}
             target="_blank"
             rel="noopener noreferrer"
           >

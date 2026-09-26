@@ -8,7 +8,8 @@ import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import DatosDePago from '../components/DatosDePago.jsx'
 import PagoMercadoPago from '../components/PagoMercadoPago.jsx'
 import { obtenerPlan, formatearPrecio } from '../data/planes.js'
-import { MERCADO_PAGO_AUTOMATICO } from '../data/pagos.js'
+import { cobroAutomatico } from '../data/pagos.js'
+import { useConfiguracion } from '../services/configuracion.js'
 import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { comprimirImagen } from '../utils/imagenes.js'
@@ -21,7 +22,7 @@ const REVISAR_PAGO_VECES = 10
 // vencido), cómo pagar y los últimos pagos.
 //
 // Dos formas de pagar:
-//   1. Mercado Pago automático (si está activado en data/pagos.js): paga
+//   1. Mercado Pago automático (si el Admin lo activó en Ajustes): paga
 //      con tarjeta y la cuenta se activa sola al instante.
 //   2. Transferencia: ve los datos, sube el comprobante y toca "Ya pagué";
 //      el profe lo confirma desde "Pagos".
@@ -34,6 +35,7 @@ const REVISAR_PAGO_VECES = 10
 // "comprobantes"), en una carpeta con el id del cliente para que cada
 // uno solo pueda ver los suyos; su profe los ve desde "Pagos".
 export default function Suscripcion() {
+  useConfiguracion() // planes, precios y datos de pago (Ajustes del Admin)
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   const [perfil, setPerfil] = useState(null)
@@ -127,6 +129,7 @@ export default function Suscripcion() {
 
   const plan = obtenerPlan(perfil?.plan)
   const estado = estadoDelPlan(perfil, obtenerFechaHoyISO())
+  const automatico = cobroAutomatico()
 
   return (
     <div className="screen has-bottom-nav">
@@ -142,7 +145,7 @@ export default function Suscripcion() {
         <div className="suscripcion-plan-card">
           <p className="suscripcion-plan-nombre">{plan?.nombre || 'Sin plan'}</p>
           {plan && <p className="suscripcion-plan-descripcion">{plan.descripcion}</p>}
-          {plan && !MERCADO_PAGO_AUTOMATICO && (
+          {plan && !automatico && (
             <p className="suscripcion-plan-precio">
               {formatearPrecio(plan.precioDesdeSegundoMes)} por mes
             </p>
@@ -158,11 +161,11 @@ export default function Suscripcion() {
           </p>
         </div>
 
-        {MERCADO_PAGO_AUTOMATICO && perfil && (
+        {automatico && perfil && (
           <PagoMercadoPago onAprobado={() => cargarPerfil({ silencioso: true })} />
         )}
 
-        {MERCADO_PAGO_AUTOMATICO && (
+        {automatico && (
           <p className="seccion-etiqueta suscripcion-otra-forma">O por transferencia</p>
         )}
 

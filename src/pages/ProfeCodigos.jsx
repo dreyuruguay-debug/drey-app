@@ -8,7 +8,7 @@ import {
   crearCodigo,
 } from '../services/codigos.js'
 import { mostrarAviso } from '../services/avisos.js'
-import { PLANES, formatearPrecio } from '../data/planes.js'
+import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 import { textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
@@ -220,7 +220,7 @@ export default function ProfeCodigos() {
               aria-label="Para qué plan"
             >
               <option value="">Para todos los planes</option>
-              {PLANES.map((plan) => (
+              {listaDePlanes().map((plan) => (
                 <option key={plan.id} value={plan.id}>
                   Solo {plan.nombre}
                 </option>
@@ -293,7 +293,7 @@ function describirCodigo(item) {
     if (item.monto_fijo) partes.push(`${formatearPrecio(item.monto_fijo)} de descuento`)
     partes.push(item.solo_primer_mes ? 'solo el primer mes' : 'en cada pago')
     if (item.planes?.length) {
-      partes.push(item.planes.map((id) => PLANES.find((plan) => plan.id === id)?.nombre || id).join(', '))
+      partes.push(item.planes.map((id) => listaDePlanes().find((plan) => plan.id === id)?.nombre || id).join(', '))
     }
     partes.push(item.usos_maximos ? `${item.usos} de ${item.usos_maximos} usos` : `${item.usos} usos`)
     if (item.descripcion) partes.push(item.descripcion)

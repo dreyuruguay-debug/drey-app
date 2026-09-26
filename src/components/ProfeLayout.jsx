@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   contarPagosPendientes,
+  esAdminConocido,
   esProfeConocido,
   ultimosPagosPendientes,
   verificarProfe,
@@ -10,15 +11,22 @@ import { precargarPantallas } from '../pantallasDiferidas.js'
 import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
 
-// Layout que comparten todas las pantallas del panel del profe: revisa
-// que quien entra sea profe (una sola vez por sesión, ver
+// Layout que comparten todas las pantallas del panel: revisa que quien
+// entra sea profe o Admin (una sola vez por sesión, ver
 // services/accesoProfe.js: cambiar de pantalla no espera nada), muestra
-// el menú fijo de abajo con 4 secciones (Inicio, Clientes, Biblioteca, Pagos) y un "← Volver" cuando
-// la pantalla lo necesita. Cada pantalla pone su contenido adentro de
-// <ProfeLayout>, así la revisión de acceso y la navegación no se repiten.
+// el menú fijo de abajo y un "← Volver" cuando la pantalla lo necesita.
+// Cada pantalla pone su contenido adentro de <ProfeLayout>, así la
+// revisión de acceso y la navegación no se repiten.
+//
+// El profe ve 4 secciones (Inicio, Clientes, Biblioteca, Pagos). El Admin
+// tiene su propio menú de 5 (Inicio, Clientes, Equipo, Pagos, Ajustes);
+// la Biblioteca la abre desde su Inicio.
+//
+// soloAdmin: la pantalla es solo para el Admin (Ajustes, Historial). La
+// base de datos igual lo controla; esto decide qué se dibuja.
 //
 // "rutas": las direcciones que marcan esa sección como activa.
-const SECCIONES = [
+const SECCIONES_PROFE = [
   {
     to: '/profe',
     label: 'Inicio',
@@ -47,22 +55,65 @@ const SECCIONES = [
   },
 ]
 
-export default function ProfeLayout({ titulo, volverA, children, sinMenu = false }) {
+const SECCIONES_ADMIN = [
+  {
+    to: '/profe',
+    label: 'Inicio',
+    rutas: ['/profe', '/profe/estadisticas', '/profe/ejercicios', '/profe/plantillas'],
+    exacta: true,
+    Icono: IconoInicio,
+  },
+  {
+    to: '/profe/clientes',
+    label: 'Clientes',
+    rutas: ['/profe/clientes', '/profe/rutinas', '/profe/calendario', '/profe/progresion'],
+    Icono: IconoClientes,
+  },
+  {
+    to: '/profe/equipo',
+    label: 'Equipo',
+    rutas: ['/profe/equipo'],
+    Icono: IconoEquipo,
+  },
+  {
+    to: '/profe/cuentas',
+    label: 'Pagos',
+    rutas: ['/profe/cuentas', '/profe/codigos'],
+    Icono: IconoPagos,
+    avisos: true,
+  },
+  {
+    to: '/profe/ajustes',
+    label: 'Ajustes',
+    rutas: ['/profe/ajustes'],
+    Icono: IconoAjustes,
+  },
+]
+
+export default function ProfeLayout({
+  titulo,
+  volverA,
+  children,
+  sinMenu = false,
+  soloAdmin = false,
+}) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   // null = todavía no se sabe (solo la primera vez en este celular).
   const [esProfe, setEsProfe] = useState(esProfeConocido)
+  const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [pagosPendientes, setPagosPendientes] = useState(ultimosPagosPendientes)
 
   useEffect(() => {
     let activo = true
-    verificarProfe().then(({ usuarioId, esProfe: profe }) => {
+    verificarProfe().then(({ usuarioId, esProfe: profe, esAdmin: admin }) => {
       if (!activo) return
       if (!usuarioId) {
         navigate('/')
         return
       }
       setEsProfe(profe)
+      setEsAdmin(Boolean(admin))
       if (!profe) return
       contarPagosPendientes().then((cantidad) => activo && setPagosPendientes(cantidad))
       // Deja descargadas las demás pantallas del panel, así la primera
@@ -74,7 +125,7 @@ export default function ProfeLayout({ titulo, volverA, children, sinMenu = false
     }
   }, [])
 
-  const cargando = esProfe === null
+  const cargando = esProfe === null || (soloAdmin && esAdmin === null)
 
   if (cargando) {
     return (
@@ -85,7 +136,7 @@ export default function ProfeLayout({ titulo, volverA, children, sinMenu = false
     )
   }
 
-  if (!esProfe) {
+  if (!esProfe || (soloAdmin && !esAdmin)) {
     return (
       <div className="screen">
         <TopPattern />
@@ -115,28 +166,33 @@ export default function ProfeLayout({ titulo, volverA, children, sinMenu = false
       </div>
 
       {!sinMenu && (
-        <nav className="bottom-nav" aria-label="Menú del profe">
-          {SECCIONES.map(({ to, label, rutas, exacta, Icono, avisos }) => {
-            const activo = rutas.some((ruta) =>
-              exacta ? pathname === ruta : pathname === ruta || pathname.startsWith(`${ruta}/`),
-            )
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={activo ? 'bottom-nav-item bottom-nav-item-activo' : 'bottom-nav-item'}
-                aria-current={activo ? 'page' : undefined}
-              >
-                {avisos && pagosPendientes > 0 && (
-                  <span className="bottom-nav-numero" aria-label={`${pagosPendientes} pendientes`}>
-                    {pagosPendientes}
-                  </span>
-                )}
-                <Icono />
-                <span>{label}</span>
-              </Link>
-            )
-          })}
+        <nav className="bottom-nav" aria-label={esAdmin ? 'Menú del Admin' : 'Menú del profe'}>
+          {(esAdmin ? SECCIONES_ADMIN : SECCIONES_PROFE).map(
+            ({ to, label, rutas, exacta, Icono, avisos }) => {
+              const activo = rutas.some((ruta) =>
+                exacta ? pathname === ruta : pathname === ruta || pathname.startsWith(`${ruta}/`),
+              )
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={activo ? 'bottom-nav-item bottom-nav-item-activo' : 'bottom-nav-item'}
+                  aria-current={activo ? 'page' : undefined}
+                >
+                  {avisos && pagosPendientes > 0 && (
+                    <span
+                      className="bottom-nav-numero"
+                      aria-label={`${pagosPendientes} pendientes`}
+                    >
+                      {pagosPendientes}
+                    </span>
+                  )}
+                  <Icono />
+                  <span>{label}</span>
+                </Link>
+              )
+            },
+          )}
         </nav>
       )}
     </div>
@@ -191,6 +247,26 @@ function IconoPagos() {
     <Svg>
       <rect x="2" y="6" width="20" height="13" rx="2" />
       <path d="M2 10h20" />
+    </Svg>
+  )
+}
+
+function IconoEquipo() {
+  return (
+    <Svg>
+      <path d="M3 21V9l9-6 9 6v12" />
+      <path d="M9 21v-6h6v6M3 21h18" />
+    </Svg>
+  )
+}
+
+function IconoAjustes() {
+  return (
+    <Svg>
+      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="10" cy="12" r="2" />
+      <circle cx="18" cy="18" r="2" />
     </Svg>
   )
 }

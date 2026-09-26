@@ -1,6 +1,9 @@
-// Los tres planes de DREY (ver "Planes y acceso" en el plan del
-// proyecto). Viven en un solo lugar para que Registro y Suscripción
-// muestren siempre los mismos datos.
+import { configuracion } from './configuracion.js'
+
+// Planes de DREY. Los vigentes (nombre, descripción, precios, link de
+// Mercado Pago, visible o no) los maneja el Admin desde Ajustes y viven
+// en la tabla "planes" (supabase/sql/014 y 022). Esta lista es solo el
+// respaldo mientras la app todavía no los trajo de la base.
 export const PLANES = [
   {
     id: 'seguimiento',
@@ -29,6 +32,13 @@ export function formatearPrecio(valor) {
   return `$U ${valor.toLocaleString('es-UY')}`
 }
 
+// Todos los planes (también los ocultos: hay clientes que los tienen).
+// Con soloVisibles, solo los que se ofrecen al registrarse.
+export function listaDePlanes({ soloVisibles = false } = {}) {
+  const lista = configuracion().planes || PLANES
+  return soloVisibles ? lista.filter((plan) => plan.activo !== false) : lista
+}
+
 export function obtenerPlan(id) {
-  return PLANES.find((plan) => plan.id === id)
+  return listaDePlanes().find((plan) => plan.id === id)
 }

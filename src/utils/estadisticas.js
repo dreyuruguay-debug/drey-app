@@ -1,5 +1,5 @@
 import { obtenerLunesDeSemana, sumarDias, textoFechaCorta } from './dias.js'
-import { DIAS_DE_GRACIA, estadoDelPlan } from '../data/vencimiento.js'
+import { diasDeGracia, estadoDelPlan } from '../data/vencimiento.js'
 
 // Números del negocio para el profe (y el dueño de gimnasio): clientes
 // activos, cuántos se fueron, ingresos del mes, entrenamientos por semana.
@@ -26,7 +26,7 @@ function fechaDelPago(pago) {
 
 // Día en que un cliente vencido perdió el acceso (vencimiento + gracia + 1).
 function diaDeBloqueo(cliente) {
-  return sumarDias(cliente.vencimiento, DIAS_DE_GRACIA + 1)
+  return sumarDias(cliente.vencimiento, diasDeGracia() + 1)
 }
 
 export function calcularEstadisticas({ clientes = [], pagos = [], sesiones = [], planes = [], hoy }) {

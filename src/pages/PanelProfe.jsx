@@ -26,9 +26,8 @@ const MEMORIA_PANEL = 'panel-profe'
 // utils/tareasProfe.js. Al volver a Inicio se muestra al instante lo
 // último cargado (MEMORIA_PANEL) y se actualiza por detrás.
 //
-// La cuenta Admin (utils/roles.js) usa este mismo Inicio: ve las tareas de
-// todos los clientes, se identifica con la etiqueta "Admin" y no ve los
-// "Primeros pasos" (son para un profe que recién empieza).
+// La cuenta Admin tiene su propio Inicio (AdminInicio.jsx); la elige
+// InicioPanel.jsx.
 export default function PanelProfe() {
   const navigate = useNavigate()
   const guardado = recordado(MEMORIA_PANEL)
@@ -37,7 +36,6 @@ export default function PanelProfe() {
   const [tareas, setTareas] = useState(guardado?.tareas || [])
   const [pasos, setPasos] = useState(guardado?.pasos || null)
   const [armaEquipo, setArmaEquipo] = useState(guardado?.armaEquipo || false)
-  const [esAdmin, setEsAdmin] = useState(guardado?.esAdmin || false)
 
   useEffect(() => {
     let activo = true
@@ -81,7 +79,7 @@ export default function PanelProfe() {
       cargarActividadClientes(),
       supabase.from('resumenes_progreso').select('id, cliente_id').eq('estado', 'borrador'),
       supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
-      // ¿Es administrador o dueño de gimnasio? (para "Equipo y gimnasios")
+      // ¿Es dueño de un gimnasio? (para "Equipo y gimnasios")
       supabase.rpc('mi_rol'),
       // Clientes con medidas (si la tabla todavía no existe, se ignora).
       supabase.from('mediciones').select('cliente_id'),
@@ -100,11 +98,10 @@ export default function PanelProfe() {
     const ultimaSesion = {}
     for (const [clienteId, registro] of actividad) ultimaSesion[clienteId] = registro.ultima
 
-    const soyAdmin = Boolean(rol?.es_admin)
     const panel = {
       nombre: yo?.nombre || '',
-      esAdmin: soyAdmin,
-      armaEquipo: soyAdmin || Boolean(rol?.gimnasios?.length),
+      // Dueño de un gimnasio: ve "Equipo y gimnasios".
+      armaEquipo: Boolean(rol?.gimnasios?.length),
       tareas: armarTareas({
         clientes: clientes || [],
         rutinas: rutinas || [],
@@ -117,19 +114,15 @@ export default function PanelProfe() {
         ciclosTerminados,
         hoy,
       }),
-      pasos: soyAdmin
-        ? null
-        : primerosPasos({
-            ejercicios: ejercicios || 0,
-            clientesActivos: (clientes || []).filter((cliente) => cliente.estado === 'activo')
-              .length,
-            rutinas: (rutinas || []).length,
-          }),
+      pasos: primerosPasos({
+        ejercicios: ejercicios || 0,
+        clientesActivos: (clientes || []).filter((cliente) => cliente.estado === 'activo').length,
+        rutinas: (rutinas || []).length,
+      }),
     }
     recordar(MEMORIA_PANEL, panel)
     setNombre(panel.nombre)
     setArmaEquipo(panel.armaEquipo)
-    setEsAdmin(panel.esAdmin)
     setTareas(panel.tareas)
     setPasos(panel.pasos)
     setCargando(false)
@@ -145,7 +138,6 @@ export default function PanelProfe() {
       <header className="inicio-saludo inicio-saludo-profe">
         <div>
           <p className="inicio-fecha">{textoFechaLarga()}</p>
-          {esAdmin && <span className="estado-chip estado-ok etiqueta-admin">Admin</span>}
           <h1 className="inicio-hola">
             {saludo()}
             {nombre ? `, ${nombre}` : ''}
@@ -216,7 +208,7 @@ export default function PanelProfe() {
                 Estadísticas
               </Link>
               {armaEquipo && (
-                <Link to="/profe/equipo" className={esAdmin ? 'acceso acceso-principal' : 'acceso'}>
+                <Link to="/profe/equipo" className="acceso">
                   Equipo y gimnasios
                 </Link>
               )}

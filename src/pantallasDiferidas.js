@@ -67,6 +67,12 @@ export const NuevaContrasena = pantallaDiferida(() => import('./pages/NuevaContr
 export const Medidas = pantallaDiferida(() => import('./pages/Medidas.jsx'), PANTALLAS_CLIENTE)
 export const ProfeClienteMedidas = pantallaDiferida(() => import('./pages/ProfeClienteMedidas.jsx'))
 
+// Panel del Admin (supabase/sql/020 y 022).
+export const InicioPanel = pantallaDiferida(() => import('./pages/InicioPanel.jsx'))
+export const AdminInicio = pantallaDiferida(() => import('./pages/AdminInicio.jsx'))
+export const AdminAjustes = pantallaDiferida(() => import('./pages/AdminAjustes.jsx'))
+export const AdminHistorial = pantallaDiferida(() => import('./pages/AdminHistorial.jsx'))
+
 
 // Descarga por adelantado el código de las pantallas diferidas, sin
 // mostrarlas: así la primera vez que se abren no hay que esperarlo.

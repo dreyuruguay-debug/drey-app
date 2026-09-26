@@ -6,10 +6,10 @@ import EyeIcon from '../components/EyeIcon.jsx'
 import DatosDePago from '../components/DatosDePago.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
 import CasillasConsentimiento from '../components/CasillasConsentimiento.jsx'
-import { PLANES, formatearPrecio } from '../data/planes.js'
-import { MERCADO_PAGO_AUTOMATICO } from '../data/pagos.js'
+import { formatearPrecio, listaDePlanes } from '../data/planes.js'
+import { cobroAutomatico } from '../data/pagos.js'
 import { VERSION_TERMINOS } from '../data/versionLegal.js'
-import { cargarPlanesConPrecios } from '../services/planes.js'
+import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { validarCodigo } from '../services/pagos.js'
 import { calcularEdad } from '../utils/fechas.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -24,11 +24,12 @@ import Esqueleto from '../components/Esqueleto.jsx'
 //   4. Pago           (cómo pagar y botón "Ya pagué")
 //
 // Recién en el paso 4 se crea la cuenta. Queda "pendiente" hasta que
-// se paga: con Mercado Pago automático (data/pagos.js) se activa sola al
-// pagar desde Suscripción; por transferencia, la habilita el profe.
+// se paga: con el cobro automático de Mercado Pago (Ajustes del Admin) se
+// activa sola al pagar desde Suscripción; por transferencia, la habilita
+// el profe.
 //
-// Los precios salen de la base de datos (tabla "planes"), los mismos que
-// cobra Mercado Pago.
+// Los planes y precios salen de la base de datos (tabla "planes", solo
+// los visibles), los mismos que cobra Mercado Pago.
 //
 // Todos los datos viajan en los metadatos del usuario de Supabase y la
 // base los copia sola a la tabla "perfiles" (triggers handle_new_user y
@@ -59,7 +60,6 @@ export default function Registro() {
   const [codigoDescuento, setCodigoDescuento] = useState('')
   const [codigoValidado, setCodigoValidado] = useState(null) // respuesta de validarCodigo
   const [revisando, setRevisando] = useState(false)
-  const [planes, setPlanes] = useState(PLANES)
 
   // Paso 3
   const [opcionesProfe, setOpcionesProfe] = useState([])
@@ -70,12 +70,17 @@ export default function Registro() {
   const [loading, setLoading] = useState(false)
   const [resultado, setResultado] = useState(null) // { avisoPago: boolean }
 
+  // Planes, precios y forma de cobro: los maneja el Admin en Ajustes.
+  useConfiguracion()
+  const planes = listaDePlanes({ soloVisibles: true })
+  const automatico = cobroAutomatico()
+
   const edad = calcularEdad(fechaNacimiento)
   const plan = planes.find((opcion) => opcion.id === planId)
 
   useEffect(() => {
     cargarOpcionesDeProfe()
-    cargarPlanesConPrecios().then(setPlanes)
+    cargarConfiguracion()
   }, [])
 
   async function cargarOpcionesDeProfe() {
@@ -205,7 +210,7 @@ export default function Registro() {
         <p className="registro-gracias-texto">
           {resultado.avisoPago
             ? 'Avisaste tu pago. Esperando autorización del profesor.'
-            : MERCADO_PAGO_AUTOMATICO
+            : automatico
               ? 'Tu cuenta queda pendiente hasta que pagues. Entrá a la app y pagá desde Suscripción: se activa al instante.'
               : 'Tu cuenta queda pendiente. Cuando pagues, entrá a Suscripción y tocá "Ya pagué".'}
         </p>
@@ -442,7 +447,7 @@ export default function Registro() {
               )}
             </div>
 
-            {MERCADO_PAGO_AUTOMATICO ? (
+            {automatico ? (
               <>
                 <p className="registro-edad">
                   Creá tu cuenta, confirmá tu email y entrá a la app: desde Suscripción pagás con
@@ -469,7 +474,7 @@ export default function Registro() {
           <button type="submit" className="auth-submit" disabled={revisando}>
             {revisando ? 'Revisando el código…' : 'Siguiente'}
           </button>
-        ) : MERCADO_PAGO_AUTOMATICO ? (
+        ) : automatico ? (
           <>
             <button
               type="button"

@@ -21,6 +21,17 @@ las siga en el gimnasio y registre lo que levantó.
   profe". Una cuenta nunca es las dos cosas (SQL 020). La regla vive en
   `src/utils/roles.js` (`esCliente`, `entraAlPanel`, `SOLO_CLIENTES`).
 
+## Panel del Admin y configuración
+
+El Admin tiene su propio menú (Inicio con el resumen del negocio,
+Clientes con filtros por profe y gimnasio, Equipo, Pagos y Ajustes). En
+**Ajustes** cambia planes y precios, datos de cobro, el link del grupo de
+WhatsApp y los plazos de vencimiento, sin tocar código; cada cambio queda
+en el **Historial**. La app lee esa configuración de la base
+(`services/configuracion.js`) y la guarda en el celular
+(`data/configuracion.js`): abre al instante con lo último conocido. Las
+pantallas que la muestran usan `useConfiguracion()` para actualizarse.
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),
@@ -53,7 +64,7 @@ entrenamientos hechos sin señal, que se envían solos al volver la conexión.
 - `src/pages` — una carpeta por pantalla completa (Login, Inicio, Rutinas, Suscripción, Comunidad, Mis datos, Panel del profe).
 - `src/components` — piezas reutilizables (botones, tarjetas, barra de progreso, temporizador).
 - `src/services` — conexión con Supabase y Mercado Pago, copia sin señal, aviso de errores.
-- `src/data` — datos fijos: planes, métodos, textos legales (`legal.js`, versión en `versionLegal.js`), reglas de vencimiento (`vencimiento.js`), datos de pago (`pagos.js`).
+- `src/data` — datos fijos (métodos, textos legales en `legal.js`, versión en `versionLegal.js`) y la configuración del negocio que maneja el Admin (`configuracion.js`), con sus lecturas: planes (`planes.js`), vencimiento (`vencimiento.js`), datos de pago (`pagos.js`) y comunidad (`comunidad.js`).
 - `src/utils` — cálculos que no leen la base (fechas, progreso, tareas del profe).
 - `src/styles` — colores (negro, gris, blanco, verde) y tipografía.
 - `supabase/` — definición de las tablas de la base de datos.
