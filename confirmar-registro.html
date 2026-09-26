@@ -1,0 +1,13 @@
+<!-- DREY · plantilla de mail: Confirmar registro
+     Se pega en Supabase → Authentication → Emails → Templates → "Confirm signup".
+     Asunto sugerido: Confirmá tu cuenta de DREY
+     El link del botón lo completa Supabase solo. -->
+<div style="margin:0;padding:32px 16px;background:#0d0d0d;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:480px;margin:0 auto;background:#161616;border:1px solid #2a2a2a;border-radius:16px;padding:32px 24px;text-align:center;">
+    <p style="margin:0 0 24px;font-size:28px;font-weight:800;letter-spacing:6px;color:#ffffff;">DREY</p>
+    <h1 style="margin:0 0 12px;font-size:22px;color:#ffffff;">Confirmá tu email</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.5;color:#a3a3a3;">¡Bienvenido/a a DREY! Tocá el botón para confirmar tu email y entrar a la app.</p>
+    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;border-radius:14px;background:#3ddc84;color:#0d0d0d;font-size:16px;font-weight:800;text-decoration:none;">Confirmar mi email</a>
+    <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b6b6b;">Si no te registraste en DREY, ignorá este mail.</p>
+  </div>
+</div>

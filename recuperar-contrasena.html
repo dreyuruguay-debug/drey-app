@@ -1,0 +1,13 @@
+<!-- DREY · plantilla de mail: Recuperar contraseña
+     Se pega en Supabase → Authentication → Emails → Templates → "Reset password".
+     Asunto sugerido: Elegí tu contraseña nueva de DREY
+     El link del botón lo completa Supabase solo. -->
+<div style="margin:0;padding:32px 16px;background:#0d0d0d;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:480px;margin:0 auto;background:#161616;border:1px solid #2a2a2a;border-radius:16px;padding:32px 24px;text-align:center;">
+    <p style="margin:0 0 24px;font-size:28px;font-weight:800;letter-spacing:6px;color:#ffffff;">DREY</p>
+    <h1 style="margin:0 0 12px;font-size:22px;color:#ffffff;">¿Olvidaste tu contraseña?</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.5;color:#a3a3a3;">Tocá el botón para elegir una contraseña nueva. El link vence en una hora.</p>
+    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;border-radius:14px;background:#3ddc84;color:#0d0d0d;font-size:16px;font-weight:800;text-decoration:none;">Elegir contraseña nueva</a>
+    <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b6b6b;">Si no lo pediste vos, ignorá este mail: tu contraseña no cambia.</p>
+  </div>
+</div>
