@@ -5,6 +5,9 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // Última pantalla del modo entrenar: la vuelta a la calma (si el profe
 // la cargó), un resumen de lo que hizo, "¿Cómo te sentiste?" y el botón
 // para guardar el entrenamiento.
+//
+// pendienteDeEnvio: se guardó en el celular porque no había señal; se
+// envía solo cuando vuelva la conexión.
 export default function PantallaFinal({
   vueltaCalma,
   resumen,
@@ -16,7 +19,7 @@ export default function PantallaFinal({
   onVolver,
   guardando,
   guardado,
-  error,
+  pendienteDeEnvio,
   modoPrevia,
 }) {
   if (guardado) {
@@ -25,7 +28,15 @@ export default function PantallaFinal({
         <span className="final-icono" aria-hidden="true">
           ✓
         </span>
-        <h1 className="entrenar-titulo">¡Entrenamiento guardado!</h1>
+        <h1 className="entrenar-titulo">
+          {pendienteDeEnvio ? '¡Guardado en tu celular!' : '¡Entrenamiento guardado!'}
+        </h1>
+        {pendienteDeEnvio && (
+          <p className="final-sin-senal">
+            No hay señal ahora. Se lo mandamos a tu profe solo, apenas vuelva la conexión. No
+            tenés que hacer nada.
+          </p>
+        )}
         <p className="entrenar-objetivo">
           {resumen.series} series en {formatearReloj(resumen.segundos)}
           {resumen.records > 0 &&
@@ -99,7 +110,6 @@ export default function PantallaFinal({
         onChange={(event) => onComentario(event.target.value)}
       />
 
-      {error && <p className="auth-message">{error}</p>}
       {modoPrevia && <p className="profe-nota">Vista previa: este botón no guarda nada.</p>}
 
       <button

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
+import { cargarHistorial } from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
@@ -18,7 +19,8 @@ const RECORDS_A_MOSTRAR = 5
 
 // "Progreso" del cliente: cuánto entrenó, sus récords, cómo viene
 // subiendo la carga en cada ejercicio y los resúmenes de 4 semanas que
-// publicó su profe. Todo sale de la tabla "sesiones".
+// publicó su profe. Todo sale de la tabla "sesiones" (más los
+// entrenamientos guardados en el celular que esperan señal).
 export default function Progreso() {
   const navigate = useNavigate()
   const [cargando, setCargando] = useState(true)
@@ -32,19 +34,14 @@ export default function Progreso() {
 
   async function cargar() {
     setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
+    const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
       return
     }
     setUsuarioId(usuario.id)
-    const { data } = await supabase
-      .from('sesiones')
-      .select('fecha, detalle')
-      .eq('cliente_id', usuario.id)
-      .order('fecha')
-    setSesiones(data || [])
+    const { sesiones: lista } = await cargarHistorial(usuario.id)
+    setSesiones(lista)
     setCargando(false)
   }
 
@@ -62,6 +59,16 @@ export default function Progreso() {
     <div className="screen has-bottom-nav pagina-cliente">
       <TopPattern />
       <h1 className="pagina-titulo">Mi progreso</h1>
+
+      <Link to="/medidas" className="tarjeta-rutina progreso-medidas">
+        <span className="tarjeta-rutina-textos">
+          <strong>Mis medidas y fotos</strong>
+          <small>Peso, perímetros y fotos de antes y ahora</small>
+        </span>
+        <span className="tarjeta-flecha" aria-hidden="true">
+          ›
+        </span>
+      </Link>
 
       {cargando ? (
         <p className="profe-mensaje-carga">Cargando…</p>

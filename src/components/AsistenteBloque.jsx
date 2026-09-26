@@ -37,6 +37,7 @@ export default function AsistenteBloque({
   grupos,
   biblioteca,
   mostrarKgObjetivo,
+  conCiclo = false,
   onGuardar,
   onCerrar,
 }) {
@@ -274,6 +275,7 @@ export default function AsistenteBloque({
                 item={item}
                 numero={esGrupo ? indice + 1 : null}
                 mostrarKgObjetivo={mostrarKgObjetivo}
+                conCiclo={conCiclo}
                 onCambiar={(campo, valor) => cambiarEjercicio(indice, campo, valor)}
               />
             ))}
@@ -371,7 +373,7 @@ function TarjetaTipo({ metodo, activo, onElegir }) {
 
 // Casilleros de un ejercicio del bloque: series, repeticiones (una
 // cantidad o un rango), peso objetivo, RPE y calentamiento.
-function ConfigEjercicio({ item, numero, mostrarKgObjetivo, onCambiar }) {
+function ConfigEjercicio({ item, numero, mostrarKgObjetivo, conCiclo, onCambiar }) {
   return (
     <div className="config-ejercicio">
       <div className="ejercicio-header config-ejercicio-nombre">
@@ -443,6 +445,41 @@ function ConfigEjercicio({ item, numero, mostrarKgObjetivo, onCambiar }) {
           />
         </label>
       </div>
+
+      {conCiclo && (
+        <div className="config-progresion">
+          <span className="editor-rango-etiqueta">Sube por semana (ciclo, opcional)</span>
+          <div className="editor-campos">
+            {mostrarKgObjetivo && (
+              <label className="editor-campo">
+                <span>+ kg</span>
+                <input
+                  className="profe-input-tabla"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  inputMode="decimal"
+                  placeholder="2,5"
+                  value={item.progresionKg}
+                  onChange={(event) => onCambiar('progresionKg', event.target.value)}
+                />
+              </label>
+            )}
+            <label className="editor-campo">
+              <span>+ reps</span>
+              <input
+                className="profe-input-tabla"
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder="0"
+                value={item.progresionReps}
+                onChange={(event) => onCambiar('progresionReps', event.target.value)}
+              />
+            </label>
+          </div>
+        </div>
+      )}
 
       <div className="config-calentamiento">
         <span className="editor-rango-etiqueta">Series de calentamiento</span>

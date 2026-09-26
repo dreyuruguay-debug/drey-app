@@ -1,5 +1,6 @@
 import { diasEntre, textoFechaCorta } from './dias.js'
 import { linkWhatsApp } from './whatsapp.js'
+import { estadoDelPlan } from '../data/vencimiento.js'
 
 // Arma la lista "Para hacer hoy" del Inicio del profe a partir de los
 // datos de sus clientes. Nada de este archivo lee ni guarda en la base:
@@ -10,7 +11,6 @@ import { linkWhatsApp } from './whatsapp.js'
 // Las urgentes (pagos, clientes sin rutina) van primero.
 
 export const DIAS_PARA_INACTIVO = 5
-const DIAS_AVISO_VENCIMIENTO = 3
 const MAXIMO_POR_TIPO = 3
 
 function nombreCompleto(cliente) {
@@ -33,6 +33,10 @@ export function armarTareas({
   calendario = [],
   ultimaSesion = {},
   resumenesBorrador = [],
+  // Clientes con alguna medición (null = no se sabe: tabla sin instalar).
+  conMediciones = null,
+  // Rutinas con ciclo terminado: [{ rutina, cliente }] (ver utils/ciclos.js).
+  ciclosTerminados = [],
   hoy,
 }) {
   const tareas = []
@@ -41,6 +45,19 @@ export function armarTareas({
     (cliente) => cliente.aviso_pago && cliente.estado !== 'pendiente',
   )
   const activos = clientes.filter((cliente) => cliente.estado === 'activo')
+  const bajas = clientes.filter((cliente) => cliente.baja_solicitada_en)
+
+  // Pedido de baja (Ley 18.331): hay que borrar la cuenta y sus datos.
+  for (const cliente of bajas) {
+    tareas.push({
+      id: `baja-${cliente.id}`,
+      nivel: 'urgente',
+      icono: 'baja',
+      titulo: `${nombreCompleto(cliente)} pidió la baja de su cuenta`,
+      detalle: `Desde el ${textoFechaCorta(cliente.baja_solicitada_en.slice(0, 10))} · hay que borrar sus datos`,
+      accion: { texto: 'Ver', to: `/profe/clientes/${cliente.id}?tab=pagos` },
+    })
+  }
 
   if (pendientes.length) {
     tareas.push({
@@ -78,6 +95,7 @@ export function armarTareas({
   const sinDias = []
   const inactivos = []
   const porVencer = []
+  const enGracia = []
   const vencidos = []
 
   for (const cliente of activos) {
@@ -98,9 +116,10 @@ export function armarTareas({
     }
 
     if (cliente.vencimiento && !cliente.aviso_pago) {
-      const faltan = diasEntre(hoy, cliente.vencimiento)
-      if (faltan < 0) vencidos.push(cliente)
-      else if (faltan <= DIAS_AVISO_VENCIMIENTO) porVencer.push(cliente)
+      const plan = estadoDelPlan(cliente, hoy)
+      if (plan.tipo === 'vencido') vencidos.push(cliente)
+      else if (plan.tipo === 'gracia') enGracia.push({ cliente, plan })
+      else if (plan.tipo === 'por-vencer') porVencer.push({ cliente, plan })
     }
   }
 
@@ -131,9 +150,26 @@ export function armarTareas({
       id: `vencido-${cliente.id}`,
       nivel: 'urgente',
       icono: 'pago',
+      titulo: `${nombreCompleto(cliente)} no tiene acceso: plan vencido`,
+      detalle: `Venció el ${textoFechaCorta(cliente.vencimiento)} y pasaron los días de gracia`,
+      accion: accionRecordarPago(
+        cliente,
+        `Hola ${cliente.nombre || ''}! Tu plan de DREY venció y se pausó el acceso a tus rutinas. Podés pagar desde la app (Perfil → Suscripción) y se reactiva. ¡Te espero! 💪`,
+      ),
+    })
+  }
+
+  for (const { cliente, plan } of enGracia) {
+    tareas.push({
+      id: `gracia-${cliente.id}`,
+      nivel: 'urgente',
+      icono: 'pago',
       titulo: `El plan de ${nombreCompleto(cliente)} venció`,
-      detalle: `Venció el ${textoFechaCorta(cliente.vencimiento)}`,
-      accion: { texto: 'Ver', to: `/profe/clientes/${cliente.id}?tab=pagos` },
+      detalle: `Venció el ${textoFechaCorta(cliente.vencimiento)} · pierde el acceso el ${textoFechaCorta(plan.hasta)}`,
+      accion: accionRecordarPago(
+        cliente,
+        `Hola ${cliente.nombre || ''}! Te recuerdo que tu plan de DREY venció el ${textoFechaCorta(cliente.vencimiento)}. Podés pagar desde la app (Perfil → Suscripción) para no perder el acceso a tus rutinas.`,
+      ),
     })
   }
 
@@ -181,6 +217,34 @@ export function armarTareas({
     })
   }
 
+  // Evaluación inicial pendiente (clientes activos que ya tienen rutina).
+  if (conMediciones) {
+    const sinEvaluacion = activos.filter(
+      (cliente) => !conMediciones.has(cliente.id) && rutinasPorCliente.get(cliente.id)?.length,
+    )
+    for (const cliente of sinEvaluacion.slice(0, MAXIMO_POR_TIPO)) {
+      tareas.push({
+        id: `evaluacion-${cliente.id}`,
+        nivel: 'aviso',
+        icono: 'medida',
+        titulo: `Evaluación inicial de ${nombreCompleto(cliente)}`,
+        detalle: 'Todavía no tiene medidas ni fotos cargadas',
+        accion: { texto: 'Cargar', to: `/profe/clientes/${cliente.id}/medidas` },
+      })
+    }
+  }
+
+  for (const { rutina, cliente } of ciclosTerminados) {
+    tareas.push({
+      id: `ciclo-${rutina.id}`,
+      nivel: 'aviso',
+      icono: 'calendario',
+      titulo: `Terminó el ciclo de "${rutina.nombre}"`,
+      detalle: `${nombreCompleto(cliente)} · armale el próximo`,
+      accion: { texto: 'Renovar', to: `/profe/rutinas/${rutina.id}` },
+    })
+  }
+
   for (const resumen of resumenesBorrador) {
     const cliente = clientes.find((item) => item.id === resumen.cliente_id)
     if (!cliente) continue
@@ -194,18 +258,30 @@ export function armarTareas({
     })
   }
 
-  for (const cliente of porVencer) {
+  for (const { cliente } of porVencer) {
     tareas.push({
       id: `vence-${cliente.id}`,
       nivel: 'aviso',
       icono: 'pago',
       titulo: `El plan de ${nombreCompleto(cliente)} vence pronto`,
       detalle: `Vence el ${textoFechaCorta(cliente.vencimiento)}`,
-      accion: { texto: 'Ver', to: `/profe/clientes/${cliente.id}?tab=pagos` },
+      accion: accionRecordarPago(
+        cliente,
+        `Hola ${cliente.nombre || ''}! Tu plan de DREY vence el ${textoFechaCorta(cliente.vencimiento)}. Podés renovarlo desde la app (Perfil → Suscripción). 💪`,
+      ),
     })
   }
 
   return tareas.sort((a, b) => (a.nivel === b.nivel ? 0 : a.nivel === 'urgente' ? -1 : 1))
+}
+
+// Botón "Recordarle" (WhatsApp con el mensaje escrito) o, si no tiene
+// celular cargado, "Ver" (su ficha, pestaña Pagos).
+function accionRecordarPago(cliente, texto) {
+  const whatsapp = linkWhatsApp(cliente.celular, texto)
+  return whatsapp
+    ? { texto: 'Recordarle', href: whatsapp }
+    : { texto: 'Ver', to: `/profe/clientes/${cliente.id}?tab=pagos` }
 }
 
 // Primeros pasos de un profe nuevo. Devuelve null cuando ya hizo todo.

@@ -5,17 +5,29 @@ import { obtenerOpcionesDeProfe } from '../services/profes.js'
 import EyeIcon from '../components/EyeIcon.jsx'
 import DatosDePago from '../components/DatosDePago.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
-import { PLANES, obtenerPlan, formatearPrecio } from '../data/planes.js'
+import CasillasConsentimiento from '../components/CasillasConsentimiento.jsx'
+import { PLANES, formatearPrecio } from '../data/planes.js'
+import { MERCADO_PAGO_AUTOMATICO } from '../data/pagos.js'
+import { VERSION_TERMINOS } from '../data/versionLegal.js'
+import { cargarPlanesConPrecios } from '../services/planes.js'
+import { validarCodigo } from '../services/pagos.js'
 import { calcularEdad } from '../utils/fechas.js'
 
 // Registro en 4 pasos, en este orden:
-//   1. Tus datos      (datos personales, objetivo, lesiones, privacidad)
-//   2. Tu plan        (uno de los 3 planes + código de descuento)
+//   1. Tus datos      (datos personales, objetivo, lesiones y las dos
+//                      casillas de consentimiento: términos/privacidad y
+//                      datos de salud, Ley 18.331)
+//   2. Tu plan        (uno de los planes + código de descuento, que se
+//                      revisa en la base antes de seguir)
 //   3. Tu profe       (profe o gimnasio al que se asocia)
 //   4. Pago           (cómo pagar y botón "Ya pagué")
 //
 // Recién en el paso 4 se crea la cuenta. Queda "pendiente" hasta que
-// el profe elegido la habilita desde "Cuentas y pagos".
+// se paga: con Mercado Pago automático (data/pagos.js) se activa sola al
+// pagar desde Suscripción; por transferencia, la habilita el profe.
+//
+// Los precios salen de la base de datos (tabla "planes"), los mismos que
+// cobra Mercado Pago.
 //
 // Todos los datos viajan en los metadatos del usuario de Supabase y la
 // base los copia sola a la tabla "perfiles" (triggers handle_new_user y
@@ -38,11 +50,15 @@ export default function Registro() {
   const [celular, setCelular] = useState('')
   const [objetivo, setObjetivo] = useState('')
   const [lesiones, setLesiones] = useState('')
-  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false)
+  const [aceptaTerminos, setAceptaTerminos] = useState(false)
+  const [consienteSalud, setConsienteSalud] = useState(false)
 
   // Paso 2
   const [planId, setPlanId] = useState('')
   const [codigoDescuento, setCodigoDescuento] = useState('')
+  const [codigoValidado, setCodigoValidado] = useState(null) // respuesta de validarCodigo
+  const [revisando, setRevisando] = useState(false)
+  const [planes, setPlanes] = useState(PLANES)
 
   // Paso 3
   const [opcionesProfe, setOpcionesProfe] = useState([])
@@ -54,10 +70,11 @@ export default function Registro() {
   const [resultado, setResultado] = useState(null) // { avisoPago: boolean }
 
   const edad = calcularEdad(fechaNacimiento)
-  const plan = obtenerPlan(planId)
+  const plan = planes.find((opcion) => opcion.id === planId)
 
   useEffect(() => {
     cargarOpcionesDeProfe()
+    cargarPlanesConPrecios().then(setPlanes)
   }, [])
 
   async function cargarOpcionesDeProfe() {
@@ -89,7 +106,12 @@ export default function Registro() {
       if (!/^\S+@\S+\.\S+$/.test(email)) return 'Revisá el email: parece que tiene un error.'
       if (password.length < 6) return 'La contraseña tiene que tener al menos 6 caracteres.'
       if (password !== confirmarPassword) return 'Las contraseñas no coinciden.'
-      if (!aceptaPrivacidad) return 'Tenés que aceptar la política de privacidad para continuar.'
+      if (!aceptaTerminos) {
+        return 'Tenés que aceptar los términos y la política de privacidad para continuar.'
+      }
+      if (!consienteSalud) {
+        return 'Necesitamos tu autorización para usar tus datos de salud: sin ellos tu profe no puede armarte la rutina.'
+      }
     }
     if (numeroPaso === 1 && !planId) return 'Elegí un plan para continuar.'
     if (numeroPaso === 2 && opcionesProfe.length > 0 && !eleccion) {
@@ -98,12 +120,27 @@ export default function Registro() {
     return ''
   }
 
-  function irAlSiguiente(event) {
+  async function irAlSiguiente(event) {
     event.preventDefault()
-    const error = validarPaso(paso)
+    if (revisando) return
+    const pasoActual = paso
+    let error = validarPaso(pasoActual)
+
+    // El código de descuento se revisa en la base antes de pasar al pago.
+    if (!error && pasoActual === 1 && codigoDescuento.trim()) {
+      setRevisando(true)
+      const validado = await validarCodigo(codigoDescuento, planId)
+      setRevisando(false)
+      setCodigoValidado(validado)
+      if (!validado?.valido) {
+        error = validado?.mensaje || 'Ese código no es válido. Corregilo o borralo para seguir.'
+      }
+    }
+
     setMessage(error)
     if (!error) {
-      setPaso((actual) => actual + 1)
+      // Paso fijo (no "el actual + 1"): un doble toque no saltea pasos.
+      setPaso(pasoActual + 1)
       window.scrollTo(0, 0)
     }
   }
@@ -121,6 +158,8 @@ export default function Registro() {
       email,
       password,
       options: {
+        // El link del mail de confirmación vuelve a la app (y entra solo).
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           nombre,
           apellido,
@@ -130,11 +169,13 @@ export default function Registro() {
           objetivo,
           lesiones: lesiones || null,
           plan: planId,
-          codigo_descuento: codigoDescuento || null,
+          codigo_descuento: codigoValidado?.valido ? codigoValidado.codigo : null,
           estado: 'pendiente',
           profe_id: eleccion?.tipo === 'profe' ? eleccion.id : null,
           gimnasio_id: eleccion?.tipo === 'gimnasio' ? eleccion.id : null,
           aviso_pago: avisoPago,
+          terminos_version: VERSION_TERMINOS,
+          consentimiento_salud: consienteSalud,
         },
       },
     })
@@ -163,7 +204,9 @@ export default function Registro() {
         <p className="registro-gracias-texto">
           {resultado.avisoPago
             ? 'Avisaste tu pago. Esperando autorización del profesor.'
-            : 'Tu cuenta queda pendiente. Cuando pagues, entrá a Suscripción y tocá "Ya pagué".'}
+            : MERCADO_PAGO_AUTOMATICO
+              ? 'Tu cuenta queda pendiente hasta que pagues. Entrá a la app y pagá desde Suscripción: se activa al instante.'
+              : 'Tu cuenta queda pendiente. Cuando pagues, entrá a Suscripción y tocá "Ya pagué".'}
         </p>
         <p className="registro-gracias-texto">
           Te mandamos un email para confirmar tu cuenta. Revisá también la carpeta de spam.
@@ -293,16 +336,12 @@ export default function Registro() {
               onChange={(event) => setLesiones(event.target.value)}
             />
 
-            <label className="form-checkbox-row">
-              <input
-                type="checkbox"
-                checked={aceptaPrivacidad}
-                onChange={(event) => setAceptaPrivacidad(event.target.checked)}
-              />
-              <span>
-                Acepto la política de privacidad (Ley 18.331 de protección de datos personales).
-              </span>
-            </label>
+            <CasillasConsentimiento
+              terminos={aceptaTerminos}
+              salud={consienteSalud}
+              onTerminos={setAceptaTerminos}
+              onSalud={setConsienteSalud}
+            />
           </>
         )}
 
@@ -311,7 +350,7 @@ export default function Registro() {
             <p className="form-section-label">Elegí tu plan</p>
 
             <div className="plan-opciones">
-              {PLANES.map((opcion) => (
+              {planes.map((opcion) => (
                 <button
                   key={opcion.id}
                   type="button"
@@ -335,8 +374,16 @@ export default function Registro() {
               type="text"
               placeholder="Código de descuento (opcional)"
               value={codigoDescuento}
-              onChange={(event) => setCodigoDescuento(event.target.value)}
+              onChange={(event) => {
+                setCodigoDescuento(event.target.value.toUpperCase())
+                setCodigoValidado(null)
+              }}
             />
+            {codigoValidado?.valido && (
+              <p className="registro-edad registro-codigo-ok">
+                ✓ Código {codigoValidado.codigo}: {textoDescuento(codigoValidado)}
+              </p>
+            )}
           </>
         )}
 
@@ -383,30 +430,63 @@ export default function Registro() {
             <div className="suscripcion-plan-card">
               <p className="suscripcion-plan-nombre">{plan.nombre}</p>
               <p className="suscripcion-plan-precio">
-                {formatearPrecio(plan.precioPrimerMes)} el primer mes
+                {formatearPrecio(precioConDescuento(plan.precioPrimerMes, codigoValidado))} el
+                primer mes
               </p>
-              {codigoDescuento && (
+              {codigoValidado?.valido && (
                 <p className="suscripcion-vencimiento">
-                  Código {codigoDescuento}: el profe aplica el descuento al confirmar.
+                  Con el código {codigoValidado.codigo} (antes{' '}
+                  {formatearPrecio(plan.precioPrimerMes)}).
                 </p>
               )}
             </div>
 
-            <DatosDePago planId={planId} />
-
-            <p className="registro-edad">
-              Cuando termines de pagar tocá "Ya pagué". Si preferís pagar después, podés avisar
-              desde la pantalla Suscripción.
-            </p>
+            {MERCADO_PAGO_AUTOMATICO ? (
+              <>
+                <p className="registro-edad">
+                  Creá tu cuenta, confirmá tu email y entrá a la app: desde Suscripción pagás con
+                  tarjeta o Mercado Pago y tu cuenta se activa al instante.
+                </p>
+                <p className="form-section-label">¿Preferís transferencia?</p>
+                <DatosDePago planId={planId} />
+              </>
+            ) : (
+              <>
+                <DatosDePago planId={planId} />
+                <p className="registro-edad">
+                  Cuando termines de pagar tocá "Ya pagué". Si preferís pagar después, podés avisar
+                  desde la pantalla Suscripción.
+                </p>
+              </>
+            )}
           </>
         )}
 
         {message && <p className="auth-message">{message}</p>}
 
         {paso < PASOS.length - 1 ? (
-          <button type="submit" className="auth-submit">
-            Siguiente
+          <button type="submit" className="auth-submit" disabled={revisando}>
+            {revisando ? 'Revisando el código…' : 'Siguiente'}
           </button>
+        ) : MERCADO_PAGO_AUTOMATICO ? (
+          <>
+            <button
+              type="button"
+              className="auth-submit"
+              disabled={loading}
+              onClick={() => crearCuenta(false)}
+            >
+              {loading ? 'Creando cuenta…' : 'Crear mi cuenta'}
+            </button>
+            <button
+              type="button"
+              className="registro-boton-secundario"
+              disabled={loading}
+              onClick={() => crearCuenta(true)}
+            >
+              Ya pagué por transferencia
+            </button>
+          </>
         ) : (
           <>
             <button
@@ -445,4 +525,21 @@ export default function Registro() {
       </Link>
     </main>
   )
+}
+
+// Precio del primer mes con el descuento del código (el mismo cálculo que
+// hace la base en calcular_precio, supabase/sql/014).
+function precioConDescuento(precio, codigo) {
+  if (!codigo?.valido) return precio
+  const descuento =
+    (Number(codigo.monto_fijo) || 0) + Math.round((precio * (Number(codigo.porcentaje) || 0)) / 100)
+  return Math.max(0, precio - Math.min(precio, descuento))
+}
+
+function textoDescuento(codigo) {
+  const partes = []
+  if (codigo.porcentaje) partes.push(`${Number(codigo.porcentaje)}% de descuento`)
+  if (codigo.monto_fijo) partes.push(`${formatearPrecio(codigo.monto_fijo)} de descuento`)
+  if (codigo.solo_primer_mes) partes.push('el primer mes')
+  return partes.join(' ') || codigo.descripcion || 'aplicado'
 }

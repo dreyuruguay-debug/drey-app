@@ -44,8 +44,12 @@ function serviceWorkerDrey() {
           /^const ARCHIVOS = .*\/\/ __DREY_ARCHIVOS__$/m,
           `const ARCHIVOS = ${JSON.stringify([...archivos])}`,
         )
+      // Si public/sw.js no tiene las dos líneas a completar (por ejemplo,
+      // quedó una versión vieja), la web se publica igual, solo que sin el
+      // modo sin señal. No se corta la publicación.
       if (!codigo.includes(`const VERSION = '${version}'`)) {
-        throw new Error('No se pudo preparar sw.js (¿cambiaron las líneas VERSION/ARCHIVOS?)')
+        this.warn('public/sw.js no tiene las líneas VERSION/ARCHIVOS: la app no se guarda para usar sin señal.')
+        return
       }
       writeFileSync(ruta, codigo)
     },

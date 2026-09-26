@@ -136,6 +136,8 @@ export const VALORES_INICIALES_EJERCICIO = {
   calentamiento: false,
   calentamientoSeries: 2,
   calentamientoDetalle: '',
+  progresionKg: '',
+  progresionReps: '',
 }
 
 export function borradorNuevo(metodo = 'normal', descanso = {}) {
@@ -181,6 +183,8 @@ export function bloqueABorrador(bloque) {
         calentamientoSeries:
           fila.calentamiento?.series || VALORES_INICIALES_EJERCICIO.calentamientoSeries,
         calentamientoDetalle: fila.calentamiento?.detalle || '',
+        progresionKg: fila.progresion?.kg ?? '',
+        progresionReps: fila.progresion?.reps ?? '',
       }
     }),
   }
@@ -261,9 +265,20 @@ export function borradorAFilas(borrador) {
             detalle: item.calentamientoDetalle.trim() || null,
           }
         : null,
+      progresion: progresionDe(item),
       metodo: borrador.metodo,
       grupo,
       config: posicion === 0 ? config : {},
     }
   })
+}
+
+// Lo que sube por semana en un ciclo ({ kg, reps }); vacío si no sube.
+function progresionDe(item) {
+  const progresion = {}
+  const kg = numeroONull(item.progresionKg)
+  const reps = numeroONull(item.progresionReps)
+  if (kg && kg > 0) progresion.kg = kg
+  if (reps && reps > 0) progresion.reps = Math.round(reps)
+  return progresion
 }

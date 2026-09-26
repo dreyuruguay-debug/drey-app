@@ -17,6 +17,7 @@ export default function PantallaEjercicio({
   bloque,
   series,
   anterior,
+  sugerencia,
   onAjustar,
   onMarcar,
 }) {
@@ -70,6 +71,11 @@ export default function PantallaEjercicio({
           <p className="entrenar-calentamiento">
             Antes: {calentamiento}
             <Ayuda titulo={TERMINOS.calentamiento.titulo} texto={TERMINOS.calentamiento.texto} />
+          </p>
+        )}
+        {sugerencia?.motivo && (
+          <p className="entrenar-sugerencia">
+            💡 Hoy: {formatearNumero(Number(sugerencia.kg))} kg · {sugerencia.motivo}
           </p>
         )}
         {anterior && (

@@ -3,6 +3,14 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
+import { comprimirImagen } from '../utils/imagenes.js'
+
+// Filtros para encontrar rápido lo que falta cargar.
+const FILTROS = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'sin-foto', label: 'Sin foto' },
+  { id: 'sin-video', label: 'Sin video' },
+]
 
 // Biblioteca de ejercicios, organizada en 7 categorías (Empuje,
 // Tracción, Multiarticulares, Piernas, Zona media, Cardiorrespiratorio y
@@ -10,6 +18,10 @@ import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 // varias categorías: se eligen al editarlo. Estos son los ejercicios que después se usan para
 // armar la rutina de cada cliente (ver "Clientes y rutinas" → un
 // cliente → "+ Agregar ejercicio" dentro de una rutina).
+//
+// Arriba se ve cuántos ejercicios tienen foto y video, y los filtros "Sin
+// foto" / "Sin video" muestran solo los que falta completar. Las fotos se
+// achican solas antes de subirlas (cargan rápido en el celular).
 //
 // Acá solo se administra la lista: crear, editar (nombre, foto, link de
 // video) y borrar. Asignarle series/reps/peso a un cliente puntual se
@@ -19,6 +31,7 @@ export default function ProfeEjercicios() {
   const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [categoriaActiva, setCategoriaActiva] = useState(CATEGORIAS[0].nombre)
+  const [filtro, setFiltro] = useState('todos')
 
   const [nombreNuevo, setNombreNuevo] = useState('')
   const [videoNuevo, setVideoNuevo] = useState('')
@@ -48,8 +61,9 @@ export default function ProfeEjercicios() {
   // "ejercicios-fotos") y devuelve el link para guardar en la fila del
   // ejercicio. Si falla la subida, devuelve null y no rompe el guardado
   // del resto de los datos.
-  async function subirImagen(archivo) {
-    const ruta = `${Date.now()}-${archivo.name}`
+  async function subirImagen(original) {
+    const archivo = await comprimirImagen(original, 900)
+    const ruta = `${Date.now()}-${archivo.name.replace(/[^\w.-]/g, '_')}`
     const { error } = await supabase.storage.from('ejercicios-fotos').upload(ruta, archivo)
     if (error) return null
     const { data } = supabase.storage.from('ejercicios-fotos').getPublicUrl(ruta)
@@ -161,6 +175,11 @@ export default function ProfeEjercicios() {
   const ejerciciosDelGrupo = ejercicios
     .filter((ejercicio) => categoriasDeEjercicio(ejercicio).includes(categoriaActiva))
     .filter((ejercicio) => ejercicio.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    .filter((ejercicio) =>
+      filtro === 'sin-foto' ? !ejercicio.imagen_url : filtro === 'sin-video' ? !ejercicio.video_url : true,
+    )
+  const conFoto = ejercicios.filter((ejercicio) => ejercicio.imagen_url).length
+  const conVideo = ejercicios.filter((ejercicio) => ejercicio.video_url).length
 
   return (
     <ProfeLayout titulo="Biblioteca">
@@ -170,6 +189,13 @@ export default function ProfeEjercicios() {
         video). Para asignarle uno a un cliente, entrá a "Clientes y rutinas" → el cliente → su
         rutina → "+ Agregar ejercicio".
       </p>
+
+      {ejercicios.length > 0 && (
+        <div className="biblioteca-avance">
+          <BarraAvance etiqueta="Con foto" cantidad={conFoto} total={ejercicios.length} />
+          <BarraAvance etiqueta="Con video" cantidad={conVideo} total={ejercicios.length} />
+        </div>
+      )}
 
       <div className="profe-grupos-grid">
         {CATEGORIAS.map(({ nombre, musculos }) => (
@@ -197,12 +223,29 @@ export default function ProfeEjercicios() {
         onChange={(event) => setBusqueda(event.target.value)}
       />
 
+      <div className="chips-lista biblioteca-filtros">
+        {FILTROS.map((opcion) => (
+          <button
+            key={opcion.id}
+            type="button"
+            className={opcion.id === filtro ? 'chip chip-activo' : 'chip'}
+            onClick={() => setFiltro(opcion.id)}
+          >
+            {opcion.label}
+          </button>
+        ))}
+      </div>
+
       {mensaje && <p className="auth-message">{mensaje}</p>}
 
       {cargando ? (
         <p className="profe-vacio">Cargando…</p>
       ) : ejerciciosDelGrupo.length === 0 ? (
-        <p className="profe-vacio">Todavía no hay ejercicios de {categoriaActiva}.</p>
+        <p className="profe-vacio">
+          {filtro === 'todos'
+            ? `Todavía no hay ejercicios de ${categoriaActiva}.`
+            : `En ${categoriaActiva} no falta ninguno. ¡Bien!`}
+        </p>
       ) : (
         <div className="profe-ejercicios-lista">
           {ejerciciosDelGrupo.map((ejercicio) =>
@@ -337,5 +380,19 @@ export default function ProfeEjercicios() {
         </button>
       </form>
     </ProfeLayout>
+  )
+}
+
+function BarraAvance({ etiqueta, cantidad, total }) {
+  const porcentaje = total ? Math.round((cantidad / total) * 100) : 0
+  return (
+    <div className="barra-avance">
+      <span>
+        {etiqueta}: {cantidad} de {total}
+      </span>
+      <span className="barra-avance-fondo" aria-hidden="true">
+        <span className="barra-avance-relleno" style={{ width: `${porcentaje}%` }} />
+      </span>
+    </div>
   )
 }

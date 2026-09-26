@@ -7,8 +7,10 @@ import PantallaEjercicio from '../components/entrenar/PantallaEjercicio.jsx'
 import PantallaDescanso from '../components/entrenar/PantallaDescanso.jsx'
 import PantallaFinal from '../components/entrenar/PantallaFinal.jsx'
 import VistaGeneral from '../components/entrenar/VistaGeneral.jsx'
-import { supabase } from '../services/supabaseClient.js'
 import { cargarRutinaCompleta } from '../services/rutinas.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
+import { cargarHistorial, cargarRutinaParaEntrenar } from '../services/datosCliente.js'
+import { guardarEntrenamiento, nuevaFilaDeEntrenamiento } from '../services/colaEntrenamientos.js'
 import { agruparEnBloques } from '../utils/bloques.js'
 import { obtenerMetodo } from '../data/metodos.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
@@ -22,6 +24,7 @@ import {
 } from '../utils/entrenamiento.js'
 import { borrarEnCurso, guardarEnCurso, leerEnCurso } from '../utils/entrenamientoEnCurso.js'
 import { formatearNumero } from '../utils/progreso.js'
+import { semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 
 const DURACION_AVISO_MS = 3000
 const VIBRACION_FIN_DESCANSO = [300, 150, 300]
@@ -41,6 +44,10 @@ const VIBRACION_FIN_DESCANSO = [300, 150, 300]
 // Al guardar, queda una sesión en la tabla "sesiones" con el kg/reps de
 // cada serie (de ahí salen "La vez pasada", los récords y las gráficas).
 //
+// Funciona sin señal: la rutina sale de la copia guardada en el celular
+// y, si al guardar no hay conexión, el entrenamiento queda en el celular
+// y se envía solo cuando vuelve la señal (services/colaEntrenamientos.js).
+//
 // modoPrevia: el profe ve la rutina como la verá el alumno (desde su
 // editor). No guarda nada. tipo = 'rutina' o 'plantilla'.
 export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
@@ -55,6 +62,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [ejercicios, setEjercicios] = useState([])
   const [anteriorPorEjercicio, setAnteriorPorEjercicio] = useState({})
   const [mejoresPorEjercicio, setMejoresPorEjercicio] = useState({})
+  const [sugerencias, setSugerencias] = useState([])
 
   const [series, setSeries] = useState([])
   const [calentamientoHecho, setCalentamientoHecho] = useState(false)
@@ -70,7 +78,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [esfuerzo, setEsfuerzo] = useState(null)
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState('')
+  const [pendienteDeEnvio, setPendienteDeEnvio] = useState(false)
 
   useEffect(() => {
     cargar()
@@ -132,41 +140,34 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     let datos = null
     let lista = []
     let mejores = {}
+    let anteriores = {}
 
     if (modoPrevia) {
       const resultado = await cargarRutinaCompleta(tipo, id)
       datos = resultado.datos
       lista = resultado.ejercicios
     } else {
-      const { data: userData } = await supabase.auth.getUser()
-      const usuario = userData?.user
+      const usuario = await obtenerUsuarioActual()
       if (!usuario) {
         navigate('/')
         return
       }
       setUsuarioId(usuario.id)
-      const [{ data: rutinaData }, { data: ejerciciosData }, { data: sesiones }] =
-        await Promise.all([
-          supabase.from('rutinas').select('*').eq('id', id).single(),
-          supabase
-            .from('rutina_ejercicios')
-            .select('*, ejercicios(nombre, video_url, imagen_url)')
-            .eq('rutina_id', id)
-            .order('orden'),
-          supabase
-            .from('sesiones')
-            .select('rutina_id, fecha, detalle')
-            .eq('cliente_id', usuario.id)
-            .order('fecha', { ascending: false }),
-        ])
-      datos = rutinaData
-      lista = ejerciciosData || []
+      const [datosRutina, historial] = await Promise.all([
+        cargarRutinaParaEntrenar(usuario.id, id),
+        cargarHistorial(usuario.id),
+      ])
+      datos = datosRutina.rutina
+      lista = datosRutina.ejercicios
+      // Del más nuevo al más viejo.
+      const sesiones = [...historial.sesiones].reverse()
 
       // "La vez pasada": la última vez que hizo ESTA rutina.
       const ultima = (sesiones || []).find((sesion) => sesion.rutina_id === id)
       const anterior = {}
       for (const item of ultima?.detalle || []) anterior[item.ejercicio_id] = item.series || []
       setAnteriorPorEjercicio(anterior)
+      anteriores = anterior
 
       // Mejor marca histórica de cada ejercicio (en cualquier rutina),
       // para avisar si hoy hace un récord.
@@ -188,7 +189,12 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     setRutina(datos || null)
     setEjercicios(lista)
 
-    const iniciales = crearSeriesIniciales(lista)
+    // Peso sugerido para hoy en cada ejercicio (ciclo o progresión).
+    const sugeridas = lista.map((ejercicio) =>
+      sugerenciaParaHoy(ejercicio, datos, anteriores[ejercicio.ejercicio_id], hoy),
+    )
+    setSugerencias(sugeridas)
+    const iniciales = crearSeriesIniciales(lista, sugeridas)
     const enCurso = modoPrevia ? null : leerEnCurso(id, hoy)
     if (enCurso && mismaForma(enCurso.series, iniciales)) {
       setSeries(enCurso.series)
@@ -339,26 +345,25 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   async function finalizar() {
     if (!usuarioId || modoPrevia) return
     setGuardando(true)
-    setError('')
     const detalle = ejercicios.map((ejercicio, exIndex) => ({
       ejercicio_id: ejercicio.ejercicio_id,
       nombre: ejercicio.ejercicios?.nombre || '',
       metodo: ejercicio.metodo || 'normal',
       series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })),
     }))
-    const { error: errorGuardar } = await supabase.from('sesiones').insert({
-      cliente_id: usuarioId,
-      rutina_id: rutina.id,
-      fecha: hoy,
-      esfuerzo,
-      comentario: comentario.trim() || null,
-      detalle,
-    })
+    const resultado = await guardarEntrenamiento(
+      nuevaFilaDeEntrenamiento({
+        cliente_id: usuarioId,
+        rutina_id: rutina.id,
+        fecha: hoy,
+        esfuerzo,
+        comentario: comentario.trim() || null,
+        detalle,
+      }),
+    )
+    // Enviado o guardado en el celular: en los dos casos ya no se pierde.
     setGuardando(false)
-    if (errorGuardar) {
-      setError('No pudimos guardar el entrenamiento. Revisá tu conexión y probá de nuevo.')
-      return
-    }
+    setPendienteDeEnvio(resultado === 'en-cola')
     borrarEnCurso(id)
     setFase('guardado')
   }
@@ -378,10 +383,17 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     return (
       <div className="screen entrenar">
         <div className="entrenar-pantalla entrenar-pantalla-centrada">
-          <p className="entrenar-objetivo">No encontramos esa rutina.</p>
+          <p className="entrenar-objetivo">
+            No encontramos esa rutina. Si tu plan está vencido, al pagar la vas a volver a ver.
+          </p>
           <Link to="/rutinas" className="boton-principal">
             Volver a mis rutinas
           </Link>
+          {!modoPrevia && (
+            <Link to="/suscripcion" className="boton-secundario">
+              Ver mi suscripción
+            </Link>
+          )}
         </div>
       </div>
     )
@@ -441,7 +453,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           onVolver={() => setFase('entrenando')}
           guardando={guardando}
           guardado={fase === 'guardado'}
-          error={error}
+          pendienteDeEnvio={pendienteDeEnvio}
           modoPrevia={modoPrevia}
         />
       </div>
@@ -449,6 +461,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   }
 
   const ejercicio = ejercicios[visible]
+  const ciclo = semanaDelCiclo(rutina, hoy)
   const bloque = bloques.find((item) => item.items.some(({ indice }) => indice === visible))
   const posicionEnBloque = bloque.items.findIndex(({ indice }) => indice === visible)
   const siguienteEjercicio = ejercicios[visible + 1]
@@ -474,6 +487,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           {calentamientoHecho
             ? `Ejercicio ${visible + 1} de ${ejercicios.length}`
             : 'Calentamiento'}
+          {ciclo && <small className="entrenar-ciclo">Semana {ciclo.semana} de {ciclo.total}</small>}
         </span>
         <span className="entrenar-barra-derecha">
           <Cronometro desde={inicio} />
@@ -531,6 +545,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             }}
             series={series[visible]}
             anterior={mejorSerieAnterior(anteriorPorEjercicio[ejercicio.ejercicio_id])}
+            sugerencia={sugerencias[visible]}
             onAjustar={(serieIndex, campo, delta) =>
               ajustarValor(visible, serieIndex, campo, delta)
             }

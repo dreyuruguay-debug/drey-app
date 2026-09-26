@@ -9,11 +9,11 @@ import { Link, useLocation } from 'react-router-dom'
 const ITEMS = [
   { to: '/inicio', label: 'Inicio', rutas: ['/inicio'], Icono: IconoInicio },
   { to: '/rutinas', label: 'Rutinas', rutas: ['/rutinas'], Icono: IconoRutinas },
-  { to: '/progreso', label: 'Progreso', rutas: ['/progreso'], Icono: IconoProgreso },
+  { to: '/progreso', label: 'Progreso', rutas: ['/progreso', '/medidas'], Icono: IconoProgreso },
   {
     to: '/perfil',
     label: 'Perfil',
-    rutas: ['/perfil', '/mas', '/mis-datos', '/suscripcion', '/comunidad'],
+    rutas: ['/perfil', '/mas', '/mis-datos', '/suscripcion', '/comunidad', '/mi-privacidad'],
     Icono: IconoPerfil,
   },
 ]

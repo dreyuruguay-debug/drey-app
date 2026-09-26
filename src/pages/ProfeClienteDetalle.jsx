@@ -17,7 +17,8 @@ import {
   habilitarCliente,
 } from '../services/cuentas.js'
 import { mostrarAviso } from '../services/avisos.js'
-import { obtenerPlan } from '../data/planes.js'
+import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
+import { formatearPrecio, obtenerPlan } from '../data/planes.js'
 import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
 
@@ -44,6 +45,7 @@ export default function ProfeClienteDetalle() {
   const [cantidades, setCantidades] = useState({})
   const [calendario, setCalendario] = useState({})
   const [sesiones, setSesiones] = useState([])
+  const [pagos, setPagos] = useState([])
 
   useEffect(() => {
     cargarTodo()
@@ -51,8 +53,8 @@ export default function ProfeClienteDetalle() {
 
   async function cargarTodo({ silencioso = false } = {}) {
     if (!silencioso) setCargando(true)
-    const [{ data: perfil }, resultadoRutinas, { data: listaSesiones }, porDia] = await Promise.all(
-      [
+    const [{ data: perfil }, resultadoRutinas, { data: listaSesiones }, porDia, listaPagos] =
+      await Promise.all([
         supabase.from('perfiles').select('*').eq('id', id).single(),
         cargarRutinasDeCliente(id),
         supabase
@@ -62,13 +64,14 @@ export default function ProfeClienteDetalle() {
           .order('fecha', { ascending: false })
           .limit(8),
         cargarCalendarioCliente(id),
-      ],
-    )
+        cargarPagos(id, 6),
+      ])
     setCliente(perfil || null)
     setRutinas(resultadoRutinas.rutinas)
     setCantidades(resultadoRutinas.cantidades)
     setSesiones(listaSesiones || [])
     setCalendario(porDia)
+    setPagos(listaPagos)
     setCargando(false)
   }
 
@@ -187,6 +190,9 @@ export default function ProfeClienteDetalle() {
             <Link to={`/profe/clientes/${id}/progreso`} className="boton-principal">
               Ver gráficas y resúmenes
             </Link>
+            <Link to={`/profe/clientes/${id}/medidas`} className="boton-secundario ficha-medidas">
+              Medidas y fotos (evaluación inicial)
+            </Link>
             <p className="seccion-etiqueta">Últimos entrenamientos</p>
             {sesiones.length === 0 ? (
               <p className="profe-vacio">Todavía no completó ningún entrenamiento.</p>
@@ -220,6 +226,19 @@ export default function ProfeClienteDetalle() {
 
         {pestana === 'pagos' && (
           <>
+            {cliente.baja_solicitada_en && (
+              <div className="aviso-baja">
+                <strong>
+                  Pidió la baja de su cuenta el{' '}
+                  {textoFechaCorta(cliente.baja_solicitada_en.slice(0, 10))}
+                </strong>
+                <span>
+                  Por la Ley de datos personales hay que borrar su cuenta y sus datos. Hacelo desde
+                  Supabase → Authentication → Users → buscá su email → "Delete user". Se borra
+                  todo lo suyo (rutinas, entrenamientos, pagos).
+                </span>
+              </div>
+            )}
             <dl className="ficha-datos-lista">
               <div>
                 <dt>Plan</dt>
@@ -253,7 +272,7 @@ export default function ProfeClienteDetalle() {
                 <button
                   type="button"
                   className={cliente.aviso_pago ? 'boton-principal' : 'boton-secundario'}
-                  onClick={() => accionDePago(() => confirmarPago(id, cliente.vencimiento))}
+                  onClick={() => accionDePago(() => confirmarPago(id))}
                 >
                   {cliente.aviso_pago ? 'Confirmar pago (+1 mes)' : 'Registrar un pago (+1 mes)'}
                 </button>
@@ -277,6 +296,25 @@ export default function ProfeClienteDetalle() {
                 </a>
               )}
             </div>
+            {pagos.length > 0 && (
+              <>
+                <p className="seccion-etiqueta">Pagos</p>
+                <div className="lista-tarjetas">
+                  {pagos.map((pago) => (
+                    <p key={pago.id} className="pago-fila">
+                      <span>{textoFechaCorta(pago.creado_en.slice(0, 10))}</span>
+                      <span>
+                        {formatearPrecio(pago.monto)}
+                        {pago.codigo ? ` · ${pago.codigo}` : ''}
+                      </span>
+                      <span className={`pago-estado pago-estado-${pago.estado}`}>
+                        {TEXTO_ESTADO_PAGO[pago.estado] || pago.estado}
+                      </span>
+                    </p>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

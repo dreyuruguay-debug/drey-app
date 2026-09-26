@@ -2,15 +2,28 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { obtenerPlan } from '../data/planes.js'
-import { abrirComprobante, confirmarPago, habilitarCliente } from '../services/cuentas.js'
+import { formatearPrecio, obtenerPlan } from '../data/planes.js'
+import {
+  abrirComprobante,
+  confirmarPago,
+  estadoDeCuenta,
+  habilitarCliente,
+} from '../services/cuentas.js'
 import { mostrarAviso } from '../services/avisos.js'
+import { TEXTO_ESTADO_PAGO, TEXTO_METODO_PAGO } from '../services/pagos.js'
+import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 
-// Pagos: habilitar cuentas nuevas y confirmar los avisos de
-// pago, usando la tabla "perfiles" de Supabase. En cada cuenta nueva se
-// ve qué profe o gimnasio eligió la persona al registrarse.
+// Pagos: habilitar cuentas nuevas y confirmar los avisos de pago por
+// transferencia, usando la tabla "perfiles" de Supabase. En cada cuenta
+// nueva se ve qué profe o gimnasio eligió la persona al registrarse.
+// Abajo, los últimos pagos con Mercado Pago (esos se activan solos) y el
+// acceso a los códigos de descuento.
+//
+// Cada profe ve solo a sus clientes (lo controla la base, ver
+// supabase/sql/013).
 export default function ProfeCuentas() {
   const [clientes, setClientes] = useState([])
+  const [pagosMp, setPagosMp] = useState([])
   const [nombresProfeYGimnasio, setNombresProfeYGimnasio] = useState({})
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState('')
@@ -21,10 +34,17 @@ export default function ProfeCuentas() {
 
   async function cargarClientes() {
     setCargando(true)
-    const [{ data, error }, { data: gimnasios }] = await Promise.all([
+    const [{ data, error }, { data: gimnasios }, { data: pagos }] = await Promise.all([
       supabase.from('perfiles').select('*').order('creado_en', { ascending: false }),
       supabase.from('gimnasios').select('id, nombre'),
+      supabase
+        .from('pagos')
+        .select('id, cliente_id, monto, estado, metodo, codigo, creado_en')
+        .neq('estado', 'pendiente')
+        .order('creado_en', { ascending: false })
+        .limit(10),
     ])
+    setPagosMp(pagos || [])
     if (!error) {
       const lista = data || []
       // Nombres de profes y gimnasios, para mostrar qué eligió cada cliente.
@@ -51,9 +71,9 @@ export default function ProfeCuentas() {
     cargarClientes()
   }
 
-  async function confirmar(id, vencimientoActual) {
+  async function confirmar(id) {
     setMensaje('')
-    if (await confirmarPago(id, vencimientoActual)) {
+    if (await confirmarPago(id)) {
       setMensaje('No pudimos confirmar ese pago. Probá de nuevo.')
       return
     }
@@ -72,9 +92,19 @@ export default function ProfeCuentas() {
   )
   const resto = clientes.filter((cliente) => cliente.estado !== 'pendiente')
 
+  const nombreDe = (id) => {
+    const cliente = clientes.find((item) => item.id === id)
+    return cliente ? `${cliente.nombre} ${cliente.apellido}` : 'Cliente'
+  }
+  const hoy = obtenerFechaHoyISO()
+
   return (
     <ProfeLayout titulo="Pagos">
       {mensaje && <p className="auth-message">{mensaje}</p>}
+
+      <Link to="/profe/codigos" className="boton-secundario pagos-codigos">
+        Códigos de descuento
+      </Link>
 
       {cargando ? (
         <p className="profe-vacio">Cargando…</p>
@@ -147,7 +177,7 @@ export default function ProfeCuentas() {
                   <button
                     type="button"
                     className="pill-button profe-boton-habilitar"
-                    onClick={() => confirmar(cliente.id, cliente.vencimiento)}
+                    onClick={() => confirmar(cliente.id)}
                   >
                     Confirmar pago
                   </button>
@@ -182,13 +212,60 @@ export default function ProfeCuentas() {
                         </Link>
                       </td>
                       <td>{obtenerPlan(cliente.plan)?.nombre || cliente.plan || '—'}</td>
-                      <td>{cliente.estado}</td>
+                      <td>{estadoDeCuenta(cliente, hoy).texto}</td>
                       <td>{cliente.vencimiento || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          )}
+
+          {pagosMp.length > 0 && (
+            <>
+              <p className="profe-seccion-label">Últimos pagos</p>
+              <p className="profe-nota">
+                Los de Mercado Pago se activan solos: no hay que confirmarlos. Todos los pagos
+                suman en Estadísticas.
+              </p>
+              <div className="profe-tabla-wrap">
+                <table className="profe-tabla">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Cliente</th>
+                      <th>Monto</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagosMp.map((pago) => (
+                      <tr key={pago.id}>
+                        <td>{textoFechaCorta(pago.creado_en.slice(0, 10))}</td>
+                        <td>
+                          <Link
+                            to={`/profe/clientes/${pago.cliente_id}?tab=pagos`}
+                            className="enlace-tabla"
+                          >
+                            {nombreDe(pago.cliente_id)}
+                          </Link>
+                        </td>
+                        <td>
+                          {formatearPrecio(pago.monto)}
+                          {pago.codigo ? ` (${pago.codigo})` : ''}
+                        </td>
+                        <td>
+                          {TEXTO_ESTADO_PAGO[pago.estado] || pago.estado}
+                          <small className="pago-metodo">
+                            {TEXTO_METODO_PAGO[pago.metodo] || pago.metodo}
+                          </small>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}

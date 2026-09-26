@@ -11,7 +11,13 @@ import TopPattern from './TopPattern.jsx'
 //
 // "rutas": las direcciones que marcan esa sección como activa.
 const SECCIONES = [
-  { to: '/profe', label: 'Inicio', rutas: ['/profe'], exacta: true, Icono: IconoInicio },
+  {
+    to: '/profe',
+    label: 'Inicio',
+    rutas: ['/profe', '/profe/estadisticas', '/profe/equipo'],
+    exacta: true,
+    Icono: IconoInicio,
+  },
   {
     to: '/profe/clientes',
     label: 'Clientes',
@@ -27,7 +33,7 @@ const SECCIONES = [
   {
     to: '/profe/cuentas',
     label: 'Pagos',
-    rutas: ['/profe/cuentas'],
+    rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
     avisos: true,
   },

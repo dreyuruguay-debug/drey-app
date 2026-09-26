@@ -1,46 +1,83 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
+import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import DatosDePago from '../components/DatosDePago.jsx'
+import PagoMercadoPago from '../components/PagoMercadoPago.jsx'
 import { obtenerPlan, formatearPrecio } from '../data/planes.js'
+import { MERCADO_PAGO_AUTOMATICO } from '../data/pagos.js'
+import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
+import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import { comprimirImagen } from '../utils/imagenes.js'
 
-// Suscripción: plan, precio, vencimiento, datos de pago y botón "Ya
-// pagué" con comprobante.
+const REVISAR_PAGO_CADA_MS = 3000
+const REVISAR_PAGO_VECES = 10
+
+// Suscripción: plan, estado (al día, por vencer, días de gracia,
+// vencido), cómo pagar y los últimos pagos.
 //
-// El plan, el estado y el vencimiento son los reales del cliente:
-// vienen de la tabla "perfiles" de Supabase (la misma que llena
-// Registro y que usa el panel del profe para habilitar cuentas). Los
-// datos de transferencia y los links de Mercado Pago se cargan en
-// src/data/pagos.js y los muestra el componente DatosDePago.
-// El comprobante que se adjunta acá
-// se sube al almacenamiento de archivos de Supabase (bucket
+// Dos formas de pagar:
+//   1. Mercado Pago automático (si está activado en data/pagos.js): paga
+//      con tarjeta y la cuenta se activa sola al instante.
+//   2. Transferencia: ve los datos, sube el comprobante y toca "Ya pagué";
+//      el profe lo confirma desde "Pagos".
+//
+// Al volver de Mercado Pago la dirección trae ?pago=ok / pendiente /
+// error. Con "ok", la pantalla revisa unos segundos hasta ver la cuenta
+// actualizada (Mercado Pago avisa a la base casi al instante).
+//
+// El comprobante se sube al almacenamiento de Supabase (bucket
 // "comprobantes"), en una carpeta con el id del cliente para que cada
-// uno solo pueda ver los suyos; el profe puede ver los de todos desde
-// "Cuentas y pagos".
+// uno solo pueda ver los suyos; su profe los ve desde "Pagos".
 export default function Suscripcion() {
   const navigate = useNavigate()
+  const [parametros, setParametros] = useSearchParams()
   const [perfil, setPerfil] = useState(null)
+  const [pagos, setPagos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [comprobante, setComprobante] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [vueltaDePago, setVueltaDePago] = useState(() => parametros.get('pago'))
+  const revisiones = useRef(0)
 
   useEffect(() => {
     cargarPerfil()
+    // Se limpia la dirección para que un "recargar" no repita el aviso.
+    if (parametros.get('pago')) setParametros({}, { replace: true })
   }, [])
 
-  async function cargarPerfil() {
-    setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
+  // Volvió de pagar: se revisa cada 3 segundos hasta ver el pago aprobado.
+  useEffect(() => {
+    if (vueltaDePago !== 'ok' || !perfil) return undefined
+    if (pagos[0]?.estado === 'aprobado' && pagoReciente(pagos[0])) {
+      setVueltaDePago('aprobado')
+      return undefined
+    }
+    if (revisiones.current >= REVISAR_PAGO_VECES) return undefined
+    const temporizador = setTimeout(() => {
+      revisiones.current += 1
+      cargarPerfil({ silencioso: true })
+    }, REVISAR_PAGO_CADA_MS)
+    return () => clearTimeout(temporizador)
+  }, [vueltaDePago, perfil, pagos])
+
+  async function cargarPerfil({ silencioso = false } = {}) {
+    if (!silencioso) setCargando(true)
+    const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
       return
     }
-    const { data } = await supabase.from('perfiles').select('*').eq('id', usuario.id).single()
+    const [{ data }, listaPagos] = await Promise.all([
+      supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
+      cargarPagos(usuario.id),
+    ])
     setPerfil(data)
+    setPagos(listaPagos)
     setCargando(false)
   }
 
@@ -52,10 +89,11 @@ export default function Suscripcion() {
 
     let comprobantePath = perfil.comprobante_nombre || null
     if (comprobante) {
-      const rutaArchivo = `${perfil.id}/${Date.now()}-${comprobante.name}`
+      const archivo = await comprimirImagen(comprobante, 1600)
+      const rutaArchivo = `${perfil.id}/${Date.now()}-${archivo.name.replace(/[^\w.-]/g, '_')}`
       const { error: errorSubida } = await supabase.storage
         .from('comprobantes')
-        .upload(rutaArchivo, comprobante)
+        .upload(rutaArchivo, archivo)
       if (errorSubida) {
         setEnviando(false)
         setMensaje('No pudimos subir el comprobante. Probá de nuevo.')
@@ -87,13 +125,7 @@ export default function Suscripcion() {
   }
 
   const plan = obtenerPlan(perfil?.plan)
-  const vencimientoTexto = perfil?.vencimiento
-    ? new Date(`${perfil.vencimiento}T00:00:00`).toLocaleDateString('es-UY', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : 'Todavía sin definir'
+  const estado = estadoDelPlan(perfil, obtenerFechaHoyISO())
 
   return (
     <div className="screen has-bottom-nav">
@@ -104,25 +136,39 @@ export default function Suscripcion() {
         </Link>
         <h1 className="suscripcion-titulo">Suscripción</h1>
 
+        <AvisoVueltaDePago estado={vueltaDePago} />
+
         <div className="suscripcion-plan-card">
           <p className="suscripcion-plan-nombre">{plan?.nombre || 'Sin plan'}</p>
           {plan && <p className="suscripcion-plan-descripcion">{plan.descripcion}</p>}
-          {plan && (
+          {plan && !MERCADO_PAGO_AUTOMATICO && (
             <p className="suscripcion-plan-precio">
               {formatearPrecio(plan.precioDesdeSegundoMes)} por mes
             </p>
           )}
-          <p className="suscripcion-vencimiento">
-            {perfil?.estado === 'pendiente'
-              ? 'Tu cuenta está pendiente de habilitación'
-              : `Vence el ${vencimientoTexto}`}
+          <p
+            className={
+              ['gracia', 'vencido'].includes(estado.tipo)
+                ? 'suscripcion-vencimiento suscripcion-vencida'
+                : 'suscripcion-vencimiento'
+            }
+          >
+            {textoEstado(estado, perfil)}
           </p>
         </div>
+
+        {MERCADO_PAGO_AUTOMATICO && perfil && (
+          <PagoMercadoPago onAprobado={() => cargarPerfil({ silencioso: true })} />
+        )}
+
+        {MERCADO_PAGO_AUTOMATICO && (
+          <p className="seccion-etiqueta suscripcion-otra-forma">O por transferencia</p>
+        )}
 
         <DatosDePago planId={perfil?.plan} />
 
         <div className="suscripcion-bloque">
-          <p className="suscripcion-bloque-titulo">¿Ya pagaste?</p>
+          <p className="suscripcion-bloque-titulo">¿Ya pagaste por transferencia?</p>
           {perfil?.aviso_pago ? (
             <p className="suscripcion-bloque-texto">
               {perfil?.estado === 'pendiente'
@@ -147,8 +193,63 @@ export default function Suscripcion() {
             </form>
           )}
         </div>
+
+        {pagos.length > 0 && (
+          <div className="suscripcion-bloque">
+            <p className="suscripcion-bloque-titulo">Tus pagos</p>
+            {pagos.map((pago) => (
+              <p key={pago.id} className="suscripcion-bloque-texto pago-fila">
+                <span>{textoFechaCorta(pago.creado_en.slice(0, 10))}</span>
+                <span>{formatearPrecio(pago.monto)}</span>
+                <span className={`pago-estado pago-estado-${pago.estado}`}>
+                  {TEXTO_ESTADO_PAGO[pago.estado] || pago.estado}
+                </span>
+              </p>
+            ))}
+          </div>
+        )}
       </div>
       <BottomNav />
+    </div>
+  )
+}
+
+function textoEstado(estado, perfil) {
+  const vence = perfil?.vencimiento ? textoFechaCorta(perfil.vencimiento) : ''
+  switch (estado.tipo) {
+    case 'pendiente':
+      return 'Tu cuenta está pendiente: se activa cuando se confirma el pago.'
+    case 'por-vencer':
+      return `Tu plan ${textoVence(estado.dias)} (${vence}).`
+    case 'gracia':
+      return `Venció el ${vence}. Tenés hasta el ${textoFechaCorta(estado.hasta)} para pagar sin perder el acceso.`
+    case 'vencido':
+      return `Venció el ${vence}. Pagá para volver a ver tus rutinas.`
+    default:
+      return vence ? `Al día. Vence el ${vence}.` : 'Al día.'
+  }
+}
+
+function pagoReciente(pago) {
+  return Date.now() - new Date(pago.aprobado_en || pago.creado_en).getTime() < 30 * 60 * 1000
+}
+
+function AvisoVueltaDePago({ estado }) {
+  if (!estado) return null
+  const textos = {
+    ok: ['Procesando tu pago…', 'Mercado Pago nos está avisando. Tarda unos segundos.'],
+    aprobado: ['¡Pago aprobado!', 'Tu plan ya está activo. Gracias.'],
+    pendiente: [
+      'Tu pago está pendiente',
+      'Si pagaste en efectivo (Abitab, Redpagos), tu plan se activa solo cuando se acredite.',
+    ],
+    error: ['El pago no se completó', 'No se cobró nada. Podés probar de nuevo.'],
+  }
+  const [titulo, texto] = textos[estado] || textos.error
+  return (
+    <div className={`aviso-pago aviso-pago-${estado}`} role="status">
+      <strong>{titulo}</strong>
+      <span>{texto}</span>
     </div>
   )
 }

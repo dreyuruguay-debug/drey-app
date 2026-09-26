@@ -4,7 +4,9 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import { armarTareas, primerosPasos } from '../utils/tareasProfe.js'
+import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
+import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 
 // Inicio del profe: una lista de tareas "Para hacer hoy", ordenada por
 // urgencia (pagos, clientes sin rutina, rutinas sin guardar, clientes que
@@ -18,6 +20,7 @@ export default function PanelProfe() {
   const [nombre, setNombre] = useState('')
   const [tareas, setTareas] = useState([])
   const [pasos, setPasos] = useState(null)
+  const [armaEquipo, setArmaEquipo] = useState(false)
 
   useEffect(() => {
     cargar()
@@ -40,14 +43,30 @@ export default function PanelProfe() {
       supabase.from('perfiles').select('nombre').eq('id', userData?.user?.id).single(),
       supabase
         .from('perfiles')
-        .select('id, nombre, apellido, estado, aviso_pago, celular, vencimiento, creado_en')
+        .select('*')
         .eq('es_profe', false),
-      supabase.from('rutinas').select('id, cliente_id, nombre, publicada'),
+      supabase.from('rutinas').select('*'),
       supabase.from('calendario_cliente').select('cliente_id, rutina_id'),
       supabase.from('sesiones').select('cliente_id, fecha').order('fecha', { ascending: false }),
       supabase.from('resumenes_progreso').select('id, cliente_id').eq('estado', 'borrador'),
       supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
     ])
+    // ¿Es administrador o dueño de gimnasio? (para "Equipo y gimnasios")
+    const { data: rol } = await supabase.rpc('mi_rol')
+    setArmaEquipo(Boolean(rol?.es_admin || rol?.gimnasios?.length))
+
+    // Clientes con medidas (si la tabla todavía no existe, se ignora).
+    const { data: mediciones, error: errorMediciones } = await supabase
+      .from('mediciones')
+      .select('cliente_id')
+    const hoy = obtenerFechaHoyISO()
+    const ciclosTerminados = (rutinas || [])
+      .filter((rutina) => rutina.publicada !== false && semanaDelCiclo(rutina, hoy)?.terminado)
+      .map((rutina) => ({
+        rutina,
+        cliente: (clientes || []).find((cliente) => cliente.id === rutina.cliente_id),
+      }))
+      .filter((item) => item.cliente?.estado === 'activo')
 
     const ultimaSesion = {}
     for (const sesion of sesiones || []) {
@@ -62,7 +81,11 @@ export default function PanelProfe() {
         calendario: calendario || [],
         ultimaSesion,
         resumenesBorrador: resumenes || [],
-        hoy: obtenerFechaHoyISO(),
+        conMediciones: errorMediciones
+          ? null
+          : new Set((mediciones || []).map((fila) => fila.cliente_id)),
+        ciclosTerminados,
+        hoy,
       }),
     )
     setPasos(
@@ -151,8 +174,20 @@ export default function PanelProfe() {
               <Link to="/profe/progresion" className="acceso">
                 Progresión
               </Link>
+              <Link to="/profe/estadisticas" className="acceso">
+                Estadísticas
+              </Link>
+              {armaEquipo && (
+                <Link to="/profe/equipo" className="acceso">
+                  Equipo y gimnasios
+                </Link>
+              )}
             </div>
           </section>
+
+          <div className="lista-tarjetas">
+            <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
+          </div>
 
           <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
             Cerrar sesión
@@ -199,6 +234,8 @@ function IconoTarea({ tipo }) {
     reloj: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2" />,
     grafico: <path d="M4 19V9M10 19V5M16 19v-7M22 19H2" />,
     calendario: <path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4" />,
+    baja: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />,
+    medida: <path d="M3 17l14-14 4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2" />,
   }
   return (
     <svg

@@ -1,17 +1,20 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { WHATSAPP_GRUPO_URL } from '../data/comunidad.js'
+import { cargarCodigosDeRopa } from '../services/codigos.js'
+import { textoFechaCorta } from '../utils/dias.js'
 
 // Comunidad y beneficios: muro de novedades del profe, códigos de
 // descuento de la marca de ropa DREY y el acceso al grupo de WhatsApp
 // de la comunidad (no hay chat dentro de la app).
 //
-// Las publicaciones y los códigos son de ejemplo por ahora: van a venir
-// de lo que cargue el profe desde su panel, todavía no construido. Los
-// comentarios que se escriban acá tampoco se guardan todavía. El link
-// del grupo de WhatsApp se carga en src/data/comunidad.js.
+// Los códigos de ropa son reales: los crea el profe en Pagos → Códigos
+// de descuento → "De ropa" (solo los ven los clientes con el plan al
+// día). Las publicaciones del muro son de ejemplo por ahora y los
+// comentarios todavía no se guardan. El link del grupo de WhatsApp se
+// carga en src/data/comunidad.js.
 const PUBLICACIONES_EJEMPLO = [
   {
     id: 1,
@@ -27,11 +30,14 @@ const PUBLICACIONES_EJEMPLO = [
   },
 ]
 
-const CODIGOS_EJEMPLO = [{ codigo: 'DREY10', descripcion: '10% off en toda la ropa DREY' }]
-
 export default function Comunidad() {
   const [comentarios, setComentarios] = useState({})
   const [textoNuevo, setTextoNuevo] = useState({})
+  const [codigos, setCodigos] = useState([])
+
+  useEffect(() => {
+    cargarCodigosDeRopa().then(setCodigos)
+  }, [])
 
   function handleComentar(event, publicacionId) {
     event.preventDefault()
@@ -108,12 +114,21 @@ export default function Comunidad() {
 
         <p className="comunidad-seccion-label">Beneficios</p>
         <div className="comunidad-codigos">
-          {CODIGOS_EJEMPLO.map((item) => (
-            <div key={item.codigo} className="comunidad-codigo-card">
-              <span className="comunidad-codigo-valor">{item.codigo}</span>
-              <span className="comunidad-codigo-descripcion">{item.descripcion}</span>
-            </div>
-          ))}
+          {codigos.length === 0 ? (
+            <p className="comunidad-codigo-descripcion">
+              Pronto vas a ver acá los descuentos en la ropa DREY.
+            </p>
+          ) : (
+            codigos.map((item) => (
+              <div key={item.id} className="comunidad-codigo-card">
+                <span className="comunidad-codigo-valor">{item.codigo}</span>
+                <span className="comunidad-codigo-descripcion">
+                  {item.descripcion}
+                  {item.vence ? ` · hasta el ${textoFechaCorta(item.vence)}` : ''}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
       <BottomNav />

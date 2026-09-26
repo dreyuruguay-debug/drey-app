@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import EyeIcon from '../components/EyeIcon.jsx'
@@ -13,6 +13,21 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Si ya tiene la sesión abierta (por ejemplo, volvió del link del mail de
+  // confirmación), entra directo sin volver a escribir la contraseña.
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const usuario = data?.session?.user
+      if (!usuario) return
+      const { data: perfil } = await supabase
+        .from('perfiles')
+        .select('es_profe')
+        .eq('id', usuario.id)
+        .single()
+      navigate(perfil?.es_profe ? '/profe' : '/inicio', { replace: true })
+    })
+  }, [])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -46,7 +61,10 @@ export default function Login() {
       return
     }
     setMessage('')
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    // El link del mail lleva a "Elegí tu contraseña nueva".
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/nueva-contrasena`,
+    })
     setMessage(
       error
         ? 'No pudimos enviar el email. Probá de nuevo.'

@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient.js'
 import TopPattern from '../components/TopPattern.jsx'
 import WeekDots from '../components/WeekDots.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import Bienvenida from '../components/Bienvenida.jsx'
+import ConsentimientoPendiente from '../components/ConsentimientoPendiente.jsx'
+import InvitacionNotificaciones from '../components/InvitacionNotificaciones.jsx'
+import { obtenerUsuarioActual } from '../services/sesion.js'
+import {
+  cargarHistorial,
+  cargarInicioCliente,
+  precargarRutinasSinConexion,
+} from '../services/datosCliente.js'
+import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
+import { necesitaAceptarTerminos } from '../data/versionLegal.js'
+import { tocaMedirse } from '../utils/medidas.js'
+import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerPlan } from '../data/planes.js'
 import {
   DIAS_SEMANA,
@@ -13,6 +24,7 @@ import {
   obtenerFechaHoyISO,
   calcularRachaSemanas,
   proximoDiaConRutina,
+  textoFechaCorta,
   textoFechaLarga,
 } from '../utils/dias.js'
 import { estimarMinutos } from '../utils/entrenamiento.js'
@@ -26,18 +38,24 @@ import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 // récord. La primera vez que entra se muestra la bienvenida.
 //
 // El calendario (qué rutina toca cada día) lo arma el profe. Los días
-// cumplidos salen de la tabla "sesiones".
+// cumplidos salen de la tabla "sesiones" (más los entrenamientos que
+// quedaron guardados en el celular esperando señal).
+//
+// Funciona sin señal: muestra lo último que se cargó (ver
+// services/datosCliente.js) y, con señal, deja guardadas en el celular
+// todas las rutinas para poder entrenar sin conexión.
+//
+// También avisa cuándo vence el plan y, si ya pasaron los días de
+// gracia, reemplaza el entrenamiento por el botón para pagar (ver
+// data/vencimiento.js).
 export default function Home() {
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   const [cargando, setCargando] = useState(true)
   const [usuarioId, setUsuarioId] = useState(null)
-  const [perfil, setPerfil] = useState(null)
-  const [calendario, setCalendario] = useState({})
+  const [datos, setDatos] = useState(null)
   const [sesiones, setSesiones] = useState([])
-  const [cantidadRutinas, setCantidadRutinas] = useState(0)
-  const [ejerciciosHoy, setEjerciciosHoy] = useState([])
-  const [avanceNuevo, setAvanceNuevo] = useState(false)
+  const [sinConexion, setSinConexion] = useState(false)
   const [mostrarBienvenida, setMostrarBienvenida] = useState(false)
 
   useEffect(() => {
@@ -46,61 +64,27 @@ export default function Home() {
 
   async function cargarDatos() {
     setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
+    const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
       return
     }
     setUsuarioId(usuario.id)
 
-    const [
-      { data: perfilData },
-      { data: calendarioData },
-      { data: sesionesData },
-      { count: rutinasCount },
-      { count: resumenesSinVer },
-    ] = await Promise.all([
-      supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
-      supabase
-        .from('calendario_cliente')
-        .select('*, rutinas(id, nombre, patron, musculos, calentamiento)')
-        .eq('cliente_id', usuario.id),
-      supabase.from('sesiones').select('fecha, detalle').eq('cliente_id', usuario.id),
-      supabase
-        .from('rutinas')
-        .select('*', { count: 'exact', head: true })
-        .eq('cliente_id', usuario.id),
-      supabase
-        .from('resumenes_progreso')
-        .select('*', { count: 'exact', head: true })
-        .eq('cliente_id', usuario.id)
-        .eq('estado', 'publicado')
-        .eq('visto', false),
+    const [inicio, historial] = await Promise.all([
+      cargarInicioCliente(usuario.id),
+      cargarHistorial(usuario.id),
     ])
 
-    const diasMap = {}
-    for (const fila of calendarioData || []) diasMap[fila.dia] = fila
-
-    // Datos de la rutina de hoy, para "6 ejercicios · ~50 min".
-    const rutinaHoy = diasMap[obtenerNombreDiaHoy()]?.rutinas
-    let ejercicios = []
-    if (rutinaHoy) {
-      const { data } = await supabase
-        .from('rutina_ejercicios')
-        .select('series, descansos, descanso_min, descanso_max')
-        .eq('rutina_id', rutinaHoy.id)
-      ejercicios = data || []
-    }
-
-    setPerfil(perfilData || null)
-    setCalendario(diasMap)
-    setSesiones(sesionesData || [])
-    setCantidadRutinas(rutinasCount || 0)
-    setEjerciciosHoy(ejercicios)
-    setAvanceNuevo((resumenesSinVer || 0) > 0)
+    setDatos(inicio)
+    setSesiones(historial.sesiones)
+    setSinConexion(inicio.sinConexion)
     setMostrarBienvenida(parametros.get('bienvenida') === '1' || !yaVioBienvenida(usuario.id))
     setCargando(false)
+
+    if (!inicio.sinConexion && inicio.acceso?.acceso !== false) {
+      precargarRutinasSinConexion(usuario.id)
+    }
   }
 
   function cerrarBienvenida() {
@@ -121,10 +105,24 @@ export default function Home() {
 
   if (mostrarBienvenida) return <Bienvenida onTerminar={cerrarBienvenida} />
 
+  const perfil = datos?.perfil || null
+  if (!sinConexion && necesitaAceptarTerminos(perfil)) {
+    return <ConsentimientoPendiente onAceptado={cargarDatos} />
+  }
+
+  const calendario = datos?.calendario || {}
   const hoy = obtenerFechaHoyISO()
   const diaHoy = obtenerNombreDiaHoy()
   const rutinaHoy = calendario[diaHoy]?.rutinas || null
+  const ejerciciosHoy = rutinaHoy ? datos?.ejerciciosPorRutina?.[rutinaHoy.id] || [] : []
+  const cantidadRutinas = datos?.cantidadRutinas || 0
   const cuentaPendiente = perfil?.estado === 'pendiente'
+  const plan = estadoDelPlan(perfil, hoy)
+  // La base de datos es la que decide si puede ver sus rutinas; si no
+  // respondió (sin señal), se usa la misma regla calculada acá.
+  const planBloqueado =
+    !cuentaPendiente &&
+    (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
   const enCurso = rutinaHoy ? leerEnCurso(rutinaHoy.id, hoy) : null
 
   const fechasConSesion = new Set(sesiones.map((sesion) => sesion.fecha))
@@ -162,7 +160,23 @@ export default function Home() {
         </Link>
       )}
 
-      {avanceNuevo && (
+      {!cuentaPendiente && !planBloqueado && plan.tipo === 'por-vencer' && (
+        <Link to="/suscripcion" className="home-aviso-pendiente">
+          Tu plan {textoVence(plan.dias)}. Tocá acá para renovarlo.
+        </Link>
+      )}
+
+      {!planBloqueado && plan.tipo === 'gracia' && (
+        <Link to="/suscripcion" className="home-aviso-pendiente home-aviso-urgente">
+          Tu plan venció el {textoFechaCorta(perfil.vencimiento)}.{' '}
+          {plan.dias === 0
+            ? 'Hoy es el último día para pagar sin perder el acceso.'
+            : `Tenés ${plan.dias} ${plan.dias === 1 ? 'día' : 'días'} para pagar sin perder el acceso.`}{' '}
+          Tocá acá para pagar.
+        </Link>
+      )}
+
+      {datos?.avanceNuevo && (
         <Link to="/progreso#avance" className="home-aviso-pendiente home-aviso-avance">
           📈 Tu profe publicó tu resumen de avance. Tocá acá para verlo.
         </Link>
@@ -181,7 +195,14 @@ export default function Home() {
         {cuentaPendiente ? (
           <TarjetaMensaje
             titulo="Cuenta pendiente"
-            texto="En cuanto tu profe habilite tu cuenta vas a ver acá tu entrenamiento del día."
+            texto="En cuanto se confirme tu pago vas a ver acá tu entrenamiento del día."
+            accion={{ texto: 'Ver cómo pagar', to: '/suscripcion' }}
+          />
+        ) : planBloqueado ? (
+          <TarjetaMensaje
+            titulo="Tu plan está vencido"
+            texto={`Venció el ${textoFechaCorta(perfil?.vencimiento)}. Pagá la cuota para volver a ver tus rutinas. Tu historial y tus récords siguen guardados.`}
+            accion={{ texto: 'Pagar y reactivar', to: '/suscripcion' }}
           />
         ) : rutinaHoy ? (
           <div className="hoy-tarjeta">
@@ -200,6 +221,12 @@ export default function Home() {
               )}
               {rutinaHoy.calentamiento?.length > 0 && (
                 <span className="chip chip-dato">Con calentamiento</span>
+              )}
+              {semanaDelCiclo(rutinaHoy, hoy) && !semanaDelCiclo(rutinaHoy, hoy).terminado && (
+                <span className="chip chip-dato">
+                  Semana {semanaDelCiclo(rutinaHoy, hoy).semana} de{' '}
+                  {semanaDelCiclo(rutinaHoy, hoy).total}
+                </span>
               )}
             </div>
             <Link to={`/rutinas/${rutinaHoy.id}`} className="boton-principal boton-grande">
@@ -248,6 +275,21 @@ export default function Home() {
           />
         )}
       </section>
+
+      {sesiones.length > 0 && !cuentaPendiente && <InvitacionNotificaciones usuarioId={usuarioId} />}
+
+      {datos?.ultimaMedicion !== undefined &&
+        !planBloqueado &&
+        !cuentaPendiente &&
+        sesiones.length >= 3 &&
+        tocaMedirse(datos.ultimaMedicion, hoy) && (
+          <Link to="/medidas" className="home-aviso-pendiente home-aviso-medidas">
+            📏{' '}
+            {datos.ultimaMedicion
+              ? 'Pasaron 4 semanas desde tus últimas medidas. Tocá acá para cargar las de hoy.'
+              : 'Cargá tus medidas y fotos de hoy: así vas a ver cuánto cambiás.'}
+          </Link>
+        )}
 
       {sesiones.length > 0 && (
         <section className="inicio-datos">

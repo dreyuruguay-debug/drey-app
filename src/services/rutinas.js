@@ -24,6 +24,7 @@ export const CAMPOS_RUTINA = [
   'pausa_min',
   'pausa_max',
   'vuelta_calma',
+  'ciclo_semanas',
 ]
 
 // Datos de cada ejercicio de una rutina o plantilla.
@@ -41,6 +42,7 @@ export const CAMPOS_EJERCICIO = [
   'metodo',
   'grupo',
   'config',
+  'progresion',
 ]
 
 const SELECT_EJERCICIOS = '*, ejercicios(nombre, grupo_muscular, categorias, imagen_url, video_url)'

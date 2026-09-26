@@ -4357,3 +4357,710 @@ div.tarjeta-rutina {
 .bottom-nav-item {
   max-width: 180px;
 }
+
+/* ==================================================================
+   Entrega 25/09/2026: sin señal, privacidad, vencimientos, errores,
+   Mercado Pago y códigos de descuento
+   ================================================================== */
+
+.pagina-cliente > .volver-enlace,
+.pagina-cliente > .profe-nota {
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+}
+
+.pagina-cliente > .volver-enlace {
+  margin-top: 1.25rem;
+}
+
+/* ---------- Sin señal ---------- */
+.estado-conexion {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.estado-conexion.sin-senal {
+  background: #262626;
+  color: var(--drey-gray-light);
+}
+
+.final-sin-senal {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ---------- Avisos de vencimiento en Inicio ---------- */
+.home-aviso-urgente {
+  background: var(--drey-naranja-fondo);
+  border-color: var(--drey-naranja);
+  color: var(--drey-white);
+}
+
+/* ---------- Botón para acciones que no se pueden deshacer ---------- */
+.boton-peligro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 16px;
+  border: 1px solid #e5484d;
+  background: rgba(229, 72, 77, 0.12);
+  color: #ff8a8d;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.boton-peligro:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.boton-texto-plano {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ---------- Privacidad ---------- */
+.consentimiento {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.consentimiento a {
+  color: var(--drey-accent);
+  font-weight: 700;
+}
+
+.legal {
+  padding-bottom: 4rem;
+}
+
+.legal > .volver-enlace {
+  margin: 1.25rem 1.25rem 0;
+}
+
+.legal-version,
+.legal-borrador {
+  margin: -0.5rem 1.25rem 1rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.legal-borrador {
+  margin-top: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-naranja);
+  font-weight: 700;
+}
+
+.legal-seccion {
+  margin: 0 1.25rem 1.25rem;
+}
+
+.legal-seccion h2 {
+  margin: 0 0 0.4rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.legal-seccion p {
+  margin: 0 0 0.6rem;
+  color: var(--drey-gray-light);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* ---------- Pantalla de error ---------- */
+.pantalla-error .boton-principal {
+  max-width: 320px;
+  margin-top: 1.25rem;
+}
+
+/* ---------- Suscripción: vencimiento y Mercado Pago ---------- */
+.suscripcion-vencida {
+  color: var(--drey-naranja);
+  font-weight: 700;
+}
+
+.suscripcion-otra-forma {
+  margin-top: 1.5rem;
+}
+
+.pago-mp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--drey-borde);
+  border-radius: 16px;
+  background: var(--drey-superficie);
+}
+
+.pago-mp-precio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+}
+
+.pago-mp-precio span {
+  flex: 1 1 100%;
+  color: var(--drey-texto-suave);
+  font-size: 0.85rem;
+}
+
+.pago-mp-precio .pago-mp-tachado {
+  flex: 0 0 auto;
+  text-decoration: line-through;
+}
+
+.pago-mp-precio strong {
+  font-family: var(--fuente-titulos);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.pago-mp-codigo {
+  flex: 1 1 100%;
+  color: var(--drey-accent);
+  font-weight: 700;
+}
+
+.pago-mp-form-codigo {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pago-mp .boton-texto {
+  padding: 0.25rem;
+  text-align: left;
+}
+
+.pago-mp-nota {
+  font-size: 0.78rem;
+}
+
+.aviso-pago {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul);
+  font-size: 0.88rem;
+}
+
+.aviso-pago-aprobado {
+  background: var(--drey-verde-fondo);
+  color: var(--drey-accent);
+}
+
+.aviso-pago-error,
+.aviso-pago-pendiente {
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-naranja);
+}
+
+.aviso-pago span {
+  color: var(--drey-gray-light);
+}
+
+.pago-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.pago-estado {
+  font-weight: 700;
+}
+
+.pago-estado-aprobado {
+  color: var(--drey-accent);
+}
+
+.pago-estado-rechazado,
+.pago-estado-cancelado {
+  color: var(--drey-naranja);
+}
+
+.registro-codigo-ok {
+  color: var(--drey-accent);
+  font-weight: 700;
+}
+
+/* ---------- Pagos del profe y códigos de descuento ---------- */
+.pagos-codigos {
+  margin-bottom: 1.25rem;
+}
+
+.codigo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.codigo-pausado {
+  opacity: 0.55;
+}
+
+.codigo-item-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.codigo-item-textos strong {
+  font-family: var(--fuente-titulos);
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+
+.codigo-item-textos small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.codigo-item-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.codigo-item-acciones .boton-peligro {
+  width: auto;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.codigo-borrar {
+  width: auto;
+  padding: 0.5rem;
+}
+
+.codigo-form {
+  max-width: 420px;
+}
+
+.codigo-fila {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.codigo-fila > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.codigo-vence {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.aviso-baja {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #e5484d;
+  background: rgba(229, 72, 77, 0.1);
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.aviso-baja strong {
+  color: #ff8a8d;
+}
+
+/* ==================================================================
+   Entrega 25/09/2026 (2): notificaciones, medidas, ciclos,
+   estadísticas, gimnasios
+   ================================================================== */
+
+/* ---------- Notificaciones ---------- */
+.notificaciones-tarjeta {
+  width: 100%;
+  text-align: left;
+  font-family: var(--fuente-texto);
+  color: inherit;
+  cursor: pointer;
+}
+
+.notificaciones-tarjeta:disabled {
+  cursor: default;
+}
+
+.interruptor {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: #3a3a3a;
+  transition: background 0.2s;
+}
+
+.interruptor::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--drey-white);
+  transition: transform 0.2s;
+}
+
+.interruptor-on {
+  background: var(--drey-accent);
+}
+
+.interruptor-on::after {
+  transform: translateX(20px);
+}
+
+.invitacion-avisos {
+  margin: 1rem 1.25rem 0;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--drey-gray-light);
+}
+
+.invitacion-avisos p {
+  margin: 0 0 0.75rem;
+}
+
+.invitacion-avisos strong {
+  color: var(--drey-white);
+}
+
+.invitacion-avisos-botones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.invitacion-avisos-botones .boton-texto {
+  width: auto;
+}
+
+/* ---------- Ciclos y peso sugerido ---------- */
+.entrenar-ciclo {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--drey-accent);
+  letter-spacing: 0.03em;
+}
+
+.entrenar-sugerencia {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ejercicio-progresion {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--drey-azul);
+}
+
+.config-progresion {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Medidas ---------- */
+.pagina-cliente-cuerpo {
+  margin: 0 1.25rem;
+}
+
+.progreso-medidas {
+  margin: 0 1.25rem 1rem;
+}
+
+.ficha-medidas {
+  margin-top: 0.6rem;
+}
+
+.home-aviso-medidas {
+  margin-top: 0.6rem;
+  background: var(--drey-azul-fondo);
+  border-color: var(--drey-azul);
+}
+
+.medidas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.medidas-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+
+.medida-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-white);
+  font-family: var(--fuente-texto);
+  text-align: left;
+  cursor: pointer;
+}
+
+.medida-activa {
+  border-color: var(--drey-accent);
+}
+
+.medida-tarjeta strong {
+  font-size: 1.15rem;
+}
+
+.medida-tarjeta small {
+  color: var(--drey-texto-suave);
+  font-size: 0.78rem;
+}
+
+.medida-tarjeta .medida-cambio {
+  color: var(--drey-azul);
+  font-weight: 700;
+}
+
+.medidas-fotos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.medidas-foto {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.medidas-foto img,
+.medidas-foto > span {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #1c1c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+}
+
+.medidas-foto figcaption {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+  text-align: center;
+}
+
+.medicion-fila {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.medicion-fila-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.medicion-fila-textos small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.medicion-notas {
+  font-style: italic;
+}
+
+.medidas-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.medidas-campos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.medidas-campos .editor-campo span,
+.medidas-formulario > .editor-campo span {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.medidas-fotos-carga {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.medidas-adjuntar {
+  padding: 0.7rem 0.4rem;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* ---------- Biblioteca: avance de fotos y videos ---------- */
+.biblioteca-avance {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.barra-avance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.barra-avance-fondo {
+  height: 8px;
+  border-radius: 999px;
+  background: #262626;
+  overflow: hidden;
+}
+
+.barra-avance-relleno {
+  display: block;
+  height: 100%;
+  background: var(--drey-accent);
+}
+
+.biblioteca-filtros {
+  margin: 0.25rem 0 0.75rem;
+}
+
+.pago-metodo {
+  display: block;
+  color: var(--drey-texto-suave);
+  font-size: 0.72rem;
+}
+
+/* ---------- Estadísticas ---------- */
+.estadisticas-filtro {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.estadisticas-grilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.estadistica small {
+  color: var(--drey-texto-suave);
+  font-size: 0.75rem;
+}
+
+.estadistica-alerta .dato-valor {
+  color: var(--drey-naranja);
+}
+
+/* ---------- Equipo y gimnasios ---------- */
+.equipo-encontrada {
+  margin-top: 0.6rem;
+}
+
+.equipo-gimnasio-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.equipo-estadisticas {
+  margin: 0.75rem 0 1rem;
+}
+
+.codigo-item > select {
+  max-width: 45%;
+}

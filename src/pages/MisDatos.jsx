@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { calcularEdad } from '../utils/fechas.js'
@@ -37,8 +38,7 @@ export default function MisDatos() {
 
   async function cargarPerfil() {
     setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
+    const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
       return

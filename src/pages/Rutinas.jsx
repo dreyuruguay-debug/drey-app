@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient.js'
+import { obtenerUsuarioActual } from '../services/sesion.js'
+import { cargarMisRutinas } from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { DIAS_SEMANA, abreviaturaDia, obtenerNombreDiaHoy } from '../utils/dias.js'
 
 // "Mis rutinas" del cliente: cada rutina con los días en que le toca y,
 // abajo, su semana completa. Al tocar una rutina se ve entera y desde
-// ahí se empieza a entrenar.
+// ahí se empieza a entrenar. Sin señal muestra lo último guardado.
 export default function Rutinas() {
   const navigate = useNavigate()
   const [cargando, setCargando] = useState(true)
@@ -20,20 +21,14 @@ export default function Rutinas() {
 
   async function cargarDatos() {
     setCargando(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const usuario = userData?.user
+    const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate('/')
       return
     }
-    const [{ data: rutinasData }, { data: calendarioData }] = await Promise.all([
-      supabase.from('rutinas').select('*').eq('cliente_id', usuario.id).order('orden'),
-      supabase.from('calendario_cliente').select('*, rutinas(nombre)').eq('cliente_id', usuario.id),
-    ])
-    const porDia = {}
-    for (const fila of calendarioData || []) porDia[fila.dia] = fila
-    setRutinas(rutinasData || [])
-    setCalendario(porDia)
+    const resultado = await cargarMisRutinas(usuario.id)
+    setRutinas(resultado.rutinas)
+    setCalendario(resultado.calendario)
     setCargando(false)
   }
 
@@ -50,10 +45,10 @@ export default function Rutinas() {
         <p className="profe-mensaje-carga">Cargando…</p>
       ) : rutinas.length === 0 ? (
         <div className="hoy-tarjeta hoy-tarjeta-mensaje">
-          <h2 className="hoy-mensaje-titulo">Tu profe está armando tu rutina</h2>
+          <h2 className="hoy-mensaje-titulo">Todavía no hay rutinas para mostrar</h2>
           <p className="hoy-mensaje-texto">
-            Apenas esté lista la vas a ver acá. Mientras tanto, completá tus datos para que te
-            conozca mejor.
+            Si tu profe la está armando, apenas esté lista la vas a ver acá. Si tu plan está
+            vencido, la vas a volver a ver al pagar (Perfil → Suscripción).
           </p>
           <Link to="/mis-datos" className="boton-principal">
             Completar mis datos

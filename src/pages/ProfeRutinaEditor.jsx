@@ -29,6 +29,10 @@ import { textoGrupos } from '../data/gruposMusculares.js'
 import { SECCIONES_ACTIVIDADES } from '../data/actividades.js'
 import { PASOS_RUTINA } from '../data/asistente.js'
 import { mostrarAviso } from '../services/avisos.js'
+import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
+import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+
+const OPCIONES_SEMANAS = [2, 3, 4, 5, 6, 8, 10, 12]
 
 const ERROR_GUARDAR = 'No pudimos guardar el cambio. Revisá tu conexión y probá de nuevo.'
 
@@ -39,6 +43,7 @@ const ERROR_GUARDAR = 'No pudimos guardar el cambio. Revisá tu conexión y prob
 //   🔥 Calentamiento previo                      [Configurar]
 //   Ejercicios (bloques numerados)  [↑ ↓ Editar Quitar] + Agregar ejercicios
 //   ⏱️ Pausa entre ejercicios                    [Configurar]
+//   📅 Ciclo (semanas y progresión)              [Configurar]
 //   🧘 Vuelta a la calma (opcional)              [Agregar]
 //   [Guardar rutina]
 //
@@ -66,6 +71,7 @@ export default function ProfeRutinaEditor({ tipo }) {
   const [editando, setEditando] = useState(null)
   const [datosEdit, setDatosEdit] = useState(null)
   const [pausaEdit, setPausaEdit] = useState({ min: '', max: '' })
+  const [semanasEdit, setSemanasEdit] = useState('')
 
   // Asistente de bloque abierto: { indiceBloque, borrador } (indiceBloque
   // null = bloque nuevo).
@@ -124,6 +130,7 @@ export default function ProfeRutinaEditor({ tipo }) {
     }
     if (seccion === 'pausa')
       setPausaEdit({ min: datos.pausa_min ?? '', max: datos.pausa_max ?? '' })
+    if (seccion === 'ciclo') setSemanasEdit(datos.ciclo_semanas ?? '')
     setEditando(seccion)
   }
 
@@ -157,6 +164,39 @@ export default function ProfeRutinaEditor({ tipo }) {
     if (max === null) max = min
     const ok = await guardarCampos({ pausa_min: min ?? max, pausa_max: max })
     if (ok) setEditando(null)
+  }
+
+  // --- Ciclo (planificación por semanas) ---
+
+  async function guardarCiclo() {
+    const semanas = semanasEdit === '' ? null : Number(semanasEdit)
+    const cambios = { ciclo_semanas: semanas }
+    // En una rutina ya guardada, el ciclo arranca hoy (si no había empezado).
+    if (esRutina) {
+      cambios.ciclo_inicio = semanas
+        ? datos.ciclo_inicio || (datos.publicada === false ? null : obtenerFechaHoyISO())
+        : null
+    }
+    const ok = await guardarCampos(cambios)
+    if (ok) setEditando(null)
+  }
+
+  // Ciclo nuevo: cada ejercicio con progresión arranca desde el peso de la
+  // última semana del ciclo anterior, y se vuelve a la semana 1.
+  async function empezarCicloNuevo() {
+    const semanas = Number(datos.ciclo_semanas)
+    if (
+      !window.confirm(
+        `¿Empezar un ciclo nuevo de ${semanas} semanas desde hoy? Los ejercicios que suben de peso arrancan desde el peso de la última semana.`,
+      )
+    )
+      return
+    const error = await aplicarLista(ejerciciosParaCicloNuevo(items, semanas))
+    if (error) {
+      setMensaje(error)
+      return
+    }
+    await guardarCampos({ ciclo_inicio: obtenerFechaHoyISO() })
   }
 
   // --- Bloques de ejercicios ---
@@ -211,7 +251,11 @@ export default function ProfeRutinaEditor({ tipo }) {
     // paso, elegir qué días la hace.
     if (esRutina && datos.publicada === false) {
       setGuardandoRutina(true)
-      const ok = await guardarCampos({ publicada: true })
+      const ok = await guardarCampos(
+        datos.ciclo_semanas && !datos.ciclo_inicio
+          ? { publicada: true, ciclo_inicio: obtenerFechaHoyISO() }
+          : { publicada: true },
+      )
       setGuardandoRutina(false)
       if (!ok) return
       navigate(`/profe/rutinas/${id}/dias`, { state: { recienGuardada: true } })
@@ -236,6 +280,7 @@ export default function ProfeRutinaEditor({ tipo }) {
   const textoMusculos = grupos.length ? textoGrupos(grupos) : datos.musculos
   const pausa = textoRango(datos.pausa_min, datos.pausa_max)
   const mostrarKgObjetivo = !cliente || cliente.plan !== 'rutina'
+  const ciclo = esRutina ? semanaDelCiclo(datos, obtenerFechaHoyISO()) : null
 
   return (
     <ProfeLayout
@@ -428,6 +473,86 @@ export default function ProfeRutinaEditor({ tipo }) {
           )}
         </section>
 
+        {/* Ciclo: semanas y progresión */}
+        <section className="seccion-rutina">
+          <div className="seccion-rutina-cabecera">
+            <p className="seccion-rutina-titulo">📅 Ciclo por semanas</p>
+            {editando !== 'ciclo' && (
+              <button
+                type="button"
+                className="profe-ejercicio-agregar"
+                onClick={() => abrirEdicion('ciclo')}
+                disabled={Boolean(editando)}
+              >
+                {datos.ciclo_semanas ? 'Editar' : 'Configurar'}
+              </button>
+            )}
+          </div>
+          {editando === 'ciclo' ? (
+            <>
+              <p className="profe-nota">
+                Elegí cuántas semanas dura el ciclo. Después, en cada ejercicio (Editar), poné
+                cuánto sube por semana (ej. +2,5 kg): la app le muestra al alumno el peso de la
+                semana que le toca.
+              </p>
+              <select
+                className="profe-calendario-select"
+                value={semanasEdit}
+                onChange={(event) => setSemanasEdit(event.target.value)}
+                aria-label="Duración del ciclo"
+              >
+                <option value="">Sin ciclo</option>
+                {OPCIONES_SEMANAS.map((semanas) => (
+                  <option key={semanas} value={semanas}>
+                    {semanas} semanas
+                  </option>
+                ))}
+              </select>
+              <div className="editor-acciones">
+                <button
+                  type="button"
+                  className="registro-boton-secundario"
+                  onClick={() => setEditando(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="pill-button editor-boton-listo"
+                  onClick={guardarCiclo}
+                >
+                  Listo
+                </button>
+              </div>
+            </>
+          ) : datos.ciclo_semanas ? (
+            <>
+              <p className="seccion-rutina-valor">
+                {datos.ciclo_semanas} semanas
+                {ciclo && datos.ciclo_inicio
+                  ? ciclo.terminado
+                    ? ` · terminó (empezó el ${textoFechaCorta(datos.ciclo_inicio)})`
+                    : ` · semana ${ciclo.semana} de ${ciclo.total} (empezó el ${textoFechaCorta(datos.ciclo_inicio)})`
+                  : esRutina
+                    ? ' · empieza cuando guardes la rutina'
+                    : ''}
+              </p>
+              {esRutina && datos.ciclo_inicio && (
+                <button
+                  type="button"
+                  className={ciclo?.terminado ? 'boton-principal' : 'boton-secundario boton-chico'}
+                  onClick={empezarCicloNuevo}
+                  disabled={Boolean(editando)}
+                >
+                  Empezar ciclo nuevo
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="profe-vacio">Sin ciclo: el peso lo sugiere la app según cómo le fue.</p>
+          )}
+        </section>
+
         <SeccionActividadesEditable
           seccion="vuelta_calma"
           actividades={datos.vuelta_calma || []}
@@ -460,6 +585,7 @@ export default function ProfeRutinaEditor({ tipo }) {
           grupos={grupos}
           biblioteca={biblioteca}
           mostrarKgObjetivo={mostrarKgObjetivo}
+          conCiclo={Boolean(datos.ciclo_semanas)}
           onGuardar={guardarBloque}
           onCerrar={() => setAsistente(null)}
         />

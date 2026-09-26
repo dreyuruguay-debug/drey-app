@@ -9,3 +9,12 @@ export async function obtenerOpcionesDeProfe() {
   if (error) return { opciones: [], error }
   return { opciones: data || [], error: null }
 }
+
+// Nombre y celular del profe del cliente que está usando la app (para
+// "Escribirle a mi profe" y "Reportar un problema"). Usa la función
+// "mi_profe" de la base (supabase/sql/013). Devuelve null si no hay.
+export async function obtenerMiProfe() {
+  const { data, error } = await supabase.rpc('mi_profe')
+  if (error) return null
+  return data?.[0] || null
+}

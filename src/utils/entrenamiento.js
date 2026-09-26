@@ -9,13 +9,15 @@ const CANTIDAD_SERIES_POR_DEFECTO = 4
 const SEGUNDOS_POR_SERIE = 45
 const MINUTOS_CALENTAMIENTO = 10
 
-// Series con las que arranca cada ejercicio: el peso objetivo del profe y
+// Series con las que arranca cada ejercicio: el peso sugerido para hoy
+// (ver utils/ciclos.js: semana del ciclo, o un poco más si la vez pasada
+// completó todo) o, si no hay sugerencia, el peso objetivo del profe; y
 // las repeticiones más bajas del rango ("8–12" → 8).
-export function crearSeriesIniciales(ejercicios) {
-  return ejercicios.map((ejercicio) =>
+export function crearSeriesIniciales(ejercicios, sugerencias = []) {
+  return ejercicios.map((ejercicio, indice) =>
     Array.from({ length: ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO }, () => ({
-      kg: Number(ejercicio.kg_objetivo) || 0,
-      reps: Number.parseInt(ejercicio.reps_objetivo, 10) || 0,
+      kg: sugerencias[indice]?.kg ?? (Number(ejercicio.kg_objetivo) || 0),
+      reps: sugerencias[indice]?.reps || Number.parseInt(ejercicio.reps_objetivo, 10) || 0,
       hecha: false,
     })),
   )
