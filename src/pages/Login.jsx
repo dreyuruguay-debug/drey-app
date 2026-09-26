@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
+import { entraAlPanel } from '../utils/roles.js'
 import EyeIcon from '../components/EyeIcon.jsx'
 
 // Pantalla de login, siguiendo el diseño original: logo DREY, campo de
@@ -22,10 +23,10 @@ export default function Login() {
       if (!usuario) return
       const { data: perfil } = await supabase
         .from('perfiles')
-        .select('es_profe')
+        .select('es_profe, es_admin')
         .eq('id', usuario.id)
         .single()
-      navigate(perfil?.es_profe ? '/profe' : '/inicio', { replace: true })
+      navigate(entraAlPanel(perfil) ? '/profe' : '/inicio', { replace: true })
     })
   }, [])
 
@@ -44,15 +45,15 @@ export default function Login() {
       return
     }
 
-    // Si la cuenta es la del profe, entra directo a su panel en vez de
+    // Si la cuenta es de un profe o la del Admin, entra directo al panel en vez de
     // a la pantalla de Inicio del cliente.
     const { data: perfil } = await supabase
       .from('perfiles')
-      .select('es_profe')
+      .select('es_profe, es_admin')
       .eq('id', loginData.user.id)
       .single()
     setLoading(false)
-    navigate(perfil?.es_profe ? '/profe' : '/inicio')
+    navigate(entraAlPanel(perfil) ? '/profe' : '/inicio')
   }
 
   async function handleForgotPassword() {

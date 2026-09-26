@@ -13,6 +13,7 @@ import { mostrarAviso } from '../services/avisos.js'
 import { TEXTO_ESTADO_PAGO, TEXTO_METODO_PAGO } from '../services/pagos.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { esCliente, esProfe } from '../utils/roles.js'
 
 // Pagos: habilitar cuentas nuevas y confirmar los avisos de pago por
 // transferencia, usando la tabla "perfiles" de Supabase. En cada cuenta
@@ -50,14 +51,14 @@ export default function ProfeCuentas() {
       const lista = data || []
       // Nombres de profes y gimnasios, para mostrar qué eligió cada cliente.
       const nombres = {}
-      for (const persona of lista.filter((item) => item.es_profe)) {
+      for (const persona of lista.filter(esProfe)) {
         nombres[persona.id] = `${persona.nombre} ${persona.apellido}`
       }
       for (const gimnasio of gimnasios || []) {
         nombres[gimnasio.id] = gimnasio.nombre
       }
       setNombresProfeYGimnasio(nombres)
-      setClientes(lista.filter((item) => !item.es_profe))
+      setClientes(lista.filter(esCliente))
     }
     setCargando(false)
   }

@@ -27,6 +27,7 @@ Tablas ya creadas (los scripts que las crean están en `supabase/sql/`, en el or
 - **mediciones** (016) — evaluación inicial y controles (peso, perímetros, % grasa, altura, notas, fotos). Fotos en el bucket privado **fotos-progreso** (carpeta = id del cliente).
 - **Ciclos** (017): `rutinas.ciclo_semanas` / `ciclo_inicio`, `plantillas.ciclo_semanas` y `progresion` ({kg, reps} por semana) en los ejercicios. La lógica del peso sugerido está en `src/utils/ciclos.js`.
 - **018**: `registrar_pago_manual()` (habilitar / confirmar pago: anota el pago y suma el mes), `gimnasios.dueno_id` (dueño del gimnasio: ve sus profes y clientes y puede reasignarlos), `puede_ver_profe()`, `mi_rol()` y `buscar_cuenta_por_email()` (solo el administrador).
+- **Admin separado** (020): el Admin (`es_admin`) ya no es profe; la base no deja que una cuenta sea las dos cosas (`perfiles_admin_no_es_profe`). `es_profe()` ahora significa "entra al panel" (profe o Admin) y `es_admin()` mira solo `es_admin`. Cliente = ni profe ni Admin. El Admin ve a todos los clientes, confirma pagos sin quedarse con el cliente, y es el contacto de los clientes sin profe. Solo el Admin da o quita el permiso de profe (no a quien todavía tiene clientes). `convertir_en_admin('email')` se corre una vez desde el SQL Editor (desde la app no se puede).
 
 Funciones de Supabase (Edge Functions, carpeta `supabase/functions/`):
 

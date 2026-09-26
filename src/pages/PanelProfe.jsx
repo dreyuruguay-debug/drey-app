@@ -12,6 +12,7 @@ import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Lo último que se mostró queda en memoria (services/memoriaSesion.js):
 // al volver a Inicio se ve al instante y se actualiza por detrás.
@@ -24,6 +25,10 @@ const MEMORIA_PANEL = 'panel-profe'
 // primeros pasos. La lógica de qué tareas mostrar está en
 // utils/tareasProfe.js. Al volver a Inicio se muestra al instante lo
 // último cargado (MEMORIA_PANEL) y se actualiza por detrás.
+//
+// La cuenta Admin (utils/roles.js) usa este mismo Inicio: ve las tareas de
+// todos los clientes, se identifica con la etiqueta "Admin" y no ve los
+// "Primeros pasos" (son para un profe que recién empieza).
 export default function PanelProfe() {
   const navigate = useNavigate()
   const guardado = recordado(MEMORIA_PANEL)
@@ -32,6 +37,7 @@ export default function PanelProfe() {
   const [tareas, setTareas] = useState(guardado?.tareas || [])
   const [pasos, setPasos] = useState(guardado?.pasos || null)
   const [armaEquipo, setArmaEquipo] = useState(guardado?.armaEquipo || false)
+  const [esAdmin, setEsAdmin] = useState(guardado?.esAdmin || false)
 
   useEffect(() => {
     let activo = true
@@ -65,7 +71,7 @@ export default function PanelProfe() {
     ] = await Promise.all([
       supabase.from('perfiles').select('nombre').eq('id', usuario?.id).single(),
       traerTodasLasFilas(() =>
-        supabase.from('perfiles').select('*').eq('es_profe', false).order('id'),
+        supabase.from('perfiles').select('*').match(SOLO_CLIENTES).order('id'),
       ),
       traerTodasLasFilas(() => supabase.from('rutinas').select('*').order('id')),
       traerTodasLasFilas(() =>
@@ -94,9 +100,11 @@ export default function PanelProfe() {
     const ultimaSesion = {}
     for (const [clienteId, registro] of actividad) ultimaSesion[clienteId] = registro.ultima
 
+    const soyAdmin = Boolean(rol?.es_admin)
     const panel = {
       nombre: yo?.nombre || '',
-      armaEquipo: Boolean(rol?.es_admin || rol?.gimnasios?.length),
+      esAdmin: soyAdmin,
+      armaEquipo: soyAdmin || Boolean(rol?.gimnasios?.length),
       tareas: armarTareas({
         clientes: clientes || [],
         rutinas: rutinas || [],
@@ -109,15 +117,19 @@ export default function PanelProfe() {
         ciclosTerminados,
         hoy,
       }),
-      pasos: primerosPasos({
-        ejercicios: ejercicios || 0,
-        clientesActivos: (clientes || []).filter((cliente) => cliente.estado === 'activo').length,
-        rutinas: (rutinas || []).length,
-      }),
+      pasos: soyAdmin
+        ? null
+        : primerosPasos({
+            ejercicios: ejercicios || 0,
+            clientesActivos: (clientes || []).filter((cliente) => cliente.estado === 'activo')
+              .length,
+            rutinas: (rutinas || []).length,
+          }),
     }
     recordar(MEMORIA_PANEL, panel)
     setNombre(panel.nombre)
     setArmaEquipo(panel.armaEquipo)
+    setEsAdmin(panel.esAdmin)
     setTareas(panel.tareas)
     setPasos(panel.pasos)
     setCargando(false)
@@ -133,6 +145,7 @@ export default function PanelProfe() {
       <header className="inicio-saludo inicio-saludo-profe">
         <div>
           <p className="inicio-fecha">{textoFechaLarga()}</p>
+          {esAdmin && <span className="estado-chip estado-ok etiqueta-admin">Admin</span>}
           <h1 className="inicio-hola">
             {saludo()}
             {nombre ? `, ${nombre}` : ''}
@@ -203,7 +216,7 @@ export default function PanelProfe() {
                 Estadísticas
               </Link>
               {armaEquipo && (
-                <Link to="/profe/equipo" className="acceso">
+                <Link to="/profe/equipo" className={esAdmin ? 'acceso acceso-principal' : 'acceso'}>
                   Equipo y gimnasios
                 </Link>
               )}

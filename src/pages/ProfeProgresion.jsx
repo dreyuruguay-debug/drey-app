@@ -4,6 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Progresión: los resúmenes de 4 semanas que esperan revisión del profe
 // y el acceso a las gráficas de cada cliente. Al abrir esta pantalla se
@@ -30,7 +31,7 @@ export default function ProfeProgresion() {
         .from('perfiles')
         .select('id, nombre, apellido')
         .eq('estado', 'activo')
-        .eq('es_profe', false)
+        .match(SOLO_CLIENTES)
         .order('nombre'),
     ])
     setBorradores(listaBorradores || [])

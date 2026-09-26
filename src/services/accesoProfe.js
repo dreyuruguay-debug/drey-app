@@ -2,9 +2,12 @@ import { supabase } from './supabaseClient.js'
 import { obtenerUsuarioActual, usuarioGuardado } from './sesion.js'
 import { recordado, recordar } from './memoriaSesion.js'
 import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
+import { SOLO_CLIENTES, entraAlPanel } from '../utils/roles.js'
 
-// ¿Quién usa la app es profe? Lo usa el menú del panel del profe
-// (components/ProfeLayout.jsx) para decidir si muestra la pantalla.
+// ¿Quién usa la app entra al panel? (profe o Admin, ver utils/roles.js).
+// Lo usa el menú del panel (components/ProfeLayout.jsx) para decidir si
+// muestra la pantalla. En esta sección "esProfe" quiere decir "entra al
+// panel"; "esAdmin" dice además si es la cuenta Admin.
 //
 // Antes cada pantalla del profe le preguntaba al servidor antes de
 // mostrar nada. Ahora:
@@ -42,7 +45,7 @@ export async function verificarProfe() {
 
   const { data, error } = await supabase
     .from('perfiles')
-    .select('es_profe')
+    .select('es_profe, es_admin')
     .eq('id', usuario.id)
     .single()
   if (error) {
@@ -50,7 +53,11 @@ export async function verificarProfe() {
     const conocido = esProfeConocido()
     return { usuarioId: usuario.id, esProfe: Boolean(conocido) }
   }
-  const resultado = { usuarioId: usuario.id, esProfe: Boolean(data?.es_profe) }
+  const resultado = {
+    usuarioId: usuario.id,
+    esProfe: entraAlPanel(data),
+    esAdmin: Boolean(data?.es_admin),
+  }
   recordar(CLAVE_MEMORIA, resultado)
   guardarJSON(CLAVE_CELULAR, resultado)
   return resultado
@@ -68,7 +75,7 @@ export async function contarPagosPendientes() {
   const { count, error } = await supabase
     .from('perfiles')
     .select('id', { count: 'exact', head: true })
-    .eq('es_profe', false)
+    .match(SOLO_CLIENTES)
     .or('estado.eq.pendiente,aviso_pago.is.true')
   if (error) return ultimosPagosPendientes()
   recordar(CLAVE_PAGOS, count || 0)

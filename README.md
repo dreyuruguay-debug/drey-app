@@ -11,6 +11,16 @@ las siga en el gimnasio y registre lo que levantó.
 - **Mercado Pago** — cobro de las suscripciones (funciones en `supabase/functions`).
 - **Sentry** — aviso por mail cuando algo falla en el celular de un cliente (variable `VITE_SENTRY_DSN` en Cloudflare; sin ella no se usa).
 
+## Tipos de cuenta
+
+- **Cliente** — usa la app del alumno.
+- **Profe** (`es_profe`) — entra al panel y ve solo a sus clientes.
+- **Admin** (`es_admin`) — la cuenta del dueño de DREY. Entra al mismo
+  panel y ve y administra todo (clientes, profes, gimnasios, planes,
+  precios), pero no es profe: no tiene clientes ni aparece en "Elegí tu
+  profe". Una cuenta nunca es las dos cosas (SQL 020). La regla vive en
+  `src/utils/roles.js` (`esCliente`, `entraAlPanel`, `SOLO_CLIENTES`).
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),

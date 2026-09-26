@@ -6,6 +6,7 @@ import { cargarActividadClientes } from '../services/actividad.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
 import { obtenerPlan } from '../data/planes.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // A partir de esta cantidad de días sin entrenar, el cliente aparece
 // marcado como "inactivo" en la lista, para que el profe lo note sin
@@ -37,7 +38,7 @@ export default function ProfeClientes() {
         .from('perfiles')
         .select('*')
         .eq('estado', 'activo')
-        .eq('es_profe', false)
+        .match(SOLO_CLIENTES)
         .order('nombre'),
       cargarActividadClientes(),
     ])

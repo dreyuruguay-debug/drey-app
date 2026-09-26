@@ -5061,6 +5061,27 @@ div.tarjeta-rutina {
   margin: 0.75rem 0 1rem;
 }
 
+.equipo-confirmar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.equipo-confirmar > * {
+  flex: 1;
+}
+
+.equipo-filtro {
+  margin-bottom: 0.6rem;
+}
+
+/* Etiqueta "Admin" en el Inicio del panel (utils/roles.js). */
+.etiqueta-admin {
+  display: inline-block;
+  margin: 0.35rem 0 0.15rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .codigo-item > select {
   max-width: 45%;
 }

@@ -9,6 +9,7 @@ import { obtenerUsuarioActual } from '../services/sesion.js'
 import { formatearPrecio } from '../data/planes.js'
 import { calcularEstadisticas, desdeParaPagos, desdeParaSesiones } from '../utils/estadisticas.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
+import { esCliente, esProfe } from '../utils/roles.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
 // Estadísticas del negocio: clientes activos, nuevos, los que se fueron,
@@ -53,8 +54,8 @@ export default function ProfeEstadisticas() {
     const usuario = await obtenerUsuarioActual()
     setDatos({
       yo: usuario?.id,
-      clientes: (perfiles || []).filter((perfil) => !perfil.es_profe),
-      profes: (perfiles || []).filter((perfil) => perfil.es_profe),
+      clientes: (perfiles || []).filter(esCliente),
+      profes: (perfiles || []).filter(esProfe),
       pagos: pagos || [],
       sesiones: sesiones || [],
       planes,

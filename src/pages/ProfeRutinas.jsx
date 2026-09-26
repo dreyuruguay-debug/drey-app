@@ -4,6 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerPlan } from '../data/planes.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // "+ Nueva rutina" (desde Inicio o Clientes): primero se elige para qué
 // cliente es y enseguida arranca el asistente paso a paso. Las rutinas
@@ -27,7 +28,7 @@ export default function ProfeRutinas() {
       .from('perfiles')
       .select('id, nombre, apellido, plan')
       .eq('estado', 'activo')
-      .eq('es_profe', false)
+      .match(SOLO_CLIENTES)
       .order('nombre')
     setClientes(data || [])
     setCargando(false)
