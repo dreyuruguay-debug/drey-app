@@ -2099,6 +2099,16 @@ a.profe-boton-agregar-ejercicio {
   flex: 1 1 120px;
 }
 
+/* Qué reloj verá el alumno en el calentamiento (EditorActividades.jsx) */
+.editor-actividad-reloj {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.editor-actividad-reloj-libre {
+  color: var(--drey-naranja);
+}
+
 .editor-actividad-items {
   display: flex;
   flex-direction: column;
@@ -3731,7 +3741,9 @@ div.tarjeta-rutina {
   text-align: center;
 }
 
-.descanso-reloj {
+/* Reloj grande del modo entrenar (RelojCircular.jsx): lo usan el
+   descanso (verde) y el calentamiento (naranja). */
+.reloj-circular {
   position: relative;
   width: 250px;
   max-width: 70vw;
@@ -3741,7 +3753,7 @@ div.tarjeta-rutina {
   justify-content: center;
 }
 
-.descanso-reloj svg {
+.reloj-circular svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -3749,13 +3761,13 @@ div.tarjeta-rutina {
   transform: rotate(-90deg);
 }
 
-.descanso-reloj-fondo {
+.reloj-circular-fondo {
   fill: none;
   stroke: #222222;
   stroke-width: 14;
 }
 
-.descanso-reloj-avance {
+.reloj-circular-avance {
   fill: none;
   stroke: var(--drey-accent);
   stroke-width: 14;
@@ -3763,13 +3775,17 @@ div.tarjeta-rutina {
   transition: stroke-dashoffset 0.25s linear;
 }
 
-.descanso-reloj-texto {
+.reloj-circular-calentamiento .reloj-circular-avance {
+  stroke: var(--drey-naranja);
+}
+
+.reloj-circular-texto {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.descanso-reloj-texto strong {
+.reloj-circular-texto strong {
   font-family: var(--fuente-titulos);
   font-size: 4.5rem;
   font-weight: 800;
@@ -3777,7 +3793,7 @@ div.tarjeta-rutina {
   font-variant-numeric: tabular-nums;
 }
 
-.descanso-reloj-texto span {
+.reloj-circular-texto span {
   color: var(--drey-texto-suave);
 }
 
@@ -3810,6 +3826,114 @@ div.tarjeta-rutina {
   text-align: center;
   font-size: 0.8rem;
   color: var(--drey-texto-suave);
+}
+
+/* Calentamiento (PantallaCalentamiento.jsx): una parte más del
+   entrenamiento, con su reloj grande como el del descanso y sus
+   actividades marcadas como series. El naranja es su color (🔥). */
+.calentamiento-etiqueta {
+  color: var(--drey-naranja);
+}
+
+.calentamiento-reloj {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+}
+
+.calentamiento-sumar {
+  justify-content: center;
+}
+
+.calentamiento-aviso,
+.calentamiento-nota {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.calentamiento-items {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--drey-white);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.calentamiento-lista .entrenar-etiqueta-chica {
+  margin-bottom: 0.6rem;
+}
+
+.calentamiento-fila:not(:disabled) {
+  color: #cfcfcf;
+  cursor: pointer;
+}
+
+.calentamiento-fila-actual {
+  border: 1px solid var(--drey-naranja);
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-white);
+}
+
+.calentamiento-fila-actual .entrenar-serie-valor {
+  color: var(--drey-naranja);
+  font-weight: 800;
+}
+
+.calentamiento-check-actual {
+  border-color: var(--drey-naranja);
+}
+
+.calentamiento-completo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0 0.5rem;
+  text-align: center;
+}
+
+.vista-general-calentamiento .vista-general-bloque {
+  color: var(--drey-naranja);
+}
+
+.vista-general-bloque-estado {
+  margin-left: auto;
+  color: var(--drey-texto-suave);
+  letter-spacing: 0;
+}
+
+.final-calentamiento {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.final-calentamiento.completo {
+  background: var(--drey-verde-fondo);
+  border-color: transparent;
+  color: #cfeedd;
+}
+
+.final-calentamiento-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.final-calentamiento-texto small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.final-calentamiento.completo .final-calentamiento-texto small {
+  color: #9fd8b8;
 }
 
 /* Final del entrenamiento */

@@ -6,6 +6,9 @@
 //   - duracion: texto libre ("10 min", "30 s por lado").
 //   - items: ejercicios puntuales dentro de la actividad (por ejemplo,
 //     los ejercicios de "Movilidad").
+//
+// conReloj: en el modo entrenar, cada actividad tiene su reloj grande
+// (solo el calentamiento; la vuelta a la calma es una lista al final).
 
 export const SECCIONES_ACTIVIDADES = {
   calentamiento: {
@@ -14,6 +17,7 @@ export const SECCIONES_ACTIVIDADES = {
     vacio: 'Sin configurar todavía',
     boton: '+ Configurar calentamiento',
     sugerencias: ['Cinta', 'Bicicleta', 'Elíptica', 'Remo', 'Movilidad', 'Activación'],
+    conReloj: true,
   },
   vuelta_calma: {
     titulo: 'Vuelta a la calma',
@@ -21,6 +25,7 @@ export const SECCIONES_ACTIVIDADES = {
     vacio: 'Opcional',
     boton: '+ Agregar vuelta a la calma',
     sugerencias: ['Caminata suave', 'Respiración', 'Movilidad', 'Estiramientos', 'Bicicleta suave'],
+    conReloj: false,
   },
 }
 

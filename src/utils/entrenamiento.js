@@ -1,4 +1,5 @@
 import { agruparEnBloques } from './bloques.js'
+import { segundosDeCalentamiento } from './calentamiento.js'
 import { descansosDeEjercicio, opcionesDeDescanso } from './formatos.js'
 
 // Lógica del "modo entrenar" del alumno (de a un ejercicio por vez).
@@ -7,7 +8,6 @@ import { descansosDeEjercicio, opcionesDeDescanso } from './formatos.js'
 
 const CANTIDAD_SERIES_POR_DEFECTO = 4
 const SEGUNDOS_POR_SERIE = 45
-const MINUTOS_CALENTAMIENTO = 10
 
 // Series con las que arranca cada ejercicio: el peso sugerido para hoy
 // (ver utils/ciclos.js: semana del ciclo, o un poco más si la vez pasada
@@ -97,7 +97,8 @@ export function mejorSerieAnterior(seriesAnteriores = []) {
 }
 
 // Duración aproximada de una rutina en minutos (redondeada a 5), para
-// mostrar "~50 min" en Inicio.
+// mostrar "~50 min" en Inicio. El calentamiento suma lo que dura de
+// verdad (utils/calentamiento.js), no un número fijo.
 export function estimarMinutos(rutina, ejercicios) {
   if (!ejercicios?.length) return 0
   let segundos = 0
@@ -106,7 +107,7 @@ export function estimarMinutos(rutina, ejercicios) {
     const series = ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO
     segundos += series * (SEGUNDOS_POR_SERIE + delMedio(opciones))
   }
-  if (rutina?.calentamiento?.length) segundos += MINUTOS_CALENTAMIENTO * 60
+  segundos += segundosDeCalentamiento(rutina?.calentamiento)
   return Math.max(5, Math.round(segundos / 60 / 5) * 5)
 }
 

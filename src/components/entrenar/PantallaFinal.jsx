@@ -3,8 +3,12 @@ import SeccionActividades from '../SeccionActividades.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
 
 // Última pantalla del modo entrenar: la vuelta a la calma (si el profe
-// la cargó), un resumen de lo que hizo, "¿Cómo te sentiste?" y el botón
-// para guardar el entrenamiento.
+// la cargó), un resumen de lo que hizo (con el calentamiento, que cuenta
+// como una parte más), "¿Cómo te sentiste?" y el botón para guardar el
+// entrenamiento.
+//
+// resumen: { series, total, segundos, records, calentamiento } —
+// calentamiento es { hechas, total, completo } o null si no tenía.
 //
 // pendienteDeEnvio: se guardó en el celular porque no había señal; se
 // envía solo cuando vuelva la conexión.
@@ -33,11 +37,12 @@ export default function PantallaFinal({
         </h1>
         {pendienteDeEnvio && (
           <p className="final-sin-senal">
-            No hay señal ahora. Se lo mandamos a tu profe solo, apenas vuelva la conexión. No
-            tenés que hacer nada.
+            No hay señal ahora. Se lo mandamos a tu profe solo, apenas vuelva la conexión. No tenés
+            que hacer nada.
           </p>
         )}
         <p className="entrenar-objetivo">
+          {resumen.calentamiento?.completo ? 'Calentamiento y ' : ''}
           {resumen.series} series en {formatearReloj(resumen.segundos)}
           {resumen.records > 0 &&
             ` · ${resumen.records} ${resumen.records === 1 ? 'récord nuevo' : 'récords nuevos'}`}
@@ -56,6 +61,8 @@ export default function PantallaFinal({
     <div className="entrenar-pantalla">
       <span className="entrenar-etiqueta">Último paso</span>
       <h1 className="entrenar-titulo">¡Buen trabajo!</h1>
+
+      {resumen.calentamiento && <FilaCalentamiento calentamiento={resumen.calentamiento} />}
 
       <div className="final-cifras">
         <div>
@@ -123,6 +130,32 @@ export default function PantallaFinal({
       <button type="button" className="boton-texto" onClick={onVolver}>
         ← Volver a los ejercicios
       </button>
+    </div>
+  )
+}
+
+// "✓ Calentamiento completo" (o cuántas actividades hizo), con el mismo
+// aspecto que una serie hecha.
+function FilaCalentamiento({ calentamiento }) {
+  const { hechas, total, completo } = calentamiento
+  let clase = 'final-calentamiento'
+  let check = 'entrenar-check entrenar-check-vacio'
+  if (completo) {
+    clase += ' completo'
+    check = 'entrenar-check'
+  } else if (hechas > 0) {
+    check = 'entrenar-check entrenar-check-parcial'
+  }
+  return (
+    <div className={clase}>
+      <span className={check}>{completo ? '✓' : ''}</span>
+      <span className="final-calentamiento-texto">
+        <strong>{completo ? 'Calentamiento completo' : 'Calentamiento'}</strong>
+        <small>
+          {hechas} de {total} {total === 1 ? 'actividad' : 'actividades'}
+        </small>
+      </span>
+      <span aria-hidden="true">🔥</span>
     </div>
   )
 }

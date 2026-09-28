@@ -1,7 +1,5 @@
+import RelojCircular from './RelojCircular.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
-
-const RADIO = 110
-const CIRCUNFERENCIA = 2 * Math.PI * RADIO
 
 // Pantalla completa de descanso: un reloj grande que baja solo, botones
 // para sumar tiempo o seguir antes, y qué viene después. Si el profe dio
@@ -18,8 +16,6 @@ export default function PantallaDescanso({
   onSumar,
   onListo,
 }) {
-  const proporcion = total > 0 ? Math.min(1, restante / total) : 0
-
   return (
     <div className="descanso-pantalla" role="dialog" aria-modal="true" aria-label="Descanso">
       {aviso && (
@@ -29,23 +25,11 @@ export default function PantallaDescanso({
       )}
       <span className="entrenar-etiqueta">{titulo}</span>
 
-      <div className="descanso-reloj">
-        <svg viewBox="0 0 260 260" aria-hidden="true">
-          <circle cx="130" cy="130" r={RADIO} className="descanso-reloj-fondo" />
-          <circle
-            cx="130"
-            cy="130"
-            r={RADIO}
-            className="descanso-reloj-avance"
-            strokeDasharray={CIRCUNFERENCIA}
-            strokeDashoffset={CIRCUNFERENCIA * (1 - proporcion)}
-          />
-        </svg>
-        <div className="descanso-reloj-texto" aria-live="off">
-          <strong>{formatearReloj(restante)}</strong>
-          <span>de {formatearReloj(total)}</span>
-        </div>
-      </div>
+      <RelojCircular
+        proporcion={total > 0 ? restante / total : 0}
+        valor={formatearReloj(restante)}
+        detalle={`de ${formatearReloj(total)}`}
+      />
 
       {opciones.length > 1 && (
         <div className="chips-lista descanso-opciones-rango" aria-label="Elegir descanso">

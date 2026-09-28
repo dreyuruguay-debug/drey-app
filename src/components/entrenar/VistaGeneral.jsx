@@ -2,18 +2,22 @@ import SeccionActividades from '../SeccionActividades.jsx'
 import InfoMetodo from '../InfoMetodo.jsx'
 import { tituloDeBloque } from '../../utils/bloques.js'
 import { estadoDeEjercicio } from '../../utils/entrenamiento.js'
+import { resumenDeCalentamiento } from '../../utils/calentamiento.js'
 import { textoDescanso, textoRango } from '../../utils/formatos.js'
 
 // La rutina completa de un vistazo (lo que se abre con "Ver toda la
 // rutina"): calentamiento, bloques con sus ejercicios y cuánto lleva
-// hecho de cada uno, pausa y vuelta a la calma. Tocar un ejercicio lleva
-// directo a él.
+// hecho de cada uno, pausa y vuelta a la calma. El calentamiento se ve
+// igual que un bloque, con ✓ en cada actividad hecha. Tocar un ejercicio
+// o una actividad lleva directo a él.
 export default function VistaGeneral({
   rutina,
   bloques,
   series,
+  calentamiento,
   empezado,
   onElegir,
+  onElegirCalentamiento,
   onCerrar,
   onTerminar,
 }) {
@@ -34,11 +38,12 @@ export default function VistaGeneral({
 
       {rutina.descripcion && <p className="vista-general-descripcion">{rutina.descripcion}</p>}
 
-      {rutina.calentamiento?.length > 0 && (
-        <section className="entrenar-tarjeta">
-          <span className="entrenar-etiqueta-chica">Calentamiento</span>
-          <SeccionActividades actividades={rutina.calentamiento} />
-        </section>
+      {rutina.calentamiento?.length > 0 && calentamiento && (
+        <BloqueCalentamiento
+          actividades={rutina.calentamiento}
+          estado={calentamiento}
+          onElegir={onElegirCalentamiento}
+        />
       )}
 
       {bloques.map((bloque) => {
@@ -119,5 +124,40 @@ export default function VistaGeneral({
         )}
       </div>
     </div>
+  )
+}
+
+// El calentamiento como un bloque más: cada actividad con su ✓.
+function BloqueCalentamiento({ actividades, estado, onElegir }) {
+  const resumen = resumenDeCalentamiento(estado)
+  return (
+    <section className="entrenar-tarjeta vista-general-calentamiento">
+      <div className="vista-general-bloque">
+        <span>🔥 Calentamiento</span>
+        <span className="vista-general-bloque-estado">
+          {resumen.hechas}/{resumen.total}
+        </span>
+      </div>
+      {actividades.map((actividad, indice) => {
+        const hecha = estado.hechas[indice]
+        return (
+          <button
+            key={`${actividad.nombre}-${indice}`}
+            type="button"
+            className="vista-general-ejercicio"
+            onClick={() => onElegir(indice)}
+          >
+            <span className={hecha ? 'entrenar-check' : 'entrenar-check entrenar-check-vacio'}>
+              {hecha ? '✓' : ''}
+            </span>
+            <span className="vista-general-ejercicio-texto">
+              <strong>{actividad.nombre}</strong>
+              {actividad.items?.length > 0 && <small>{actividad.items.join(' · ')}</small>}
+            </span>
+            <span className="vista-general-ejercicio-estado">{actividad.duracion}</span>
+          </button>
+        )
+      })}
+    </section>
   )
 }

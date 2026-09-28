@@ -1,14 +1,26 @@
 import { useState } from 'react'
 import { SUGERENCIAS_ITEMS, actividadVacia } from '../data/actividades.js'
+import { segundosDeDuracion } from '../utils/calentamiento.js'
+import { formatearReloj } from '../utils/entrenamiento.js'
 
 // Editor del calentamiento previo o de la vuelta a la calma de una
 // rutina. Cada actividad tiene nombre, duración (texto libre: "10 min",
 // "30 s por lado") y, si hace falta, los ejercicios que la forman (por
 // ejemplo, los de "Movilidad").
 //
+// conReloj (calentamiento): debajo de la duración se ve qué reloj le va a
+// aparecer al alumno: uno que baja solo ("10 min" → 10:00) o, si no se
+// entiende como tiempo, uno que cuenta hacia arriba.
+//
 // Trabaja sobre una copia: recién al tocar "Listo" se le pasa la lista
 // final a onGuardar. "Cancelar" descarta los cambios.
-export default function EditorActividades({ actividades, sugerencias, onGuardar, onCancelar }) {
+export default function EditorActividades({
+  actividades,
+  sugerencias,
+  conReloj = false,
+  onGuardar,
+  onCancelar,
+}) {
   const [lista, setLista] = useState(() =>
     actividades.length
       ? actividades.map((actividad) => ({ ...actividad, items: [...(actividad.items || [])] }))
@@ -106,6 +118,7 @@ export default function EditorActividades({ actividades, sugerencias, onGuardar,
               Quitar
             </button>
           </div>
+          {conReloj && <AvisoReloj duracion={actividad.duracion} />}
 
           {conDetalle[indice] ? (
             <div className="editor-actividad-items">
@@ -199,5 +212,25 @@ export default function EditorActividades({ actividades, sugerencias, onGuardar,
         </button>
       </div>
     </div>
+  )
+}
+
+// "⏱ Reloj de 10:00 para el alumno" o, si la duración no es un tiempo
+// ("12 reps"), cómo escribirla para que el reloj baje solo.
+function AvisoReloj({ duracion }) {
+  if (!duracion?.trim()) return null
+  const segundos = segundosDeDuracion(duracion)
+  if (segundos !== null) {
+    return (
+      <small className="editor-actividad-reloj">
+        ⏱ Reloj de {formatearReloj(segundos)} para el alumno
+      </small>
+    )
+  }
+  return (
+    <small className="editor-actividad-reloj editor-actividad-reloj-libre">
+      ⏱ No es un tiempo: el alumno verá un cronómetro libre. Para que baje solo, escribí por ejemplo
+      10 min, 30 s o 1:30.
+    </small>
   )
 }

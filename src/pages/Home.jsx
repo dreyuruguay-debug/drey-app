@@ -31,6 +31,7 @@ import {
   textoFechaLarga,
 } from '../utils/dias.js'
 import { estimarMinutos } from '../utils/entrenamiento.js'
+import { textoDuracionCalentamiento } from '../utils/calentamiento.js'
 import { leerEnCurso } from '../utils/entrenamientoEnCurso.js'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
@@ -151,9 +152,10 @@ export default function Home() {
   // La base de datos es la que decide si puede ver sus rutinas; si no
   // respondió (sin señal), se usa la misma regla calculada acá.
   const planBloqueado =
-    !cuentaPendiente &&
-    (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
+    !cuentaPendiente && (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
   const enCurso = rutinaHoy ? leerEnCurso(rutinaHoy.id, hoy) : null
+  // "15 min" si todas las actividades del calentamiento tienen tiempo.
+  const duracionCalentamiento = textoDuracionCalentamiento(rutinaHoy?.calentamiento)
 
   const fechasConSesion = new Set(sesiones.map((sesion) => sesion.fecha))
   const dias = DIAS_SEMANA.map((dia) => {
@@ -250,7 +252,9 @@ export default function Home() {
                 </span>
               )}
               {rutinaHoy.calentamiento?.length > 0 && (
-                <span className="chip chip-dato">Con calentamiento</span>
+                <span className="chip chip-dato">
+                  🔥 Calentamiento{duracionCalentamiento ? ` ${duracionCalentamiento}` : ''}
+                </span>
               )}
               {semanaDelCiclo(rutinaHoy, hoy) && !semanaDelCiclo(rutinaHoy, hoy).terminado && (
                 <span className="chip chip-dato">
@@ -306,7 +310,9 @@ export default function Home() {
         )}
       </section>
 
-      {sesiones.length > 0 && !cuentaPendiente && <InvitacionNotificaciones usuarioId={usuarioId} />}
+      {sesiones.length > 0 && !cuentaPendiente && (
+        <InvitacionNotificaciones usuarioId={usuarioId} />
+      )}
 
       {datos?.ultimaMedicion !== undefined &&
         !planBloqueado &&

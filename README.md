@@ -69,6 +69,25 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
   "http://…" y "youtu.be/…" se arreglan solos al guardar.
 - Quién archiva, recupera o borra queda en el Historial del Admin.
 
+## Calentamiento (modo entrenar)
+
+- El calentamiento es una parte más del entrenamiento, no un trámite:
+  ocupa el primer tramo de la barra de avance y el tiempo del
+  entrenamiento arranca con él.
+- Cada actividad (Cinta, Movilidad...) se hace de a una, con un reloj
+  grande igual al del descanso (en naranja) y se marca con ✓ como una
+  serie. Si la duración se entiende como tiempo ("10 min", "30 s",
+  "1:30", "30 s por lado") el reloj baja solo y vibra al terminar; si no,
+  cuenta hacia arriba.
+- Al final se ve "Calentamiento completo" (o cuántas actividades hizo).
+  No cambia nada en la base de datos.
+- Pantalla: `components/entrenar/PantallaCalentamiento.jsx`; reloj
+  compartido con el descanso: `components/entrenar/RelojCircular.jsx`;
+  barra de abajo compartida: `components/entrenar/PieEntrenar.jsx`;
+  lógica (leer duraciones, marcar, pausar): `utils/calentamiento.js`.
+- En el editor del profe, debajo de cada duración se ve qué reloj verá
+  el alumno (`EditorActividades.jsx`, `conReloj` en `data/actividades.js`).
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),

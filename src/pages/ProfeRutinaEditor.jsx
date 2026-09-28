@@ -638,6 +638,7 @@ function SeccionActividadesEditable({
         <EditorActividades
           actividades={actividades}
           sugerencias={textos.sugerencias}
+          conReloj={textos.conReloj}
           onGuardar={onGuardar}
           onCancelar={onCancelar}
         />
