@@ -10,7 +10,9 @@ import CopiarRutina from './CopiarRutina.jsx'
 // Las rutinas de un cliente (pestaña "Rutinas" de su ficha): cada una con
 // sus días, su estado y el menú ⋯ (Editar, Asignar días, Ver como alumno,
 // Duplicar, Guardar como plantilla, Borrar). Abajo, el botón verde para
-// armar una nueva y la opción de copiar una rutina de otro cliente.
+// armar una nueva, "Rutinas en Excel" (bajar sus rutinas en la planilla
+// oficial, o subirla: pages/ProfeExcel.jsx) y la opción de copiar una
+// rutina de otro cliente.
 //
 // Las rutinas que el profe todavía no terminó aparecen como "Borrador":
 // el cliente no las ve hasta que se guardan.
@@ -139,6 +141,9 @@ export default function ListaRutinasCliente({
       <div className="acciones-columna">
         <Link to={`/profe/rutinas/nueva/${clienteId}`} className="boton-principal">
           + Nueva rutina{clienteNombre ? ` para ${clienteNombre}` : ''}
+        </Link>
+        <Link to={`/profe/clientes/${clienteId}/excel`} className="boton-secundario">
+          Rutinas en Excel (bajar o subir planilla)
         </Link>
         <button type="button" className="boton-secundario" onClick={() => setCopiando(true)}>
           Copiar una rutina de otro cliente

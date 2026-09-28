@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
 import SelectorGrupos from '../components/SelectorGrupos.jsx'
@@ -12,6 +12,8 @@ import { PASOS_RUTINA, EJEMPLOS_NOMBRE } from '../data/asistente.js'
 // rutina de un cliente o una plantilla. Al terminar el paso 2 se crea la
 // rutina y se abre el paso 3: el editor (ProfeRutinaEditor), que ya
 // muestra la rutina como la va a ver el cliente, todavía vacía.
+// (Para un cliente, también se pueden crear desde la planilla de Excel:
+// pages/ProfeExcel.jsx.)
 //
 // tipo = 'rutina'    → /profe/rutinas/nueva/:clienteId
 // tipo = 'plantilla' → /profe/plantillas/nueva
@@ -161,6 +163,13 @@ export default function ProfeRutinaNueva({ tipo }) {
               Siguiente
             </button>
           </div>
+          {esRutina && (
+            <p className="profe-nota planilla-desde-excel">
+              ¿Las armás en Excel?{' '}
+              <Link to={`/profe/clientes/${clienteId}/excel`}>Subí la planilla</Link> y se crean
+              solas.
+            </p>
+          )}
         </form>
       )}
 

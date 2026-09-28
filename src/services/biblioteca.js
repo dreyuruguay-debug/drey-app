@@ -28,6 +28,25 @@ export async function cargarBiblioteca() {
   return { ejercicios: data, error: null }
 }
 
+// Crea un ejercicio en la biblioteca (lo puede hacer cualquier profe; la
+// base no deja a los clientes). La categoría es también su grupo muscular
+// hasta que el profe lo edite. Lo usan la Biblioteca y la planilla de
+// Excel (ejercicios nuevos). Devuelve { data: el ejercicio, error }.
+export async function crearEjercicio({ nombre, categoria, videoUrl = null, imagenUrl = null }) {
+  const { data, error } = await supabase
+    .from('ejercicios')
+    .insert({
+      nombre: nombre.trim(),
+      grupo_muscular: categoria,
+      categorias: [categoria],
+      video_url: videoUrl,
+      imagen_url: imagenUrl,
+    })
+    .select()
+    .single()
+  return { data: data || null, error }
+}
+
 // Proteger la biblioteca (supabase/sql/024) ----------------------------------
 
 // En cuántas rutinas (y de cuántos clientes) y plantillas está un

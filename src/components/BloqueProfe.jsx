@@ -11,9 +11,11 @@ import ObjetivoEjercicio from './ObjetivoEjercicio.jsx'
 //
 // idsArchivados: ejercicios archivados en la biblioteca (supabase/sql/024).
 // Siguen en la rutina, con la etiqueta "Archivado" al lado del nombre.
+// semanasCiclo: semanas del ciclo de la rutina (para mostrar cada semana).
 export default function BloqueProfe({
   bloque,
   idsArchivados,
+  semanasCiclo = 0,
   esPrimero,
   esUltimo,
   onMover,
@@ -74,7 +76,7 @@ export default function BloqueProfe({
               <span className="estado-chip estado-alerta estado-chip-chico">Archivado</span>
             )}
           </div>
-          <ObjetivoEjercicio ejercicio={item} />
+          <ObjetivoEjercicio ejercicio={item} semanasCiclo={semanasCiclo} />
         </div>
       ))}
 

@@ -5,8 +5,17 @@ import {
   limitesDeEjercicios,
   nombreCortoDeMetodo,
 } from '../data/metodos.js'
-import { borradorNuevo, ejercicioParaBorrador, validarBorrador } from '../utils/bloques.js'
+import {
+  MAXIMO_NOTAS,
+  MAXIMO_TEMPO,
+  borradorAPrescripcion,
+  borradorNuevo,
+  ejercicioParaBorrador,
+  nuevoPlanSemanal,
+  validarBorrador,
+} from '../utils/bloques.js'
 import { nuevaSerieDeCalentamiento } from '../utils/seriesCalentamiento.js'
+import { textoPrescripcion } from '../utils/semanas.js'
 import { guardarUltimosValores, leerUltimosValores } from '../utils/ultimosValores.js'
 import PasosAsistente from './PasosAsistente.jsx'
 import SelectorEjercicios from './SelectorEjercicios.jsx'
@@ -26,20 +35,22 @@ const OTROS_METODOS = METODOS.filter((metodo) => !metodo.principal)
 //      circuito u otros métodos.
 //   2. Ejercicios: se eligen de la biblioteca (primero los recomendados
 //      para los grupos musculares de la rutina).
-//   3. Configurar: series, repeticiones, peso objetivo, series de
-//      calentamiento (cada una con sus reps y kg, y su propio descanso) y
-//      descanso de las series efectivas (como rango).
+//   3. Configurar: series, repeticiones, peso objetivo, RPE, tempo, notas
+//      para el alumno, cómo cambia en cada semana del ciclo (si la rutina
+//      tiene ciclo), series de calentamiento (cada una con sus reps y kg,
+//      y su propio descanso) y descanso de las series efectivas (rango).
 //
 // borradorInicial: null para un bloque nuevo, o el borrador de un bloque
 // ya guardado (arranca directo en "Configurar", con "← Atrás" para
 // cambiar el tipo o los ejercicios).
+// semanasCiclo: semanas del ciclo de la rutina (0 = sin ciclo).
 // onGuardar(borrador) guarda y devuelve un texto de error, o '' si salió bien.
 export default function AsistenteBloque({
   borradorInicial,
   grupos,
   biblioteca,
   mostrarKgObjetivo,
-  conCiclo = false,
+  semanasCiclo = 0,
   onGuardar,
   onCerrar,
 }) {
@@ -277,7 +288,7 @@ export default function AsistenteBloque({
                 item={item}
                 numero={esGrupo ? indice + 1 : null}
                 mostrarKgObjetivo={mostrarKgObjetivo}
-                conCiclo={conCiclo}
+                semanasCiclo={semanasCiclo}
                 onCambiar={(campo, valor) => cambiarEjercicio(indice, campo, valor)}
               />
             ))}
@@ -376,8 +387,9 @@ function TarjetaTipo({ metodo, activo, onElegir }) {
 }
 
 // Casilleros de un ejercicio del bloque: series, repeticiones (una
-// cantidad o un rango), peso objetivo, RPE y series de calentamiento.
-function ConfigEjercicio({ item, numero, mostrarKgObjetivo, conCiclo, onCambiar }) {
+// cantidad o un rango), peso objetivo, RPE, tempo, semanas del ciclo,
+// series de calentamiento y notas para el alumno.
+function ConfigEjercicio({ item, numero, mostrarKgObjetivo, semanasCiclo, onCambiar }) {
   return (
     <div className="config-ejercicio">
       <div className="ejercicio-header config-ejercicio-nombre">
@@ -448,13 +460,169 @@ function ConfigEjercicio({ item, numero, mostrarKgObjetivo, conCiclo, onCambiar 
             onChange={(event) => onCambiar('rpe', event.target.value)}
           />
         </label>
+        <label className="editor-campo">
+          <span>Tempo (opcional)</span>
+          <input
+            className="profe-input-tabla config-input-ancho"
+            type="text"
+            placeholder="3-1-1-0"
+            maxLength={MAXIMO_TEMPO}
+            value={item.tempo ?? ''}
+            onChange={(event) => onCambiar('tempo', event.target.value)}
+          />
+        </label>
       </div>
 
-      {conCiclo && (
-        <div className="config-progresion">
-          <span className="editor-rango-etiqueta">Sube por semana (ciclo, opcional)</span>
+      {semanasCiclo > 1 && (
+        <ConfigSemanas
+          item={item}
+          semanasCiclo={semanasCiclo}
+          mostrarKg={mostrarKgObjetivo}
+          onCambiar={onCambiar}
+        />
+      )}
+
+      <ConfigCalentamiento item={item} mostrarKg={mostrarKgObjetivo} onCambiar={onCambiar} />
+
+      <label className="editor-campo config-notas">
+        <span>Notas para el alumno (opcional)</span>
+        <textarea
+          className="form-textarea"
+          placeholder="Ej: bajá lento, codos cerca del cuerpo"
+          maxLength={MAXIMO_NOTAS}
+          value={item.notas ?? ''}
+          onChange={(event) => onCambiar('notas', event.target.value)}
+        />
+      </label>
+    </div>
+  )
+}
+
+// Cómo cambia el ejercicio en cada semana del ciclo:
+//   · "Sube cada semana": cuántos kg o reps se suben por semana (o nada:
+//     todas las semanas iguales).
+//   · "Cada semana distinta": una fila por semana con series, reps y peso
+//     (la semana 1 es la de arriba). Es lo mismo que las columnas SEMANA
+//     de la planilla de Excel.
+function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
+  const distinta = Boolean(item.semanasPlan)
+  const semanas = item.semanasPlan || []
+
+  function elegirDistinta(activa) {
+    if (activa === distinta) return
+    if (activa) {
+      onCambiar('semanasPlan', nuevoPlanSemanal(item, semanasCiclo))
+      onCambiar('progresionKg', '')
+      onCambiar('progresionReps', '')
+    } else {
+      onCambiar('semanasPlan', null)
+    }
+  }
+
+  function cambiarSemana(indice, campo, valor) {
+    onCambiar(
+      'semanasPlan',
+      semanas.map((semana, i) => (i === indice ? { ...semana, [campo]: valor } : semana)),
+    )
+  }
+
+  return (
+    <div className="config-progresion">
+      <span className="editor-rango-etiqueta">Semanas del ciclo ({semanasCiclo})</span>
+      <div className="chips-lista">
+        <button
+          type="button"
+          className={distinta ? 'chip' : 'chip chip-activo'}
+          onClick={() => elegirDistinta(false)}
+          aria-pressed={!distinta}
+        >
+          Igual o sube lo mismo
+        </button>
+        <button
+          type="button"
+          className={distinta ? 'chip chip-activo' : 'chip'}
+          onClick={() => elegirDistinta(true)}
+          aria-pressed={distinta}
+        >
+          Cada semana distinta
+        </button>
+      </div>
+
+      {distinta ? (
+        <div className="config-semanas">
+          <p className="config-semanas-fila config-semanas-primera">
+            <span className="config-semanas-numero">S1</span>
+            <span>{textoPrescripcion(borradorAPrescripcion(item))} (lo de arriba)</span>
+          </p>
+          {semanas.map((semana, indice) => {
+            const nombre = `Semana ${indice + 2}`
+            return (
+              <div key={indice} className="config-semanas-fila">
+                <span className="config-semanas-numero">S{indice + 2}</span>
+                <label className="editor-campo">
+                  <span>Series</span>
+                  <input
+                    className="profe-input-tabla"
+                    type="number"
+                    min="1"
+                    inputMode="numeric"
+                    aria-label={`${nombre}: series`}
+                    value={semana.series}
+                    onChange={(event) => cambiarSemana(indice, 'series', event.target.value)}
+                  />
+                </label>
+                <div className="editor-campo">
+                  <span>Reps</span>
+                  <div className="config-reps">
+                    <input
+                      className="profe-input-tabla"
+                      type="number"
+                      min="1"
+                      inputMode="numeric"
+                      aria-label={`${nombre}: repeticiones (desde)`}
+                      value={semana.repsDesde}
+                      onChange={(event) => cambiarSemana(indice, 'repsDesde', event.target.value)}
+                    />
+                    <span>a</span>
+                    <input
+                      className="profe-input-tabla"
+                      type="number"
+                      min="1"
+                      inputMode="numeric"
+                      placeholder="—"
+                      aria-label={`${nombre}: repeticiones (hasta, opcional)`}
+                      value={semana.repsHasta}
+                      onChange={(event) => cambiarSemana(indice, 'repsHasta', event.target.value)}
+                    />
+                  </div>
+                </div>
+                {mostrarKg && (
+                  <label className="editor-campo">
+                    <span>Kg</span>
+                    <input
+                      className="profe-input-tabla config-input-ancho"
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      inputMode="decimal"
+                      placeholder="—"
+                      aria-label={`${nombre}: peso (kg)`}
+                      value={semana.kg}
+                      onChange={(event) => cambiarSemana(indice, 'kg', event.target.value)}
+                    />
+                  </label>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <>
+          <p className="profe-nota">
+            Sube por semana (opcional). Vacío: todas las semanas iguales.
+          </p>
           <div className="editor-campos">
-            {mostrarKgObjetivo && (
+            {mostrarKg && (
               <label className="editor-campo">
                 <span>+ kg</span>
                 <input
@@ -482,10 +650,8 @@ function ConfigEjercicio({ item, numero, mostrarKgObjetivo, conCiclo, onCambiar 
               />
             </label>
           </div>
-        </div>
+        </>
       )}
-
-      <ConfigCalentamiento item={item} mostrarKg={mostrarKgObjetivo} onCambiar={onCambiar} />
     </div>
   )
 }

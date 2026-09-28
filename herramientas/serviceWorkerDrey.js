@@ -14,6 +14,11 @@ export const version =
   new Date().toISOString().replace(/\D/g, '').slice(0, 14)
 process.env.VITE_VERSION = version
 
+// Partes de la web que NO se guardan en el celular al instalar la app:
+// la librería de Excel (cerca de 1 MB) solo la usa el profe en "Rutinas
+// en Excel" y se descarga cuando la abre (ver vite.config.js).
+const SIN_GUARDAR = ['excel']
+
 // Completa public/sw.js con la lista de archivos de esta versión, para
 // que la app se guarde entera en el celular y abra sin señal.
 export function serviceWorkerDrey() {
@@ -29,8 +34,10 @@ export function serviceWorkerDrey() {
       carpetaPublica = config.publicDir
     },
     generateBundle(_opciones, paquete) {
-      for (const nombre of Object.keys(paquete)) {
-        if (!nombre.endsWith('.map') && nombre !== 'index.html') archivos.add(`/${nombre}`)
+      for (const [nombre, archivo] of Object.entries(paquete)) {
+        if (nombre.endsWith('.map') || nombre === 'index.html') continue
+        if (archivo.type === 'chunk' && SIN_GUARDAR.includes(archivo.name)) continue
+        archivos.add(`/${nombre}`)
       }
     },
     closeBundle() {

@@ -15,8 +15,8 @@ const PASO_REPS = 1
 const MARGEN_ARRIBA_PX = 80
 const MARGEN_ABAJO_PX = 110
 
-// Un ejercicio del modo entrenar: foto o video, qué hay que hacer, la
-// vez pasada y la lista de series. La serie que toca está abierta, con
+// Un ejercicio del modo entrenar: foto o video, qué hay que hacer (con el
+// tempo y las notas del profe, si puso), la vez pasada y la lista de series. La serie que toca está abierta, con
 // los botones grandes para ajustar kilos y repeticiones y "Serie hecha".
 // Las series hechas se pueden tocar para corregirlas.
 //
@@ -98,7 +98,17 @@ export default function PantallaEjercicio({
               </span>
             </>
           )}
+          {ejercicio.tempo && (
+            <>
+              {' · '}
+              <span className="entrenar-rpe">
+                Tempo {ejercicio.tempo}
+                <Ayuda titulo={TERMINOS.tempo.titulo} texto={TERMINOS.tempo.texto} />
+              </span>
+            </>
+          )}
         </p>
+        {ejercicio.notas && <p className="entrenar-notas">📝 Tu profe: {ejercicio.notas}</p>}
         {sugerencia?.motivo && (
           <p className="entrenar-sugerencia">
             💡 Hoy: {formatearNumero(Number(sugerencia.kg))} kg · {sugerencia.motivo}

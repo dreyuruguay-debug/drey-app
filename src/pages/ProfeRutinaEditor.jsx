@@ -32,10 +32,12 @@ import { mostrarAviso } from '../services/avisos.js'
 import { cargarBiblioteca } from '../services/biblioteca.js'
 import { estaArchivado } from '../utils/biblioteca.js'
 import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
+import { MAXIMO_SEMANAS } from '../utils/semanas.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
-const OPCIONES_SEMANAS = [2, 3, 4, 5, 6, 8, 10, 12]
+// De 2 a 12 semanas (lo mismo que acepta la planilla de Excel).
+const OPCIONES_SEMANAS = Array.from({ length: MAXIMO_SEMANAS - 1 }, (_, indice) => indice + 2)
 
 const ERROR_GUARDAR = 'No pudimos guardar el cambio. Revisá tu conexión y probá de nuevo.'
 
@@ -196,7 +198,7 @@ export default function ProfeRutinaEditor({ tipo }) {
     const semanas = Number(datos.ciclo_semanas)
     if (
       !window.confirm(
-        `¿Empezar un ciclo nuevo de ${semanas} semanas desde hoy? Los ejercicios que suben de peso arrancan desde el peso de la última semana.`,
+        `¿Empezar un ciclo nuevo de ${semanas} semanas desde hoy? Los ejercicios que suben de peso arrancan desde el peso de la última semana; los que tienen cada semana distinta repiten su plan.`,
       )
     )
       return
@@ -292,6 +294,7 @@ export default function ProfeRutinaEditor({ tipo }) {
   const pausa = textoRango(datos.pausa_min, datos.pausa_max)
   const mostrarKgObjetivo = !cliente || cliente.plan !== 'rutina'
   const ciclo = esRutina ? semanaDelCiclo(datos, obtenerFechaHoyISO()) : null
+  const semanasCiclo = Number(datos.ciclo_semanas) || 0
 
   return (
     <ProfeLayout
@@ -417,10 +420,13 @@ export default function ProfeRutinaEditor({ tipo }) {
                 key={bloque.items[0].item.id || indiceBloque}
                 bloque={bloque}
                 idsArchivados={idsArchivados}
+                semanasCiclo={semanasCiclo}
                 esPrimero={indiceBloque === 0}
                 esUltimo={indiceBloque === bloques.length - 1}
                 onMover={(direccion) => moverUnBloque(indiceBloque, direccion)}
-                onEditar={() => setAsistente({ indiceBloque, borrador: bloqueABorrador(bloque) })}
+                onEditar={() =>
+                  setAsistente({ indiceBloque, borrador: bloqueABorrador(bloque, semanasCiclo) })
+                }
                 onQuitar={() => quitarUnBloque(bloque, indiceBloque)}
                 onDuplicar={() => duplicarUnBloque(indiceBloque)}
               />
@@ -504,8 +510,8 @@ export default function ProfeRutinaEditor({ tipo }) {
             <>
               <p className="profe-nota">
                 Elegí cuántas semanas dura el ciclo. Después, en cada ejercicio (Editar), poné
-                cuánto sube por semana (ej. +2,5 kg): la app le muestra al alumno el peso de la
-                semana que le toca.
+                cuánto sube por semana (ej. +2,5 kg) o armá cada semana distinta: la app le muestra
+                al alumno lo de la semana que le toca.
               </p>
               <select
                 className="profe-calendario-select"
@@ -597,7 +603,7 @@ export default function ProfeRutinaEditor({ tipo }) {
           grupos={grupos}
           biblioteca={biblioteca}
           mostrarKgObjetivo={mostrarKgObjetivo}
-          conCiclo={Boolean(datos.ciclo_semanas)}
+          semanasCiclo={semanasCiclo}
           onGuardar={guardarBloque}
           onCerrar={() => setAsistente(null)}
         />

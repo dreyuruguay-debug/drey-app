@@ -27,7 +27,8 @@ export const CAMPOS_RUTINA = [
   'ciclo_semanas',
 ]
 
-// Datos de cada ejercicio de una rutina o plantilla.
+// Datos de cada ejercicio de una rutina o plantilla. "semanas", "notas" y
+// "tempo" son del SQL 025 (ver utils/semanas.js).
 export const CAMPOS_EJERCICIO = [
   'ejercicio_id',
   'orden',
@@ -43,6 +44,9 @@ export const CAMPOS_EJERCICIO = [
   'grupo',
   'config',
   'progresion',
+  'semanas',
+  'notas',
+  'tempo',
 ]
 
 const SELECT_EJERCICIOS = '*, ejercicios(nombre, grupo_muscular, categorias, imagen_url, video_url)'

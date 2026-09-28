@@ -5621,3 +5621,423 @@ div.tarjeta-rutina {
   font-size: 0.8rem;
   color: var(--drey-texto-suave);
 }
+
+/* ---------- Cada semana distinta, tempo y notas (SQL 025) ---------- */
+.entrenar-notas {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.ejercicio-semanas .ejercicio-objetivo {
+  margin-bottom: 0.25rem;
+}
+
+.ejercicio-semanas-lista {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--drey-gray-light);
+}
+
+.ejercicio-semanas-lista strong {
+  color: var(--drey-azul);
+  margin-right: 0.2rem;
+}
+
+.ejercicio-notas {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.config-semanas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.config-semanas-fila {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.config-semanas-primera {
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+}
+
+.config-semanas-numero {
+  min-width: 1.8rem;
+  padding-bottom: 0.6rem;
+  font-weight: 800;
+  color: var(--drey-azul);
+}
+
+.config-semanas-primera .config-semanas-numero {
+  padding-bottom: 0;
+}
+
+.config-notas {
+  margin-top: 0.75rem;
+}
+
+.config-notas .form-textarea {
+  min-height: 4rem;
+}
+
+/* ---------- Rutinas en Excel (pages/ProfeExcel.jsx) ---------- */
+.planilla-paso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.planilla-paso-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.profe-nota.planilla-nota {
+  margin: 0;
+}
+
+.planilla-mensaje {
+  margin-bottom: 1rem;
+  color: var(--drey-naranja);
+}
+
+.planilla-rutinas {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planilla-rutinas legend {
+  margin-bottom: 0.4rem;
+}
+
+.planilla-rutina {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+  cursor: pointer;
+}
+
+.planilla-rutina input,
+.planilla-reiniciar input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--drey-accent);
+  flex: 0 0 auto;
+}
+
+.planilla-rutina span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.planilla-rutina small {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.planilla-archivo {
+  display: none;
+}
+
+.planilla-archivo-nombre {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+  word-break: break-all;
+}
+
+.planilla-mensajes {
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  font-size: 0.85rem;
+}
+
+.planilla-errores {
+  background: #2a1414;
+  border: 1px solid #5c2626;
+}
+
+.planilla-avisos {
+  background: var(--drey-amarillo-fondo);
+  border: 1px solid #4d4418;
+}
+
+.planilla-mensajes-titulo {
+  margin: 0 0 0.5rem;
+  font-weight: 800;
+}
+
+.planilla-errores .planilla-mensajes-titulo {
+  color: #ff8a8a;
+}
+
+.planilla-avisos .planilla-mensajes-titulo {
+  color: var(--drey-amarillo);
+}
+
+.planilla-mensajes ul {
+  list-style: none;
+  margin: 0 0 0.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.planilla-mensajes li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: var(--drey-gray-light);
+  line-height: 1.35;
+}
+
+.planilla-celda {
+  align-self: flex-start;
+  padding: 0.05rem 0.5rem;
+  border-radius: 6px;
+  background: #0d0d0d;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--drey-white);
+}
+
+.planilla-revisar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-naranja);
+  background: var(--drey-naranja-fondo);
+}
+
+.planilla-revisar > .planilla-mensajes-titulo {
+  margin: 0;
+  color: var(--drey-naranja);
+}
+
+.planilla-desconocido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #4a3419;
+}
+
+.planilla-desconocido-nombre {
+  margin: 0;
+}
+
+.planilla-desconocido-nombre small {
+  color: var(--drey-texto-suave);
+}
+
+.planilla-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planilla-opcion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background: var(--drey-superficie);
+  color: var(--drey-white);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planilla-opcion small {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.planilla-resueltos {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid #4a3419;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.planilla-resueltos li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--drey-gray-light);
+}
+
+.planilla-dia {
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.planilla-dia summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.planilla-dia summary::-webkit-details-marker {
+  display: none;
+}
+
+.planilla-dia-titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.planilla-dia-titulo small {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.planilla-dia[open] summary {
+  border-bottom: 1px solid var(--drey-borde);
+}
+
+.planilla-dia-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.planilla-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planilla-bloque-titulo {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-accent);
+}
+
+.planilla-ejercicio {
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--drey-borde);
+}
+
+.planilla-ejercicio .ejercicio-objetivo {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.planilla-ejercicio-nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.planilla-reiniciar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--drey-gray-light);
+  cursor: pointer;
+}
+
+.planilla-listo .planilla-paso-titulo {
+  color: var(--drey-accent);
+}
+
+.planilla-listo-texto {
+  margin: 0;
+}
+
+.planilla-listo-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.planilla-listo-lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+}
+
+.planilla-listo-lista li > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.planilla-listo-lista .acciones-fila {
+  margin: 0;
+}
+
+.planilla-desde-excel {
+  margin: 1rem 0 0;
+}
+
+.planilla-desde-excel a {
+  color: var(--drey-accent);
+  font-weight: 700;
+}

@@ -9,6 +9,7 @@ import {
   bibliotecaRecordada,
   borrarEjercicio,
   cargarBiblioteca,
+  crearEjercicio,
   usoDeEjercicio,
 } from '../services/biblioteca.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
@@ -156,12 +157,11 @@ export default function ProfeEjercicios() {
       imagenUrl = await subirImagen(imagenNueva)
     }
 
-    const { error } = await supabase.from('ejercicios').insert({
+    const { error } = await crearEjercicio({
       nombre: nombreLimpio,
-      grupo_muscular: categoriaActiva,
-      categorias: [categoriaActiva],
-      video_url: video.valor,
-      imagen_url: imagenUrl,
+      categoria: categoriaActiva,
+      videoUrl: video.valor,
+      imagenUrl,
     })
     setGuardando(false)
     if (error) {

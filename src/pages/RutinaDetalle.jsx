@@ -52,7 +52,7 @@ import {
 } from '../utils/entrenamientoEnCurso.js'
 import { relojCorriendo, relojEnMarcha, relojParado, segundosDeReloj } from '../utils/reloj.js'
 import { formatearNumero } from '../utils/progreso.js'
-import { semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
+import { ejerciciosDeLaSemana, semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
 const DURACION_AVISO_MS = 3000
@@ -296,8 +296,10 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   }
 
   // Arma la pantalla con la rutina, sus ejercicios y el historial de
-  // entrenamientos (del más viejo al más nuevo).
-  function armarPantalla(datos, lista, historialSesiones) {
+  // entrenamientos (del más viejo al más nuevo). Si la rutina tiene ciclo,
+  // cada ejercicio trae lo que toca esta semana (utils/ciclos.js).
+  function armarPantalla(datos, ejerciciosGuardados, historialSesiones) {
+    const lista = ejerciciosDeLaSemana(ejerciciosGuardados, datos, hoy)
     let mejores = {}
     let anteriores = {}
 

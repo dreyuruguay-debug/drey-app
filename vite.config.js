@@ -16,6 +16,9 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           supabase: ['@supabase/supabase-js'],
+          // La librería de Excel: solo la usa el profe en "Rutinas en
+          // Excel" y se descarga recién ahí (no se guarda para usar sin señal).
+          excel: ['exceljs'],
         },
       },
     },

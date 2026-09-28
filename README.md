@@ -112,6 +112,50 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
 - Después de cada serie la pantalla baja sola hasta la que sigue, así el
   botón queda a la vista.
 
+## Rutinas en Excel (planilla oficial)
+
+El profe puede bajar las rutinas de un cliente en una planilla de Excel
+(o vacía), armarlas o cambiarlas en Excel / Google Sheets y volver a
+subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
+(`pages/ProfeExcel.jsx`, ruta `/profe/clientes/:id/excel`).
+
+- **Un solo modelo.** La planilla es otra forma de ver lo mismo que el
+  editor de la app. El "programa" de un cliente (`utils/programa.js`) son
+  sus rutinas (una por día) con las semanas del ciclo, y cada bloque es
+  exactamente el borrador del asistente (`utils/bloques.js`): se valida
+  con `validarBorrador` y se guarda con `borradorAFilas`, igual que a mano.
+- **Cada semana distinta** (SQL 025): `rutina_ejercicios.semanas` guarda
+  las semanas 2 en adelante cuando cambian de forma libre (3×10@70,
+  3×8@75, 4×8@75...). Si sube siempre lo mismo se sigue guardando como
+  `progresion` y si no cambia, nada (`compactarPlan` en
+  `utils/semanas.js` elige). El alumno ve lo de su semana
+  (`ejerciciosDeLaSemana` en `utils/ciclos.js`); el profe lo edita en el
+  asistente ("Cada semana distinta"). También `notas` y `tempo`.
+- **La planilla** (`data/planillaExcel.js` define hojas y columnas):
+  Rutina (días), Ejercicios (una fila por ejercicio, con SEMANA 1, 2...
+  de Series / Repeticiones / Peso; lo que no cambia es una fórmula que
+  copia la semana anterior, en gris), Calentamiento (series de
+  aproximación), Actividades (calentamiento previo y vuelta a la calma),
+  Configuración (versión, cliente, ayuda de tipos de bloque) y Listas
+  (oculta: biblioteca con ID y opciones de las listas desplegables).
+  Superseries: misma letra en "Bloque" (A1, A2) + "Tipo de bloque".
+- **IDs estables.** Cada día lleva el ID de su rutina y cada ejercicio el
+  de su fila y el del ejercicio de la biblioteca (columnas ocultas): al
+  subirla se actualiza lo que ya existía, sin duplicar. Ejercicio: primero
+  por ID, después por nombre exacto (sin tildes ni mayúsculas) y si no, lo
+  decide el profe (vincular a uno de la biblioteca o crearlo).
+- **Importar** (`utils/importarPlanilla.js`): lee por título de columna,
+  revisa cada celda y separa errores (impiden importar) de avisos, con
+  hoja, fila y celda ("Ejercicios · F18"). Nada se guarda hasta confirmar
+  la revisión; `planDeGuardado` (`utils/programa.js`) muestra qué cambia
+  y `services/programas.js` lo guarda con las funciones de siempre
+  (`services/rutinas.js`). Lo que no está en la planilla no se toca.
+- **Exportar**: `utils/exportarPlanilla.js` (qué va en cada celda) +
+  `services/planillaExcel.js` (cómo se ve y cómo se lee el .xlsx, con la
+  librería ExcelJS). ExcelJS pesa ~1 MB: se descarga recién al usar la
+  planilla y no se guarda para usar sin señal (`vite.config.js` y
+  `herramientas/serviceWorkerDrey.js`).
+
 ## Tiempo y pausa del entrenamiento
 
 - El tiempo de arriba a la derecha arranca cuando el alumno empieza (el

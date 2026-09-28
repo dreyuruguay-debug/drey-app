@@ -1,12 +1,16 @@
 import { diasEntre } from './dias.js'
 import { separarReps } from './formatos.js'
+import { prescripcionDeLaSemana, tienePlanSemanal } from './semanas.js'
 
 // Planificación por semanas (ciclos) y peso sugerido. Ver
-// supabase/sql/017_ciclos.sql. Nada de este archivo lee ni guarda en la
-// base: recibe datos y devuelve resultados, así se puede probar solo.
+// supabase/sql/017_ciclos.sql y 025. Nada de este archivo lee ni guarda
+// en la base: recibe datos y devuelve resultados, así se puede probar solo.
 //
 // Ejemplo: sentadilla 60 kg, ciclo de 4 semanas, +2,5 kg por semana
 //   semana 1 → 60 · semana 2 → 62,5 · semana 3 → 65 · semana 4 → 67,5
+// O cada semana distinta (armada en el editor o en la planilla de Excel):
+//   semana 1 → 3 × 10 con 70 · semana 2 → 3 × 8 con 75 · semana 3 → 4 × 8 con 75
+// Lo que toca cada semana lo calcula utils/semanas.js.
 
 // Cuánto se sube el peso cuando el alumno completa todo sin ciclo
 // planificado (progresión doble): 2,5 kg; si el peso es chico, 1 kg.
@@ -23,6 +27,29 @@ export function semanaDelCiclo(rutina, hoyISO) {
   const dias = Math.max(0, diasEntre(rutina.ciclo_inicio, hoyISO))
   const semana = Math.floor(dias / 7) + 1
   return { semana: Math.min(semana, total), total, terminado: semana > total }
+}
+
+// Los ejercicios de la rutina con lo que toca ESTA semana del ciclo
+// (series, repeticiones y peso) en series / reps_objetivo / kg_objetivo.
+// Así el modo entrenar muestra y carga lo de la semana sin saber nada de
+// ciclos. Los que cambian por semana quedan marcados con semanaDelPlan
+// (la semana que se usó). Sin ciclo, la lista queda igual.
+export function ejerciciosDeLaSemana(ejercicios, rutina, hoyISO) {
+  const ciclo = semanaDelCiclo(rutina, hoyISO)
+  if (!ciclo) return ejercicios
+  return ejercicios.map((ejercicio) => {
+    if (!tienePlanSemanal(ejercicio)) return ejercicio
+    const semana = prescripcionDeLaSemana(ejercicio, ciclo.semana)
+    return {
+      ...ejercicio,
+      series: semana.series ?? ejercicio.series,
+      reps_objetivo: semana.reps || ejercicio.reps_objetivo,
+      kg_objetivo: semana.kg,
+      progresion: {},
+      semanas: [],
+      semanaDelPlan: ciclo.semana,
+    }
+  })
 }
 
 // ¿Este ejercicio tiene progresión planificada?
@@ -45,10 +72,12 @@ export function objetivoDeLaSemana(ejercicio, semana) {
 }
 
 // Qué peso le proponemos hoy al alumno para arrancar cada serie, y por qué.
-//   1. Si la rutina tiene ciclo y el ejercicio progresión: el de la semana.
+//   1. Si la rutina tiene ciclo y el ejercicio cambia por semana: el peso
+//      de la semana (si el profe puso peso para esa semana).
 //   2. Si no: la vez pasada completó todas las series llegando al tope de
 //      repeticiones → un poco más de peso. Si no llegó → el mismo peso.
 //   3. Si es la primera vez: el peso objetivo del profe.
+// "ejercicio" puede venir ya con lo de la semana (ejerciciosDeLaSemana).
 // Devuelve { kg, reps, motivo } (motivo = texto para mostrar, o '').
 export function sugerenciaParaHoy(ejercicio, rutina, seriesAnteriores, hoyISO) {
   const reps = separarReps(ejercicio.reps_objetivo)
@@ -56,7 +85,15 @@ export function sugerenciaParaHoy(ejercicio, rutina, seriesAnteriores, hoyISO) {
   const kgObjetivo = Number(ejercicio.kg_objetivo) || 0
   const ciclo = semanaDelCiclo(rutina, hoyISO)
 
-  if (ciclo && tieneProgresion(ejercicio)) {
+  if (ciclo && ejercicio.semanaDelPlan && kgObjetivo > 0) {
+    return {
+      kg: kgObjetivo,
+      reps: repsBase,
+      motivo: `Semana ${ciclo.semana} de ${ciclo.total} del ciclo`,
+    }
+  }
+
+  if (ciclo && !ejercicio.semanaDelPlan && tieneProgresion(ejercicio)) {
     const objetivo = objetivoDeLaSemana(ejercicio, ciclo.semana)
     return {
       kg: objetivo.kg,
@@ -91,8 +128,10 @@ export function sugerenciaParaHoy(ejercicio, rutina, seriesAnteriores, hoyISO) {
   return { kg: kgObjetivo, reps: repsBase, motivo: '' }
 }
 
-// Para "Empezar ciclo nuevo": cada ejercicio arranca desde el peso de la
-// última semana del ciclo que terminó (las repeticiones vuelven a la base).
+// Para "Empezar ciclo nuevo": cada ejercicio que sube de peso por semana
+// arranca desde el peso de la última semana del ciclo que terminó (las
+// repeticiones vuelven a la base). Los que tienen cada semana distinta
+// repiten su plan tal cual (el profe lo ajusta si quiere).
 // Devuelve la lista de ejercicios con el kg_objetivo actualizado.
 export function ejerciciosParaCicloNuevo(ejercicios, semanas) {
   return ejercicios.map((ejercicio) => {
