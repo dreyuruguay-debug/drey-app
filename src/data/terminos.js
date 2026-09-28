@@ -9,7 +9,7 @@ export const TERMINOS = {
   calentamiento: {
     titulo: 'Series de calentamiento',
     texto:
-      'Series más livianas antes de las series de trabajo, para preparar el músculo y la técnica. No se cuentan en tu progreso.',
+      'Series más livianas antes de las series de trabajo (aproximación), para preparar el músculo y la técnica. Se hacen y se marcan igual que las demás, con su propio descanso, pero no cuentan para tus récords ni tus gráficas.',
   },
   pausa: {
     titulo: 'Pausa entre ejercicios',

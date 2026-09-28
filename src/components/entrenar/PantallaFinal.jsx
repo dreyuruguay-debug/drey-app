@@ -7,8 +7,11 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // como una parte más), "¿Cómo te sentiste?" y el botón para guardar el
 // entrenamiento.
 //
-// resumen: { series, total, segundos, records, calentamiento } —
-// calentamiento es { hechas, total, completo } o null si no tenía.
+// resumen: { series, total, segundos, records, calentamiento,
+// seriesCalentamiento } — series/total son las efectivas;
+// calentamiento es el de la rutina ({ hechas, total, completo } o null)
+// y seriesCalentamiento las series de calentamiento de los ejercicios
+// ({ hechas, total }).
 //
 // pendienteDeEnvio: se guardó en el celular porque no había señal; se
 // envía solo cuando vuelva la conexión.
@@ -68,6 +71,11 @@ export default function PantallaFinal({
         <div>
           <strong>{resumen.series}</strong>
           <span>de {resumen.total} series</span>
+          {resumen.seriesCalentamiento?.total > 0 && (
+            <span className="final-cifra-calentamiento">
+              + {resumen.seriesCalentamiento.hechas} de calentamiento
+            </span>
+          )}
         </div>
         <div>
           <strong>{formatearReloj(resumen.segundos)}</strong>

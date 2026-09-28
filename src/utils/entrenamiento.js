@@ -1,49 +1,122 @@
 import { agruparEnBloques } from './bloques.js'
 import { segundosDeCalentamiento } from './calentamiento.js'
 import { descansosDeEjercicio, opcionesDeDescanso } from './formatos.js'
+import {
+  TIPO_CALENTAMIENTO,
+  TIPO_EFECTIVA,
+  descansoDeCalentamiento,
+  esSerieDeCalentamiento,
+  normalizarCalentamiento,
+} from './seriesCalentamiento.js'
 
 // Lógica del "modo entrenar" del alumno (de a un ejercicio por vez).
 // Nada de este archivo lee ni guarda en la base de datos: recibe datos y
 // devuelve resultados, así se puede probar solo.
+//
+// Las series de cada ejercicio van en una sola lista, cada una con su
+// tipo: primero las de calentamiento (aproximación, en amarillo) y
+// después las efectivas: [{ kg, reps, hecha, tipo }]. Se hacen igual
+// (peso y repeticiones editables, "hecha", descanso); lo que cambia es el
+// descanso (el de calentamiento que puso el profe) y que las de
+// calentamiento no cuentan para récords ni gráficas.
 
 const CANTIDAD_SERIES_POR_DEFECTO = 4
 const SEGUNDOS_POR_SERIE = 45
 
-// Series con las que arranca cada ejercicio: el peso sugerido para hoy
-// (ver utils/ciclos.js: semana del ciclo, o un poco más si la vez pasada
-// completó todo) o, si no hay sugerencia, el peso objetivo del profe; y
-// las repeticiones más bajas del rango ("8–12" → 8).
+// Series con las que arranca cada ejercicio:
+//   · Calentamiento: el peso y las repeticiones que puso el profe para
+//     cada una (si no puso reps, las más bajas del ejercicio).
+//   · Efectivas: el peso sugerido para hoy (ver utils/ciclos.js: semana
+//     del ciclo, o un poco más si la vez pasada completó todo) o, si no
+//     hay sugerencia, el peso objetivo del profe; y las repeticiones más
+//     bajas del rango ("8–12" → 8).
 export function crearSeriesIniciales(ejercicios, sugerencias = []) {
-  return ejercicios.map((ejercicio, indice) =>
-    Array.from({ length: ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO }, () => ({
-      kg: sugerencias[indice]?.kg ?? (Number(ejercicio.kg_objetivo) || 0),
-      reps: sugerencias[indice]?.reps || Number.parseInt(ejercicio.reps_objetivo, 10) || 0,
-      hecha: false,
-    })),
+  return ejercicios.map((ejercicio, indice) => {
+    const repsBase = Number.parseInt(ejercicio.reps_objetivo, 10) || 0
+    const calentamiento = (normalizarCalentamiento(ejercicio.calentamiento)?.series || []).map(
+      (serie) => ({
+        kg: serie.kg ?? 0,
+        reps: serie.reps ?? repsBase,
+        hecha: false,
+        tipo: TIPO_CALENTAMIENTO,
+      }),
+    )
+    const efectivas = Array.from(
+      { length: ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO },
+      () => ({
+        kg: sugerencias[indice]?.kg ?? (Number(ejercicio.kg_objetivo) || 0),
+        reps: sugerencias[indice]?.reps || repsBase,
+        hecha: false,
+        tipo: TIPO_EFECTIVA,
+      }),
+    )
+    return [...calentamiento, ...efectivas]
+  })
+}
+
+// "Calentamiento 2" o "Serie 3" (las efectivas se cuentan aparte), con
+// cuántas hay de ese tipo: { tipo, numero, total, calentamiento }.
+export function etiquetaDeSerie(seriesDelEjercicio = [], indice) {
+  const calentamiento = esSerieDeCalentamiento(seriesDelEjercicio[indice])
+  const delMismoTipo = seriesDelEjercicio.filter(
+    (serie) => esSerieDeCalentamiento(serie) === calentamiento,
   )
+  const antes = seriesDelEjercicio
+    .slice(0, indice)
+    .filter((serie) => esSerieDeCalentamiento(serie) === calentamiento).length
+  return {
+    calentamiento,
+    numero: antes + 1,
+    total: delMismoTipo.length,
+    texto: `${calentamiento ? 'Calentamiento' : 'Serie'} ${antes + 1}`,
+  }
 }
 
 // El orden real en que se hacen las series. En un bloque de un ejercicio
-// es serie 1, 2, 3... En una superserie se alterna: serie 1 del primero,
-// serie 1 del segundo (recién ahí se descansa), serie 2 del primero...
+// es calentamiento 1, 2... y después serie 1, 2, 3... En una superserie
+// primero van los calentamientos de cada ejercicio (en orden) y después
+// se alterna: serie 1 del primero, serie 1 del segundo (recién ahí se
+// descansa), serie 2 del primero...
 //
-// Devuelve [{ exIndex, serieIndex, bloque, finDeRonda, finDeBloque }]:
-//   finDeRonda: después de este turno se descansa.
+// Devuelve [{ exIndex, serieIndex, bloque, tipo, finDeRonda, finDeBloque }]:
+//   serieIndex: la posición en la lista de series del ejercicio.
+//   tipo: 'calentamiento' o 'efectiva'.
+//   finDeRonda: después de este turno se descansa (después de cada serie
+//               de calentamiento, siempre).
 //   finDeBloque: es la última serie del bloque (lo que sigue es otro bloque).
 export function construirTurnos(ejercicios) {
   const turnos = []
   agruparEnBloques(ejercicios).forEach((bloque, indiceBloque) => {
-    const cantidades = bloque.items.map(({ item }) => item.series || CANTIDAD_SERIES_POR_DEFECTO)
-    const rondas = Math.max(...cantidades)
-    for (let serie = 0; serie < rondas; serie++) {
-      const enEstaRonda = bloque.items.filter((_, posicion) => cantidades[posicion] > serie)
-      enEstaRonda.forEach(({ indice }, posicion) => {
+    const calentamientos = bloque.items.map(
+      ({ item }) => normalizarCalentamiento(item.calentamiento)?.series.length || 0,
+    )
+    bloque.items.forEach(({ indice }, posicion) => {
+      for (let serie = 0; serie < calentamientos[posicion]; serie++) {
         turnos.push({
           exIndex: indice,
           serieIndex: serie,
           bloque: indiceBloque,
-          finDeRonda: posicion === enEstaRonda.length - 1,
-          finDeBloque: serie === rondas - 1 && posicion === enEstaRonda.length - 1,
+          tipo: TIPO_CALENTAMIENTO,
+          finDeRonda: true,
+          finDeBloque: false,
+        })
+      }
+    })
+
+    const cantidades = bloque.items.map(({ item }) => item.series || CANTIDAD_SERIES_POR_DEFECTO)
+    const rondas = Math.max(...cantidades)
+    for (let serie = 0; serie < rondas; serie++) {
+      const enEstaRonda = bloque.items
+        .map((item, posicion) => ({ ...item, posicion }))
+        .filter(({ posicion }) => cantidades[posicion] > serie)
+      enEstaRonda.forEach(({ indice, posicion }, orden) => {
+        turnos.push({
+          exIndex: indice,
+          serieIndex: calentamientos[posicion] + serie,
+          bloque: indiceBloque,
+          tipo: TIPO_EFECTIVA,
+          finDeRonda: orden === enEstaRonda.length - 1,
+          finDeBloque: serie === rondas - 1 && orden === enEstaRonda.length - 1,
         })
       })
     }
@@ -56,19 +129,46 @@ export function turnoPendiente(turnos, series) {
   return turnos.find((turno) => !series[turno.exIndex]?.[turno.serieIndex]?.hecha) || null
 }
 
-// Cuántas series lleva hechas un ejercicio y si ya lo terminó.
+// Cuántas series efectivas lleva hechas un ejercicio, cuántas de
+// calentamiento y si ya lo terminó (todas, las dos clases).
 export function estadoDeEjercicio(seriesDelEjercicio = []) {
-  const hechas = seriesDelEjercicio.filter((serie) => serie.hecha).length
+  const cuenta = contarSeries([seriesDelEjercicio])
+  const todas = cuenta.total + cuenta.calentamientoTotal
+  const hechasTodas = cuenta.hechas + cuenta.calentamientoHechas
   return {
-    hechas,
-    total: seriesDelEjercicio.length,
-    completo: hechas === seriesDelEjercicio.length,
+    ...cuenta,
+    empezado: hechasTodas > 0,
+    completo: hechasTodas === todas,
   }
 }
 
-// Descanso (en segundos) después de un turno. Al terminar un bloque se
-// usa la pausa entre ejercicios de la rutina, si el profe la cargó.
+// Series de todo el entrenamiento: las efectivas (hechas, total) y, aparte,
+// las de calentamiento. Recibe la lista de series de cada ejercicio.
+export function contarSeries(seriesPorEjercicio = []) {
+  const cuenta = { hechas: 0, total: 0, calentamientoHechas: 0, calentamientoTotal: 0 }
+  for (const filas of seriesPorEjercicio) {
+    for (const serie of filas || []) {
+      if (esSerieDeCalentamiento(serie)) {
+        cuenta.calentamientoTotal++
+        if (serie.hecha) cuenta.calentamientoHechas++
+      } else {
+        cuenta.total++
+        if (serie.hecha) cuenta.hechas++
+      }
+    }
+  }
+  return cuenta
+}
+
+// Descanso (en segundos) después de un turno. Después de una serie de
+// calentamiento, el descanso de calentamiento del ejercicio. Al terminar
+// un bloque se usa la pausa entre ejercicios de la rutina, si el profe la
+// cargó.
 export function descansoDespuesDe(turno, ejercicios, rutina) {
+  if (turno.tipo === TIPO_CALENTAMIENTO) {
+    const segundos = descansoDeCalentamiento(ejercicios[turno.exIndex]?.calentamiento)
+    return { opciones: [segundos], segundos }
+  }
   if (turno.finDeBloque) {
     const pausa = opcionesDeDescanso(rutina?.pausa_min, rutina?.pausa_max)
     if (pausa.length) return { opciones: pausa, segundos: delMedio(pausa) }
@@ -106,6 +206,10 @@ export function estimarMinutos(rutina, ejercicios) {
     const opciones = descansosDeEjercicio(ejercicio)
     const series = ejercicio.series || CANTIDAD_SERIES_POR_DEFECTO
     segundos += series * (SEGUNDOS_POR_SERIE + delMedio(opciones))
+    const calentamiento = normalizarCalentamiento(ejercicio.calentamiento)
+    if (calentamiento) {
+      segundos += calentamiento.series.length * (SEGUNDOS_POR_SERIE + calentamiento.descanso)
+    }
   }
   segundos += segundosDeCalentamiento(rutina?.calentamiento)
   return Math.max(5, Math.round(segundos / 60 / 5) * 5)

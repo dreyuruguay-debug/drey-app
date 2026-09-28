@@ -23,12 +23,15 @@ import { obtenerMetodo } from '../data/metodos.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
 import {
   construirTurnos,
+  contarSeries,
   crearSeriesIniciales,
   descansoDespuesDe,
   estadoDeEjercicio,
+  etiquetaDeSerie,
   mejorSerieAnterior,
   turnoPendiente,
 } from '../utils/entrenamiento.js'
+import { TIPO_CALENTAMIENTO, esSerieDeCalentamiento } from '../utils/seriesCalentamiento.js'
 import {
   actividadCorriendo,
   completarActividad,
@@ -70,6 +73,11 @@ const VIBRACION_FIN_TIEMPO = [300, 150, 300]
 //      al terminar) y después pasa al ejercicio que sigue. En una
 //      superserie o circuito alterna los ejercicios y recién descansa al
 //      terminar la vuelta (ver construirTurnos en utils/entrenamiento.js).
+//      Si el ejercicio tiene series de calentamiento (aproximación), van
+//      primero, en amarillo, y se hacen igual que las efectivas pero con
+//      su propio descanso (utils/seriesCalentamiento.js). Se guardan en el
+//      entrenamiento aparte ("calentamiento"), así no cuentan para los
+//      récords ni las gráficas.
 //   3. Final: cómo le fue en el calentamiento, vuelta a la calma,
 //      "¿Cómo te sentiste?" y guardar.
 //
@@ -367,7 +375,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       // dos veces el mismo récord al volver de una pausa.
       lista.forEach((ejercicio, indice) => {
         for (const serie of enCurso.series[indice]) {
-          if (!serie.hecha) continue
+          if (!serie.hecha || esSerieDeCalentamiento(serie)) continue
           const actual = mejores[ejercicio.ejercicio_id] || { kg: 0, reps: 0 }
           mejores[ejercicio.ejercicio_id] = {
             kg: Math.max(actual.kg, Number(serie.kg) || 0),
@@ -471,24 +479,31 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       fin: Date.now() + segundos * 1000,
       total: segundos,
       opciones,
-      titulo: turno?.finDeBloque ? 'Cambio de ejercicio' : 'Descansá',
-      loQueSigue: textoDelTurno(siguiente),
+      titulo: tituloDelDescanso(turno),
+      calentamiento: turno?.tipo === TIPO_CALENTAMIENTO,
+      loQueSigue: textoDelTurno(siguiente, nuevas),
     })
   }
 
-  function textoDelTurno(turno) {
+  // "Sentadilla · Calentamiento 2 de 3" / "Sentadilla · Serie 1 de 4",
+  // con el peso y las repeticiones, para "Lo que sigue" en el descanso.
+  function textoDelTurno(turno, lista = series) {
     const ejercicio = ejercicios[turno.exIndex]
-    const serie = series[turno.exIndex]?.[turno.serieIndex]
-    const total = series[turno.exIndex]?.length || ejercicio.series
+    const filas = lista[turno.exIndex] || []
+    const serie = filas[turno.serieIndex]
+    const etiqueta = etiquetaDeSerie(filas, turno.serieIndex)
+    const reps = etiqueta.calentamiento ? serie?.reps : ejercicio.reps_objetivo || serie?.reps
     return {
-      titulo: `${ejercicio.ejercicios?.nombre || 'Ejercicio'} · Serie ${turno.serieIndex + 1} de ${total}`,
-      detalle: `${formatearNumero(Number(serie?.kg))} kg × ${ejercicio.reps_objetivo || serie?.reps} reps`,
+      titulo: `${ejercicio.ejercicios?.nombre || 'Ejercicio'} · ${etiqueta.texto} de ${etiqueta.total}`,
+      detalle: `${formatearNumero(Number(serie?.kg))} kg × ${reps} reps`,
+      calentamiento: etiqueta.calentamiento,
     }
   }
 
-  // Compara la serie recién marcada contra su mejor marca histórica.
+  // Compara la serie recién marcada contra su mejor marca histórica (las
+  // de calentamiento no cuentan).
   function revisarRecord(exIndex, serieIndex) {
-    if (modoPrevia) return
+    if (modoPrevia || esSerieDeCalentamiento(series[exIndex][serieIndex])) return
     const ejercicio = ejercicios[exIndex]
     const ejercicioId = ejercicio?.ejercicio_id
     if (!ejercicioId) return
@@ -619,12 +634,20 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   async function finalizar() {
     if (!usuarioId || modoPrevia) return
     setGuardando(true)
-    const detalle = ejercicios.map((ejercicio, exIndex) => ({
-      ejercicio_id: ejercicio.ejercicio_id,
-      nombre: ejercicio.ejercicios?.nombre || '',
-      metodo: ejercicio.metodo || 'normal',
-      series: series[exIndex].map((fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })),
-    }))
+    // Las series efectivas en "series" (de ahí salen los récords y las
+    // gráficas) y las de calentamiento aparte, en "calentamiento".
+    const detalle = ejercicios.map((ejercicio, exIndex) => {
+      const aGuardar = (fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })
+      const filas = series[exIndex]
+      const calentamiento = filas.filter(esSerieDeCalentamiento).map(aGuardar)
+      return {
+        ejercicio_id: ejercicio.ejercicio_id,
+        nombre: ejercicio.ejercicios?.nombre || '',
+        metodo: ejercicio.metodo || 'normal',
+        series: filas.filter((fila) => !esSerieDeCalentamiento(fila)).map(aGuardar),
+        ...(calentamiento.length ? { calentamiento } : {}),
+      }
+    })
     const resultado = await guardarEntrenamiento(
       nuevaFilaDeEntrenamiento({
         cliente_id: usuarioId,
@@ -701,11 +724,10 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     )
   }
 
-  const totalSeries = series.reduce((total, filas) => total + filas.length, 0)
-  const seriesHechas = series.reduce(
-    (total, filas) => total + filas.filter((serie) => serie.hecha).length,
-    0,
-  )
+  // Series efectivas (las de calentamiento se cuentan aparte).
+  const cuentaSeries = contarSeries(series)
+  const totalSeries = cuentaSeries.total
+  const seriesHechas = cuentaSeries.hechas
 
   if (fase !== 'entrenando') {
     return (
@@ -719,6 +741,10 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             segundos: segundosDeReloj(reloj, Date.now()),
             records,
             calentamiento: resumenDeCalentamiento(calentamiento),
+            seriesCalentamiento: {
+              hechas: cuentaSeries.calentamientoHechas,
+              total: cuentaSeries.calentamientoTotal,
+            },
           }}
           esfuerzo={esfuerzo}
           comentario={comentario}
@@ -810,7 +836,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
               key={indice}
               className={claseDeTramo(
                 estado.completo,
-                estado.hechas > 0,
+                estado.empezado,
                 indice === visible && !enCalentamiento,
               )}
             />
@@ -911,6 +937,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           total={descanso.total}
           opciones={descanso.opciones}
           titulo={descanso.titulo}
+          calentamiento={descanso.calentamiento}
           loQueSigue={descanso.loQueSigue}
           aviso={aviso?.tipo === 'record' ? aviso.texto : null}
           onElegir={(segundos) =>
@@ -973,10 +1000,23 @@ function huella({ rutina, ejercicios }, sesiones) {
 
 // true si el progreso guardado corresponde a esta misma rutina (mismos
 // ejercicios y series); si el profe la cambió, se arranca de cero.
+// (Mismas series de calentamiento y efectivas en cada ejercicio.)
 function mismaForma(guardadas, iniciales) {
   return (
     Array.isArray(guardadas) &&
     guardadas.length === iniciales.length &&
-    guardadas.every((filas, i) => filas?.length === iniciales[i].length)
+    guardadas.every(
+      (filas, i) =>
+        filas?.length === iniciales[i].length &&
+        filas.every(
+          (serie, j) => esSerieDeCalentamiento(serie) === esSerieDeCalentamiento(iniciales[i][j]),
+        ),
+    )
   )
+}
+
+// Título de la pantalla de descanso según la serie que terminó.
+function tituloDelDescanso(turno) {
+  if (turno?.tipo === TIPO_CALENTAMIENTO) return 'Descanso de calentamiento'
+  return turno?.finDeBloque ? 'Cambio de ejercicio' : 'Descansá'
 }

@@ -1,5 +1,6 @@
 import { clavesConPrefijo, leerJSON } from './almacenLocal.js'
 import { actividadCorriendo, empezarActividad, pausarActividad } from './calentamiento.js'
+import { contarSeries } from './entrenamiento.js'
 import {
   pausarReloj,
   reanudarReloj,
@@ -92,15 +93,16 @@ export function reanudarEnCurso(datos, ahora) {
 }
 
 // Lo que se muestra de un entrenamiento a medias: si está en pausa, si
-// solo le falta guardarlo, cuánto tiempo lleva y cuántas series hizo.
+// solo le falta guardarlo, cuánto tiempo lleva y cuántas series
+// efectivas hizo (las de calentamiento no se cuentan acá).
 export function resumenEnCurso(datos, ahora = Date.now()) {
-  const series = datos?.series || []
   const reloj = relojDeEnCurso(datos, ahora)
+  const cuenta = contarSeries(datos?.series || [])
   return {
     pausado: Boolean(datos?.pausa) || !relojCorriendo(reloj),
     faltaGuardar: datos?.fase === 'final',
     segundos: segundosDeReloj(reloj, ahora),
-    seriesHechas: series.reduce((total, filas) => total + filas.filter((s) => s.hecha).length, 0),
-    seriesTotales: series.reduce((total, filas) => total + filas.length, 0),
+    seriesHechas: cuenta.hechas,
+    seriesTotales: cuenta.total,
   }
 }

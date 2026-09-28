@@ -71,7 +71,7 @@ export default function VistaGeneral({
                     className={
                       estado.completo
                         ? 'entrenar-check'
-                        : estado.hechas
+                        : estado.empezado
                           ? 'entrenar-check entrenar-check-parcial'
                           : 'entrenar-check entrenar-check-vacio'
                     }
@@ -83,6 +83,12 @@ export default function VistaGeneral({
                     <small>
                       {item.series} × {item.reps_objetivo || '—'}
                       {item.kg_objetivo ? ` · ${item.kg_objetivo} kg` : ''}
+                      {estado.calentamientoTotal > 0 && (
+                        <span className="vista-general-calentamiento-series">
+                          {' · '}
+                          {estado.calentamientoHechas}/{estado.calentamientoTotal} de calentamiento
+                        </span>
+                      )}
                     </small>
                   </span>
                   <span className="vista-general-ejercicio-estado">

@@ -88,6 +88,30 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
 - En el editor del profe, debajo de cada duración se ve qué reloj verá
   el alumno (`EditorActividades.jsx`, `conReloj` en `data/actividades.js`).
 
+## Series de calentamiento (aproximación) de cada ejercicio
+
+- Distinto del calentamiento general de la rutina: son series más
+  livianas del mismo ejercicio, antes de las efectivas. El profe carga
+  cada una (reps y kg) y un "Descanso de calentamiento" propio
+  (`components/AsistenteBloque.jsx`, paso "Configurar").
+- Se guardan en `rutina_ejercicios.calentamiento` (jsonb, sin cambios en
+  la base) como `{ series: [{ reps, kg }], descanso }`. Lo viejo
+  (`{ series: 2, detalle: "2 × 10 con 30 kg" }`) se convierte solo; si el
+  texto no se entiende, se muestra tal cual. Todo en
+  `utils/seriesCalentamiento.js`.
+- En el modo entrenar son series reales, en amarillo, antes de las
+  efectivas (verde): peso y repeticiones editables, "✓ Calentamiento
+  hecho", "ahora" y su propio descanso (pantalla de descanso amarilla).
+  Cada serie tiene su tipo (`tipo: 'calentamiento' | 'efectiva'`), mismo
+  componente (`PantallaEjercicio.jsx`); el orden y los descansos salen de
+  `construirTurnos` y `descansoDespuesDe` (`utils/entrenamiento.js`). En
+  una superserie, primero los calentamientos de cada ejercicio.
+- Al guardar el entrenamiento, las de calentamiento van aparte
+  (`detalle[].calentamiento`), así no cuentan para récords, gráficas,
+  "La vez pasada" ni el peso sugerido.
+- Después de cada serie la pantalla baja sola hasta la que sigue, así el
+  botón queda a la vista.
+
 ## Tiempo y pausa del entrenamiento
 
 - El tiempo de arriba a la derecha arranca cuando el alumno empieza (el

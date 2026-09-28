@@ -19,6 +19,9 @@
   --drey-azul: #7cb8ff;
   --drey-azul-fondo: #1c2d42;
   --drey-verde-fondo: #10261a;
+  /* Series de calentamiento (aproximación) de cada ejercicio */
+  --drey-amarillo: #f5d547;
+  --drey-amarillo-fondo: #2c2710;
   --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --fuente-texto: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -2204,7 +2207,7 @@ a.profe-boton-agregar-ejercicio {
 .ejercicio-calentamiento {
   margin: -0.25rem 0 0.5rem;
   font-size: 0.8rem;
-  color: #e0b656;
+  color: var(--drey-amarillo);
 }
 
 .bloque-descanso {
@@ -3515,17 +3518,10 @@ div.tarjeta-rutina {
   font-weight: 600;
 }
 
-.entrenar-rpe,
-.entrenar-calentamiento {
+.entrenar-rpe {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-}
-
-.entrenar-calentamiento {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #e0b656;
 }
 
 .entrenar-anterior {
@@ -5516,4 +5512,112 @@ div.tarjeta-rutina {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+}
+
+/* ---------- Series de calentamiento (aproximación) ----------
+   Mismo componente que las series efectivas (PantallaEjercicio.jsx),
+   pero en amarillo: 🟡 calentamiento · 🟢 efectiva. El texto sigue
+   blanco para que se lea bien. */
+.entrenar-series-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-series-titulo-calentamiento {
+  margin-top: 0;
+  color: var(--drey-amarillo);
+}
+
+.entrenar-series-nota {
+  flex-basis: 100%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--drey-white);
+}
+
+/* Pendiente: una línea amarilla a la izquierda la identifica. */
+.entrenar-serie-calentamiento {
+  box-shadow: inset 4px 0 0 var(--drey-amarillo);
+}
+
+.entrenar-serie-actual.entrenar-serie-calentamiento {
+  border-color: var(--drey-amarillo);
+  box-shadow: none;
+}
+
+.entrenar-serie-hecha.entrenar-serie-calentamiento {
+  background: var(--drey-amarillo-fondo);
+  color: #f3eac2;
+}
+
+.entrenar-serie-calentamiento .entrenar-check:not(.entrenar-check-vacio) {
+  background: var(--drey-amarillo);
+}
+
+.boton-calentamiento {
+  background: var(--drey-amarillo);
+  color: var(--drey-black);
+}
+
+/* Descanso después de una serie de calentamiento */
+.etiqueta-serie-calentamiento {
+  color: var(--drey-amarillo);
+}
+
+.reloj-circular-serie-calentamiento .reloj-circular-avance {
+  stroke: var(--drey-amarillo);
+}
+
+.descanso-sigue-calentamiento {
+  border-left: 4px solid var(--drey-amarillo);
+}
+
+/* Final: series de calentamiento hechas */
+.final-cifras .final-cifra-calentamiento {
+  color: var(--drey-amarillo);
+}
+
+/* Vista general: cuántas de calentamiento lleva */
+.vista-general-calentamiento-series {
+  color: var(--drey-amarillo);
+}
+
+/* Editor del profe: series de calentamiento */
+.config-calentamiento-series {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--drey-amarillo);
+}
+
+.config-calentamiento-fila {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.config-calentamiento-numero {
+  min-width: 1.5rem;
+  padding-bottom: 0.6rem;
+  font-weight: 800;
+  color: var(--drey-amarillo);
+}
+
+.config-calentamiento-nota {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
 }

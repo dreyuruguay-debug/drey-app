@@ -5,6 +5,11 @@ import {
   esMetodoDeBloque,
 } from '../data/metodos.js'
 import { textoReps, separarReps, opcionesDeDescanso, DESCANSOS_POR_DEFECTO } from './formatos.js'
+import {
+  DESCANSO_CALENTAMIENTO_POR_DEFECTO,
+  borradorACalentamiento,
+  calentamientoABorrador,
+} from './seriesCalentamiento.js'
 
 // Todo lo que tiene que ver con los "bloques" de una rutina: un bloque es
 // un ejercicio único, una superserie, una triserie, un circuito...
@@ -122,8 +127,12 @@ export function cambiosEntre(antes, despues, campos) {
 // {
 //   metodo, config, grupo, descansoMin, descansoMax,
 //   ejercicios: [{ id, ejercicio, series, repsDesde, repsHasta, kg, rpe,
-//                  calentamiento, calentamientoSeries, calentamientoDetalle }]
+//                  calentamiento, calentamientoSeries, calentamientoDescanso,
+//                  calentamientoNota }]
 // }
+// calentamiento: sí/no. calentamientoSeries: [{ reps, kg }] (una por
+// serie de calentamiento). calentamientoDescanso: segundos. Ver
+// utils/seriesCalentamiento.js.
 // "ejercicio" es el ejercicio de la biblioteca ({ id, nombre, ... }) y
 // "id" es la fila de la rutina (vacío si todavía no está guardado).
 
@@ -134,8 +143,9 @@ export const VALORES_INICIALES_EJERCICIO = {
   kg: '',
   rpe: '',
   calentamiento: false,
-  calentamientoSeries: 2,
-  calentamientoDetalle: '',
+  calentamientoSeries: [],
+  calentamientoDescanso: DESCANSO_CALENTAMIENTO_POR_DEFECTO,
+  calentamientoNota: '',
   progresionKg: '',
   progresionReps: '',
 }
@@ -154,7 +164,13 @@ export function borradorNuevo(metodo = 'normal', descanso = {}) {
 // "valores" permite arrancar con los últimos números que usó el profe
 // (series, repeticiones) en vez de los de fábrica.
 export function ejercicioParaBorrador(ejercicio, valores = {}) {
-  return { id: undefined, ejercicio, ...VALORES_INICIALES_EJERCICIO, ...valores }
+  return {
+    id: undefined,
+    ejercicio,
+    ...VALORES_INICIALES_EJERCICIO,
+    calentamientoSeries: [],
+    ...valores,
+  }
 }
 
 // Bloque ya guardado → borrador (para editarlo en el asistente).
@@ -179,10 +195,7 @@ export function bloqueABorrador(bloque) {
         repsHasta: reps.hasta,
         kg: fila.kg_objetivo ?? '',
         rpe: fila.rpe ?? '',
-        calentamiento: Boolean(fila.calentamiento?.series),
-        calentamientoSeries:
-          fila.calentamiento?.series || VALORES_INICIALES_EJERCICIO.calentamientoSeries,
-        calentamientoDetalle: fila.calentamiento?.detalle || '',
+        ...calentamientoABorrador(fila.calentamiento),
         progresionKg: fila.progresion?.kg ?? '',
         progresionReps: fila.progresion?.reps ?? '',
       }
@@ -215,6 +228,18 @@ export function validarBorrador(borrador) {
     if (!(Number(item.series) >= 1)) return `Poné cuántas series lleva ${item.ejercicio.nombre}.`
     if (!textoReps(item.repsDesde, item.repsHasta)) {
       return `Poné las repeticiones de ${item.ejercicio.nombre}.`
+    }
+    if (item.calentamiento) {
+      const series = item.calentamientoSeries || []
+      if (!series.length) {
+        return `Agregá al menos una serie de calentamiento a ${item.ejercicio.nombre} (o elegí "No").`
+      }
+      if (series.some((serie) => !(Number(serie.reps) >= 1))) {
+        return `Poné las repeticiones de cada serie de calentamiento de ${item.ejercicio.nombre}.`
+      }
+      if (!(Number(item.calentamientoDescanso) >= 0)) {
+        return `Poné el descanso de calentamiento de ${item.ejercicio.nombre} (en segundos).`
+      }
     }
   }
   const min = numeroONull(borrador.descansoMin)
@@ -259,12 +284,7 @@ export function borradorAFilas(borrador) {
       descansos: descansos.length ? descansos : DESCANSOS_POR_DEFECTO,
       descanso_min: descansoMin,
       descanso_max: descansoMax,
-      calentamiento: item.calentamiento
-        ? {
-            series: Math.max(1, Number.parseInt(item.calentamientoSeries, 10) || 1),
-            detalle: item.calentamientoDetalle.trim() || null,
-          }
-        : null,
+      calentamiento: borradorACalentamiento(item),
       progresion: progresionDe(item),
       metodo: borrador.metodo,
       grupo,

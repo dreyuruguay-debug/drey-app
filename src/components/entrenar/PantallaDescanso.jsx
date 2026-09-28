@@ -5,11 +5,14 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // para sumar tiempo o seguir antes, y qué viene después. Si el profe dio
 // un rango (60–90 s), se puede elegir otro valor con los chips.
 // "aviso": un récord recién hecho, para festejarlo mientras descansa.
+// calentamiento: es el descanso después de una serie de calentamiento
+// (el que puso el profe para el calentamiento): se ve en amarillo.
 export default function PantallaDescanso({
   restante,
   total,
   opciones,
   titulo,
+  calentamiento = false,
   loQueSigue,
   aviso,
   onElegir,
@@ -23,9 +26,16 @@ export default function PantallaDescanso({
           {aviso}
         </p>
       )}
-      <span className="entrenar-etiqueta">{titulo}</span>
+      <span
+        className={
+          calentamiento ? 'entrenar-etiqueta etiqueta-serie-calentamiento' : 'entrenar-etiqueta'
+        }
+      >
+        {titulo}
+      </span>
 
       <RelojCircular
+        variante={calentamiento ? 'serie-calentamiento' : undefined}
         proporcion={total > 0 ? restante / total : 0}
         valor={formatearReloj(restante)}
         detalle={`de ${formatearReloj(total)}`}
@@ -56,7 +66,13 @@ export default function PantallaDescanso({
       </div>
 
       {loQueSigue && (
-        <div className="entrenar-tarjeta descanso-sigue">
+        <div
+          className={
+            loQueSigue.calentamiento
+              ? 'entrenar-tarjeta descanso-sigue descanso-sigue-calentamiento'
+              : 'entrenar-tarjeta descanso-sigue'
+          }
+        >
           <span className="entrenar-etiqueta-chica">Lo que sigue</span>
           <strong>{loQueSigue.titulo}</strong>
           {loQueSigue.detalle && <span>{loQueSigue.detalle}</span>}

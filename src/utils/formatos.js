@@ -67,13 +67,6 @@ export function textoDescanso(item) {
   return lista.length ? textoRango(lista[0], lista[lista.length - 1]) : ''
 }
 
-// "Calentamiento: 2 series · 2 × 10 con 40 kg" o '' si no tiene.
-export function textoCalentamiento(calentamiento) {
-  if (!calentamiento?.series) return ''
-  const series = calentamiento.series === 1 ? '1 serie' : `${calentamiento.series} series`
-  return calentamiento.detalle ? `${series} · ${calentamiento.detalle}` : series
-}
-
 function numeroOVacio(valor) {
   if (valor === null || valor === undefined || valor === '') return ''
   const numero = Number(valor)

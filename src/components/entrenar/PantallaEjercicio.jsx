@@ -1,18 +1,32 @@
+import { useEffect, useRef } from 'react'
 import InfoMetodo from '../InfoMetodo.jsx'
 import Ayuda from '../Ayuda.jsx'
 import { nombreCortoDeMetodo } from '../../data/metodos.js'
 import { TERMINOS } from '../../data/terminos.js'
-import { textoCalentamiento } from '../../utils/formatos.js'
 import { formatearNumero } from '../../utils/progreso.js'
 import { linkVideoSeguro } from '../../utils/linkVideo.js'
+import { etiquetaDeSerie } from '../../utils/entrenamiento.js'
+import { esSerieDeCalentamiento, normalizarCalentamiento } from '../../utils/seriesCalentamiento.js'
 
 const PASO_KG = 2.5
 const PASO_REPS = 1
+// Lo que tapan la barra de arriba y la de abajo (para saber si la serie
+// que toca se ve entera).
+const MARGEN_ARRIBA_PX = 80
+const MARGEN_ABAJO_PX = 110
 
 // Un ejercicio del modo entrenar: foto o video, qué hay que hacer, la
 // vez pasada y la lista de series. La serie que toca está abierta, con
 // los botones grandes para ajustar kilos y repeticiones y "Serie hecha".
 // Las series hechas se pueden tocar para corregirlas.
+//
+// Si tiene series de calentamiento (aproximación), van primero y son
+// iguales a las efectivas (mismo componente), pero en amarillo y con
+// "✓ Calentamiento hecho". Hasta no hacerlas no se abre la serie 1.
+//
+// Cuando cambia la serie que toca (al marcar una), la pantalla baja sola
+// hasta ella si quedó tapada, así el botón siempre está a la vista (al
+// entrar al ejercicio no se mueve: primero se ve la foto).
 export default function PantallaEjercicio({
   ejercicio,
   bloque,
@@ -23,10 +37,23 @@ export default function PantallaEjercicio({
   onMarcar,
 }) {
   const actual = series.findIndex((serie) => !serie.hecha)
+  const serieActual = useRef(null)
+  const actualAnterior = useRef(actual)
+  useEffect(() => {
+    if (actualAnterior.current === actual) return
+    actualAnterior.current = actual
+    const tarjeta = serieActual.current
+    if (!tarjeta) return
+    const { top, bottom } = tarjeta.getBoundingClientRect()
+    if (top < MARGEN_ARRIBA_PX || bottom > window.innerHeight - MARGEN_ABAJO_PX) {
+      tarjeta.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [actual])
   const datos = ejercicio.ejercicios || {}
   // Solo links https:// (utils/linkVideo.js): uno viejo de otro tipo no se muestra.
   const linkVideo = linkVideoSeguro(datos.video_url)
-  const calentamiento = textoCalentamiento(ejercicio.calentamiento)
+  const notaCalentamiento = normalizarCalentamiento(ejercicio.calentamiento)?.nota
+  const conCalentamiento = series.some(esSerieDeCalentamiento)
   const esGrupo = bloque.cantidad > 1
 
   return (
@@ -72,12 +99,6 @@ export default function PantallaEjercicio({
             </>
           )}
         </p>
-        {calentamiento && (
-          <p className="entrenar-calentamiento">
-            Antes: {calentamiento}
-            <Ayuda titulo={TERMINOS.calentamiento.titulo} texto={TERMINOS.calentamiento.texto} />
-          </p>
-        )}
         {sugerencia?.motivo && (
           <p className="entrenar-sugerencia">
             💡 Hoy: {formatearNumero(Number(sugerencia.kg))} kg · {sugerencia.motivo}
@@ -92,58 +113,36 @@ export default function PantallaEjercicio({
 
       <ol className="entrenar-series">
         {series.map((serie, indice) => {
-          if (indice === actual) {
-            return (
-              <li key={indice} className="entrenar-serie entrenar-serie-actual">
-                <span className="entrenar-serie-titulo">Serie {indice + 1} · ahora</span>
-                <div className="entrenar-steppers">
-                  <Stepper
-                    valor={formatearNumero(Number(serie.kg))}
-                    unidad="kg"
-                    onRestar={() => onAjustar(indice, 'kg', -PASO_KG)}
-                    onSumar={() => onAjustar(indice, 'kg', PASO_KG)}
-                    etiqueta="kilos"
-                  />
-                  <Stepper
-                    valor={serie.reps}
-                    unidad="reps"
-                    onRestar={() => onAjustar(indice, 'reps', -PASO_REPS)}
-                    onSumar={() => onAjustar(indice, 'reps', PASO_REPS)}
-                    etiqueta="repeticiones"
-                  />
-                </div>
-                <button type="button" className="boton-principal" onClick={() => onMarcar(indice)}>
-                  ✓ Serie hecha
-                </button>
-              </li>
-            )
-          }
+          const etiqueta = etiquetaDeSerie(series, indice)
+          const primeraDeSuTipo = etiqueta.numero === 1 && conCalentamiento
           return (
-            <li key={indice}>
-              <button
-                type="button"
-                className={serie.hecha ? 'entrenar-serie entrenar-serie-hecha' : 'entrenar-serie'}
-                onClick={serie.hecha ? () => onMarcar(indice) : undefined}
-                disabled={!serie.hecha}
-                aria-label={
-                  serie.hecha
-                    ? `Serie ${indice + 1} hecha: ${serie.kg} kg por ${serie.reps}. Tocá para corregirla`
-                    : `Serie ${indice + 1}, pendiente`
-                }
-              >
-                <span
-                  className={serie.hecha ? 'entrenar-check' : 'entrenar-check entrenar-check-vacio'}
-                >
-                  {serie.hecha ? '✓' : ''}
-                </span>
-                <span className="entrenar-serie-nombre">Serie {indice + 1}</span>
-                <span className="entrenar-serie-valor">
-                  {serie.hecha
-                    ? `${formatearNumero(Number(serie.kg))} kg × ${serie.reps}`
-                    : `${formatearNumero(Number(serie.kg))} kg × ${ejercicio.reps_objetivo || serie.reps}`}
-                </span>
-              </button>
-            </li>
+            <FilaSerie
+              key={indice}
+              serie={serie}
+              etiqueta={etiqueta}
+              encabezado={
+                primeraDeSuTipo &&
+                (etiqueta.calentamiento ? (
+                  <li className="entrenar-series-titulo entrenar-series-titulo-calentamiento">
+                    Calentamiento · aproximación
+                    <Ayuda
+                      titulo={TERMINOS.calentamiento.titulo}
+                      texto={TERMINOS.calentamiento.texto}
+                    />
+                    {notaCalentamiento && (
+                      <small className="entrenar-series-nota">Tu profe: {notaCalentamiento}</small>
+                    )}
+                  </li>
+                ) : (
+                  <li className="entrenar-series-titulo">Series efectivas</li>
+                ))
+              }
+              actual={indice === actual}
+              refActual={indice === actual ? serieActual : undefined}
+              repsObjetivo={ejercicio.reps_objetivo}
+              onAjustar={(campo, delta) => onAjustar(indice, campo, delta)}
+              onMarcar={() => onMarcar(indice)}
+            />
           )
         })}
       </ol>
@@ -153,6 +152,92 @@ export default function PantallaEjercicio({
         </p>
       )}
     </div>
+  )
+}
+
+// Una serie de la lista (de calentamiento o efectiva: el mismo componente,
+// cambia el color). La que toca ahora está abierta con los botones para
+// ajustar kilos y repeticiones; las hechas se pueden tocar para
+// corregirlas; las que faltan esperan su turno.
+function FilaSerie({
+  serie,
+  etiqueta,
+  encabezado,
+  actual,
+  refActual,
+  repsObjetivo,
+  onAjustar,
+  onMarcar,
+}) {
+  const tipo = etiqueta.calentamiento ? ' entrenar-serie-calentamiento' : ''
+  const kg = formatearNumero(Number(serie.kg))
+  // En las de calentamiento se muestran sus repeticiones; en las
+  // efectivas, el objetivo del profe mientras no se hacen.
+  const repsPendiente = etiqueta.calentamiento ? serie.reps : repsObjetivo || serie.reps
+
+  if (actual) {
+    return (
+      <>
+        {encabezado}
+        <li ref={refActual} className={`entrenar-serie entrenar-serie-actual${tipo}`}>
+          <span className="entrenar-serie-titulo">{etiqueta.texto} · ahora</span>
+          <div className="entrenar-steppers">
+            <Stepper
+              valor={kg}
+              unidad="kg"
+              onRestar={() => onAjustar('kg', -PASO_KG)}
+              onSumar={() => onAjustar('kg', PASO_KG)}
+              etiqueta="kilos"
+            />
+            <Stepper
+              valor={serie.reps}
+              unidad="reps"
+              onRestar={() => onAjustar('reps', -PASO_REPS)}
+              onSumar={() => onAjustar('reps', PASO_REPS)}
+              etiqueta="repeticiones"
+            />
+          </div>
+          <button
+            type="button"
+            className={
+              etiqueta.calentamiento ? 'boton-principal boton-calentamiento' : 'boton-principal'
+            }
+            onClick={onMarcar}
+          >
+            {etiqueta.calentamiento ? '✓ Calentamiento hecho' : '✓ Serie hecha'}
+          </button>
+        </li>
+      </>
+    )
+  }
+
+  return (
+    <>
+      {encabezado}
+      <li>
+        <button
+          type="button"
+          className={
+            serie.hecha ? `entrenar-serie entrenar-serie-hecha${tipo}` : `entrenar-serie${tipo}`
+          }
+          onClick={serie.hecha ? onMarcar : undefined}
+          disabled={!serie.hecha}
+          aria-label={
+            serie.hecha
+              ? `${etiqueta.texto} hecha: ${serie.kg} kg por ${serie.reps}. Tocá para corregirla`
+              : `${etiqueta.texto}, pendiente`
+          }
+        >
+          <span className={serie.hecha ? 'entrenar-check' : 'entrenar-check entrenar-check-vacio'}>
+            {serie.hecha ? '✓' : ''}
+          </span>
+          <span className="entrenar-serie-nombre">{etiqueta.texto}</span>
+          <span className="entrenar-serie-valor">
+            {kg} kg × {serie.hecha ? serie.reps : repsPendiente}
+          </span>
+        </button>
+      </li>
+    </>
   )
 }
 

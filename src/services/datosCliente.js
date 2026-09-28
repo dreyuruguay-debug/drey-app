@@ -16,7 +16,10 @@ import { traerTodasLasFilas } from './paginado.js'
 // la muestran enseguida y actualizan cuando llega lo del servidor: así
 // cambiar de pantalla no deja al alumno mirando "Cargando…".
 
-const CAMPOS_EJERCICIO_RESUMEN = 'rutina_id, series, descansos, descanso_min, descanso_max'
+// (calentamiento: las series de calentamiento de cada ejercicio, que
+// también suman tiempo.)
+const CAMPOS_EJERCICIO_RESUMEN =
+  'rutina_id, series, descansos, descanso_min, descanso_max, calentamiento'
 const PRECARGA_CADA_MS = 10 * 60 * 1000
 
 // --- Inicio ---

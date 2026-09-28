@@ -6,6 +6,7 @@ import {
   nombreCortoDeMetodo,
 } from '../data/metodos.js'
 import { borradorNuevo, ejercicioParaBorrador, validarBorrador } from '../utils/bloques.js'
+import { nuevaSerieDeCalentamiento } from '../utils/seriesCalentamiento.js'
 import { guardarUltimosValores, leerUltimosValores } from '../utils/ultimosValores.js'
 import PasosAsistente from './PasosAsistente.jsx'
 import SelectorEjercicios from './SelectorEjercicios.jsx'
@@ -25,8 +26,9 @@ const OTROS_METODOS = METODOS.filter((metodo) => !metodo.principal)
 //      circuito u otros métodos.
 //   2. Ejercicios: se eligen de la biblioteca (primero los recomendados
 //      para los grupos musculares de la rutina).
-//   3. Configurar: series, repeticiones, calentamiento, peso objetivo y
-//      descanso (como rango).
+//   3. Configurar: series, repeticiones, peso objetivo, series de
+//      calentamiento (cada una con sus reps y kg, y su propio descanso) y
+//      descanso de las series efectivas (como rango).
 //
 // borradorInicial: null para un bloque nuevo, o el borrador de un bloque
 // ya guardado (arranca directo en "Configurar", con "← Atrás" para
@@ -305,7 +307,9 @@ export default function AsistenteBloque({
 
             <div className="config-bloque">
               <EditorRango
-                etiqueta={esGrupo ? 'Descanso al terminar el bloque' : 'Descanso entre series'}
+                etiqueta={
+                  esGrupo ? 'Descanso al terminar el bloque' : 'Descanso entre series efectivas'
+                }
                 minimo={borrador.descansoMin}
                 maximo={borrador.descansoMax}
                 onCambiar={(min, max) =>
@@ -372,7 +376,7 @@ function TarjetaTipo({ metodo, activo, onElegir }) {
 }
 
 // Casilleros de un ejercicio del bloque: series, repeticiones (una
-// cantidad o un rango), peso objetivo, RPE y calentamiento.
+// cantidad o un rango), peso objetivo, RPE y series de calentamiento.
 function ConfigEjercicio({ item, numero, mostrarKgObjetivo, conCiclo, onCambiar }) {
   return (
     <div className="config-ejercicio">
@@ -481,52 +485,127 @@ function ConfigEjercicio({ item, numero, mostrarKgObjetivo, conCiclo, onCambiar 
         </div>
       )}
 
-      <div className="config-calentamiento">
-        <span className="editor-rango-etiqueta">Series de calentamiento</span>
-        <div className="chips-lista">
-          <button
-            type="button"
-            className={item.calentamiento ? 'chip' : 'chip chip-activo'}
-            onClick={() => onCambiar('calentamiento', false)}
-            aria-pressed={!item.calentamiento}
-          >
-            No
-          </button>
-          <button
-            type="button"
-            className={item.calentamiento ? 'chip chip-activo' : 'chip'}
-            onClick={() => onCambiar('calentamiento', true)}
-            aria-pressed={item.calentamiento}
-          >
-            Sí
-          </button>
-        </div>
-        {item.calentamiento && (
-          <div className="editor-campos">
-            <label className="editor-campo">
-              <span>Cantidad</span>
-              <input
-                className="profe-input-tabla"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                value={item.calentamientoSeries}
-                onChange={(event) => onCambiar('calentamientoSeries', event.target.value)}
-              />
-            </label>
-            <label className="editor-campo editor-campo-ancho">
-              <span>Detalle (opcional)</span>
-              <input
-                className="profe-input-tabla config-input-detalle"
-                type="text"
-                placeholder="Ej: 1 × 12 con 40 kg, 1 × 8 con 60 kg"
-                value={item.calentamientoDetalle}
-                onChange={(event) => onCambiar('calentamientoDetalle', event.target.value)}
-              />
-            </label>
-          </div>
-        )}
+      <ConfigCalentamiento item={item} mostrarKg={mostrarKgObjetivo} onCambiar={onCambiar} />
+    </div>
+  )
+}
+
+// Series de calentamiento (aproximación) de un ejercicio: una fila por
+// serie, con sus repeticiones y su peso, y el descanso de calentamiento
+// (aparte del descanso de las series efectivas). El alumno las hace
+// antes de las efectivas, en amarillo.
+function ConfigCalentamiento({ item, mostrarKg, onCambiar }) {
+  const series = item.calentamientoSeries || []
+
+  function activar(activo) {
+    onCambiar('calentamiento', activo)
+    if (activo && !series.length) {
+      onCambiar('calentamientoSeries', [nuevaSerieDeCalentamiento([], item.kg)])
+    }
+  }
+
+  function cambiarSerie(indice, campo, valor) {
+    onCambiar(
+      'calentamientoSeries',
+      series.map((serie, i) => (i === indice ? { ...serie, [campo]: valor } : serie)),
+    )
+  }
+
+  function agregarSerie() {
+    onCambiar('calentamientoSeries', [...series, nuevaSerieDeCalentamiento(series, item.kg)])
+  }
+
+  function quitarSerie(indice) {
+    const quedan = series.filter((_, i) => i !== indice)
+    onCambiar('calentamientoSeries', quedan)
+    if (!quedan.length) onCambiar('calentamiento', false)
+  }
+
+  return (
+    <div className="config-calentamiento">
+      <span className="editor-rango-etiqueta">Series de calentamiento (aproximación)</span>
+      <div className="chips-lista">
+        <button
+          type="button"
+          className={item.calentamiento ? 'chip' : 'chip chip-activo'}
+          onClick={() => activar(false)}
+          aria-pressed={!item.calentamiento}
+        >
+          No
+        </button>
+        <button
+          type="button"
+          className={item.calentamiento ? 'chip chip-activo' : 'chip'}
+          onClick={() => activar(true)}
+          aria-pressed={item.calentamiento}
+        >
+          Sí
+        </button>
       </div>
+
+      {item.calentamiento && (
+        <div className="config-calentamiento-series">
+          {item.calentamientoNota && (
+            <p className="config-calentamiento-nota">
+              Antes decía: “{item.calentamientoNota}”. Pasalo a series (repeticiones y peso).
+            </p>
+          )}
+          {series.map((serie, indice) => (
+            <div key={indice} className="config-calentamiento-fila">
+              <span className="config-calentamiento-numero">{indice + 1}.</span>
+              <label className="editor-campo">
+                <span>Reps</span>
+                <input
+                  className="profe-input-tabla"
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={serie.reps}
+                  onChange={(event) => cambiarSerie(indice, 'reps', event.target.value)}
+                />
+              </label>
+              {mostrarKg && (
+                <label className="editor-campo">
+                  <span>Peso (kg)</span>
+                  <input
+                    className="profe-input-tabla config-input-ancho"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    inputMode="decimal"
+                    placeholder="—"
+                    value={serie.kg}
+                    onChange={(event) => cambiarSerie(indice, 'kg', event.target.value)}
+                  />
+                </label>
+              )}
+              <button
+                type="button"
+                className="profe-ejercicio-borrar"
+                onClick={() => quitarSerie(indice)}
+                aria-label={`Quitar la serie de calentamiento ${indice + 1}`}
+              >
+                Quitar
+              </button>
+            </div>
+          ))}
+          <button type="button" className="profe-ejercicio-agregar" onClick={agregarSerie}>
+            + Agregar serie de calentamiento
+          </button>
+          <label className="editor-campo">
+            <span>Descanso de calentamiento (segundos)</span>
+            <input
+              className="profe-input-tabla"
+              type="number"
+              min="0"
+              step="5"
+              inputMode="numeric"
+              value={item.calentamientoDescanso}
+              onChange={(event) => onCambiar('calentamientoDescanso', event.target.value)}
+            />
+          </label>
+        </div>
+      )}
     </div>
   )
 }
