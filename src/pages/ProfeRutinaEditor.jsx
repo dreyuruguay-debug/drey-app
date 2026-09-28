@@ -29,6 +29,7 @@ import { textoGrupos } from '../data/gruposMusculares.js'
 import { SECCIONES_ACTIVIDADES } from '../data/actividades.js'
 import { PASOS_RUTINA } from '../data/asistente.js'
 import { mostrarAviso } from '../services/avisos.js'
+import { cargarBiblioteca } from '../services/biblioteca.js'
 import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -84,9 +85,9 @@ export default function ProfeRutinaEditor({ tipo }) {
 
   async function cargar() {
     setCargando(true)
-    const [{ datos: rutina, ejercicios }, { data: listaBiblioteca }] = await Promise.all([
+    const [{ datos: rutina, ejercicios }, { ejercicios: listaBiblioteca }] = await Promise.all([
       cargarRutinaCompleta(tipo, id),
-      supabase.from('ejercicios').select('*').order('nombre'),
+      cargarBiblioteca(),
     ])
     let perfil = null
     if (esRutina && rutina?.cliente_id) {

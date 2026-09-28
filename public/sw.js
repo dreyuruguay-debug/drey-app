@@ -6,7 +6,11 @@
 //     sola la construcción de la web (ver vite.config.js), así que cada
 //     vez que se publica una versión nueva se guarda la nueva y se borra
 //     la vieja.
-//   · Las tipografías y las fotos de los ejercicios, a medida que se ven.
+//   · Las tipografías y las fotos de los ejercicios, a medida que se ven:
+//     las de la biblioteca que viene con la app (carpeta /ejercicios, con
+//     su versión chica en /ejercicios/mini) y las que sube el profe
+//     (Supabase). Se guardan aparte de la app, así no se vuelven a
+//     descargar cada vez que se publica una versión nueva.
 //
 // También recibe las notificaciones (avisos de DREY) y las muestra,
 // aunque la app esté cerrada. Ver src/services/notificaciones.js.
@@ -22,8 +26,12 @@ const ARCHIVOS = [] // __DREY_ARCHIVOS__
 
 const CACHE_APP = `drey-app-${VERSION}`
 const CACHE_FOTOS = 'drey-fotos'
+const CACHE_MINIATURAS = 'drey-miniaturas'
 const CACHE_FUENTES = 'drey-fuentes'
 const MAXIMO_FOTOS = 200
+const MAXIMO_MINIATURAS = 1000
+const CARPETA_EJERCICIOS = '/ejercicios/'
+const CARPETA_MINIATURAS = '/ejercicios/mini/'
 const ESPERA_PAGINA_MS = 4000
 
 self.addEventListener('install', (event) => {
@@ -64,6 +72,15 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin === self.location.origin) {
+    // Fotos de la biblioteca que viene con la app: no cambian nunca.
+    if (url.pathname.startsWith(CARPETA_MINIATURAS)) {
+      event.respondWith(primeroGuardado(request, CACHE_MINIATURAS, MAXIMO_MINIATURAS))
+      return
+    }
+    if (url.pathname.startsWith(CARPETA_EJERCICIOS)) {
+      event.respondWith(primeroGuardado(request, CACHE_FOTOS, MAXIMO_FOTOS))
+      return
+    }
     // Código y estilos: tienen el nombre cambiado en cada versión, así
     // que lo guardado nunca queda viejo.
     if (url.pathname.startsWith('/assets/')) {
@@ -104,11 +121,17 @@ async function primeroGuardado(request, nombreCache, maximo) {
   const guardada = await cache.match(request)
   if (guardada) return guardada
   const respuesta = await fetch(request)
-  if (respuesta.ok || respuesta.type === 'opaque') {
+  // Nunca se guarda una página en lugar de un archivo (por ejemplo, si
+  // alguna vez falta una foto y el servidor contesta con la app).
+  if ((respuesta.ok && !esPagina(respuesta)) || respuesta.type === 'opaque') {
     await cache.put(request, respuesta.clone())
     if (maximo) recortar(cache, maximo)
   }
   return respuesta
+}
+
+function esPagina(respuesta) {
+  return (respuesta.headers.get('content-type') || '').includes('text/html')
 }
 
 async function guardadoYActualizar(request, nombreCache) {

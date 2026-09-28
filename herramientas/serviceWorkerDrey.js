@@ -34,8 +34,13 @@ export function serviceWorkerDrey() {
       }
     },
     closeBundle() {
-      for (const nombre of readdirSync(carpetaPublica)) {
-        if (nombre !== 'sw.js' && !nombre.startsWith('.')) archivos.add(`/${nombre}`)
+      // Solo los archivos sueltos de public/ (logos, íconos). Las carpetas
+      // no: la de ejercicios tiene cientos de GIF que el celular guarda de
+      // a uno, a medida que se ven (ver public/sw.js).
+      for (const entrada of readdirSync(carpetaPublica, { withFileTypes: true })) {
+        const nombre = entrada.name
+        if (entrada.isFile() && nombre !== 'sw.js' && !nombre.startsWith('.'))
+          archivos.add(`/${nombre}`)
       }
       const ruta = join(carpetaSalida, 'sw.js')
       const codigo = readFileSync(ruta, 'utf8')
@@ -48,7 +53,9 @@ export function serviceWorkerDrey() {
       // quedó una versión vieja), la web se publica igual, solo que sin el
       // modo sin señal. No se corta la publicación.
       if (!codigo.includes(`const VERSION = '${version}'`)) {
-        this.warn('public/sw.js no tiene las líneas VERSION/ARCHIVOS: la app no se guarda para usar sin señal.')
+        this.warn(
+          'public/sw.js no tiene las líneas VERSION/ARCHIVOS: la app no se guarda para usar sin señal.',
+        )
         return
       }
       writeFileSync(ruta, codigo)

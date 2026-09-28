@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { recordado, recordar } from '../services/memoriaSesion.js'
-import { traerTodasLasFilas } from '../services/paginado.js'
+import { bibliotecaRecordada, cargarBiblioteca } from '../services/biblioteca.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
-import { comprimirImagen } from '../utils/imagenes.js'
+import { comprimirImagen, miniaturaDeEjercicio } from '../utils/imagenes.js'
+import { filtrarPorBusqueda } from '../utils/biblioteca.js'
+import { normalizarTexto } from '../utils/texto.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
 // Filtros para encontrar rápido lo que falta cargar.
@@ -14,9 +15,6 @@ const FILTROS = [
   { id: 'sin-foto', label: 'Sin foto' },
   { id: 'sin-video', label: 'Sin video' },
 ]
-
-// Lo último que se cargó queda en memoria (services/memoriaSesion.js).
-const MEMORIA_EJERCICIOS = 'profe-ejercicios'
 
 // Biblioteca de ejercicios, organizada en 7 categorías (Empuje,
 // Tracción, Multiarticulares, Piernas, Zona media, Cardiorrespiratorio y
@@ -27,15 +25,20 @@ const MEMORIA_EJERCICIOS = 'profe-ejercicios'
 //
 // Arriba se ve cuántos ejercicios tienen foto y video, y los filtros "Sin
 // foto" / "Sin video" muestran solo los que falta completar. Las fotos se
-// achican solas antes de subirlas (cargan rápido en el celular).
+// achican solas antes de subirlas (cargan rápido en el celular). En la
+// lista se ve la versión chica y quieta de cada foto, y solo se descargan
+// las que aparecen en pantalla (la animación completa se ve al editar).
+//
+// El buscador no distingue tildes ni mayúsculas y también busca por
+// músculo (utils/biblioteca.js).
 //
 // Acá solo se administra la lista: crear, editar (nombre, foto, link de
 // video) y borrar. Asignarle series/reps/peso a un cliente puntual se
 // hace en el detalle de ese cliente, no acá.
 export default function ProfeEjercicios() {
   // Lo último cargado se ve al instante; se actualiza por detrás.
-  const [ejercicios, setEjercicios] = useState(() => recordado(MEMORIA_EJERCICIOS) || [])
-  const [cargando, setCargando] = useState(() => !recordado(MEMORIA_EJERCICIOS))
+  const [ejercicios, setEjercicios] = useState(() => bibliotecaRecordada() || [])
+  const [cargando, setCargando] = useState(() => !bibliotecaRecordada())
   const [busqueda, setBusqueda] = useState('')
   const [categoriaActiva, setCategoriaActiva] = useState(CATEGORIAS[0].nombre)
   const [filtro, setFiltro] = useState('todos')
@@ -57,12 +60,10 @@ export default function ProfeEjercicios() {
     cargarEjercicios()
   }, [])
 
+  // Si falla (por ejemplo, sin señal) queda la lista que ya se veía.
   async function cargarEjercicios() {
-    const { data, error } = await traerTodasLasFilas(() =>
-      supabase.from('ejercicios').select('*').order('nombre').order('id'),
-    )
-    if (!error) recordar(MEMORIA_EJERCICIOS, data)
-    setEjercicios(data || [])
+    const { ejercicios: lista, error } = await cargarBiblioteca()
+    if (!error) setEjercicios(lista)
     setCargando(false)
   }
 
@@ -87,8 +88,10 @@ export default function ProfeEjercicios() {
     // Evita crear un ejercicio "duplicado" por error (por ejemplo, para
     // agregarle una foto a uno que ya existe). Si ya hay uno con ese
     // nombre, avisa y no lo crea: hay que usar "Editar" en el de la lista.
+    // (Sin mirar tildes ni mayúsculas: "Pajaros" y "Pájaros" son el mismo.)
+    const nombreComparable = normalizarTexto(nombreLimpio)
     const yaExiste = ejercicios.some(
-      (ejercicio) => ejercicio.nombre.trim().toLowerCase() === nombreLimpio.toLowerCase(),
+      (ejercicio) => normalizarTexto(ejercicio.nombre) === nombreComparable,
     )
     if (yaExiste) {
       setMensaje(
@@ -181,22 +184,34 @@ export default function ProfeEjercicios() {
     cargarEjercicios()
   }
 
-  const ejerciciosDelGrupo = ejercicios
-    .filter((ejercicio) => categoriasDeEjercicio(ejercicio).includes(categoriaActiva))
-    .filter((ejercicio) => ejercicio.nombre.toLowerCase().includes(busqueda.toLowerCase()))
-    .filter((ejercicio) =>
-      filtro === 'sin-foto' ? !ejercicio.imagen_url : filtro === 'sin-video' ? !ejercicio.video_url : true,
+  const ejerciciosDelGrupo = useMemo(() => {
+    const deLaCategoria = ejercicios.filter((ejercicio) =>
+      categoriasDeEjercicio(ejercicio).includes(categoriaActiva),
     )
-  const conFoto = ejercicios.filter((ejercicio) => ejercicio.imagen_url).length
-  const conVideo = ejercicios.filter((ejercicio) => ejercicio.video_url).length
+    return filtrarPorBusqueda(deLaCategoria, busqueda).filter((ejercicio) =>
+      filtro === 'sin-foto'
+        ? !ejercicio.imagen_url
+        : filtro === 'sin-video'
+          ? !ejercicio.video_url
+          : true,
+    )
+  }, [ejercicios, categoriaActiva, busqueda, filtro])
+  const conFoto = useMemo(
+    () => ejercicios.filter((ejercicio) => ejercicio.imagen_url).length,
+    [ejercicios],
+  )
+  const conVideo = useMemo(
+    () => ejercicios.filter((ejercicio) => ejercicio.video_url).length,
+    [ejercicios],
+  )
 
   return (
     <ProfeLayout titulo="Biblioteca">
       <BibliotecaTabs activa="ejercicios" />
       <p className="profe-nota">
-        Elegí una categoría, buscá, agregá o editá ejercicios (nombre, categorías, foto y link de
-        video). Para asignarle uno a un cliente, entrá a "Clientes y rutinas" → el cliente → su
-        rutina → "+ Agregar ejercicio".
+        Elegí una categoría, buscá (por nombre o músculo, con o sin tildes), agregá o editá
+        ejercicios (nombre, categorías, foto y link de video). Para asignarle uno a un cliente,
+        entrá a "Clientes y rutinas" → el cliente → su rutina → "+ Agregar ejercicio".
       </p>
 
       {ejercicios.length > 0 && (
@@ -329,9 +344,13 @@ export default function ProfeEjercicios() {
                 <div className="profe-ejercicio-item-info">
                   {ejercicio.imagen_url && (
                     <img
-                      src={ejercicio.imagen_url}
-                      alt={ejercicio.nombre}
+                      src={miniaturaDeEjercicio(ejercicio.imagen_url)}
+                      alt=""
                       className="profe-ejercicio-foto-mini"
+                      width="48"
+                      height="48"
+                      loading="lazy"
+                      decoding="async"
                     />
                   )}
                   <span>{ejercicio.nombre}</span>

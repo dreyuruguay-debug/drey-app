@@ -1103,18 +1103,22 @@ textarea {
   min-width: 0;
 }
 
+/* Los nombres largos (por ejemplo "Extensión de Gemelo Aislado sentado
+   con Mancuerna") se ven enteros, en dos o tres renglones: cortados con
+   "…" varios quedarían iguales. */
 .profe-ejercicio-item-info span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 
 .profe-ejercicio-foto-mini {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
+  background: #fff;
 }
 
 .profe-ejercicio-item-acciones {
@@ -3390,7 +3394,7 @@ div.tarjeta-rutina {
 
 .entrenar-foto {
   position: relative;
-  height: 180px;
+  height: 220px;
   border-radius: 20px;
   overflow: hidden;
   background: #1e1e1e;
@@ -3400,10 +3404,16 @@ div.tarjeta-rutina {
   justify-content: center;
 }
 
+/* La foto o el GIF se ve entero (sin recortar cabeza ni pies) sobre
+   fondo blanco, el mismo fondo que traen los GIF de la biblioteca. */
+.entrenar-foto-con-imagen {
+  background: #fff;
+}
+
 .entrenar-foto img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .entrenar-foto-vacia {
@@ -3422,6 +3432,12 @@ div.tarjeta-rutina {
   font-size: 0.85rem;
   font-weight: 800;
   text-decoration: none;
+}
+
+/* Sobre la foto de fondo blanco, el botón del video va oscuro. */
+.entrenar-foto-con-imagen .entrenar-video {
+  background: var(--drey-black);
+  color: var(--drey-white);
 }
 
 .entrenar-encabezado {
@@ -5061,6 +5077,27 @@ div.tarjeta-rutina {
   margin: 0.75rem 0 1rem;
 }
 
+.equipo-confirmar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.equipo-confirmar > * {
+  flex: 1;
+}
+
+.equipo-filtro {
+  margin-bottom: 0.6rem;
+}
+
+/* Etiqueta "Admin" en el Inicio del panel (utils/roles.js). */
+.etiqueta-admin {
+  display: inline-block;
+  margin: 0.35rem 0 0.15rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .codigo-item > select {
   max-width: 45%;
 }
@@ -5157,4 +5194,106 @@ div.tarjeta-rutina {
   .esqueleto-bloque::after {
     animation: none;
   }
+}
+
+/* ==================================================================
+   Panel del Admin (26/09/2026): Ajustes, Historial, filtros
+   ================================================================== */
+.ajustes-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.ajustes-tarjeta-oculta {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.ajustes-tarjeta-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ajustes-tarjeta-cabecera small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.ajustes-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.ajustes-nuevo-plan,
+.ajustes-historial {
+  margin-top: 1rem;
+}
+
+.ajustes-historial {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem;
+}
+
+.ajustes-interruptor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ajustes-interruptor-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ajustes-interruptor-texto small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.historial-item {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  font-size: 0.88rem;
+}
+
+.historial-hora {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.historial-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.historial-textos small {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--drey-accent);
+}
+
+.clientes-filtros {
+  margin: 0.25rem 0 0.5rem;
 }

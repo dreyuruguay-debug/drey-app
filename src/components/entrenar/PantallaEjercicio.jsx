@@ -39,9 +39,11 @@ export default function PantallaEjercicio({
         </div>
       )}
 
-      <div className="entrenar-foto">
+      <div
+        className={datos.imagen_url ? 'entrenar-foto entrenar-foto-con-imagen' : 'entrenar-foto'}
+      >
         {datos.imagen_url ? (
-          <img src={datos.imagen_url} alt={datos.nombre} />
+          <img src={datos.imagen_url} alt={`Cómo se hace: ${datos.nombre || 'el ejercicio'}`} />
         ) : (
           <span className="entrenar-foto-vacia">Sin foto todavía</span>
         )}

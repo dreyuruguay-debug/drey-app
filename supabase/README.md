@@ -3,7 +3,7 @@
 Tablas ya creadas (los scripts que las crean están en `supabase/sql/`, en el orden en que se fueron aplicando; `007`, `008` y `009` también vienen juntos en `INSTALAR_BASE_DE_DATOS.sql` de la entrega del 23/09/2026; `010` es de la entrega del 24/09/2026; `011` a `018`, de la del 25/09/2026, que trae también `007`–`010` por las dudas):
 
 - **perfiles** — clientes y profe, con su plan, estado (pendiente/activo), vencimiento y si es profe (`es_profe`). Se completa sola cuando alguien se registra, con un trigger (`handle_new_user`) sobre `auth.users`.
-- **ejercicios** — biblioteca por grupo muscular, con link a video. La carga el profe desde "Biblioteca de ejercicios".
+- **ejercicios** — biblioteca por grupo muscular, con foto (`imagen_url`) y link a video. La carga el profe desde "Biblioteca de ejercicios"; los 750 de FitCron vienen del SQL 023.
 - **rutinas** — Rutina A, B, C... de cada cliente (`cliente_id`), armadas por el profe desde el detalle de cada cliente.
 - **rutina_ejercicios** — los ejercicios de cada rutina, con series, reps objetivo, kg objetivo y las opciones de descanso.
 - **calendario_cliente** — qué rutina le toca a cada cliente cada día de la semana.
@@ -27,6 +27,11 @@ Tablas ya creadas (los scripts que las crean están en `supabase/sql/`, en el or
 - **mediciones** (016) — evaluación inicial y controles (peso, perímetros, % grasa, altura, notas, fotos). Fotos en el bucket privado **fotos-progreso** (carpeta = id del cliente).
 - **Ciclos** (017): `rutinas.ciclo_semanas` / `ciclo_inicio`, `plantillas.ciclo_semanas` y `progresion` ({kg, reps} por semana) en los ejercicios. La lógica del peso sugerido está en `src/utils/ciclos.js`.
 - **018**: `registrar_pago_manual()` (habilitar / confirmar pago: anota el pago y suma el mes), `gimnasios.dueno_id` (dueño del gimnasio: ve sus profes y clientes y puede reasignarlos), `puede_ver_profe()`, `mi_rol()` y `buscar_cuenta_por_email()` (solo el administrador).
+- **Admin separado** (020): el Admin (`es_admin`) ya no es profe; la base no deja que una cuenta sea las dos cosas (`perfiles_admin_no_es_profe`). `es_profe()` ahora significa "entra al panel" (profe o Admin) y `es_admin()` mira solo `es_admin`. Cliente = ni profe ni Admin. El Admin ve a todos los clientes, confirma pagos sin quedarse con el cliente, y es el contacto de los clientes sin profe. Solo el Admin da o quita el permiso de profe (no a quien todavía tiene clientes). `convertir_en_admin('email')` se corre una vez desde el SQL Editor (desde la app no se puede).
+- **Admin fantasma** (021): `convertir_en_admin('email')` además deja la cuenta sin rastro de cliente (plan, profe, datos de salud, términos, rutinas, entrenamientos, medidas, pagos y los avisos que generó). Para crear un Admin nuevo sin pasar por el registro: Supabase → Authentication → Users → "Add user" → "Create new user" (con "Auto Confirm User"), y después `select public.convertir_en_admin('email');`.
+- **Panel del Admin** (022): **ajustes** (una sola fila: datos para transferencia, `cobro_automatico`, `whatsapp_grupo_url`, `dias_aviso`, `dias_de_gracia`; la leen todos, la cambia solo el Admin). En **planes**, `descripcion` y `link_mp` (link de pago manual); el Admin crea y edita planes, nadie los borra (se ocultan con `activo`). `dias_de_gracia()` lee de ajustes. **historial_admin**: la base anota sola cada cambio que hace el Admin (triggers en planes, ajustes, perfiles, gimnasios y pagos manuales); solo el Admin lo lee.
+
+- **Biblioteca con GIF** (023): en **ejercicios**, `origen` (de dónde vino el ejercicio, por ejemplo `fitcron-12`; no se repite). Carga los 750 ejercicios de FitCron con su grupo muscular (los de pierna separados en Cuádriceps, Isquiotibiales, Glúteos, Gemelos, Aductores y Abductores), sus categorías e `imagen_url` = `/ejercicios/fitcron-N.webp` (el archivo está en la app: `public/ejercicios`). Si ya había uno con el mismo nombre, lo usa en vez de duplicarlo, y a los ejercicios de antes (004) con un equivalente claro les pone ese GIF si no tenían foto. Se puede correr más de una vez.
 
 Funciones de Supabase (Edge Functions, carpeta `supabase/functions/`):
 

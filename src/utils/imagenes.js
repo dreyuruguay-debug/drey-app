@@ -25,3 +25,17 @@ export async function comprimirImagen(archivo, ladoMaximo = 1280, calidad = 0.82
     return archivo
   }
 }
+
+// Fotos de la biblioteca que vienen con la app (carpeta public/ejercicios,
+// por ejemplo "/ejercicios/fitcron-12.webp"). Cada una tiene al lado una
+// versión chica y quieta en public/ejercicios/mini, que es la que usan
+// las listas: así una lista de 200 ejercicios no descarga 200 animaciones.
+// Las fotos que sube el profe (Supabase) no tienen versión chica: se usa
+// la misma.
+const CARPETA_EJERCICIOS = '/ejercicios/'
+
+export function miniaturaDeEjercicio(url) {
+  if (typeof url !== 'string' || !url) return null
+  if (!url.startsWith(CARPETA_EJERCICIOS)) return url
+  return `${CARPETA_EJERCICIOS}mini/${url.slice(CARPETA_EJERCICIOS.length)}`
+}

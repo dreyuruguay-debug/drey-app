@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 import { ejerciciosRecomendados, textoGrupos } from '../data/gruposMusculares.js'
+import { filtrarPorBusqueda } from '../utils/biblioteca.js'
+import { miniaturaDeEjercicio } from '../utils/imagenes.js'
 
 const RECOMENDADOS = 'recomendados'
 
 // Selector de ejercicios de la biblioteca para armar un bloque (paso
 // "Ejercicios" del asistente). Primero muestra los recomendados para los
 // grupos musculares de la rutina; también se puede recorrer cualquier
-// categoría o buscar por nombre en toda la biblioteca.
+// categoría o buscar por nombre o músculo en toda la biblioteca (sin
+// importar tildes ni mayúsculas). Las fotos de la lista son la versión
+// chica y solo se descargan las que aparecen en pantalla.
 //
 // seleccionados: ejercicios ya elegidos (en orden). completo: true cuando
 // ya se eligieron todos los que lleva el bloque (los demás se deshabilitan).
@@ -27,10 +31,9 @@ export default function SelectorEjercicios({
     [ejercicios, grupos, hayGrupos],
   )
 
-  const texto = busqueda.trim().toLowerCase()
+  const texto = busqueda.trim()
   const visibles = useMemo(() => {
-    if (texto)
-      return ejercicios.filter((ejercicio) => ejercicio.nombre.toLowerCase().includes(texto))
+    if (texto) return filtrarPorBusqueda(ejercicios, texto)
     if (vista === RECOMENDADOS) return recomendados
     return ejercicios.filter((ejercicio) => categoriasDeEjercicio(ejercicio).includes(vista))
   }, [ejercicios, recomendados, vista, texto])
@@ -73,7 +76,7 @@ export default function SelectorEjercicios({
 
       <p className="profe-nota selector-ejercicios-nota">
         {texto
-          ? `Resultados en toda la biblioteca para "${busqueda.trim()}"`
+          ? `Resultados en toda la biblioteca para "${texto}"`
           : vista === RECOMENDADOS
             ? `Para ${textoGrupos(grupos)}`
             : `Categoría ${vista}`}
@@ -99,7 +102,15 @@ export default function SelectorEjercicios({
               >
                 <div className="profe-ejercicio-item-info">
                   {ejercicio.imagen_url && (
-                    <img src={ejercicio.imagen_url} alt="" className="profe-ejercicio-foto-mini" />
+                    <img
+                      src={miniaturaDeEjercicio(ejercicio.imagen_url)}
+                      alt=""
+                      className="profe-ejercicio-foto-mini"
+                      width="48"
+                      height="48"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   )}
                   <span>
                     {ejercicio.nombre}
