@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
@@ -30,6 +30,7 @@ import { SECCIONES_ACTIVIDADES } from '../data/actividades.js'
 import { PASOS_RUTINA } from '../data/asistente.js'
 import { mostrarAviso } from '../services/avisos.js'
 import { cargarBiblioteca } from '../services/biblioteca.js'
+import { estaArchivado } from '../utils/biblioteca.js'
 import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -64,6 +65,12 @@ export default function ProfeRutinaEditor({ tipo }) {
   const [datos, setDatos] = useState(null)
   const [items, setItems] = useState([])
   const [biblioteca, setBiblioteca] = useState([])
+  // Ejercicios de la rutina que están archivados en la biblioteca: siguen
+  // acá, pero se marcan para que el profe sepa que conviene cambiarlos.
+  const idsArchivados = useMemo(
+    () => new Set(biblioteca.filter(estaArchivado).map((ejercicio) => ejercicio.id)),
+    [biblioteca],
+  )
   const [cliente, setCliente] = useState(null)
   const [mensaje, setMensaje] = useState('')
   const [guardandoRutina, setGuardandoRutina] = useState(false)
@@ -409,6 +416,7 @@ export default function ProfeRutinaEditor({ tipo }) {
               <BloqueProfe
                 key={bloque.items[0].item.id || indiceBloque}
                 bloque={bloque}
+                idsArchivados={idsArchivados}
                 esPrimero={indiceBloque === 0}
                 esUltimo={indiceBloque === bloques.length - 1}
                 onMover={(direccion) => moverUnBloque(indiceBloque, direccion)}

@@ -7,7 +7,9 @@ import { fechaLocalISO, textoFechaCorta } from '../utils/dias.js'
 // Historial de cambios del Admin (tabla "historial_admin",
 // supabase/sql/022). La base anota sola cada cambio que hace el Admin:
 // precios y planes, ajustes, profes, gimnasios, clientes reasignados y
-// pagos confirmados. Acá se ven los últimos 200, agrupados por día.
+// pagos confirmados. También quién archiva, recupera o borra ejercicios
+// de la Biblioteca, sea profe o Admin (supabase/sql/024). Acá se ven los
+// últimos 200, agrupados por día.
 const TIPOS = {
   plan: 'Planes',
   ajustes: 'Ajustes',
@@ -15,6 +17,7 @@ const TIPOS = {
   cliente: 'Clientes',
   gimnasio: 'Gimnasios',
   pago: 'Pagos',
+  biblioteca: 'Biblioteca',
 }
 
 export default function AdminHistorial() {
@@ -49,7 +52,8 @@ export default function AdminHistorial() {
   return (
     <ProfeLayout titulo="Historial de cambios" volverA="/profe/ajustes" soloAdmin>
       <p className="profe-nota">
-        Todo lo que cambiás como Admin queda anotado acá solo, con fecha y hora.
+        Todo lo que cambiás como Admin queda anotado acá solo, con fecha y hora. También quién
+        archiva, recupera o borra ejercicios de la Biblioteca.
       </p>
 
       <select

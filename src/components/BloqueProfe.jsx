@@ -8,8 +8,12 @@ import ObjetivoEjercicio from './ObjetivoEjercicio.jsx'
 // rutina del cliente (mismo título, mismos ejercicios y mismos datos),
 // pero con los controles para subirlo, bajarlo, editarlo, duplicarlo o
 // quitarlo.
+//
+// idsArchivados: ejercicios archivados en la biblioteca (supabase/sql/024).
+// Siguen en la rutina, con la etiqueta "Archivado" al lado del nombre.
 export default function BloqueProfe({
   bloque,
+  idsArchivados,
   esPrimero,
   esUltimo,
   onMover,
@@ -66,6 +70,9 @@ export default function BloqueProfe({
         <div key={item.id || `${item.ejercicio_id}-${posicion}`} className="ejercicio-bloque">
           <div className="ejercicio-header">
             <span>{item.ejercicios?.nombre || 'Ejercicio borrado de la biblioteca'}</span>
+            {idsArchivados?.has(item.ejercicio_id) && (
+              <span className="estado-chip estado-alerta estado-chip-chico">Archivado</span>
+            )}
           </div>
           <ObjetivoEjercicio ejercicio={item} />
         </div>

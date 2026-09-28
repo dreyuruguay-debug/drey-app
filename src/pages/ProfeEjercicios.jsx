@@ -1,19 +1,29 @@
 import { useEffect, useMemo, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
+import ConfirmacionEjercicio from '../components/ConfirmacionEjercicio.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { bibliotecaRecordada, cargarBiblioteca } from '../services/biblioteca.js'
+import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
+import {
+  archivarEjercicio,
+  bibliotecaRecordada,
+  borrarEjercicio,
+  cargarBiblioteca,
+  usoDeEjercicio,
+} from '../services/biblioteca.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 import { comprimirImagen, miniaturaDeEjercicio } from '../utils/imagenes.js'
-import { filtrarPorBusqueda } from '../utils/biblioteca.js'
+import { ejerciciosActivos, estaArchivado, filtrarPorBusqueda } from '../utils/biblioteca.js'
+import { normalizarLinkVideo } from '../utils/linkVideo.js'
 import { normalizarTexto } from '../utils/texto.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
-// Filtros para encontrar rápido lo que falta cargar.
+// Filtros para encontrar rápido lo que falta cargar, y los archivados.
 const FILTROS = [
   { id: 'todos', label: 'Todos' },
   { id: 'sin-foto', label: 'Sin foto' },
   { id: 'sin-video', label: 'Sin video' },
+  { id: 'archivados', label: 'Archivados' },
 ]
 
 // Biblioteca de ejercicios, organizada en 7 categorías (Empuje,
@@ -32,13 +42,22 @@ const FILTROS = [
 // El buscador no distingue tildes ni mayúsculas y también busca por
 // músculo (utils/biblioteca.js).
 //
-// Acá solo se administra la lista: crear, editar (nombre, foto, link de
-// video) y borrar. Asignarle series/reps/peso a un cliente puntual se
-// hace en el detalle de ese cliente, no acá.
+// Biblioteca protegida (supabase/sql/024):
+//   · "Archivar" (cualquier profe) en vez de borrar: el ejercicio sigue en
+//     las rutinas y plantillas donde ya estaba, pero no aparece para
+//     agregar. Antes de archivar se ve en cuántas rutinas está.
+//   · "Archivados" los muestra (de todas las categorías) con "Recuperar".
+//   · "Borrar" para siempre: solo el Admin, solo desde Archivados y solo si
+//     no está en ninguna rutina ni plantilla (la base lo controla igual).
+//   · Los links de video tienen que ser https:// (utils/linkVideo.js).
+//
+// Asignarle series/reps/peso a un cliente puntual se hace en el detalle
+// de ese cliente, no acá.
 export default function ProfeEjercicios() {
   // Lo último cargado se ve al instante; se actualiza por detrás.
   const [ejercicios, setEjercicios] = useState(() => bibliotecaRecordada() || [])
   const [cargando, setCargando] = useState(() => !bibliotecaRecordada())
+  const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [busqueda, setBusqueda] = useState('')
   const [categoriaActiva, setCategoriaActiva] = useState(CATEGORIAS[0].nombre)
   const [filtro, setFiltro] = useState('todos')
@@ -56,8 +75,18 @@ export default function ProfeEjercicios() {
   const [categoriasEdit, setCategoriasEdit] = useState([])
   const [guardandoEdicion, setGuardandoEdicion] = useState(false)
 
+  // Confirmación abierta: { id, accion: 'archivar' | 'borrar', estadoUso, uso }.
+  const [confirmacion, setConfirmacion] = useState(null)
+  const [trabajando, setTrabajando] = useState(false)
+  const [recuperandoId, setRecuperandoId] = useState(null)
+
   useEffect(() => {
+    let activo = true
     cargarEjercicios()
+    verificarProfe().then(({ esAdmin: admin }) => activo && setEsAdmin(Boolean(admin)))
+    return () => {
+      activo = false
+    }
   }, [])
 
   // Si falla (por ejemplo, sin señal) queda la lista que ya se veía.
@@ -65,6 +94,16 @@ export default function ProfeEjercicios() {
     const { ejercicios: lista, error } = await cargarBiblioteca()
     if (!error) setEjercicios(lista)
     setCargando(false)
+  }
+
+  // Cambia un ejercicio en la lista de la pantalla sin esperar al servidor
+  // (después se recarga igual).
+  function cambiarEnLista(id, cambios) {
+    setEjercicios((lista) =>
+      cambios
+        ? lista.map((item) => (item.id === id ? { ...item, ...cambios } : item))
+        : lista.filter((item) => item.id !== id),
+    )
   }
 
   // Sube una foto al almacenamiento de Supabase (bucket público
@@ -87,16 +126,25 @@ export default function ProfeEjercicios() {
 
     // Evita crear un ejercicio "duplicado" por error (por ejemplo, para
     // agregarle una foto a uno que ya existe). Si ya hay uno con ese
-    // nombre, avisa y no lo crea: hay que usar "Editar" en el de la lista.
+    // nombre, avisa y no lo crea: hay que usar "Editar" en el de la lista
+    // (o "Recuperar", si está archivado).
     // (Sin mirar tildes ni mayúsculas: "Pajaros" y "Pájaros" son el mismo.)
     const nombreComparable = normalizarTexto(nombreLimpio)
-    const yaExiste = ejercicios.some(
+    const repetido = ejercicios.find(
       (ejercicio) => normalizarTexto(ejercicio.nombre) === nombreComparable,
     )
-    if (yaExiste) {
+    if (repetido) {
       setMensaje(
-        `Ya existe un ejercicio llamado "${nombreLimpio}". Para agregarle foto o video, buscalo arriba y tocá "Editar" en vez de crear uno nuevo.`,
+        estaArchivado(repetido)
+          ? `Ya existe "${repetido.nombre}", pero está archivado. Buscalo en "Archivados" y tocá "Recuperar".`
+          : `Ya existe un ejercicio llamado "${nombreLimpio}". Para agregarle foto o video, buscalo arriba y tocá "Editar" en vez de crear uno nuevo.`,
       )
+      return
+    }
+
+    const video = normalizarLinkVideo(videoNuevo)
+    if (video.error) {
+      setMensaje(video.error)
       return
     }
 
@@ -109,10 +157,10 @@ export default function ProfeEjercicios() {
     }
 
     const { error } = await supabase.from('ejercicios').insert({
-      nombre: nombreNuevo.trim(),
+      nombre: nombreLimpio,
       grupo_muscular: categoriaActiva,
       categorias: [categoriaActiva],
-      video_url: videoNuevo.trim() || null,
+      video_url: video.valor,
       imagen_url: imagenUrl,
     })
     setGuardando(false)
@@ -126,12 +174,76 @@ export default function ProfeEjercicios() {
     cargarEjercicios()
   }
 
-  async function handleBorrar(id) {
-    const { error } = await supabase.from('ejercicios').delete().eq('id', id)
-    if (!error) cargarEjercicios()
+  // Archivar o borrar: primero se abre la confirmación y se cuenta en
+  // cuántas rutinas está (en paralelo; el texto se completa al llegar).
+  async function pedirConfirmacion(ejercicio, accion) {
+    setEditandoId(null)
+    setMensaje('')
+    setConfirmacion({ id: ejercicio.id, accion, estadoUso: 'cargando', uso: null })
+    const { uso, error } = await usoDeEjercicio(ejercicio.id)
+    // Si mientras tanto se cerró o se abrió otra, no se toca.
+    setConfirmacion((actual) =>
+      actual?.id === ejercicio.id && actual.accion === accion
+        ? { ...actual, estadoUso: error ? 'error' : 'listo', uso }
+        : actual,
+    )
+  }
+
+  function cerrarConfirmacion() {
+    if (!trabajando) setConfirmacion(null)
+  }
+
+  async function confirmar(ejercicio) {
+    if (!confirmacion || trabajando) return
+    setTrabajando(true)
+    if (confirmacion.accion === 'archivar') {
+      const { error } = await archivarEjercicio(ejercicio.id, true)
+      if (error) {
+        setMensaje('No pudimos archivarlo. Probá de nuevo.')
+      } else {
+        cambiarEnLista(ejercicio.id, { archivado_en: new Date().toISOString() })
+        setMensaje(`"${ejercicio.nombre}" quedó archivado. Lo encontrás en "Archivados".`)
+      }
+    } else {
+      const { error, motivo } = await borrarEjercicio(ejercicio, ejercicios)
+      if (!error) {
+        cambiarEnLista(ejercicio.id, null)
+        setMensaje(`"${ejercicio.nombre}" se borró de la biblioteca.`)
+      } else if (motivo === 'en-uso') {
+        setMensaje(
+          `"${ejercicio.nombre}" está en una rutina o plantilla: no se puede borrar. Queda archivado.`,
+        )
+      } else if (motivo === 'sin-permiso') {
+        setMensaje('Solo el Admin puede borrar ejercicios de la biblioteca.')
+      } else {
+        setMensaje('No pudimos borrarlo. Probá de nuevo.')
+      }
+    }
+    setTrabajando(false)
+    setConfirmacion(null)
+    cargarEjercicios()
+  }
+
+  async function recuperar(ejercicio) {
+    if (recuperandoId) return
+    setRecuperandoId(ejercicio.id)
+    setConfirmacion(null)
+    setMensaje('')
+    const { error } = await archivarEjercicio(ejercicio.id, false)
+    setRecuperandoId(null)
+    if (error) {
+      setMensaje('No pudimos recuperarlo. Probá de nuevo.')
+      return
+    }
+    cambiarEnLista(ejercicio.id, { archivado_en: null })
+    setMensaje(
+      `"${ejercicio.nombre}" volvió a la biblioteca (${categoriasDeEjercicio(ejercicio).join(' y ')}).`,
+    )
+    cargarEjercicios()
   }
 
   function empezarEdicion(ejercicio) {
+    setConfirmacion(null)
     setEditandoId(ejercicio.id)
     setNombreEdit(ejercicio.nombre)
     setVideoEdit(ejercicio.video_url || '')
@@ -156,6 +268,11 @@ export default function ProfeEjercicios() {
       setMensaje('Elegí al menos una categoría para el ejercicio.')
       return
     }
+    const video = normalizarLinkVideo(videoEdit)
+    if (video.error) {
+      setMensaje(video.error)
+      return
+    }
     setGuardandoEdicion(true)
     setMensaje('')
 
@@ -169,7 +286,7 @@ export default function ProfeEjercicios() {
       .from('ejercicios')
       .update({
         nombre: nombreEdit.trim(),
-        video_url: videoEdit.trim() || null,
+        video_url: video.valor,
         imagen_url: imagenUrl,
         categorias: categoriasEdit,
       })
@@ -184,8 +301,19 @@ export default function ProfeEjercicios() {
     cargarEjercicios()
   }
 
-  const ejerciciosDelGrupo = useMemo(() => {
-    const deLaCategoria = ejercicios.filter((ejercicio) =>
+  function elegirCategoria(nombre) {
+    setCategoriaActiva(nombre)
+    // Tocar una categoría estando en "Archivados" vuelve a la lista normal.
+    if (filtro === 'archivados') setFiltro('todos')
+  }
+
+  const activos = useMemo(() => ejerciciosActivos(ejercicios), [ejercicios])
+  const archivados = useMemo(() => ejercicios.filter(estaArchivado), [ejercicios])
+  const verArchivados = filtro === 'archivados'
+
+  const visibles = useMemo(() => {
+    if (verArchivados) return filtrarPorBusqueda(archivados, busqueda)
+    const deLaCategoria = activos.filter((ejercicio) =>
       categoriasDeEjercicio(ejercicio).includes(categoriaActiva),
     )
     return filtrarPorBusqueda(deLaCategoria, busqueda).filter((ejercicio) =>
@@ -195,29 +323,38 @@ export default function ProfeEjercicios() {
           ? !ejercicio.video_url
           : true,
     )
-  }, [ejercicios, categoriaActiva, busqueda, filtro])
+  }, [activos, archivados, verArchivados, categoriaActiva, busqueda, filtro])
   const conFoto = useMemo(
-    () => ejercicios.filter((ejercicio) => ejercicio.imagen_url).length,
-    [ejercicios],
+    () => activos.filter((ejercicio) => ejercicio.imagen_url).length,
+    [activos],
   )
   const conVideo = useMemo(
-    () => ejercicios.filter((ejercicio) => ejercicio.video_url).length,
-    [ejercicios],
+    () => activos.filter((ejercicio) => ejercicio.video_url).length,
+    [activos],
   )
+
+  const textoVacio = verArchivados
+    ? busqueda.trim()
+      ? 'No hay ejercicios archivados que coincidan.'
+      : 'No hay ejercicios archivados.'
+    : filtro === 'todos'
+      ? `Todavía no hay ejercicios de ${categoriaActiva}.`
+      : `En ${categoriaActiva} no falta ninguno. ¡Bien!`
 
   return (
     <ProfeLayout titulo="Biblioteca">
       <BibliotecaTabs activa="ejercicios" />
       <p className="profe-nota">
         Elegí una categoría, buscá (por nombre o músculo, con o sin tildes), agregá o editá
-        ejercicios (nombre, categorías, foto y link de video). Para asignarle uno a un cliente,
+        ejercicios (nombre, categorías, foto y link de video). Si uno ya no se usa, archivalo: sigue
+        en las rutinas donde está, pero no aparece para agregar. Para asignarle uno a un cliente,
         entrá a "Clientes y rutinas" → el cliente → su rutina → "+ Agregar ejercicio".
       </p>
 
-      {ejercicios.length > 0 && (
+      {activos.length > 0 && (
         <div className="biblioteca-avance">
-          <BarraAvance etiqueta="Con foto" cantidad={conFoto} total={ejercicios.length} />
-          <BarraAvance etiqueta="Con video" cantidad={conVideo} total={ejercicios.length} />
+          <BarraAvance etiqueta="Con foto" cantidad={conFoto} total={activos.length} />
+          <BarraAvance etiqueta="Con video" cantidad={conVideo} total={activos.length} />
         </div>
       )}
 
@@ -227,11 +364,11 @@ export default function ProfeEjercicios() {
             key={nombre}
             type="button"
             className={
-              nombre === categoriaActiva
+              nombre === categoriaActiva && !verArchivados
                 ? 'profe-grupo-card profe-grupo-card-activo'
                 : 'profe-grupo-card'
             }
-            onClick={() => setCategoriaActiva(nombre)}
+            onClick={() => elegirCategoria(nombre)}
           >
             {nombre}
             <span className="profe-grupo-card-musculos">{musculos}</span>
@@ -242,7 +379,7 @@ export default function ProfeEjercicios() {
       <input
         className="auth-input profe-buscador"
         type="text"
-        placeholder={`Buscar en ${categoriaActiva}…`}
+        placeholder={verArchivados ? 'Buscar en archivados…' : `Buscar en ${categoriaActiva}…`}
         value={busqueda}
         onChange={(event) => setBusqueda(event.target.value)}
       />
@@ -256,23 +393,31 @@ export default function ProfeEjercicios() {
             onClick={() => setFiltro(opcion.id)}
           >
             {opcion.label}
+            {opcion.id === 'archivados' && archivados.length > 0 && ` (${archivados.length})`}
           </button>
         ))}
       </div>
 
-      {mensaje && <p className="auth-message">{mensaje}</p>}
+      {verArchivados && (
+        <p className="profe-nota">
+          Archivados de todas las categorías. Siguen igual en las rutinas donde ya estaban; tocá
+          "Recuperar" para volver a usarlos.
+        </p>
+      )}
+
+      {mensaje && (
+        <p className="auth-message" role="status">
+          {mensaje}
+        </p>
+      )}
 
       {cargando ? (
         <Esqueleto />
-      ) : ejerciciosDelGrupo.length === 0 ? (
-        <p className="profe-vacio">
-          {filtro === 'todos'
-            ? `Todavía no hay ejercicios de ${categoriaActiva}.`
-            : `En ${categoriaActiva} no falta ninguno. ¡Bien!`}
-        </p>
+      ) : visibles.length === 0 ? (
+        <p className="profe-vacio">{textoVacio}</p>
       ) : (
         <div className="profe-ejercicios-lista">
-          {ejerciciosDelGrupo.map((ejercicio) =>
+          {visibles.map((ejercicio) =>
             editandoId === ejercicio.id ? (
               <div key={ejercicio.id} className="profe-ejercicio-edicion">
                 <input
@@ -286,7 +431,11 @@ export default function ProfeEjercicios() {
                 <input
                   className="auth-input"
                   type="text"
-                  placeholder="Link del video (opcional)"
+                  inputMode="url"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="Link del video, https://… (opcional)"
                   value={videoEdit}
                   onChange={(event) => setVideoEdit(event.target.value)}
                 />
@@ -339,39 +488,28 @@ export default function ProfeEjercicios() {
                   </button>
                 </div>
               </div>
+            ) : confirmacion?.id === ejercicio.id ? (
+              <ConfirmacionEjercicio
+                key={ejercicio.id}
+                ejercicio={ejercicio}
+                accion={confirmacion.accion}
+                estadoUso={confirmacion.estadoUso}
+                uso={confirmacion.uso}
+                trabajando={trabajando}
+                onConfirmar={() => confirmar(ejercicio)}
+                onCancelar={cerrarConfirmacion}
+              />
             ) : (
-              <div key={ejercicio.id} className="profe-ejercicio-item">
-                <div className="profe-ejercicio-item-info">
-                  {ejercicio.imagen_url && (
-                    <img
-                      src={miniaturaDeEjercicio(ejercicio.imagen_url)}
-                      alt=""
-                      className="profe-ejercicio-foto-mini"
-                      width="48"
-                      height="48"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  )}
-                  <span>{ejercicio.nombre}</span>
-                </div>
-                <div className="profe-ejercicio-item-acciones">
-                  <button
-                    type="button"
-                    className="profe-ejercicio-agregar"
-                    onClick={() => empezarEdicion(ejercicio)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="profe-ejercicio-borrar"
-                    onClick={() => handleBorrar(ejercicio.id)}
-                  >
-                    Borrar
-                  </button>
-                </div>
-              </div>
+              <FilaEjercicio
+                key={ejercicio.id}
+                ejercicio={ejercicio}
+                esAdmin={esAdmin}
+                recuperando={recuperandoId === ejercicio.id}
+                onEditar={() => empezarEdicion(ejercicio)}
+                onArchivar={() => pedirConfirmacion(ejercicio, 'archivar')}
+                onRecuperar={() => recuperar(ejercicio)}
+                onBorrar={() => pedirConfirmacion(ejercicio, 'borrar')}
+              />
             ),
           )}
         </div>
@@ -390,7 +528,11 @@ export default function ProfeEjercicios() {
         <input
           className="auth-input"
           type="text"
-          placeholder="Link del video (opcional)"
+          inputMode="url"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="Link del video, https://… (opcional)"
           value={videoNuevo}
           onChange={(event) => setVideoNuevo(event.target.value)}
         />
@@ -408,6 +550,73 @@ export default function ProfeEjercicios() {
         </button>
       </form>
     </ProfeLayout>
+  )
+}
+
+// Un ejercicio de la lista. En uso: "Editar" y "Archivar". Archivado:
+// "Recuperar" y, solo para el Admin, "Borrar" (para siempre).
+function FilaEjercicio({
+  ejercicio,
+  esAdmin,
+  recuperando,
+  onEditar,
+  onArchivar,
+  onRecuperar,
+  onBorrar,
+}) {
+  const archivado = estaArchivado(ejercicio)
+  return (
+    <div className="profe-ejercicio-item">
+      <div className="profe-ejercicio-item-info">
+        {ejercicio.imagen_url && (
+          <img
+            src={miniaturaDeEjercicio(ejercicio.imagen_url)}
+            alt=""
+            className="profe-ejercicio-foto-mini"
+            width="48"
+            height="48"
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+        <span>
+          {ejercicio.nombre}
+          {archivado && (
+            <small className="selector-item-categorias">
+              {categoriasDeEjercicio(ejercicio).join(' · ')}
+            </small>
+          )}
+        </span>
+      </div>
+      <div className="profe-ejercicio-item-acciones">
+        {archivado ? (
+          <>
+            <button
+              type="button"
+              className="profe-ejercicio-agregar"
+              disabled={recuperando}
+              onClick={onRecuperar}
+            >
+              {recuperando ? 'Recuperando…' : 'Recuperar'}
+            </button>
+            {esAdmin && (
+              <button type="button" className="profe-ejercicio-borrar" onClick={onBorrar}>
+                Borrar
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <button type="button" className="profe-ejercicio-agregar" onClick={onEditar}>
+              Editar
+            </button>
+            <button type="button" className="profe-ejercicio-archivar" onClick={onArchivar}>
+              Archivar
+            </button>
+          </>
+        )}
+      </div>
+    </div>
   )
 }
 

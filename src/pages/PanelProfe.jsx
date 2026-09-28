@@ -78,7 +78,11 @@ export default function PanelProfe() {
       // Cuándo entrenó cada cliente por última vez (una fila por cliente).
       cargarActividadClientes(),
       supabase.from('resumenes_progreso').select('id, cliente_id').eq('estado', 'borrador'),
-      supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
+      // Ejercicios en uso (sin los archivados, supabase/sql/024).
+      supabase
+        .from('ejercicios')
+        .select('id', { count: 'exact', head: true })
+        .is('archivado_en', null),
       // ¿Es dueño de un gimnasio? (para "Equipo y gimnasios")
       supabase.rpc('mi_rol'),
       // Clientes con medidas (si la tabla todavía no existe, se ignora).

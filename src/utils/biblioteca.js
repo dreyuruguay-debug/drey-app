@@ -27,3 +27,29 @@ export function filtrarPorBusqueda(ejercicios, busqueda) {
     return palabras.every((palabra) => texto.includes(palabra))
   })
 }
+
+// Ejercicios archivados (supabase/sql/024): siguen en las rutinas y
+// plantillas donde ya estaban, pero no se ofrecen para agregar.
+export function estaArchivado(ejercicio) {
+  return Boolean(ejercicio?.archivado_en)
+}
+
+export function ejerciciosActivos(ejercicios) {
+  return ejercicios.filter((ejercicio) => !estaArchivado(ejercicio))
+}
+
+// "3 rutinas (de 2 clientes) y 1 plantilla", a partir de lo que devuelve
+// uso_de_ejercicio. Vacío si no está en ninguna.
+export function textoUso({ rutinas = 0, clientes = 0, plantillas = 0 } = {}) {
+  const partes = []
+  if (rutinas > 0) {
+    const deClientes = clientes > 0 ? ` (de ${cantidad(clientes, 'cliente', 'clientes')})` : ''
+    partes.push(`${cantidad(rutinas, 'rutina', 'rutinas')}${deClientes}`)
+  }
+  if (plantillas > 0) partes.push(cantidad(plantillas, 'plantilla', 'plantillas'))
+  return partes.join(' y ')
+}
+
+function cantidad(numero, singular, plural) {
+  return `${numero} ${numero === 1 ? singular : plural}`
+}

@@ -1191,6 +1191,59 @@ textarea {
   padding: 0;
 }
 
+/* Biblioteca protegida (supabase/sql/024): "Archivar" no es peligroso
+   (el ejercicio sigue en las rutinas), por eso va en gris y no en rojo. */
+.profe-ejercicio-archivar {
+  background: none;
+  border: none;
+  color: var(--drey-texto-suave);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.confirmacion-ejercicio {
+  border-color: var(--drey-naranja);
+}
+
+.confirmacion-ejercicio .profe-ejercicio-edicion-botones {
+  flex-wrap: wrap;
+}
+
+.confirmacion-ejercicio .boton-peligro {
+  width: auto;
+}
+
+.confirmacion-ejercicio-titulo {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.confirmacion-ejercicio-texto {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #d4d4d4;
+}
+
+.profe-cerrar-selector:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Etiqueta chica al lado de un nombre (por ejemplo "Archivado" en una
+   rutina). */
+.estado-chip.estado-chip-chico {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .profe-form-ejercicio {
   display: flex;
   flex-direction: column;

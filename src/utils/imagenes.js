@@ -39,3 +39,20 @@ export function miniaturaDeEjercicio(url) {
   if (!url.startsWith(CARPETA_EJERCICIOS)) return url
   return `${CARPETA_EJERCICIOS}mini/${url.slice(CARPETA_EJERCICIOS.length)}`
 }
+
+// Fotos que subió el profe: viven en el bucket "ejercicios-fotos" de
+// Supabase. Devuelve el nombre del archivo dentro del bucket (para
+// borrarlo), o null si la foto no es de ahí (por ejemplo, un GIF de la app).
+const MARCA_BUCKET_FOTOS = '/storage/v1/object/public/ejercicios-fotos/'
+
+export function archivoDeFotoSubida(url) {
+  if (typeof url !== 'string') return null
+  const posicion = url.indexOf(MARCA_BUCKET_FOTOS)
+  if (posicion === -1) return null
+  const ruta = url.slice(posicion + MARCA_BUCKET_FOTOS.length).split(/[?#]/)[0]
+  try {
+    return decodeURIComponent(ruta) || null
+  } catch {
+    return ruta || null
+  }
+}

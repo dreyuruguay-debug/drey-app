@@ -4,6 +4,7 @@ import { nombreCortoDeMetodo } from '../../data/metodos.js'
 import { TERMINOS } from '../../data/terminos.js'
 import { textoCalentamiento } from '../../utils/formatos.js'
 import { formatearNumero } from '../../utils/progreso.js'
+import { linkVideoSeguro } from '../../utils/linkVideo.js'
 
 const PASO_KG = 2.5
 const PASO_REPS = 1
@@ -23,6 +24,8 @@ export default function PantallaEjercicio({
 }) {
   const actual = series.findIndex((serie) => !serie.hecha)
   const datos = ejercicio.ejercicios || {}
+  // Solo links https:// (utils/linkVideo.js): uno viejo de otro tipo no se muestra.
+  const linkVideo = linkVideoSeguro(datos.video_url)
   const calentamiento = textoCalentamiento(ejercicio.calentamiento)
   const esGrupo = bloque.cantidad > 1
 
@@ -47,8 +50,8 @@ export default function PantallaEjercicio({
         ) : (
           <span className="entrenar-foto-vacia">Sin foto todavía</span>
         )}
-        {datos.video_url && (
-          <a className="entrenar-video" href={datos.video_url} target="_blank" rel="noreferrer">
+        {linkVideo && (
+          <a className="entrenar-video" href={linkVideo} target="_blank" rel="noreferrer">
             ▶ Cómo se hace
           </a>
         )}

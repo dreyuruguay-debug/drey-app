@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 import { ejerciciosRecomendados, textoGrupos } from '../data/gruposMusculares.js'
-import { filtrarPorBusqueda } from '../utils/biblioteca.js'
+import { ejerciciosActivos, filtrarPorBusqueda } from '../utils/biblioteca.js'
 import { miniaturaDeEjercicio } from '../utils/imagenes.js'
 
 const RECOMENDADOS = 'recomendados'
@@ -12,6 +12,9 @@ const RECOMENDADOS = 'recomendados'
 // categoría o buscar por nombre o músculo en toda la biblioteca (sin
 // importar tildes ni mayúsculas). Las fotos de la lista son la versión
 // chica y solo se descargan las que aparecen en pantalla.
+//
+// Los ejercicios archivados (supabase/sql/024) no se ofrecen. Si una
+// rutina ya tenía uno, sigue elegido en el bloque hasta que se lo quite.
 //
 // seleccionados: ejercicios ya elegidos (en orden). completo: true cuando
 // ya se eligieron todos los que lleva el bloque (los demás se deshabilitan).
@@ -26,17 +29,19 @@ export default function SelectorEjercicios({
   const [vista, setVista] = useState(hayGrupos ? RECOMENDADOS : CATEGORIAS[0].nombre)
   const [busqueda, setBusqueda] = useState('')
 
+  const disponibles = useMemo(() => ejerciciosActivos(ejercicios), [ejercicios])
+
   const recomendados = useMemo(
-    () => (hayGrupos ? ejerciciosRecomendados(ejercicios, grupos) : []),
-    [ejercicios, grupos, hayGrupos],
+    () => (hayGrupos ? ejerciciosRecomendados(disponibles, grupos) : []),
+    [disponibles, grupos, hayGrupos],
   )
 
   const texto = busqueda.trim()
   const visibles = useMemo(() => {
-    if (texto) return filtrarPorBusqueda(ejercicios, texto)
+    if (texto) return filtrarPorBusqueda(disponibles, texto)
     if (vista === RECOMENDADOS) return recomendados
-    return ejercicios.filter((ejercicio) => categoriasDeEjercicio(ejercicio).includes(vista))
-  }, [ejercicios, recomendados, vista, texto])
+    return disponibles.filter((ejercicio) => categoriasDeEjercicio(ejercicio).includes(vista))
+  }, [disponibles, recomendados, vista, texto])
 
   const idsElegidos = seleccionados.map((ejercicio) => ejercicio.id)
 

@@ -50,6 +50,25 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
 - Para sumar GIF nuevos: `herramientas/convertir_gifs.py` (lo corre alguien
   técnico) los achica igual que estos.
 
+## Biblioteca protegida
+
+- Nadie borra un ejercicio por error (SQL 024): "Archivar" lo saca de la
+  lista para agregar, pero sigue igual en las rutinas y plantillas donde
+  ya estaba. Antes de archivar se ve en cuántas rutinas, clientes y
+  plantillas está (`uso_de_ejercicio`). "Archivados" los muestra y
+  "Recuperar" los devuelve.
+- Borrar para siempre: solo el Admin, desde "Archivados", y solo si no
+  está en ninguna rutina ni plantilla (la base lo controla aunque alguien
+  toque la app). Si tenía una foto subida por el profe, se borra también.
+- Pantalla: `pages/ProfeEjercicios.jsx` + `components/ConfirmacionEjercicio.jsx`;
+  acciones en `services/biblioteca.js`; `utils/biblioteca.js`
+  (`estaArchivado`, `ejerciciosActivos`, `textoUso`). El selector del
+  asistente no ofrece archivados y el editor de rutinas los marca con
+  "Archivado".
+- Links de video: solo `https://` (`utils/linkVideo.js`, igual que la base);
+  "http://…" y "youtu.be/…" se arreglan solos al guardar.
+- Quién archiva, recupera o borra queda en el Historial del Admin.
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),
