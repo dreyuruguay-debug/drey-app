@@ -5,10 +5,16 @@ import { supabase } from './services/supabaseClient.js'
 import { iniciarAvisoDeErrores } from './services/errores.js'
 import { iniciarEnvioAutomatico } from './services/colaEntrenamientos.js'
 import { mostrarAviso } from './services/avisos.js'
+import { cargarConfiguracion } from './services/configuracion.js'
 import './styles/globals.css'
 
 // Aviso de errores por mail (solo si está configurado, ver errores.js).
 iniciarAvisoDeErrores(supabase)
+
+// Planes, precios, datos de pago y reglas de vencimiento (los maneja el
+// Admin desde Ajustes). La app abre con lo último conocido y esto lo
+// actualiza por detrás.
+cargarConfiguracion()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

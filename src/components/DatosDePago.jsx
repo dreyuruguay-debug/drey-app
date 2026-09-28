@@ -1,27 +1,27 @@
-import {
-  DATOS_TRANSFERENCIA,
-  MERCADO_PAGO_AUTOMATICO,
-  obtenerLinkMercadoPago,
-} from '../data/pagos.js'
+import { cobroAutomatico, datosTransferencia, obtenerLinkMercadoPago } from '../data/pagos.js'
+import { useConfiguracion } from '../services/configuracion.js'
 
 // Cómo pagar un plan "a mano": datos para transferencia y, mientras el
 // cobro automático no esté activado, el link de Mercado Pago de cada
 // plan. Lo usan el Registro (paso "Pago") y la pantalla de Suscripción,
 // así los dos muestran exactamente lo mismo.
 //
-// Con MERCADO_PAGO_AUTOMATICO (data/pagos.js) el botón de Mercado Pago
-// lo muestra Suscripción (PagoMercadoPago.jsx) y acá queda solo la
-// transferencia.
+// Con el cobro automático activado (Ajustes del Admin) el botón de
+// Mercado Pago lo muestra Suscripción (PagoMercadoPago.jsx) y acá queda
+// solo la transferencia.
 export default function DatosDePago({ planId }) {
-  const linkMercadoPago = MERCADO_PAGO_AUTOMATICO ? '' : obtenerLinkMercadoPago(planId)
+  useConfiguracion() // se vuelve a dibujar si el Admin cambia los datos
+  const automatico = cobroAutomatico()
+  const transferencia = datosTransferencia()
+  const linkMercadoPago = automatico ? '' : obtenerLinkMercadoPago(planId)
 
   return (
     <>
       <div className="suscripcion-bloque">
         <p className="suscripcion-bloque-titulo">Datos para transferencia</p>
-        {DATOS_TRANSFERENCIA ? (
+        {transferencia ? (
           <div className="pago-transferencia">
-            {Object.entries(DATOS_TRANSFERENCIA).map(([etiqueta, valor]) => (
+            {Object.entries(transferencia).map(([etiqueta, valor]) => (
               <p key={etiqueta} className="suscripcion-bloque-texto">
                 <span className="pago-etiqueta">{etiqueta}:</span> {valor}
               </p>
@@ -29,12 +29,12 @@ export default function DatosDePago({ planId }) {
           </div>
         ) : (
           <p className="suscripcion-bloque-texto suscripcion-pendiente">
-            Pendiente: el profe todavía tiene que cargar los datos bancarios.
+            Pendiente: todavía no se cargaron los datos bancarios.
           </p>
         )}
       </div>
 
-      {!MERCADO_PAGO_AUTOMATICO && (
+      {!automatico && (
         <div className="suscripcion-bloque">
           <p className="suscripcion-bloque-titulo">Mercado Pago</p>
           {linkMercadoPago ? (

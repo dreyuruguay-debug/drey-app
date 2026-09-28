@@ -1,4 +1,4 @@
-import { DIAS_DE_GRACIA } from './vencimiento.js'
+import { diasDeGracia } from './vencimiento.js'
 
 // Términos y condiciones y política de privacidad de DREY (Ley 18.331 de
 // protección de datos personales, Uruguay).
@@ -114,11 +114,14 @@ export const TERMINOS_Y_CONDICIONES = {
     },
     {
       titulo: '3. Planes y pagos',
-      parrafos: [
-        'Los planes se pagan por mes, por adelantado. El precio del primer mes puede ser distinto al de los siguientes; los precios vigentes se ven en la app.',
-        `Tu cuenta queda activa hasta la fecha de vencimiento que ves en "Suscripción". Si no pagás, tenés ${DIAS_DE_GRACIA} días de gracia para seguir entrenando; después se pausa el acceso a tus rutinas hasta que pagues. Tu historial no se borra.`,
-        'Los códigos de descuento tienen las condiciones que se indiquen en cada uno (plazo, cantidad de usos, si valen solo el primer mes).',
-      ],
+      // Se arma al mostrarla: los días de gracia los elige el Admin.
+      get parrafos() {
+        return [
+          'Los planes se pagan por mes, por adelantado. El precio del primer mes puede ser distinto al de los siguientes; los precios vigentes se ven en la app.',
+          `Tu cuenta queda activa hasta la fecha de vencimiento que ves en "Suscripción". Si no pagás, tenés ${diasDeGracia()} días de gracia para seguir entrenando; después se pausa el acceso a tus rutinas hasta que pagues. Tu historial no se borra.`,
+          'Los códigos de descuento tienen las condiciones que se indiquen en cada uno (plazo, cantidad de usos, si valen solo el primer mes).',
+        ]
+      },
     },
     {
       titulo: '4. Salud y responsabilidad',

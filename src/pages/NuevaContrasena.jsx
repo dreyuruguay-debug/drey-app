@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
+import { entraAlPanel } from '../utils/roles.js'
 import EyeIcon from '../components/EyeIcon.jsx'
 
 // "Elegí tu contraseña nueva". Acá llega la persona desde el link del
@@ -55,10 +56,10 @@ export default function NuevaContrasena() {
     }
     const { data: perfil } = await supabase
       .from('perfiles')
-      .select('es_profe')
+      .select('es_profe, es_admin')
       .eq('id', data.user.id)
       .single()
-    navigate(perfil?.es_profe ? '/profe' : '/inicio', { replace: true })
+    navigate(entraAlPanel(perfil) ? '/profe' : '/inicio', { replace: true })
   }
 
   return (

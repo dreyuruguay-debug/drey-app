@@ -2,9 +2,12 @@ import { supabase } from './supabaseClient.js'
 import { obtenerUsuarioActual, usuarioGuardado } from './sesion.js'
 import { recordado, recordar } from './memoriaSesion.js'
 import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
+import { SOLO_CLIENTES, entraAlPanel } from '../utils/roles.js'
 
-// ¿Quién usa la app es profe? Lo usa el menú del panel del profe
-// (components/ProfeLayout.jsx) para decidir si muestra la pantalla.
+// ¿Quién usa la app entra al panel? (profe o Admin, ver utils/roles.js).
+// Lo usa el menú del panel (components/ProfeLayout.jsx) para decidir si
+// muestra la pantalla. En esta sección "esProfe" quiere decir "entra al
+// panel"; "esAdmin" dice además si es la cuenta Admin.
 //
 // Antes cada pantalla del profe le preguntaba al servidor antes de
 // mostrar nada. Ahora:
@@ -31,26 +34,60 @@ export function esProfeConocido() {
   return null
 }
 
+// ¿Es la cuenta Admin? Igual que esProfeConocido: true / false, o null
+// si todavía no se sabe en este celular.
+export function esAdminConocido() {
+  const usuario = usuarioGuardado()
+  if (!usuario) return null
+  const enMemoria = recordado(CLAVE_MEMORIA)
+  if (enMemoria?.usuarioId === usuario.id && 'esAdmin' in enMemoria) return enMemoria.esAdmin
+  const enCelular = leerJSON(CLAVE_CELULAR)
+  if (enCelular?.usuarioId === usuario.id && 'esAdmin' in enCelular)
+    return Boolean(enCelular.esAdmin)
+  return null
+}
+
 // Confirma con el servidor (una sola vez por sesión).
-// Devuelve { usuarioId, esProfe }, o { usuarioId: null } si no hay sesión.
-export async function verificarProfe() {
+// Devuelve { usuarioId, esProfe, esAdmin }, o { usuarioId: null } si no
+// hay sesión.
+// Si ya hay una pregunta en camino (el menú y la pantalla preguntan a la
+// vez), se espera esa en vez de hacer otra.
+let verificacionEnCurso = null
+
+export function verificarProfe() {
+  if (!verificacionEnCurso) {
+    verificacionEnCurso = preguntarAlServidor().finally(() => {
+      verificacionEnCurso = null
+    })
+  }
+  return verificacionEnCurso
+}
+
+async function preguntarAlServidor() {
   const usuario = await obtenerUsuarioActual()
   if (!usuario) return { usuarioId: null, esProfe: false }
 
   const enMemoria = recordado(CLAVE_MEMORIA)
-  if (enMemoria?.usuarioId === usuario.id) return enMemoria
+  if (enMemoria?.usuarioId === usuario.id && 'esAdmin' in enMemoria) return enMemoria
 
   const { data, error } = await supabase
     .from('perfiles')
-    .select('es_profe')
+    .select('es_profe, es_admin')
     .eq('id', usuario.id)
     .single()
   if (error) {
     // Sin señal o error del servidor: se usa lo último que se supo.
-    const conocido = esProfeConocido()
-    return { usuarioId: usuario.id, esProfe: Boolean(conocido) }
+    return {
+      usuarioId: usuario.id,
+      esProfe: Boolean(esProfeConocido()),
+      esAdmin: Boolean(esAdminConocido()),
+    }
   }
-  const resultado = { usuarioId: usuario.id, esProfe: Boolean(data?.es_profe) }
+  const resultado = {
+    usuarioId: usuario.id,
+    esProfe: entraAlPanel(data),
+    esAdmin: Boolean(data?.es_admin),
+  }
   recordar(CLAVE_MEMORIA, resultado)
   guardarJSON(CLAVE_CELULAR, resultado)
   return resultado
@@ -68,7 +105,7 @@ export async function contarPagosPendientes() {
   const { count, error } = await supabase
     .from('perfiles')
     .select('id', { count: 'exact', head: true })
-    .eq('es_profe', false)
+    .match(SOLO_CLIENTES)
     .or('estado.eq.pendiente,aviso_pago.is.true')
   if (error) return ultimosPagosPendientes()
   recordar(CLAVE_PAGOS, count || 0)

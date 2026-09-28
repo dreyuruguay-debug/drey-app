@@ -3,6 +3,7 @@ import TopPattern from '../components/TopPattern.jsx'
 import { POLITICA_PRIVACIDAD, TERMINOS_Y_CONDICIONES } from '../data/legal.js'
 import { TEXTOS_REVISADOS, VERSION_TERMINOS } from '../data/versionLegal.js'
 import { textoFechaCorta } from '../utils/dias.js'
+import { useConfiguracion } from '../services/configuracion.js'
 
 const TEXTOS = { privacidad: POLITICA_PRIVACIDAD, terminos: TERMINOS_Y_CONDICIONES }
 
@@ -10,6 +11,7 @@ const TEXTOS = { privacidad: POLITICA_PRIVACIDAD, terminos: TERMINOS_Y_CONDICION
 // condiciones o la política de privacidad. Los textos están en
 // src/data/legal.js.
 export default function Legal({ tipo }) {
+  useConfiguracion() // los días de gracia los elige el Admin
   const navigate = useNavigate()
   const texto = TEXTOS[tipo]
 

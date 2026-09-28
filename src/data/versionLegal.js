@@ -14,7 +14,8 @@ export const TEXTOS_REVISADOS = false
 // todavía no tiene las columnas nuevas (SQL 011 sin instalar), no se le
 // pide nada para no trabar a nadie.
 export function necesitaAceptarTerminos(perfil) {
-  if (!perfil || perfil.es_profe) return false
+  // Profes y Admin no aceptan los términos de los clientes.
+  if (!perfil || perfil.es_profe || perfil.es_admin) return false
   if (!('terminos_version' in perfil)) return false
   return perfil.terminos_version !== VERSION_TERMINOS
 }

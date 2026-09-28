@@ -4,6 +4,7 @@ import { traerTodasLasFilas } from './paginado.js'
 import { cargarActividadClientes } from './actividad.js'
 import { ciclosTerminados, calcularResumenCiclo } from '../utils/progreso.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
+import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Genera los resúmenes de 4 semanas que falten, en estado "borrador",
 // para todos los clientes activos. Se llama sola al abrir el panel del
@@ -27,7 +28,7 @@ export function generarResumenesPendientes() {
 
 async function armarResumenesPendientes() {
   const [{ data: clientes }, { data: existentes }, actividad] = await Promise.all([
-    supabase.from('perfiles').select('id').eq('estado', 'activo').eq('es_profe', false),
+    supabase.from('perfiles').select('id').eq('estado', 'activo').match(SOLO_CLIENTES),
     traerTodasLasFilas(() =>
       supabase.from('resumenes_progreso').select('id, cliente_id, ciclo').order('id'),
     ),

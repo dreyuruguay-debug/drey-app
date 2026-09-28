@@ -35,6 +35,7 @@ import { leerEnCurso } from '../utils/entrenamientoEnCurso.js'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { useConfiguracion } from '../services/configuracion.js'
 
 // Inicio e historial guardados en el celular del usuario de la sesión
 // guardada (o null si falta alguno: entonces se espera al servidor).
@@ -65,6 +66,7 @@ function leerGuardado() {
 // gracia, reemplaza el entrenamiento por el botón para pagar (ver
 // data/vencimiento.js).
 export default function Home() {
+  useConfiguracion() // nombre del plan y reglas de vencimiento (Ajustes del Admin)
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   // Lo último guardado en el celular se muestra al instante (sin

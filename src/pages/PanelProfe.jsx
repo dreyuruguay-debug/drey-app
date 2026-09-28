@@ -12,6 +12,7 @@ import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Lo último que se mostró queda en memoria (services/memoriaSesion.js):
 // al volver a Inicio se ve al instante y se actualiza por detrás.
@@ -24,6 +25,9 @@ const MEMORIA_PANEL = 'panel-profe'
 // primeros pasos. La lógica de qué tareas mostrar está en
 // utils/tareasProfe.js. Al volver a Inicio se muestra al instante lo
 // último cargado (MEMORIA_PANEL) y se actualiza por detrás.
+//
+// La cuenta Admin tiene su propio Inicio (AdminInicio.jsx); la elige
+// InicioPanel.jsx.
 export default function PanelProfe() {
   const navigate = useNavigate()
   const guardado = recordado(MEMORIA_PANEL)
@@ -65,7 +69,7 @@ export default function PanelProfe() {
     ] = await Promise.all([
       supabase.from('perfiles').select('nombre').eq('id', usuario?.id).single(),
       traerTodasLasFilas(() =>
-        supabase.from('perfiles').select('*').eq('es_profe', false).order('id'),
+        supabase.from('perfiles').select('*').match(SOLO_CLIENTES).order('id'),
       ),
       traerTodasLasFilas(() => supabase.from('rutinas').select('*').order('id')),
       traerTodasLasFilas(() =>
@@ -75,7 +79,7 @@ export default function PanelProfe() {
       cargarActividadClientes(),
       supabase.from('resumenes_progreso').select('id, cliente_id').eq('estado', 'borrador'),
       supabase.from('ejercicios').select('*', { count: 'exact', head: true }),
-      // ¿Es administrador o dueño de gimnasio? (para "Equipo y gimnasios")
+      // ¿Es dueño de un gimnasio? (para "Equipo y gimnasios")
       supabase.rpc('mi_rol'),
       // Clientes con medidas (si la tabla todavía no existe, se ignora).
       supabase.from('mediciones').select('cliente_id'),
@@ -96,7 +100,8 @@ export default function PanelProfe() {
 
     const panel = {
       nombre: yo?.nombre || '',
-      armaEquipo: Boolean(rol?.es_admin || rol?.gimnasios?.length),
+      // Dueño de un gimnasio: ve "Equipo y gimnasios".
+      armaEquipo: Boolean(rol?.gimnasios?.length),
       tareas: armarTareas({
         clientes: clientes || [],
         rutinas: rutinas || [],

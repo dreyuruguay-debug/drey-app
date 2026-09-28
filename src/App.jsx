@@ -14,10 +14,12 @@ import AvisoGlobal from './components/AvisoGlobal.jsx'
 import EstadoConexion from './components/EstadoConexion.jsx'
 import PantallaError from './components/PantallaError.jsx'
 import {
+  AdminAjustes,
+  AdminHistorial,
+  InicioPanel,
   Legal,
   Medidas,
   NuevaContrasena,
-  PanelProfe,
   PrivacidadYDatos,
   ProfeCalendario,
   ProfeClienteDetalle,
@@ -73,7 +75,10 @@ export default function App() {
           <Route path="/privacidad" element={<Legal tipo="privacidad" />} />
           {/* "Más" pasó a llamarse "Perfil". */}
           <Route path="/mas" element={<Navigate to="/perfil" replace />} />
-          <Route path="/profe" element={<PanelProfe />} />
+          {/* Inicio del panel: el del Admin o el del profe (InicioPanel). */}
+          <Route path="/profe" element={<InicioPanel />} />
+          <Route path="/profe/ajustes" element={<AdminAjustes />} />
+          <Route path="/profe/ajustes/historial" element={<AdminHistorial />} />
           <Route path="/profe/cuentas" element={<ProfeCuentas />} />
           <Route path="/profe/codigos" element={<ProfeCodigos />} />
           <Route path="/profe/estadisticas" element={<ProfeEstadisticas />} />
