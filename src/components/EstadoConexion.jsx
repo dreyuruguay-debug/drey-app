@@ -25,16 +25,13 @@ export default function EstadoConexion() {
 
   if (enLinea && pendientes === 0) return null
 
-  const porEnviar =
-    pendientes > 0
-      ? `${pendientes} ${pendientes === 1 ? 'entrenamiento' : 'entrenamientos'} por enviar`
-      : ''
+  const cantidad = `${pendientes} ${pendientes === 1 ? 'entrenamiento' : 'entrenamientos'}`
 
   return (
     <div className={enLinea ? 'estado-conexion' : 'estado-conexion sin-senal'} role="status">
       {enLinea
-        ? `Enviando ${porEnviar}…`
-        : `Sin señal · la app sigue funcionando${porEnviar ? ` · ${porEnviar}` : ''}`}
+        ? `Enviando ${cantidad}…`
+        : `Sin señal · la app sigue funcionando${pendientes > 0 ? ` · ${cantidad} por enviar` : ''}`}
     </div>
   )
 }

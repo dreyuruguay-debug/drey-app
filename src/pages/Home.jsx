@@ -30,9 +30,9 @@ import {
   textoFechaCorta,
   textoFechaLarga,
 } from '../utils/dias.js'
-import { estimarMinutos } from '../utils/entrenamiento.js'
+import { estimarMinutos, formatearReloj } from '../utils/entrenamiento.js'
 import { textoDuracionCalentamiento } from '../utils/calentamiento.js'
-import { leerEnCurso } from '../utils/entrenamientoEnCurso.js'
+import { entrenamientosEnCursoDeHoy, resumenEnCurso } from '../utils/entrenamientoEnCurso.js'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -51,8 +51,14 @@ function leerGuardado() {
 
 // Inicio del cliente: una sola acción clara. Arriba el saludo y la
 // semana en puntos; en el medio, "Hoy te toca" con el botón verde grande
-// para empezar (o seguir) el entrenamiento; abajo la racha y el último
-// récord. La primera vez que entra se muestra la bienvenida.
+// para empezar el entrenamiento; abajo la racha y el último récord. La
+// primera vez que entra se muestra la bienvenida.
+//
+// Si dejó un entrenamiento a medias hoy (en pausa, de cualquier rutina),
+// en su lugar aparece la tarjeta naranja "Entrenamiento en pausa" con el
+// tiempo y las series que lleva, y el botón naranja "Seguir
+// entrenamiento" (naranja = algo que ya está en curso). Si llegó al final
+// y no lo guardó, el botón es "Guardar entrenamiento".
 //
 // El calendario (qué rutina toca cada día) lo arma el profe. Los días
 // cumplidos salen de la tabla "sesiones" (más los entrenamientos que
@@ -153,7 +159,8 @@ export default function Home() {
   // respondió (sin señal), se usa la misma regla calculada acá.
   const planBloqueado =
     !cuentaPendiente && (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
-  const enCurso = rutinaHoy ? leerEnCurso(rutinaHoy.id, hoy) : null
+  // El entrenamiento a medias de hoy (el último que tocó), si hay.
+  const enCurso = entrenamientosEnCursoDeHoy(hoy)[0] || null
   // "15 min" si todas las actividades del calentamiento tienen tiempo.
   const duracionCalentamiento = textoDuracionCalentamiento(rutinaHoy?.calentamiento)
 
@@ -236,6 +243,12 @@ export default function Home() {
             texto={`Venció el ${textoFechaCorta(perfil?.vencimiento)}. Pagá la cuota para volver a ver tus rutinas. Tu historial y tus récords siguen guardados.`}
             accion={{ texto: 'Pagar y reactivar', to: '/suscripcion' }}
           />
+        ) : enCurso ? (
+          <TarjetaEnCurso
+            rutinaId={enCurso.rutinaId}
+            datos={enCurso.datos}
+            nombre={enCurso.datos.nombre || nombreDeRutina(calendario, enCurso.rutinaId)}
+          />
         ) : rutinaHoy ? (
           <div className="hoy-tarjeta">
             <span className="hoy-etiqueta">{entrenoHoy ? 'Ya entrenaste hoy' : 'Hoy te toca'}</span>
@@ -273,11 +286,7 @@ export default function Home() {
               >
                 <path d="M8 5v14l11-7z" />
               </svg>
-              {enCurso
-                ? 'Seguir entrenamiento'
-                : entrenoHoy
-                  ? 'Entrenar de nuevo'
-                  : 'Empezar entrenamiento'}
+              {entrenoHoy ? 'Entrenar de nuevo' : 'Empezar entrenamiento'}
             </Link>
             <Link to={`/rutinas/${rutinaHoy.id}?vista=completa`} className="boton-texto">
               Ver la rutina antes de empezar
@@ -347,6 +356,42 @@ export default function Home() {
       <BottomNav />
     </div>
   )
+}
+
+// Entrenamiento a medias de hoy: tarjeta y botón naranjas para seguirlo
+// donde quedó (el tiempo en pausa no cuenta).
+function TarjetaEnCurso({ rutinaId, datos, nombre }) {
+  const resumen = resumenEnCurso(datos)
+  return (
+    <div className="hoy-tarjeta hoy-tarjeta-en-curso">
+      <span className="hoy-etiqueta hoy-etiqueta-en-curso">
+        {resumen.faltaGuardar
+          ? 'Te falta guardar el entrenamiento'
+          : resumen.pausado
+            ? 'Entrenamiento en pausa'
+            : 'Entrenamiento en curso'}
+      </span>
+      <h2 className="hoy-nombre">{nombre || 'Tu rutina'}</h2>
+      <div className="chips-lista">
+        <span className="chip chip-dato">⏱ {formatearReloj(resumen.segundos)}</span>
+        <span className="chip chip-dato">
+          {resumen.seriesHechas} de {resumen.seriesTotales} series
+        </span>
+      </div>
+      <Link to={`/rutinas/${rutinaId}`} className="boton-principal boton-grande boton-seguir">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        {resumen.faltaGuardar ? 'Guardar entrenamiento' : 'Seguir entrenamiento'}
+      </Link>
+    </div>
+  )
+}
+
+// Nombre de una rutina de la semana (para entrenamientos a medias
+// guardados antes de que se anotara el nombre).
+function nombreDeRutina(calendario, rutinaId) {
+  return Object.values(calendario).find((fila) => fila.rutinas?.id === rutinaId)?.rutinas?.nombre
 }
 
 function TarjetaMensaje({ titulo, texto, accion }) {

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import RelojCircular from './RelojCircular.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
-import { relojDeActividad, resumenDeCalentamiento } from '../../utils/calentamiento.js'
+import {
+  actividadCorriendo,
+  relojDeActividad,
+  resumenDeCalentamiento,
+} from '../../utils/calentamiento.js'
 
 // Primera parte del modo entrenar cuando el profe cargó un calentamiento.
 // Se hace igual que un ejercicio: una actividad por vez (Cinta, Movilidad,
@@ -112,7 +116,7 @@ function RelojActividad({
   onCompletar,
   onTiempoCumplido,
 }) {
-  const corriendo = estado.desde !== null
+  const corriendo = actividadCorriendo(estado)
   const [ahora, setAhora] = useState(() => Date.now())
 
   useEffect(() => {

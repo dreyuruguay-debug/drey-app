@@ -5474,3 +5474,46 @@ div.tarjeta-rutina {
 .clientes-filtros {
   margin: 0.25rem 0 0.5rem;
 }
+
+/* ---------- Entrenamiento en curso o en pausa ----------
+   Naranja = un entrenamiento que ya empezó y quedó a medias: el botón
+   "Seguir entrenamiento" de Inicio, la marca "En pausa" de Mis rutinas
+   y la pantalla "En pausa" del modo entrenar (PantallaPausa.jsx). */
+.boton-seguir {
+  background: var(--drey-naranja);
+  color: var(--drey-black);
+}
+
+.hoy-tarjeta-en-curso,
+.tarjeta-rutina-en-curso {
+  border-color: var(--drey-naranja);
+}
+
+.hoy-etiqueta-en-curso {
+  color: var(--drey-naranja);
+}
+
+.reloj-circular-pausa .reloj-circular-avance {
+  stroke: var(--drey-naranja);
+}
+
+.pausa-etiqueta {
+  color: var(--drey-naranja);
+}
+
+.pausa-titulo,
+.pausa-avance {
+  text-align: center;
+}
+
+.pausa-avance {
+  margin: 0;
+  font-weight: 700;
+  color: #cfcfcf;
+}
+
+.pausa-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}

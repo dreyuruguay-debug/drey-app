@@ -4,13 +4,21 @@ import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import { cargarMisRutinas, misRutinasGuardadas } from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
-import { DIAS_SEMANA, abreviaturaDia, obtenerNombreDiaHoy } from '../utils/dias.js'
+import {
+  DIAS_SEMANA,
+  abreviaturaDia,
+  obtenerFechaHoyISO,
+  obtenerNombreDiaHoy,
+} from '../utils/dias.js'
+import { entrenamientosEnCursoDeHoy, resumenEnCurso } from '../utils/entrenamientoEnCurso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
 // "Mis rutinas" del cliente: cada rutina con los días en que le toca y,
 // abajo, su semana completa. Al tocar una rutina se ve entera y desde
-// ahí se empieza a entrenar. Se abre al instante con lo último guardado
-// en el celular y se actualiza por detrás (sin señal, queda lo guardado).
+// ahí se empieza a entrenar. La que quedó a medias hoy se marca en
+// naranja ("En pausa") y al tocarla sigue directo donde quedó.
+// Se abre al instante con lo último guardado en el celular y se
+// actualiza por detrás (sin señal, queda lo guardado).
 export default function Rutinas() {
   const navigate = useNavigate()
   // Lo último guardado se muestra al instante y se actualiza por detrás.
@@ -21,6 +29,16 @@ export default function Rutinas() {
   const [cargando, setCargando] = useState(!guardado)
   const [rutinas, setRutinas] = useState(guardado?.rutinas || [])
   const [calendario, setCalendario] = useState(guardado?.calendario || {})
+  // Entrenamientos a medias de hoy, por rutina.
+  const [enCurso] = useState(
+    () =>
+      new Map(
+        entrenamientosEnCursoDeHoy(obtenerFechaHoyISO()).map(({ rutinaId, datos }) => [
+          rutinaId,
+          resumenEnCurso(datos),
+        ]),
+      ),
+  )
 
   useEffect(() => {
     cargarDatos()
@@ -66,14 +84,29 @@ export default function Rutinas() {
             {rutinas.map((rutina) => {
               const dias = diasDe(rutina.id)
               const esHoy = dias.includes(diaHoy)
+              const aMedias = enCurso.get(String(rutina.id))
+              let clase = 'tarjeta-rutina'
+              if (aMedias) clase += ' tarjeta-rutina-en-curso'
+              else if (esHoy) clase += ' tarjeta-rutina-hoy'
               return (
                 <Link
                   key={rutina.id}
-                  to={`/rutinas/${rutina.id}?vista=completa`}
-                  className={esHoy ? 'tarjeta-rutina tarjeta-rutina-hoy' : 'tarjeta-rutina'}
+                  to={aMedias ? `/rutinas/${rutina.id}` : `/rutinas/${rutina.id}?vista=completa`}
+                  className={clase}
                 >
                   <span className="tarjeta-rutina-textos">
-                    {esHoy && <span className="hoy-etiqueta">Hoy</span>}
+                    {aMedias ? (
+                      <span className="hoy-etiqueta hoy-etiqueta-en-curso">
+                        {aMedias.faltaGuardar
+                          ? 'Falta guardar'
+                          : aMedias.pausado
+                            ? 'En pausa'
+                            : 'En curso'}{' '}
+                        · {aMedias.seriesHechas} de {aMedias.seriesTotales} series
+                      </span>
+                    ) : (
+                      esHoy && <span className="hoy-etiqueta">Hoy</span>
+                    )}
                     <strong>{rutina.nombre}</strong>
                     {(rutina.musculos || rutina.patron) && (
                       <small>{rutina.musculos || rutina.patron}</small>

@@ -8,7 +8,8 @@
 // hacia arriba.
 //
 // Nada de este archivo lee ni guarda en la base de datos: recibe datos y
-// devuelve resultados, así se puede probar solo.
+// devuelve resultados, así se puede probar solo. El reloj de cada
+// actividad es el cronómetro de utils/reloj.js (desde + acumulado).
 //
 // Estado del calentamiento mientras se entrena (se guarda en el celular
 // junto con las series, ver utils/entrenamientoEnCurso.js):
@@ -19,6 +20,8 @@
 //     acumulado: 0,               // segundos que corrió antes de pausarlo
 //     extra: 0,                   // segundos sumados con "+30 s" / "+1 min"
 //   }
+
+import { pausarReloj, reanudarReloj, relojCorriendo, segundosDeReloj } from './reloj.js'
 
 // Para estimar la duración de la rutina cuando una actividad no tiene un
 // tiempo que se entienda (por ejemplo "Movilidad" sin duración).
@@ -125,7 +128,7 @@ export function resumenDeCalentamiento(estado) {
     hechas,
     total: estado.hechas.length,
     completo: hechas === estado.hechas.length,
-    empezado: hechas > 0 || estado.desde !== null || estado.acumulado > 0,
+    empezado: hechas > 0 || relojCorriendo(estado) || estado.acumulado > 0,
   }
 }
 
@@ -138,8 +141,8 @@ export function resumenDeCalentamiento(estado) {
 export function relojDeActividad(actividad, estado, ahora) {
   const base = segundosDeDuracion(actividad?.duracion)
   const objetivo = base === null ? null : base + (estado?.extra || 0)
-  const corridos = segundosCorridos(estado, ahora)
-  const corriendo = Boolean(estado && estado.desde !== null)
+  const corridos = segundosDeReloj(estado, ahora)
+  const corriendo = relojCorriendo(estado)
   if (objetivo === null) {
     return { objetivo, corridos, restante: null, proporcion: 1, corriendo, cumplido: false }
   }
@@ -154,20 +157,19 @@ export function relojDeActividad(actividad, estado, ahora) {
   }
 }
 
-export function segundosCorridos(estado, ahora) {
-  if (!estado) return 0
-  const enMarcha = estado.desde !== null ? Math.max(0, ahora - estado.desde) / 1000 : 0
-  return estado.acumulado + enMarcha
-}
-
 export function empezarActividad(estado, ahora) {
-  if (!estado || estado.actual < 0 || estado.desde !== null) return estado
-  return { ...estado, desde: ahora }
+  if (!estado || estado.actual < 0) return estado
+  return reanudarReloj(estado, ahora)
 }
 
 export function pausarActividad(estado, ahora) {
-  if (!estado || estado.desde === null) return estado
-  return { ...estado, desde: null, acumulado: segundosCorridos(estado, ahora) }
+  if (!estado) return estado
+  return pausarReloj(estado, ahora)
+}
+
+// true si el reloj de la actividad abierta está corriendo.
+export function actividadCorriendo(estado) {
+  return relojCorriendo(estado)
 }
 
 export function sumarTiempo(estado, segundos) {

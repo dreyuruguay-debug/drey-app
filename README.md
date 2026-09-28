@@ -88,6 +88,24 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
 - En el editor del profe, debajo de cada duración se ve qué reloj verá
   el alumno (`EditorActividades.jsx`, `conReloj` en `data/actividades.js`).
 
+## Tiempo y pausa del entrenamiento
+
+- El tiempo de arriba a la derecha arranca cuando el alumno empieza (el
+  calentamiento o, si no tiene, al abrir la rutina) y se frena en la
+  pausa y en el final. Es un cronómetro que se puede pausar
+  (`utils/reloj.js`, el mismo que usa cada actividad del calentamiento).
+- "Pausar" abre la pantalla "En pausa" (`components/entrenar/PantallaPausa.jsx`):
+  seguir, salir al inicio o terminar. Salir de la pantalla de cualquier
+  forma (por ejemplo con "atrás") también la deja en pausa; al volver a
+  abrirla sigue sola desde donde quedó. Bloquear el celular no pausa.
+- Naranja = entrenamiento en curso: en Inicio aparece la tarjeta
+  "Entrenamiento en pausa" (de cualquier rutina, con el tiempo y las
+  series) y el botón naranja "Seguir entrenamiento"; en Mis rutinas, la
+  marca "En pausa". Si llegó al final y no lo guardó, dice "Te falta
+  guardar el entrenamiento" y abre directo el final.
+- Lo guardado en el celular y las funciones para pausar/seguir:
+  `utils/entrenamientoEnCurso.js`.
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),

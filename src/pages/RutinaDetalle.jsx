@@ -6,6 +6,7 @@ import PantallaCalentamiento from '../components/entrenar/PantallaCalentamiento.
 import PantallaEjercicio from '../components/entrenar/PantallaEjercicio.jsx'
 import PantallaDescanso from '../components/entrenar/PantallaDescanso.jsx'
 import PantallaFinal from '../components/entrenar/PantallaFinal.jsx'
+import PantallaPausa from '../components/entrenar/PantallaPausa.jsx'
 import PieEntrenar from '../components/entrenar/PieEntrenar.jsx'
 import VistaGeneral from '../components/entrenar/VistaGeneral.jsx'
 import { cargarRutinaCompleta } from '../services/rutinas.js'
@@ -29,6 +30,7 @@ import {
   turnoPendiente,
 } from '../utils/entrenamiento.js'
 import {
+  actividadCorriendo,
   completarActividad,
   crearCalentamiento,
   elegirActividad,
@@ -38,7 +40,14 @@ import {
   resumenDeCalentamiento,
   sumarTiempo,
 } from '../utils/calentamiento.js'
-import { borrarEnCurso, guardarEnCurso, leerEnCurso } from '../utils/entrenamientoEnCurso.js'
+import {
+  borrarEnCurso,
+  guardarEnCurso,
+  leerEnCurso,
+  pausarEnCurso,
+  reanudarEnCurso,
+} from '../utils/entrenamientoEnCurso.js'
+import { relojCorriendo, relojEnMarcha, relojParado, segundosDeReloj } from '../utils/reloj.js'
 import { formatearNumero } from '../utils/progreso.js'
 import { semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -63,6 +72,13 @@ const VIBRACION_FIN_TIEMPO = [300, 150, 300]
 //      terminar la vuelta (ver construirTurnos en utils/entrenamiento.js).
 //   3. Final: cómo le fue en el calentamiento, vuelta a la calma,
 //      "¿Cómo te sentiste?" y guardar.
+//
+// Tiempo del entrenamiento (arriba a la derecha): arranca cuando empieza
+// (el calentamiento o, si no tiene, al abrir la rutina) y se frena en la
+// pausa y en el final. "Pausar" abre la pantalla "En pausa"
+// (PantallaPausa.jsx): seguir, salir al inicio o terminar. Salir de la
+// pantalla de cualquier forma (por ejemplo con "atrás") también la deja en
+// pausa, y al volver a abrirla sigue sola desde donde quedó.
 //
 // Lo que va haciendo se guarda en el celular: si toca "Pausar" o se le
 // cierra la app, al volver sigue donde estaba (el mismo día).
@@ -96,7 +112,11 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // no tiene; enCalentamiento: se está viendo la pantalla del calentamiento.
   const [calentamiento, setCalentamiento] = useState(null)
   const [enCalentamiento, setEnCalentamiento] = useState(false)
-  const [inicio, setInicio] = useState(() => Date.now())
+  // Tiempo del entrenamiento (utils/reloj.js) y pausa: null mientras
+  // entrena; { desde, calentamientoCorria } en pausa (ver
+  // utils/entrenamientoEnCurso.js).
+  const [reloj, setReloj] = useState(() => relojParado())
+  const [pausa, setPausa] = useState(null)
   const [visible, setVisible] = useState(0)
   const [records, setRecords] = useState(0)
   const [descanso, setDescanso] = useState(null)
@@ -158,25 +178,44 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   }, [descanso, restante])
 
   // Guarda en el celular lo que lleva hecho (solo si ya empezó: una
-  // serie marcada o el calentamiento arrancado).
+  // serie marcada o el calentamiento arrancado). También en el final,
+  // hasta que toca "Guardar entrenamiento".
+  const sePuedeRetomar =
+    !cargando && !modoPrevia && fase !== 'guardado' && yaEmpezo(series, calentamiento)
   useEffect(() => {
-    if (cargando || modoPrevia || fase !== 'entrenando') return
-    if (!yaEmpezo(series, calentamiento)) return
-    guardarEnCurso(id, datosEnCurso())
-  }, [series, calentamiento, enCalentamiento, visible, records, cargando, fase])
+    if (sePuedeRetomar) guardarEnCurso(id, datosEnCurso())
+  }, [series, calentamiento, enCalentamiento, reloj, pausa, visible, records, sePuedeRetomar])
 
   function datosEnCurso(cambios = {}) {
     return {
       fecha: hoy,
+      nombre: rutina?.nombre || '',
       series,
       calentamiento,
       enCalentamiento,
-      inicio,
+      reloj,
+      pausa,
+      // En el final, al volver a abrirla se muestra el final para guardar.
+      fase: fase === 'final' ? 'final' : 'entrenando',
       visible,
       records,
       ...cambios,
     }
   }
+
+  // Si sale de la pantalla sin tocar "Pausar" (por ejemplo con el botón
+  // "atrás" del celular), el entrenamiento queda en pausa: el tiempo que
+  // pasa afuera no cuenta. (Bloquear el celular no pausa: sigue
+  // entrenando.)
+  const alSalir = useRef(null)
+  alSalir.current = sePuedeRetomar ? datosEnCurso() : null
+  useEffect(
+    () => () => {
+      const datos = alSalir.current
+      if (datos && !datos.pausa) guardarEnCurso(id, pausarEnCurso(datos, Date.now()))
+    },
+    [id],
+  )
 
   // Para que una carga vieja (de otra rutina) no pise a la nueva.
   const cargaActual = useRef(0)
@@ -184,7 +223,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // se retomó un entrenamiento pausado) vale null.
   const estadoInicial = useRef(null)
   const estadoActual = useRef(null)
-  estadoActual.current = { series, calentamiento, enCalentamiento, visible, fase }
+  estadoActual.current = { series, calentamiento, enCalentamiento, reloj, pausa, visible, fase }
 
   // Primero muestra al instante la rutina guardada en el celular; después
   // la actualiza con lo del servidor, pero solo si cambió algo y el
@@ -241,6 +280,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       actual.series !== inicial.series ||
       actual.calentamiento !== inicial.calentamiento ||
       actual.enCalentamiento !== inicial.enCalentamiento ||
+      actual.reloj !== inicial.reloj ||
+      actual.pausa !== inicial.pausa ||
       actual.visible !== inicial.visible ||
       actual.fase !== inicial.fase
     )
@@ -291,17 +332,33 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     const iniciales = crearSeriesIniciales(lista, sugeridas)
     const enCurso = modoPrevia ? null : leerEnCurso(id, hoy)
     if (enCurso && mismaForma(enCurso.series, iniciales)) {
-      const guardado = mismoCalentamiento(enCurso.calentamiento, datos?.calentamiento)
-        ? enCurso.calentamiento
-        : crearCalentamiento(datos?.calentamiento)
+      const mismo = mismoCalentamiento(enCurso.calentamiento, datos?.calentamiento)
+      const guardado = {
+        ...enCurso,
+        calentamiento: mismo ? enCurso.calentamiento : crearCalentamiento(datos?.calentamiento),
+        pausa: enCurso.pausa && {
+          ...enCurso.pausa,
+          calentamientoCorria: mismo && enCurso.pausa.calentamientoCorria,
+        },
+      }
+      // Si había llegado al final sin guardar, vuelve al final (con el
+      // tiempo frenado). Si no, sigue solo desde donde quedó (el tiempo en
+      // pausa no cuenta). Si el profe cambió el calentamiento, arranca de
+      // cero.
+      const enFinal = enCurso.fase === 'final'
+      const retomado = enFinal
+        ? pausarEnCurso(guardado, Date.now())
+        : reanudarEnCurso(guardado, Date.now())
       setSeries(enCurso.series)
-      setCalentamiento(guardado)
+      setCalentamiento(retomado.calentamiento)
       // enCalentamiento no existía antes del 28/09/2026 (se guardaba
       // "calentamientoHecho"): se respeta lo de un entrenamiento a medias.
       setEnCalentamiento(
-        Boolean(guardado) && (enCurso.enCalentamiento ?? !enCurso.calentamientoHecho),
+        Boolean(retomado.calentamiento) && (enCurso.enCalentamiento ?? !enCurso.calentamientoHecho),
       )
-      setInicio(enCurso.inicio || Date.now())
+      setReloj(retomado.reloj)
+      setPausa(retomado.pausa)
+      setFase(enFinal ? 'final' : 'entrenando')
       setVisible(Math.min(enCurso.visible || 0, Math.max(0, lista.length - 1)))
       setRecords(enCurso.records || 0)
       // Retomó un entrenamiento pausado: cuenta como "ya empezó".
@@ -320,15 +377,23 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       })
     } else {
       const nuevo = crearCalentamiento(datos?.calentamiento)
+      // El tiempo arranca cuando empieza a entrenar: con calentamiento, al
+      // tocar "Empezar"; sin calentamiento, al abrir la rutina (o al cerrar
+      // "Ver la rutina", si entró a mirarla antes).
+      const relojInicial =
+        nuevo || parametros.get('vista') === 'completa' ? relojParado() : relojEnMarcha(Date.now())
       setSeries(iniciales)
       setCalentamiento(nuevo)
       setEnCalentamiento(Boolean(nuevo))
-      setInicio(Date.now())
+      setReloj(relojInicial)
+      setPausa(null)
       setVisible(0)
       estadoInicial.current = {
         series: iniciales,
         calentamiento: nuevo,
         enCalentamiento: Boolean(nuevo),
+        reloj: relojInicial,
+        pausa: null,
         visible: 0,
         fase: 'entrenando',
       }
@@ -363,6 +428,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   }
 
   function marcarSerie(exIndex, serieIndex) {
+    const relojActual = iniciarReloj()
     const hecha = !series[exIndex][serieIndex].hecha
     const nuevas = series.map((filas, i) =>
       i !== exIndex
@@ -377,8 +443,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     const turno = turnos.find((item) => item.exIndex === exIndex && item.serieIndex === serieIndex)
     const siguiente = turnoPendiente(turnos, nuevas)
     if (!siguiente) {
-      setDescanso(null)
-      setFase('final')
+      terminar(relojActual)
       return
     }
 
@@ -453,14 +518,14 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // --- Calentamiento ---
 
   // El tiempo del entrenamiento arranca con la primera actividad del
-  // calentamiento (antes arrancaba recién con los ejercicios).
+  // calentamiento.
   function empezarCalentamiento() {
-    if (!yaEmpezo(series, calentamiento)) setInicio(Date.now())
+    iniciarReloj()
     setCalentamiento(empezarActividad(calentamiento, Date.now()))
   }
 
   function completarCalentamiento() {
-    if (!yaEmpezo(series, calentamiento)) setInicio(Date.now())
+    iniciarReloj()
     setCalentamiento(completarActividad(calentamiento))
   }
 
@@ -468,7 +533,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // terminar un descanso. La siguiente espera a que el alumno toque
   // "Empezar" (tiene que ir a la máquina o al lugar).
   function tiempoCumplido(indice) {
-    if (calentamiento?.actual !== indice || calentamiento.desde === null) return
+    if (calentamiento?.actual !== indice || !actividadCorriendo(calentamiento)) return
     navigator.vibrate?.(VIBRACION_FIN_TIEMPO)
     setCalentamiento(completarActividad(calentamiento))
   }
@@ -476,7 +541,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // Pasa a los ejercicios (al terminar o salteando lo que falta). Si una
   // actividad estaba corriendo, su reloj se pausa: al volver sigue igual.
   function irAEjercicios(indice = visible) {
-    if (!yaEmpezo(series, calentamiento)) setInicio(Date.now())
+    iniciarReloj()
     setCalentamiento(pausarActividad(calentamiento, Date.now()))
     setEnCalentamiento(false)
     setVisible(indice)
@@ -491,21 +556,64 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     setEnCalentamiento(true)
   }
 
-  function salir() {
-    if (modoPrevia) {
-      navigate(-1)
-      return
-    }
-    // "Pausar" también pausa el reloj del calentamiento. Se guarda acá
-    // porque la pantalla se cierra antes de que corra el guardado de
-    // arriba.
-    if (calentamiento?.desde != null) {
-      guardarEnCurso(
-        id,
-        datosEnCurso({ calentamiento: pausarActividad(calentamiento, Date.now()) }),
-      )
+  // --- Tiempo, pausa y final ---
+
+  // Arranca el tiempo la primera vez que hace algo (si todavía no corría).
+  // Devuelve el tiempo como queda.
+  function iniciarReloj() {
+    if (relojCorriendo(reloj) || pausa || yaEmpezo(series, calentamiento)) return reloj
+    const nuevo = relojEnMarcha(Date.now())
+    setReloj(nuevo)
+    return nuevo
+  }
+
+  function aplicarPausa(datos) {
+    setReloj(datos.reloj)
+    setCalentamiento(datos.calentamiento)
+    setPausa(datos.pausa)
+  }
+
+  // Frena el tiempo y el reloj del calentamiento.
+  function pausar() {
+    setDescanso(null)
+    aplicarPausa(pausarEnCurso({ reloj, calentamiento, pausa }, Date.now()))
+  }
+
+  function seguir() {
+    aplicarPausa(reanudarEnCurso({ reloj, calentamiento, pausa }, Date.now()))
+  }
+
+  // Vuelve a Inicio con el entrenamiento en pausa. Se guarda acá porque
+  // la pantalla se cierra antes de que corra el guardado de arriba.
+  function salirAlInicio() {
+    if (yaEmpezo(series, calentamiento)) {
+      guardarEnCurso(id, datosEnCurso(pausarEnCurso({ reloj, calentamiento, pausa }, Date.now())))
     }
     navigate('/inicio')
+  }
+
+  // El tiempo se frena en el final (y sigue si vuelve a los ejercicios).
+  function irAlFinal() {
+    terminar(reloj)
+  }
+
+  function terminar(relojActual) {
+    setDescanso(null)
+    setVistaGeneral(false)
+    aplicarPausa(pausarEnCurso({ reloj: relojActual, calentamiento, pausa }, Date.now()))
+    setFase('final')
+  }
+
+  function volverDelFinal() {
+    seguir()
+    setFase('entrenando')
+  }
+
+  // "Pausar" (arriba a la izquierda). En la vista previa del profe es
+  // "Salir".
+  function tocarPausar() {
+    if (modoPrevia) navigate(-1)
+    else pausar()
   }
 
   async function finalizar() {
@@ -568,7 +676,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const avisoPrevia = modoPrevia && (
     <div className="entrenar-previa">
       <span>Vista previa · así lo ve el alumno</span>
-      <button type="button" className="boton-texto" onClick={salir}>
+      <button type="button" className="boton-texto" onClick={() => navigate(-1)}>
         Salir
       </button>
     </div>
@@ -608,7 +716,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           resumen={{
             series: seriesHechas,
             total: totalSeries,
-            segundos: (Date.now() - inicio) / 1000,
+            segundos: segundosDeReloj(reloj, Date.now()),
             records,
             calentamiento: resumenDeCalentamiento(calentamiento),
           }}
@@ -617,7 +725,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           onEsfuerzo={setEsfuerzo}
           onComentario={setComentario}
           onFinalizar={finalizar}
-          onVolver={() => setFase('entrenando')}
+          onVolver={volverDelFinal}
           guardando={guardando}
           guardado={fase === 'guardado'}
           pendienteDeEnvio={pendienteDeEnvio}
@@ -648,7 +756,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       )}
 
       <header className="entrenar-barra">
-        <button type="button" className="boton-secundario boton-chico" onClick={salir}>
+        <button type="button" className="boton-secundario boton-chico" onClick={tocarPausar}>
           {modoPrevia ? 'Salir' : 'Pausar'}
         </button>
         <span className="entrenar-barra-titulo">
@@ -660,7 +768,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           )}
         </span>
         <span className="entrenar-barra-derecha">
-          <Cronometro desde={inicio} />
+          <Cronometro reloj={reloj} />
           <button
             type="button"
             className="entrenar-ver-todo"
@@ -769,7 +877,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             ayudaAnterior={visible > 0 ? 'Ejercicio anterior' : 'Volver al calentamiento'}
             onSiguiente={siguienteEjercicio ? () => setVisible(visible + 1) : null}
             ayudaSiguiente="Ejercicio siguiente"
-            onTerminar={siguienteEjercicio ? null : () => setFase('final')}
+            onTerminar={siguienteEjercicio ? null : irAlFinal}
           />
         </>
       )}
@@ -789,11 +897,11 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             volverAlCalentamiento(indice)
             setVistaGeneral(false)
           }}
-          onCerrar={() => setVistaGeneral(false)}
-          onTerminar={() => {
+          onCerrar={() => {
+            if (!enCalentamiento) iniciarReloj()
             setVistaGeneral(false)
-            setFase('final')
           }}
+          onTerminar={irAlFinal}
         />
       )}
 
@@ -820,6 +928,19 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             }))
           }
           onListo={() => setDescanso(null)}
+        />
+      )}
+
+      {pausa && !modoPrevia && (
+        <PantallaPausa
+          nombre={rutina.nombre}
+          segundos={segundosDeReloj(reloj, Date.now())}
+          seriesHechas={seriesHechas}
+          seriesTotales={totalSeries}
+          calentamiento={resumenCalentamiento}
+          onSeguir={seguir}
+          onSalir={salirAlInicio}
+          onTerminar={irAlFinal}
         />
       )}
     </div>
