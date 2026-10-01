@@ -14,6 +14,7 @@ import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { comprimirImagen } from '../utils/imagenes.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 const REVISAR_PAGO_CADA_MS = 3000
 const REVISAR_PAGO_VECES = 10
@@ -72,7 +73,7 @@ export default function Suscripcion() {
     if (!silencioso) setCargando(true)
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     const [{ data }, listaPagos] = await Promise.all([

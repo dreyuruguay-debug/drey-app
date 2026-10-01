@@ -7153,3 +7153,797 @@ div.tarjeta-rutina {
   background: #1c1c1c;
   color: var(--drey-texto-suave);
 }
+
+/* ==================================================================
+   Página de inicio (01/10/2026): pages/Portada.jsx
+   Video a pantalla completa con el logo animado, la bienvenida y los
+   botones; debajo, las secciones que aparecen al bajar. Los textos los
+   cambia el Admin en Ajustes → Portada.
+   ================================================================== */
+.portada {
+  min-height: 100vh;
+  background: var(--drey-black);
+  color: var(--drey-white);
+}
+
+.portada-esperando {
+  min-height: 100vh;
+  background: var(--drey-black);
+}
+
+.portada-aviso-previa {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: var(--drey-amarillo-fondo);
+  color: var(--drey-amarillo);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ---------- Botones de la portada ---------- */
+.portada-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2rem;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.portada-boton-lleno {
+  background: var(--drey-white);
+  color: var(--drey-black);
+}
+
+.portada-boton-lleno:hover {
+  background: var(--drey-accent);
+}
+
+.portada-boton-borde {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.7);
+  color: var(--drey-white);
+  backdrop-filter: blur(4px);
+}
+
+.portada-boton-borde:hover {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent);
+}
+
+.portada-boton-chico {
+  min-height: 2.3rem;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.7rem;
+}
+
+.portada-boton:focus-visible,
+.portada-conocenos:focus-visible,
+.portada-pregunta summary:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 3px;
+}
+
+.portada-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.portada-botones .portada-boton {
+  min-width: 190px;
+}
+
+@media (max-width: 520px) {
+  .portada-botones {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin-inline: auto;
+  }
+}
+
+/* ---------- Video de arriba ---------- */
+.portada-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(2rem + env(safe-area-inset-top)) 1.25rem 7rem;
+  overflow: hidden;
+  text-align: center;
+}
+
+.portada-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--drey-black);
+}
+
+/* Oscurece el video para que los textos se lean bien. */
+.portada-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 13, 13, 0.55) 0%,
+    rgba(13, 13, 13, 0.25) 35%,
+    rgba(13, 13, 13, 0.55) 65%,
+    rgba(13, 13, 13, 0.96) 100%
+  );
+}
+
+.portada-hero-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 760px;
+}
+
+.portada-logo {
+  display: block;
+  width: min(72vw, 360px);
+  height: auto;
+  margin: 0 auto 1rem;
+}
+
+.portada-hero-textos {
+  transition: opacity 0.4s ease;
+}
+
+/* La primera vez, mientras llegan los textos del Admin. */
+.portada-esperando-textos {
+  opacity: 0;
+}
+
+.portada-saludo {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--drey-accent);
+}
+
+/* Más chico que el logo, para que no compita con él. */
+.portada-titulo {
+  max-width: 18ch;
+  margin: 0 auto;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(1.85rem, 4.2vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.portada-subtitulo {
+  max-width: 40ch;
+  margin: 0.85rem auto 0;
+  color: var(--drey-gray-light);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.portada-conocenos {
+  position: absolute;
+  left: 50%;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  color: var(--drey-white);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.portada-conocenos svg {
+  animation: portada-rebote 1.8s ease-in-out infinite;
+}
+
+@keyframes portada-rebote {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- Barra fija de arriba (aparece al bajar) ---------- */
+.portada-barra {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: calc(0.7rem + env(safe-area-inset-top)) 1.25rem 0.7rem;
+  background: rgba(13, 13, 13, 0.88);
+  border-bottom: 1px solid var(--drey-borde);
+  backdrop-filter: blur(10px);
+  transform: translateY(-110%);
+  transition: transform 0.3s ease;
+}
+
+.portada-barra-visible {
+  transform: none;
+}
+
+.portada-barra-logo {
+  display: flex;
+  flex: 0 0 auto;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.portada-barra-logo img {
+  width: auto;
+  height: 22px;
+}
+
+.portada-barra-botones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ---------- Secciones ---------- */
+.portada-contenido {
+  scroll-margin-top: 3.5rem;
+}
+
+.portada-seccion {
+  padding: 5rem 1.5rem;
+  border-top: 1px solid var(--drey-borde);
+}
+
+.portada-seccion-interior {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.portada-antetitulo {
+  margin: 0 0 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--drey-accent);
+}
+
+.portada-h2 {
+  max-width: 18ch;
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.portada-destacada .portada-h2 {
+  max-width: 20ch;
+  font-size: clamp(2.3rem, 6vw, 4.4rem);
+}
+
+.portada-texto {
+  max-width: 60ch;
+  margin: 1.1rem 0 0;
+  color: var(--drey-gray-light);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+@media (max-width: 520px) {
+  .portada-seccion {
+    padding: 3.75rem 1.25rem;
+  }
+}
+
+/* Aparecer al bajar (components/portada/Aparece.jsx) */
+.aparece {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.aparece-visto {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aparece {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .portada-conocenos svg {
+    animation: none;
+  }
+}
+
+/* Cómo funciona: 3 pasos */
+.portada-pasos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portada-paso {
+  min-width: 0;
+  padding: 1.5rem 1.4rem 1.6rem;
+  border-radius: 18px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.portada-paso-numero {
+  display: block;
+  margin-bottom: 0.85rem;
+  font-family: var(--fuente-titulos);
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--drey-accent);
+}
+
+.portada-paso h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+.portada-paso p {
+  margin: 0;
+  color: var(--drey-texto-suave);
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+/* Fundador */
+.portada-fundador {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 3rem;
+  align-items: center;
+}
+
+.portada-fundador-sin-foto {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.portada-fundador-foto {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 20px;
+  background: var(--drey-superficie);
+}
+
+.portada-fundador-textos {
+  min-width: 0;
+}
+
+.portada-cita {
+  max-width: 28ch;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.portada-cita::before,
+.portada-cita::after {
+  color: var(--drey-accent);
+}
+
+.portada-cita::before {
+  content: '“';
+}
+
+.portada-cita::after {
+  content: '”';
+}
+
+.portada-firma {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 1.2rem 0 0;
+}
+
+.portada-firma span {
+  color: var(--drey-texto-suave);
+  font-size: 0.9rem;
+}
+
+/* Profes (usa la misma tarjeta que "Elegí tu profe") */
+.portada-profes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.25rem;
+  align-items: start;
+}
+
+/* Planes */
+.portada-planes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.25rem;
+}
+
+.portada-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1.6rem 1.4rem;
+  border-radius: 18px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-black);
+}
+
+.portada-plan-destacado {
+  border-color: var(--drey-accent);
+  background: linear-gradient(180deg, var(--drey-verde-fondo), var(--drey-black) 70%);
+}
+
+.portada-plan h3 {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.portada-plan-descripcion {
+  min-height: 2.8em;
+  margin: 0 0 0.6rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.portada-plan-precio {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.portada-plan-precio small {
+  font-family: var(--fuente-texto);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--drey-texto-suave);
+}
+
+.portada-plan-siguiente {
+  margin: 0 0 0.9rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.85rem;
+}
+
+.portada-plan .portada-boton {
+  margin-top: auto;
+}
+
+/* Para profes y gimnasios */
+.portada-sumate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.portada-sumate-boton {
+  margin-top: 1.5rem;
+}
+
+.portada-lista-tilde {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portada-lista-tilde li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0.75rem;
+  color: var(--drey-gray-light);
+  line-height: 1.5;
+}
+
+.portada-lista-tilde li::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--drey-verde-fondo)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233ddc84' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E")
+    center / 13px no-repeat;
+}
+
+/* Preguntas frecuentes */
+.portada-preguntas {
+  max-width: 760px;
+  margin-top: 2rem;
+  border-top: 1px solid var(--drey-borde);
+}
+
+.portada-pregunta {
+  border-bottom: 1px solid var(--drey-borde);
+}
+
+.portada-pregunta summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.portada-pregunta summary::-webkit-details-marker {
+  display: none;
+}
+
+.portada-pregunta summary::after {
+  content: '+';
+  flex: 0 0 auto;
+  color: var(--drey-accent);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.portada-pregunta[open] summary::after {
+  content: '–';
+}
+
+.portada-pregunta p {
+  max-width: 62ch;
+  margin: 0 0 1.1rem;
+  color: var(--drey-texto-suave);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* Cierre y pie */
+.portada-cierre {
+  text-align: center;
+}
+
+.portada-cierre .portada-h2 {
+  max-width: 16ch;
+  margin-inline: auto;
+}
+
+.portada-pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: calc(1040px + 3rem);
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem calc(2.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--drey-borde);
+  color: var(--drey-texto-suave);
+  font-size: 0.82rem;
+}
+
+.portada-pie nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+}
+
+.portada-pie a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.portada-pie a:hover {
+  color: var(--drey-white);
+}
+
+/* Celular: todo en una columna */
+@media (max-width: 760px) {
+  .portada-pasos,
+  .portada-profes,
+  .portada-planes,
+  .portada-fundador,
+  .portada-sumate {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portada-fundador {
+    gap: 1.75rem;
+  }
+
+  .portada-fundador-foto {
+    max-width: 420px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  .portada-profes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Ajustes → Portada (components/AjustesPortada.jsx) ---------- */
+.portada-ajustes-ver {
+  margin: 0.25rem 0 1rem;
+}
+
+.portada-ajustes-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.portada-ajustes-etiqueta {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.portada-ajustes-nota {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.portada-ajustes-pendiente {
+  color: var(--drey-amarillo) !important;
+}
+
+.portada-ajustes-original {
+  align-self: flex-start;
+  color: var(--drey-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.portada-ajustes-videos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.portada-ajustes-archivo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.portada-ajustes-archivo-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.portada-ajustes-vista {
+  flex: 0 0 auto;
+  width: 112px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #1f1f1f;
+}
+
+.portada-ajustes-vista-vertical {
+  width: 54px;
+  height: 96px;
+}
+
+.portada-ajustes-vista-foto {
+  width: 72px;
+  height: 90px;
+}
+
+.portada-ajustes-vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #444;
+  color: var(--drey-texto-suave);
+  font-size: 0.72rem;
+}
+
+.portada-ajustes-preguntas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.portada-ajustes-pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+}
+
+.portada-ajustes-pregunta .profe-ejercicio-borrar {
+  align-self: flex-start;
+}
+
+@media (max-width: 520px) {
+  .portada-ajustes-videos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

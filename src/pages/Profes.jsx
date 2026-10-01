@@ -17,6 +17,7 @@ import {
 } from '../services/profes.js'
 import { MAXIMO_MENSAJE_SOLICITUD } from '../data/especialidades.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Una respuesta de "no" se muestra unos días, después ya no hace falta.
 const DIAS_AVISO_RECHAZO = 14
@@ -49,7 +50,7 @@ export default function Profes() {
   async function cargar() {
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     const [{ data: perfil }, { profes: lista }, misSolicitudes, miProfe] = await Promise.all([

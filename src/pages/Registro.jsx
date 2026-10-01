@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import { cargarProfesDisponibles, obtenerOpcionesDeProfe } from '../services/profes.js'
 import { textoExperiencia, textoModalidades } from '../data/especialidades.js'
@@ -14,6 +14,8 @@ import { cargarConfiguracion, useConfiguracion } from '../services/configuracion
 import { validarCodigo } from '../services/pagos.js'
 import { calcularEdad } from '../utils/fechas.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
+import LogoDrey from '../components/LogoDrey.jsx'
 
 // Registro en 4 pasos, en este orden:
 //   1. Tus datos      (datos personales, objetivo, lesiones y las dos
@@ -39,6 +41,7 @@ const PASOS = ['Tus datos', 'Tu plan', 'Tu profe', 'Pago']
 
 export default function Registro() {
   const [paso, setPaso] = useState(0)
+  const [parametros] = useSearchParams()
 
   // Paso 1
   const [nombre, setNombre] = useState('')
@@ -56,8 +59,10 @@ export default function Registro() {
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
   const [consienteSalud, setConsienteSalud] = useState(false)
 
-  // Paso 2
-  const [planId, setPlanId] = useState('')
+  // Paso 2 (si viene de "Empezar" en un plan de la página de inicio, ese
+  // plan ya queda elegido: /registro?plan=seguimiento. Si ese plan no
+  // existe o está oculto, no cuenta: el paso 2 pide elegir uno)
+  const [planId, setPlanId] = useState(() => parametros.get('plan') || '')
   const [codigoDescuento, setCodigoDescuento] = useState('')
   const [codigoValidado, setCodigoValidado] = useState(null) // respuesta de validarCodigo
   const [revisando, setRevisando] = useState(false)
@@ -126,7 +131,7 @@ export default function Registro() {
         return 'Necesitamos tu autorización para usar tus datos de salud: sin ellos tu profe no puede armarte la rutina.'
       }
     }
-    if (numeroPaso === 1 && !planId) return 'Elegí un plan para continuar.'
+    if (numeroPaso === 1 && !plan) return 'Elegí un plan para continuar.'
     if (numeroPaso === 2 && opcionesProfe.length > 0 && !eleccion) {
       return 'Elegí tu profe o gimnasio para continuar.'
     }
@@ -210,7 +215,7 @@ export default function Registro() {
   if (resultado) {
     return (
       <main className="auth-screen">
-        <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
+        <LogoDrey />
         <p className="registro-gracias-titulo">
           {resultado.avisoPago ? 'Pago avisado' : '¡Cuenta creada!'}
         </p>
@@ -224,7 +229,7 @@ export default function Registro() {
         <p className="registro-gracias-texto">
           Te mandamos un email para confirmar tu cuenta. Revisá también la carpeta de spam.
         </p>
-        <Link to="/" className="pill-button registro-gracias-boton">
+        <Link to={RUTA_INGRESAR} className="pill-button registro-gracias-boton">
           Volver a iniciar sesión
         </Link>
       </main>
@@ -233,7 +238,7 @@ export default function Registro() {
 
   return (
     <main className="registro-screen">
-      <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
+      <LogoDrey />
 
       <PasosAsistente pasos={PASOS} actual={paso} etiqueta="Pasos del registro" />
 
@@ -538,7 +543,7 @@ export default function Registro() {
         )}
       </form>
 
-      <Link to="/" className="auth-switch">
+      <Link to={RUTA_INGRESAR} className="auth-switch">
         Ya tengo cuenta
       </Link>
     </main>

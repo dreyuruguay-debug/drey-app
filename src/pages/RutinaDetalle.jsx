@@ -55,6 +55,7 @@ import { relojCorriendo, relojEnMarcha, relojParado, segundosDeReloj } from '../
 import { formatearNumero } from '../utils/progreso.js'
 import { ejerciciosDeLaSemana, semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 const DURACION_AVISO_MS = 3000
 // Vibración al terminar un descanso o el tiempo de una actividad del
@@ -265,7 +266,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     const usuario = await obtenerUsuarioActual()
     if (!vigente()) return
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     setUsuarioId(usuario.id)

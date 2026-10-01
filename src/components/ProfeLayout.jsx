@@ -13,6 +13,7 @@ import {
 import { precargarPantallas } from '../pantallasDiferidas.js'
 import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Layout que comparten todas las pantallas del panel: revisa que quien
 // entra sea profe o Admin (una sola vez por sesión, ver
@@ -136,7 +137,7 @@ export default function ProfeLayout({
     verificarProfe().then(({ usuarioId, esProfe: profe, esAdmin: admin }) => {
       if (!activo) return
       if (!usuarioId) {
-        navigate('/')
+        navigate(RUTA_INGRESAR)
         return
       }
       setEsProfe(profe)

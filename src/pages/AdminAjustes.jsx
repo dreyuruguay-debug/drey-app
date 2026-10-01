@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
+import AjustesPortada from '../components/AjustesPortada.jsx'
 import { mostrarAviso } from '../services/avisos.js'
 import {
   cargarConfiguracion,
@@ -23,11 +24,14 @@ import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 //   · Cobro: datos para transferencia y cobro automático con Mercado Pago.
 //   · WhatsApp: link del grupo de la comunidad.
 //   · Plazos: días de aviso antes del vencimiento y días de gracia.
+//   · Portada: textos, secciones, foto del fundador y videos de la página
+//     de inicio (components/AjustesPortada.jsx, supabase/sql/027).
 const PESTANAS = [
   { id: 'planes', label: 'Planes' },
   { id: 'cobro', label: 'Cobro' },
   { id: 'whatsapp', label: 'WhatsApp' },
   { id: 'plazos', label: 'Plazos' },
+  { id: 'portada', label: 'Portada' },
 ]
 
 export default function AdminAjustes() {
@@ -59,6 +63,8 @@ export default function AdminAjustes() {
         <SeccionCobro config={config} />
       ) : pestana === 'whatsapp' ? (
         <SeccionWhatsapp config={config} />
+      ) : pestana === 'portada' ? (
+        <AjustesPortada />
       ) : (
         <SeccionPlazos config={config} />
       )}

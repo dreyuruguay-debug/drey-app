@@ -37,6 +37,7 @@ import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { useConfiguracion } from '../services/configuracion.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Inicio e historial guardados en el celular del usuario de la sesión
 // guardada (o null si falta alguno: entonces se espera al servidor).
@@ -99,7 +100,7 @@ export default function Home() {
   async function cargarDatos() {
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     setUsuarioId(usuario.id)

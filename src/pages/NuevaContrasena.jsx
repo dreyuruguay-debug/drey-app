@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import { entraAlPanel } from '../utils/roles.js'
 import EyeIcon from '../components/EyeIcon.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
+import LogoDrey from '../components/LogoDrey.jsx'
 
 // "Elegí tu contraseña nueva". Acá llega la persona desde el link del
 // mail de "Olvidé mi contraseña" (Login). Supabase la deja con una sesión
@@ -64,14 +66,14 @@ export default function NuevaContrasena() {
 
   return (
     <main className="auth-screen">
-      <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
+      <LogoDrey />
       <p className="registro-gracias-titulo">Contraseña nueva</p>
       {sinSesion && !listo ? (
         <>
           <p className="registro-gracias-texto">
             El link venció o ya se usó. Pedí uno nuevo desde "Olvidé mi contraseña".
           </p>
-          <button type="button" className="auth-submit" onClick={() => navigate('/')}>
+          <button type="button" className="auth-submit" onClick={() => navigate(RUTA_INGRESAR)}>
             Ir a iniciar sesión
           </button>
         </>

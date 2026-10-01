@@ -17,7 +17,8 @@
 //
 // Qué NO guarda acá: los datos (rutinas, entrenamientos, perfil). Esos
 // los guarda la propia app (src/services/copiaLocal.js), porque dependen
-// de quién inició sesión.
+// de quién inició sesión. Tampoco los videos de la página de inicio
+// (carpeta /inicio): se ven solo con internet.
 //
 // Las dos líneas de abajo las completa la construcción de la web. En
 // modo desarrollo quedan así y el service worker no guarda nada.
@@ -33,6 +34,7 @@ const MAXIMO_MINIATURAS = 1000
 const CARPETA_EJERCICIOS = '/ejercicios/'
 const CARPETA_MINIATURAS = '/ejercicios/mini/'
 const ESPERA_PAGINA_MS = 4000
+const ES_VIDEO = /\.(mp4|webm|mov|m4v)$/i
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -63,6 +65,11 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   if (request.method !== 'GET' || VERSION === 'desarrollo') return
   const url = new URL(request.url)
+
+  // Videos (los de la página de inicio): van directo a internet. El
+  // navegador los pide de a pedazos y esos pedazos no se pueden guardar;
+  // además pesan mucho para tenerlos en el celular.
+  if (request.headers.has('range') || ES_VIDEO.test(url.pathname)) return
 
   // Abrir cualquier pantalla de la app: primero internet (para tener
   // siempre la última versión); si no hay señal o tarda, la guardada.

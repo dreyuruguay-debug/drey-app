@@ -12,6 +12,7 @@ import {
 } from '../utils/dias.js'
 import { entrenamientosEnCursoDeHoy, resumenEnCurso } from '../utils/entrenamientoEnCurso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // "Mis rutinas" del cliente: cada rutina con los días en que le toca y,
 // abajo, su semana completa. Al tocar una rutina se ve entera y desde
@@ -47,7 +48,7 @@ export default function Rutinas() {
   async function cargarDatos() {
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     const resultado = await cargarMisRutinas(usuario.id)

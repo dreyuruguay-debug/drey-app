@@ -14,6 +14,7 @@ import {
 } from '../services/profes.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // "Perfil" del cliente: su profe (o elegir uno), sus datos, la
 // suscripción, la comunidad, la privacidad, volver a ver la bienvenida,
@@ -50,7 +51,7 @@ export default function Perfil() {
   async function cargar() {
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     setUsuarioId(usuario.id)
@@ -74,7 +75,7 @@ export default function Perfil() {
     // otra persona en este celular, no ve nada del anterior.
     borrarCopias(usuarioId)
     await supabase.auth.signOut()
-    navigate('/')
+    navigate(RUTA_INGRESAR)
   }
 
   function verBienvenida() {

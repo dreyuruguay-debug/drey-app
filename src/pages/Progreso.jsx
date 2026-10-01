@@ -15,6 +15,7 @@ import {
   volumenPorSemana,
 } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 const RECORDS_A_MOSTRAR = 5
 
@@ -41,7 +42,7 @@ export default function Progreso() {
   async function cargar() {
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     setUsuarioId(usuario.id)

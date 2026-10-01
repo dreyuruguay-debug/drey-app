@@ -21,6 +21,38 @@ las siga en el gimnasio y registre lo que levantó.
   profe". Una cuenta nunca es las dos cosas (SQL 020). La regla vive en
   `src/utils/roles.js` (`esCliente`, `entraAlPanel`, `SOLO_CLIENTES`).
 
+## Página de inicio (SQL 027)
+
+- **"/"** es la página de inicio (`pages/Portada.jsx`): video de fondo a
+  pantalla completa (vertical en el celular, horizontal en la compu,
+  `components/portada/VideoDeFondo.jsx`), el logo animado
+  (`components/LogoDrey.jsx`), la bienvenida y los botones "Iniciar
+  sesión", "Registrarme" y "Conócenos". Al bajar aparecen (con
+  `components/portada/Aparece.jsx`): objetivo, misión, cómo funciona,
+  fundador, profes (de `profes_disponibles()`), planes (los visibles de
+  Ajustes; "Empezar" abre `/registro?plan=…` con ese plan elegido), para
+  profes y gimnasios, preguntas frecuentes y el cierre. Al pasar el video
+  aparece una barra fija con "Ingresar".
+- **Iniciar sesión** pasó a **"/ingresar"** (`pages/Login.jsx`). Todas las
+  pantallas que mandan a iniciar sesión usan `RUTA_INGRESAR`
+  (`data/rutas.js`). Quien ya tiene la sesión abierta y entra a "/" va
+  directo a su pantalla (`/inicio` o `/profe`); `/?vista=previa` muestra
+  la portada igual (la usa el Admin).
+- **Textos editables**: Ajustes → Portada (`components/AjustesPortada.jsx`).
+  Tabla `pagina_inicio` (una fila: `textos`, `secciones`, foto del
+  fundador y videos), función `guardar_pagina_inicio()` y bucket público
+  `pagina-inicio` (solo el Admin sube). Los textos originales y la lista
+  de secciones están en `data/paginaInicio.js`: si el Admin no escribió un
+  texto (o lo borró), se usa el original. La sección del fundador no se
+  muestra hasta que tenga nombre, foto o historia. En las respuestas de
+  las preguntas, `{dias_aviso}` y `{dias_de_gracia}` se cambian por los de
+  Ajustes → Plazos. La última versión queda guardada en el celular.
+- **Archivos**: `public/inicio/` (videos y su primera imagen; los videos
+  no se guardan para usar sin señal, ver `public/sw.js`),
+  `public/drey-logo-animado.webp` (el GIF del logo pasado a WebP: 64 KB
+  en vez de 1,7 MB) y `public/drey-logo-quieto.webp` (para quien tiene
+  "reducir movimiento").
+
 ## Profes con perfil y solicitudes (SQL 026)
 
 - **Perfil público del profe** (`perfiles_profe`): foto (bucket público
@@ -66,7 +98,8 @@ las siga en el gimnasio y registre lo que levantó.
 El Admin tiene su propio menú (Inicio con el resumen del negocio,
 Clientes con filtros por profe y gimnasio, Equipo, Pagos y Ajustes). En
 **Ajustes** cambia planes y precios, datos de cobro, el link del grupo de
-WhatsApp y los plazos de vencimiento, sin tocar código; cada cambio queda
+WhatsApp, los plazos de vencimiento y la página de inicio (pestaña
+Portada), sin tocar código; cada cambio queda
 en el **Historial**. La app lee esa configuración de la base
 (`services/configuracion.js`) y la guarda en el celular
 (`data/configuracion.js`): abre al instante con lo último conocido. Las
@@ -288,7 +321,7 @@ entrenamientos hechos sin señal, que se envían solos al volver la conexión.
 
 ## Estructura de carpetas
 
-- `src/pages` — una carpeta por pantalla completa (Login, Inicio, Rutinas, Suscripción, Comunidad, Mis datos, Panel del profe).
+- `src/pages` — una carpeta por pantalla completa (Página de inicio, Login, Inicio, Rutinas, Suscripción, Comunidad, Mis datos, Panel del profe).
 - `src/components` — piezas reutilizables (botones, tarjetas, barra de progreso, temporizador).
 - `src/services` — conexión con Supabase y Mercado Pago, copia sin señal, aviso de errores.
 - `src/data` — datos fijos (métodos, textos legales en `legal.js`, versión en `versionLegal.js`) y la configuración del negocio que maneja el Admin (`configuracion.js`), con sus lecturas: planes (`planes.js`), vencimiento (`vencimiento.js`), datos de pago (`pagos.js`) y comunidad (`comunidad.js`).

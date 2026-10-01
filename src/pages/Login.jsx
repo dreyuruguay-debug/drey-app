@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import { entraAlPanel } from '../utils/roles.js'
 import EyeIcon from '../components/EyeIcon.jsx'
+import LogoDrey from '../components/LogoDrey.jsx'
 
-// Pantalla de login, siguiendo el diseño original: logo DREY, campo de
-// email, campo de contraseña con botón para mostrar/ocultar, link de
-// "Olvidé mi contraseña", botón "Iniciar sesión" y link "Registrarme".
+// Pantalla de login ("/ingresar"; a "/" ahora está la página de inicio):
+// logo DREY animado, campo de email, campo de contraseña con botón para
+// mostrar/ocultar, link de "Olvidé mi contraseña", botón "Iniciar sesión"
+// y link "Registrarme".
 export default function Login() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -75,7 +77,7 @@ export default function Login() {
 
   return (
     <main className="auth-screen">
-      <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
+      <LogoDrey />
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <input

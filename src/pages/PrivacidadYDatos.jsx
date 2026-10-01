@@ -7,6 +7,7 @@ import { obtenerUsuarioActual } from '../services/sesion.js'
 import { descargarMisDatos, solicitarBaja } from '../services/privacidad.js'
 import { mostrarAviso } from '../services/avisos.js'
 import { textoFechaCorta } from '../utils/dias.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // "Privacidad y mis datos" (se entra desde Perfil). Los derechos que da
 // la Ley 18.331, en botones:
@@ -29,7 +30,7 @@ export default function PrivacidadYDatos() {
   async function cargar() {
     const actual = await obtenerUsuarioActual()
     if (!actual) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     setUsuario(actual)

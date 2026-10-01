@@ -7,6 +7,7 @@ import BottomNav from '../components/BottomNav.jsx'
 import { calcularEdad } from '../utils/fechas.js'
 import { mostrarAviso } from '../services/avisos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Mis datos: nombre, fecha de nacimiento (con la edad calculada), peso,
 // celular, email, objetivo y "Lesiones y/o limitaciones". Editable por
@@ -41,7 +42,7 @@ export default function MisDatos() {
     setCargando(true)
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
-      navigate('/')
+      navigate(RUTA_INGRESAR)
       return
     }
     setEmail(usuario.email ?? '')

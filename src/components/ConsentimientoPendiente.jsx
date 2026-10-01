@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import CasillasConsentimiento from './CasillasConsentimiento.jsx'
 import { aceptarTerminos } from '../services/privacidad.js'
 import { supabase } from '../services/supabaseClient.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
+import LogoDrey from './LogoDrey.jsx'
 
 // Pantalla que ve una vez el alumno que todavía no aceptó la versión
 // actual de los términos y la política de privacidad (las cuentas que ya
@@ -33,12 +35,12 @@ export default function ConsentimientoPendiente({ onAceptado }) {
 
   async function salir() {
     await supabase.auth.signOut()
-    navigate('/')
+    navigate(RUTA_INGRESAR)
   }
 
   return (
     <main className="auth-screen">
-      <img src="/drey-logo.png" alt="DREY" className="auth-logo-img" />
+      <LogoDrey />
       <p className="registro-gracias-titulo">Cuidamos tus datos</p>
       <p className="registro-gracias-texto">
         Para seguir, necesitamos que leas y aceptes cómo usamos tus datos. Es un minuto.

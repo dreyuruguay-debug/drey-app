@@ -8,7 +8,8 @@ import { fechaLocalISO, textoFechaCorta } from '../utils/dias.js'
 // supabase/sql/022). La base anota sola cada cambio que hace el Admin:
 // precios y planes, ajustes, profes, gimnasios, clientes reasignados y
 // pagos confirmados. También quién archiva, recupera o borra ejercicios
-// de la Biblioteca, sea profe o Admin (supabase/sql/024). Acá se ven los
+// de la Biblioteca, sea profe o Admin (supabase/sql/024), y los cambios
+// de la página de inicio (supabase/sql/027). Acá se ven los
 // últimos 200, agrupados por día.
 const TIPOS = {
   plan: 'Planes',
@@ -18,6 +19,7 @@ const TIPOS = {
   gimnasio: 'Gimnasios',
   pago: 'Pagos',
   biblioteca: 'Biblioteca',
+  pagina: 'Página de inicio',
 }
 
 export default function AdminHistorial() {

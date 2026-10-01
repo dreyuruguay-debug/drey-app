@@ -14,6 +14,7 @@ import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { SOLO_CLIENTES } from '../utils/roles.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Lo último que se mostró queda en memoria (services/memoriaSesion.js):
 // al volver a Inicio se ve al instante y se actualiza por detrás.
@@ -149,7 +150,7 @@ export default function PanelProfe() {
 
   async function cerrarSesion() {
     await supabase.auth.signOut()
-    navigate('/')
+    navigate(RUTA_INGRESAR)
   }
 
   return (

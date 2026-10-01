@@ -12,6 +12,7 @@ import { formatearPrecio } from '../data/planes.js'
 import { calcularEstadisticas, desdeParaPagos } from '../utils/estadisticas.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import { SOLO_CLIENTES } from '../utils/roles.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Lo último que se mostró queda en memoria: al volver a Inicio se ve al
 // instante y se actualiza por detrás.
@@ -40,7 +41,7 @@ export default function AdminInicio() {
 
   async function cerrarSesion() {
     await supabase.auth.signOut()
-    navigate('/')
+    navigate(RUTA_INGRESAR)
   }
 
   return (

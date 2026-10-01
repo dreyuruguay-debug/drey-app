@@ -4,6 +4,7 @@ import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import PanelMedidas from '../components/PanelMedidas.jsx'
 import { obtenerUsuarioActual } from '../services/sesion.js'
+import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // "Mis medidas" del alumno (se entra desde Progreso): peso, perímetros,
 // fotos de antes y ahora, y sus gráficas. Ver components/PanelMedidas.jsx.
@@ -13,7 +14,7 @@ export default function Medidas() {
 
   useEffect(() => {
     obtenerUsuarioActual().then((usuario) => {
-      if (!usuario) navigate('/')
+      if (!usuario) navigate(RUTA_INGRESAR)
       else setUsuarioId(usuario.id)
     })
   }, [])
