@@ -35,7 +35,9 @@ export default function PrivacidadYDatos() {
     setUsuario(actual)
     const { data } = await supabase
       .from('perfiles')
-      .select('terminos_version, terminos_aceptados_en, consentimiento_salud_en, baja_solicitada_en')
+      .select(
+        'terminos_version, terminos_aceptados_en, consentimiento_salud_en, baja_solicitada_en',
+      )
       .eq('id', actual.id)
       .single()
     setPerfil(data || null)
@@ -45,7 +47,10 @@ export default function PrivacidadYDatos() {
     setDescargando(true)
     const error = await descargarMisDatos(usuario)
     setDescargando(false)
-    mostrarAviso(error ? 'No pudimos armar el archivo. Probá con señal.' : 'Descargado', error ? 'error' : 'ok')
+    mostrarAviso(
+      error ? 'No pudimos armar el archivo. Probá con señal.' : 'Descargado',
+      error ? 'error' : 'ok',
+    )
   }
 
   async function pedirBaja() {
@@ -93,7 +98,7 @@ export default function PrivacidadYDatos() {
       {perfil?.terminos_aceptados_en && (
         <p className="profe-nota">
           Aceptaste la versión del {textoFechaCorta(perfil.terminos_version)} el{' '}
-          {textoFechaCorta(perfil.terminos_aceptados_en.slice(0, 10))}.
+          {textoFechaCorta(perfil.terminos_aceptados_en)}.
         </p>
       )}
 
@@ -118,8 +123,8 @@ export default function PrivacidadYDatos() {
         <p className="seccion-etiqueta">Baja de la cuenta</p>
         {perfil?.baja_solicitada_en ? (
           <p className="hoy-mensaje-texto">
-            Pediste la baja el {textoFechaCorta(perfil.baja_solicitada_en.slice(0, 10))}. Tu profe
-            la va a procesar y se van a borrar tu cuenta y tus datos.
+            Pediste la baja el {textoFechaCorta(perfil.baja_solicitada_en)}. Tu profe la va a
+            procesar y se van a borrar tu cuenta y tus datos.
           </p>
         ) : confirmandoBaja ? (
           <div className="hoy-tarjeta hoy-tarjeta-mensaje">

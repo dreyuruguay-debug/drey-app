@@ -227,8 +227,8 @@ export default function ProfeCuentas() {
             <>
               <p className="profe-seccion-label">Últimos pagos</p>
               <p className="profe-nota">
-                Los de Mercado Pago se activan solos: no hay que confirmarlos. Todos los pagos
-                suman en Estadísticas.
+                Los de Mercado Pago se activan solos: no hay que confirmarlos. Todos los pagos suman
+                en Estadísticas.
               </p>
               <div className="profe-tabla-wrap">
                 <table className="profe-tabla">
@@ -243,7 +243,7 @@ export default function ProfeCuentas() {
                   <tbody>
                     {pagosMp.map((pago) => (
                       <tr key={pago.id}>
-                        <td>{textoFechaCorta(pago.creado_en.slice(0, 10))}</td>
+                        <td>{textoFechaCorta(pago.creado_en)}</td>
                         <td>
                           <Link
                             to={`/profe/clientes/${pago.cliente_id}?tab=pagos`}

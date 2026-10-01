@@ -221,6 +221,13 @@ export default function Home() {
         </Link>
       )}
 
+      {/* Sin profe asignado: a elegir uno (pages/Profes.jsx, SQL 026). */}
+      {perfil && !perfil.profe_id && (
+        <Link to="/profes" className="home-aviso-pendiente home-aviso-profe">
+          👋 Todavía no tenés profe asignado. Tocá acá para conocer a los profes y elegir el tuyo.
+        </Link>
+      )}
+
       {diasConEntrenamiento > 0 && (
         <section className="inicio-semana">
           <p className="seccion-etiqueta">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   METODOS,
   obtenerMetodo,
@@ -44,6 +44,9 @@ const OTROS_METODOS = METODOS.filter((metodo) => !metodo.principal)
 // ya guardado (arranca directo en "Configurar", con "← Atrás" para
 // cambiar el tipo o los ejercicios).
 // semanasCiclo: semanas del ciclo de la rutina (0 = sin ciclo).
+// calentamientoDe: posición del ejercicio cuyas series de calentamiento se
+// quieren cargar ("+ Series de calentamiento" del editor). Abre directo
+// ahí, con la primera serie ya propuesta si todavía no tenía.
 // onGuardar(borrador) guarda y devuelve un texto de error, o '' si salió bien.
 export default function AsistenteBloque({
   borradorInicial,
@@ -51,6 +54,7 @@ export default function AsistenteBloque({
   biblioteca,
   mostrarKgObjetivo,
   semanasCiclo = 0,
+  calentamientoDe = null,
   onGuardar,
   onCerrar,
 }) {
@@ -58,8 +62,11 @@ export default function AsistenteBloque({
   const [paso, setPaso] = useState(editando ? PASO_CONFIGURAR : PASO_TIPO)
   // Los últimos números que usó el profe, para proponerlos de entrada.
   const [ultimos] = useState(() => leerUltimosValores())
-  const [borrador, setBorrador] = useState(
-    () => borradorInicial || borradorNuevo('normal', ultimos.descanso),
+  const [borrador, setBorrador] = useState(() =>
+    conCalentamientoActivo(
+      borradorInicial || borradorNuevo('normal', ultimos.descanso),
+      calentamientoDe,
+    ),
   )
   const [mostrarOtros, setMostrarOtros] = useState(
     () => Boolean(borradorInicial) && !obtenerMetodo(borradorInicial.metodo).principal,
@@ -289,6 +296,7 @@ export default function AsistenteBloque({
                 numero={esGrupo ? indice + 1 : null}
                 mostrarKgObjetivo={mostrarKgObjetivo}
                 semanasCiclo={semanasCiclo}
+                enfocarCalentamiento={indice === calentamientoDe}
                 onCambiar={(campo, valor) => cambiarEjercicio(indice, campo, valor)}
               />
             ))}
@@ -389,7 +397,14 @@ function TarjetaTipo({ metodo, activo, onElegir }) {
 // Casilleros de un ejercicio del bloque: series, repeticiones (una
 // cantidad o un rango), peso objetivo, RPE, tempo, semanas del ciclo,
 // series de calentamiento y notas para el alumno.
-function ConfigEjercicio({ item, numero, mostrarKgObjetivo, semanasCiclo, onCambiar }) {
+function ConfigEjercicio({
+  item,
+  numero,
+  mostrarKgObjetivo,
+  semanasCiclo,
+  enfocarCalentamiento,
+  onCambiar,
+}) {
   return (
     <div className="config-ejercicio">
       <div className="ejercicio-header config-ejercicio-nombre">
@@ -482,7 +497,7 @@ function ConfigEjercicio({ item, numero, mostrarKgObjetivo, semanasCiclo, onCamb
         />
       )}
 
-      <ConfigCalentamiento item={item} mostrarKg={mostrarKgObjetivo} onCambiar={onCambiar} />
+      <ConfigCalentamiento item={item} enfocar={enfocarCalentamiento} onCambiar={onCambiar} />
 
       <label className="editor-campo config-notas">
         <span>Notas para el alumno (opcional)</span>
@@ -659,9 +674,18 @@ function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
 // Series de calentamiento (aproximación) de un ejercicio: una fila por
 // serie, con sus repeticiones y su peso, y el descanso de calentamiento
 // (aparte del descanso de las series efectivas). El alumno las hace
-// antes de las efectivas, en amarillo.
-function ConfigCalentamiento({ item, mostrarKg, onCambiar }) {
+// antes de las efectivas, en amarillo. El peso se pide siempre (también
+// en el Plan rutina, donde no hay peso objetivo): cada serie de
+// calentamiento puede tener un peso distinto.
+// enfocar: se llegó desde "+ Series de calentamiento" del editor; la
+// pantalla baja sola hasta acá y lo resalta un momento.
+function ConfigCalentamiento({ item, enfocar, onCambiar }) {
   const series = item.calentamientoSeries || []
+  const referencia = useRef(null)
+
+  useEffect(() => {
+    if (enfocar) referencia.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [enfocar])
 
   function activar(activo) {
     onCambiar('calentamiento', activo)
@@ -688,8 +712,17 @@ function ConfigCalentamiento({ item, mostrarKg, onCambiar }) {
   }
 
   return (
-    <div className="config-calentamiento">
+    <div
+      ref={referencia}
+      className={
+        enfocar ? 'config-calentamiento config-calentamiento-enfocado' : 'config-calentamiento'
+      }
+    >
       <span className="editor-rango-etiqueta">Series de calentamiento (aproximación)</span>
+      <span className="config-calentamiento-ayuda">
+        Series más livianas de este mismo ejercicio, antes de las efectivas. Cada una con sus
+        repeticiones y su peso.
+      </span>
       <div className="chips-lista">
         <button
           type="button"
@@ -730,21 +763,19 @@ function ConfigCalentamiento({ item, mostrarKg, onCambiar }) {
                   onChange={(event) => cambiarSerie(indice, 'reps', event.target.value)}
                 />
               </label>
-              {mostrarKg && (
-                <label className="editor-campo">
-                  <span>Peso (kg)</span>
-                  <input
-                    className="profe-input-tabla config-input-ancho"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    inputMode="decimal"
-                    placeholder="—"
-                    value={serie.kg}
-                    onChange={(event) => cambiarSerie(indice, 'kg', event.target.value)}
-                  />
-                </label>
-              )}
+              <label className="editor-campo">
+                <span>Peso (kg)</span>
+                <input
+                  className="profe-input-tabla config-input-ancho"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  inputMode="decimal"
+                  placeholder="—"
+                  value={serie.kg}
+                  onChange={(event) => cambiarSerie(indice, 'kg', event.target.value)}
+                />
+              </label>
               <button
                 type="button"
                 className="profe-ejercicio-borrar"
@@ -774,4 +805,24 @@ function ConfigCalentamiento({ item, mostrarKg, onCambiar }) {
       )}
     </div>
   )
+}
+
+// Borrador con las series de calentamiento del ejercicio "posicion" ya
+// activadas (con una primera serie propuesta), para cuando el profe toca
+// "+ Series de calentamiento". Sin posición, el borrador queda igual.
+function conCalentamientoActivo(borrador, posicion) {
+  const item = posicion == null ? null : borrador.ejercicios[posicion]
+  if (!item || (item.calentamiento && item.calentamientoSeries?.length)) return borrador
+  return {
+    ...borrador,
+    ejercicios: borrador.ejercicios.map((actual, indice) =>
+      indice === posicion
+        ? {
+            ...actual,
+            calentamiento: true,
+            calentamientoSeries: [nuevaSerieDeCalentamiento([], actual.kg)],
+          }
+        : actual,
+    ),
+  }
 }

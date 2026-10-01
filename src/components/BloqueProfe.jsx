@@ -1,6 +1,7 @@
 import { obtenerMetodo } from '../data/metodos.js'
 import { tituloDeBloque } from '../utils/bloques.js'
 import { textoDescanso } from '../utils/formatos.js'
+import { textoSeriesCalentamiento } from '../utils/seriesCalentamiento.js'
 import InfoMetodo from './InfoMetodo.jsx'
 import ObjetivoEjercicio from './ObjetivoEjercicio.jsx'
 
@@ -12,6 +13,9 @@ import ObjetivoEjercicio from './ObjetivoEjercicio.jsx'
 // idsArchivados: ejercicios archivados en la biblioteca (supabase/sql/024).
 // Siguen en la rutina, con la etiqueta "Archivado" al lado del nombre.
 // semanasCiclo: semanas del ciclo de la rutina (para mostrar cada semana).
+// onEditarCalentamiento(posicion): abre el editor del bloque directo en
+// las series de calentamiento de ese ejercicio (cada ejercicio tiene las
+// suyas, con sus reps y su peso).
 export default function BloqueProfe({
   bloque,
   idsArchivados,
@@ -22,6 +26,7 @@ export default function BloqueProfe({
   onEditar,
   onQuitar,
   onDuplicar,
+  onEditarCalentamiento,
 }) {
   const metodo = obtenerMetodo(bloque.metodo)
   const instruccion = metodo.instruccion(bloque.config || {})
@@ -77,6 +82,21 @@ export default function BloqueProfe({
             )}
           </div>
           <ObjetivoEjercicio ejercicio={item} semanasCiclo={semanasCiclo} />
+          {onEditarCalentamiento && (
+            <button
+              type="button"
+              className={
+                textoSeriesCalentamiento(item.calentamiento)
+                  ? 'boton-calentamiento boton-calentamiento-cambiar'
+                  : 'boton-calentamiento'
+              }
+              onClick={() => onEditarCalentamiento(posicion)}
+            >
+              {textoSeriesCalentamiento(item.calentamiento)
+                ? 'Cambiar series de calentamiento'
+                : '+ Series de calentamiento'}
+            </button>
+          )}
         </div>
       ))}
 

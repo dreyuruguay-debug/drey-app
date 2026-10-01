@@ -203,7 +203,7 @@ export default function Suscripcion() {
             <p className="suscripcion-bloque-titulo">Tus pagos</p>
             {pagos.map((pago) => (
               <p key={pago.id} className="suscripcion-bloque-texto pago-fila">
-                <span>{textoFechaCorta(pago.creado_en.slice(0, 10))}</span>
+                <span>{textoFechaCorta(pago.creado_en)}</span>
                 <span>{formatearPrecio(pago.monto)}</span>
                 <span className={`pago-estado pago-estado-${pago.estado}`}>
                   {TEXTO_ESTADO_PAGO[pago.estado] || pago.estado}

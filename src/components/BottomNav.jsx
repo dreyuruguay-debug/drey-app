@@ -13,7 +13,15 @@ const ITEMS = [
   {
     to: '/perfil',
     label: 'Perfil',
-    rutas: ['/perfil', '/mas', '/mis-datos', '/suscripcion', '/comunidad', '/mi-privacidad'],
+    rutas: [
+      '/perfil',
+      '/mas',
+      '/mis-datos',
+      '/suscripcion',
+      '/comunidad',
+      '/mi-privacidad',
+      '/profes',
+    ],
     Icono: IconoPerfil,
   },
 ]

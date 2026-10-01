@@ -7,13 +7,18 @@ import BottomNav from '../components/BottomNav.jsx'
 import { obtenerPlan } from '../data/planes.js'
 import { olvidarBienvenida } from '../utils/bienvenida.js'
 import { borrarCopias } from '../services/copiaLocal.js'
-import { obtenerMiProfe } from '../services/profes.js'
+import {
+  cargarMisSolicitudes,
+  cargarProfesDisponibles,
+  obtenerMiProfe,
+} from '../services/profes.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 
-// "Perfil" del cliente: sus datos, la suscripción, la comunidad, la
-// privacidad, volver a ver la bienvenida, avisarle un problema al profe
-// y cerrar sesión. Reemplaza a la vieja pantalla "Más".
+// "Perfil" del cliente: su profe (o elegir uno), sus datos, la
+// suscripción, la comunidad, la privacidad, volver a ver la bienvenida,
+// avisarle un problema al profe y cerrar sesión. Reemplaza a la vieja
+// pantalla "Más".
 const OPCIONES = [
   { to: '/mis-datos', titulo: 'Mis datos', detalle: 'Peso, objetivo, lesiones, celular' },
   {
@@ -34,6 +39,9 @@ export default function Perfil() {
   const [perfil, setPerfil] = useState(null)
   const [usuarioId, setUsuarioId] = useState(null)
   const [profe, setProfe] = useState(null)
+  // "Mi profe": { titulo, detalle } según tenga profe, una solicitud
+  // esperando respuesta o ninguno (ver pages/Profes.jsx).
+  const [miProfe, setMiProfe] = useState(null)
 
   useEffect(() => {
     cargar()
@@ -48,11 +56,17 @@ export default function Perfil() {
     setUsuarioId(usuario.id)
     const { data } = await supabase
       .from('perfiles')
-      .select('nombre, apellido, plan, estado, vencimiento')
+      .select('nombre, apellido, plan, estado, vencimiento, profe_id')
       .eq('id', usuario.id)
       .single()
     setPerfil(data || null)
-    setProfe(await obtenerMiProfe())
+    const [contacto, { profes }, solicitudes] = await Promise.all([
+      obtenerMiProfe(),
+      cargarProfesDisponibles(),
+      cargarMisSolicitudes(),
+    ])
+    setProfe(contacto)
+    setMiProfe(textoMiProfe(data?.profe_id, profes, solicitudes))
   }
 
   async function cerrarSesion() {
@@ -84,6 +98,20 @@ export default function Perfil() {
       </header>
 
       <nav className="lista-tarjetas" aria-label="Opciones del perfil">
+        {miProfe && (
+          <Link
+            to="/profes"
+            className={miProfe.destacar ? 'tarjeta-rutina tarjeta-destacada' : 'tarjeta-rutina'}
+          >
+            <span className="tarjeta-rutina-textos">
+              <strong>{miProfe.titulo}</strong>
+              <small>{miProfe.detalle}</small>
+            </span>
+            <span className="tarjeta-flecha" aria-hidden="true">
+              ›
+            </span>
+          </Link>
+        )}
         {OPCIONES.map((opcion) => (
           <Link key={opcion.to} to={opcion.to} className="tarjeta-rutina">
             <span className="tarjeta-rutina-textos">
@@ -130,6 +158,33 @@ export default function Perfil() {
       <BottomNav />
     </div>
   )
+}
+
+// Lo que dice la opción "Mi profe" del perfil.
+function textoMiProfe(profeId, profes, solicitudes) {
+  const nombreDe = (id) => profes.find((item) => item.id === id)?.nombre || 'el profe'
+  const pendiente = solicitudes.find((solicitud) => solicitud.estado === 'pendiente')
+  if (profeId) {
+    return {
+      titulo: 'Mi profe',
+      detalle: pendiente
+        ? `${nombreDe(profeId)} · pediste cambiarte con ${nombreDe(pendiente.profe_id)}`
+        : `${nombreDe(profeId)} · ver su perfil u otros profes`,
+    }
+  }
+  if (pendiente) {
+    return {
+      titulo: 'Mi profe',
+      detalle: `Esperando la respuesta de ${nombreDe(pendiente.profe_id)}`,
+    }
+  }
+  return {
+    titulo: 'Elegí tu profe',
+    detalle: profes.length
+      ? 'Mirá los profes disponibles y su especialidad'
+      : 'Todavía no tenés profe asignado',
+    destacar: profes.length > 0,
+  }
 }
 
 // WhatsApp al profe con un mensaje que ya trae los datos que ayudan a

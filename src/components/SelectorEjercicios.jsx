@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 import { ejerciciosRecomendados, textoGrupos } from '../data/gruposMusculares.js'
 import { ejerciciosActivos, filtrarPorBusqueda } from '../utils/biblioteca.js'
-import { miniaturaDeEjercicio } from '../utils/imagenes.js'
+import VisorEjercicios, { MiniaturaEjercicio } from './VisorEjercicios.jsx'
 
 const RECOMENDADOS = 'recomendados'
 
@@ -11,7 +11,8 @@ const RECOMENDADOS = 'recomendados'
 // grupos musculares de la rutina; también se puede recorrer cualquier
 // categoría o buscar por nombre o músculo en toda la biblioteca (sin
 // importar tildes ni mayúsculas). Las fotos de la lista son la versión
-// chica y solo se descargan las que aparecen en pantalla.
+// chica y solo se descargan las que aparecen en pantalla; tocándolas se
+// ve la animación en grande (y se puede elegir desde ahí).
 //
 // Los ejercicios archivados (supabase/sql/024) no se ofrecen. Si una
 // rutina ya tenía uno, sigue elegido en el bloque hasta que se lo quite.
@@ -44,6 +45,10 @@ export default function SelectorEjercicios({
   }, [disponibles, recomendados, vista, texto])
 
   const idsElegidos = seleccionados.map((ejercicio) => ejercicio.id)
+
+  // Visor de la animación en grande: posición dentro de "conFoto".
+  const [visor, setVisor] = useState(null)
+  const conFoto = useMemo(() => visibles.filter((ejercicio) => ejercicio.imagen_url), [visibles])
 
   return (
     <div className="selector-ejercicios">
@@ -107,14 +112,11 @@ export default function SelectorEjercicios({
               >
                 <div className="profe-ejercicio-item-info">
                   {ejercicio.imagen_url && (
-                    <img
-                      src={miniaturaDeEjercicio(ejercicio.imagen_url)}
-                      alt=""
-                      className="profe-ejercicio-foto-mini"
-                      width="48"
-                      height="48"
-                      loading="lazy"
-                      decoding="async"
+                    <MiniaturaEjercicio
+                      ejercicio={ejercicio}
+                      onAbrir={() =>
+                        setVisor(conFoto.findIndex((item) => item.id === ejercicio.id))
+                      }
                     />
                   )}
                   <span>
@@ -137,6 +139,28 @@ export default function SelectorEjercicios({
             )
           })}
         </div>
+      )}
+
+      {visor !== null && conFoto[visor] && (
+        <VisorEjercicios
+          ejercicios={conFoto}
+          indice={visor}
+          onCambiar={setVisor}
+          onCerrar={() => setVisor(null)}
+          acciones={(ejercicio) => {
+            const elegido = idsElegidos.includes(ejercicio.id)
+            return (
+              <button
+                type="button"
+                className={elegido ? 'boton-secundario' : 'boton-principal'}
+                onClick={() => onAlternar(ejercicio)}
+                disabled={!elegido && completo}
+              >
+                {elegido ? '✓ Elegido (tocá para quitarlo)' : 'Elegir este ejercicio'}
+              </button>
+            )
+          }}
+        />
       )}
     </div>
   )

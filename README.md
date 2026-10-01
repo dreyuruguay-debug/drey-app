@@ -21,6 +21,46 @@ las siga en el gimnasio y registre lo que levantó.
   profe". Una cuenta nunca es las dos cosas (SQL 020). La regla vive en
   `src/utils/roles.js` (`esCliente`, `entraAlPanel`, `SOLO_CLIENTES`).
 
+## Profes con perfil y solicitudes (SQL 026)
+
+- **Perfil público del profe** (`perfiles_profe`): foto (bucket público
+  `fotos-profes`, carpeta = id del profe), especialidades, modalidad
+  (presencial / online), años de experiencia, Instagram, descripción y
+  "Tomo alumnos nuevos". Lo completa el profe en
+  `pages/ProfeMiPerfil.jsx` (`/profe/mi-perfil`); el Admin abre el de
+  cualquiera desde Equipo → "Perfil" (`?profe=<id>`). La tarjeta que ven
+  todos es `components/TarjetaProfe.jsx`; las listas de especialidades y
+  textos, `data/especialidades.js`.
+- **El alumno elige** (`pages/Profes.jsx`, `/profes`, desde Perfil → "Mi
+  profe" o el aviso de Inicio si no tiene profe): ve su profe y los demás
+  (`profes_disponibles()`, solo datos públicos) y manda una solicitud con
+  un mensaje opcional (`solicitar_profe`). Una pendiente a la vez; puede
+  cancelarla. El registro también muestra la especialidad de cada profe.
+- **El profe responde** (`pages/ProfeSolicitudes.jsx`,
+  `/profe/solicitudes`): aceptar (pasa a ser su alumno, con el gimnasio
+  del profe) o rechazar con un motivo opcional
+  (`responder_solicitud_profe`). Aparece primero en "Para hacer hoy", con
+  un número sobre "Clientes" y una notificación en el celular. El Admin
+  ve las de todos y también puede responder.
+- **El Admin asigna directo**: en la ficha del alumno ("Profe", arriba) o
+  en Equipo. Cuando cambia el profe de un alumno por cualquier camino, la
+  base cierra sus solicitudes pendientes y avisa al alumno, al profe
+  nuevo y al anterior (trigger `al_cambiar_profe_de_alumno`).
+- Todo en `services/profes.js`; el número del menú en
+  `services/accesoProfe.js` (`contarSolicitudesPendientes`).
+
+## Panel en la computadora
+
+- En pantallas de 1024 px o más, el panel del profe y del Admin usa el
+  ancho: el menú pasa a una barra fija a la izquierda (con el logo) y el
+  contenido se acomoda en columnas (tareas, clientes, biblioteca,
+  solicitudes; el editor de rutinas con los ejercicios a la izquierda y
+  el resto a la derecha; "Mi perfil" con la vista previa al lado).
+- Es solo CSS ("Panel en la computadora" al final de
+  `styles/globals.css`), todo dentro de `.pantalla-panel`, la clase que
+  pone `ProfeLayout`. Las pantallas del alumno y el panel en el celular
+  no cambian.
+
 ## Panel del Admin y configuración
 
 El Admin tiene su propio menú (Inicio con el resumen del negocio,
@@ -45,6 +85,10 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
 - `services/biblioteca.js` trae la biblioteca completa (de a páginas) para
   la Biblioteca y el editor de rutinas; `utils/biblioteca.js` busca sin
   importar tildes, por nombre o músculo.
+- Tocando la foto chica de un ejercicio (Biblioteca y selector del
+  editor de rutinas) se ve la animación en grande para revisar que sea la
+  correcta, con anterior / siguiente (flechas, teclado o deslizando) y
+  "Editar" o "Elegir" desde ahí (`components/VisorEjercicios.jsx`).
 - `public/sw.js` guarda en el celular las animaciones que se ven (hasta 200)
   y las fotos chicas (hasta 1000), aparte de la app.
 - Para sumar GIF nuevos: `herramientas/convertir_gifs.py` (lo corre alguien
@@ -94,6 +138,11 @@ pantallas que la muestran usan `useConfiguracion()` para actualizarse.
   livianas del mismo ejercicio, antes de las efectivas. El profe carga
   cada una (reps y kg) y un "Descanso de calentamiento" propio
   (`components/AsistenteBloque.jsx`, paso "Configurar").
+- En el editor de rutinas cada ejercicio tiene su botón amarillo
+  "+ Series de calentamiento" (o "Cambiar series de calentamiento"): abre
+  el editor del bloque directo en las series de ese ejercicio, con la
+  primera ya propuesta (`calentamientoDe` en `AsistenteBloque`). El peso
+  de cada serie se pide siempre, también en el Plan rutina.
 - Se guardan en `rutina_ejercicios.calentamiento` (jsonb, sin cambios en
   la base) como `{ series: [{ reps, kg }], descanso }`. Lo viejo
   (`{ series: 2, detalle: "2 × 10 con 30 kg" }`) se convierte solo; si el

@@ -55,15 +55,23 @@ export const ProfeRutinaNueva = pantallaDiferida(() => import('./pages/ProfeRuti
 export const ProfeRutinaEditor = pantallaDiferida(() => import('./pages/ProfeRutinaEditor.jsx'))
 export const ProfeRutinaDias = pantallaDiferida(() => import('./pages/ProfeRutinaDias.jsx'))
 export const ProfeProgresion = pantallaDiferida(() => import('./pages/ProfeProgresion.jsx'))
-export const ProfeClienteProgreso = pantallaDiferida(() => import('./pages/ProfeClienteProgreso.jsx'))
+export const ProfeClienteProgreso = pantallaDiferida(
+  () => import('./pages/ProfeClienteProgreso.jsx'),
+)
 export const ProfeCodigos = pantallaDiferida(() => import('./pages/ProfeCodigos.jsx'))
 
 // Textos legales: se leen poco, así que también se cargan aparte.
 export const Legal = pantallaDiferida(() => import('./pages/Legal.jsx'), PANTALLAS_CLIENTE)
-export const PrivacidadYDatos = pantallaDiferida(() => import('./pages/PrivacidadYDatos.jsx'), PANTALLAS_CLIENTE)
+export const PrivacidadYDatos = pantallaDiferida(
+  () => import('./pages/PrivacidadYDatos.jsx'),
+  PANTALLAS_CLIENTE,
+)
 export const ProfeEstadisticas = pantallaDiferida(() => import('./pages/ProfeEstadisticas.jsx'))
 export const ProfeEquipo = pantallaDiferida(() => import('./pages/ProfeEquipo.jsx'))
-export const NuevaContrasena = pantallaDiferida(() => import('./pages/NuevaContrasena.jsx'), PANTALLAS_CLIENTE)
+export const NuevaContrasena = pantallaDiferida(
+  () => import('./pages/NuevaContrasena.jsx'),
+  PANTALLAS_CLIENTE,
+)
 export const Medidas = pantallaDiferida(() => import('./pages/Medidas.jsx'), PANTALLAS_CLIENTE)
 export const ProfeClienteMedidas = pantallaDiferida(() => import('./pages/ProfeClienteMedidas.jsx'))
 // Rutinas en Excel (la librería de Excel se descarga recién al usarla).
@@ -75,6 +83,11 @@ export const AdminInicio = pantallaDiferida(() => import('./pages/AdminInicio.js
 export const AdminAjustes = pantallaDiferida(() => import('./pages/AdminAjustes.jsx'))
 export const AdminHistorial = pantallaDiferida(() => import('./pages/AdminHistorial.jsx'))
 
+// Profes y solicitudes (supabase/sql/026): el alumno elige profe; el profe
+// completa su perfil y responde las solicitudes.
+export const Profes = pantallaDiferida(() => import('./pages/Profes.jsx'), PANTALLAS_CLIENTE)
+export const ProfeMiPerfil = pantallaDiferida(() => import('./pages/ProfeMiPerfil.jsx'))
+export const ProfeSolicitudes = pantallaDiferida(() => import('./pages/ProfeSolicitudes.jsx'))
 
 // Descarga por adelantado el código de las pantallas diferidas, sin
 // mostrarlas: así la primera vez que se abren no hay que esperarlo.

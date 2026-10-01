@@ -111,3 +111,26 @@ export async function contarPagosPendientes() {
   recordar(CLAVE_PAGOS, count || 0)
   return count || 0
 }
+
+// Número sobre "Clientes": solicitudes de alumnos esperando respuesta
+// (las del profe; el Admin ve todas). Si la base todavía no tiene el SQL
+// 026, cuenta 0.
+const CLAVE_SOLICITUDES = 'solicitudes-pendientes'
+// Cada vez que se cuentan, se avisa (así el número del menú se actualiza
+// apenas el profe responde una, sin cambiar de pantalla).
+export const EVENTO_SOLICITUDES = 'drey-solicitudes'
+
+export function ultimasSolicitudesPendientes() {
+  return recordado(CLAVE_SOLICITUDES) || 0
+}
+
+export async function contarSolicitudesPendientes() {
+  const { count, error } = await supabase
+    .from('solicitudes_profe')
+    .select('id', { count: 'exact', head: true })
+    .eq('estado', 'pendiente')
+  if (error) return ultimasSolicitudesPendientes()
+  recordar(CLAVE_SOLICITUDES, count || 0)
+  window.dispatchEvent(new CustomEvent(EVENTO_SOLICITUDES, { detail: count || 0 }))
+  return count || 0
+}

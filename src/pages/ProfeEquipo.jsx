@@ -11,7 +11,8 @@ import Esqueleto from '../components/Esqueleto.jsx'
 // Equipo y gimnasios (supabase/sql/018 y 020).
 //
 //   · ADMIN (la cuenta del dueño de DREY, no es profe): suma profes (a
-//     partir de una cuenta ya registrada) y les quita el permiso, crea
+//     partir de una cuenta ya registrada) y les quita el permiso, completa
+//     o corrige el perfil público de cada profe ("Perfil"), crea
 //     gimnasios, les pone dueño, asigna cada profe a un gimnasio y pasa
 //     cualquier cliente de un profe a otro.
 //   · DUEÑO DE GIMNASIO: ve a los profes de su gimnasio con sus números
@@ -195,6 +196,12 @@ export default function ProfeEquipo() {
                     <small>{cantidadClientes} clientes</small>
                   </div>
                   <div className="equipo-gimnasio-acciones">
+                    <Link
+                      to={`/profe/mi-perfil?profe=${profe.id}`}
+                      className="boton-secundario boton-chico"
+                    >
+                      Perfil
+                    </Link>
                     <select
                       className="profe-calendario-select"
                       value={profe.gimnasio_id || ''}

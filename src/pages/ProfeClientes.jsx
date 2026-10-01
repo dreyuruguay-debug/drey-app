@@ -4,8 +4,14 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { cargarActividadClientes } from '../services/actividad.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
-import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
+import {
+  contarSolicitudesPendientes,
+  esAdminConocido,
+  ultimasSolicitudesPendientes,
+  verificarProfe,
+} from '../services/accesoProfe.js'
 import { obtenerPlan } from '../data/planes.js'
+import { fechaLocalDeMomento } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { SOLO_CLIENTES } from '../utils/roles.js'
 
@@ -34,10 +40,13 @@ export default function ProfeClientes() {
   const [equipo, setEquipo] = useState({ profes: [], gimnasios: [] })
   const [filtroProfe, setFiltroProfe] = useState('')
   const [filtroGimnasio, setFiltroGimnasio] = useState('')
+  // Alumnos que pidieron entrenar y esperan respuesta (supabase/sql/026).
+  const [solicitudes, setSolicitudes] = useState(ultimasSolicitudesPendientes)
 
   useEffect(() => {
     cargarClientes()
     verificarProfe().then(({ esAdmin: admin }) => setEsAdmin(Boolean(admin)))
+    contarSolicitudesPendientes().then(setSolicitudes)
   }, [])
 
   // Solo el Admin: profes y gimnasios para los filtros.
@@ -77,9 +86,9 @@ export default function ProfeClientes() {
       // Si nunca entrenó, se cuentan los días desde que se habilitó la
       // cuenta (creado_en), para que un cliente recién habilitado no
       // aparezca como "inactivo" el primer día.
-      const fechaBase = ultimaSesionPorCliente[cliente.id] || cliente.creado_en?.slice(0, 10)
+      const fechaBase = ultimaSesionPorCliente[cliente.id] || fechaLocalDeMomento(cliente.creado_en)
       const diasSinEntrenar = fechaBase
-        ? Math.floor((hoy - new Date(`${fechaBase}T00:00:00`)) / MS_POR_DIA)
+        ? Math.max(0, Math.floor((hoy - new Date(`${fechaBase}T00:00:00`)) / MS_POR_DIA))
         : null
       return { ...cliente, diasSinEntrenar }
     })
@@ -134,7 +143,23 @@ export default function ProfeClientes() {
         <Link to="/profe/calendario" className="boton-secundario">
           La semana de todos
         </Link>
+        <Link to="/profe/solicitudes" className="boton-secundario">
+          Solicitudes{solicitudes > 0 ? ` (${solicitudes})` : ''}
+        </Link>
       </div>
+
+      {solicitudes > 0 && (
+        <Link to="/profe/solicitudes" className="aviso-solicitudes-nuevas">
+          <strong>
+            {esAdmin
+              ? `${solicitudes} ${solicitudes === 1 ? 'solicitud espera' : 'solicitudes esperan'} respuesta de un profe`
+              : solicitudes === 1
+                ? '1 alumno quiere entrenar con vos'
+                : `${solicitudes} alumnos quieren entrenar con vos`}
+          </strong>
+          <span>{esAdmin ? 'Ver solicitudes de todos los profes ›' : 'Aceptá o rechazá ›'}</span>
+        </Link>
+      )}
 
       {!cargando && inactivos.length > 0 && (
         <div className="profe-aviso-inactivos">
@@ -205,48 +230,50 @@ export default function ProfeClientes() {
             : 'No hay ningún cliente que coincida con la búsqueda o los filtros.'}
         </p>
       ) : (
-        clientesFiltrados.map((cliente) => {
-          const esInactivo =
-            cliente.diasSinEntrenar !== null && cliente.diasSinEntrenar >= UMBRAL_DIAS_INACTIVO
-          return (
-            <Link
-              key={cliente.id}
-              to={`/profe/clientes/${cliente.id}`}
-              className={
-                esInactivo
-                  ? 'profe-cliente-card profe-cliente-card-link profe-cliente-card-inactivo'
-                  : 'profe-cliente-card profe-cliente-card-link'
-              }
-            >
-              <div>
-                <p className="profe-cliente-nombre">
-                  {cliente.nombre} {cliente.apellido}
-                </p>
-                <p className="profe-cliente-detalle">
-                  {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
-                  {esAdmin && ` · ${nombreDelProfe(cliente.profe_id)}`}
-                  {cliente.diasSinEntrenar !== null && (
-                    <>
-                      {' · '}
-                      {esInactivo ? (
-                        <span className="profe-cliente-inactivo-texto">
-                          {cliente.diasSinEntrenar === 0
-                            ? 'entrenó hoy'
-                            : `sin entrenar hace ${cliente.diasSinEntrenar} días`}
-                        </span>
-                      ) : cliente.diasSinEntrenar === 0 ? (
-                        'entrenó hoy'
-                      ) : (
-                        `última vez hace ${cliente.diasSinEntrenar} días`
-                      )}
-                    </>
-                  )}
-                </p>
-              </div>
-              <span className="profe-cliente-flecha">→</span>
-            </Link>
-          )
-        })
+        <div className="clientes-lista">
+          {clientesFiltrados.map((cliente) => {
+            const esInactivo =
+              cliente.diasSinEntrenar !== null && cliente.diasSinEntrenar >= UMBRAL_DIAS_INACTIVO
+            return (
+              <Link
+                key={cliente.id}
+                to={`/profe/clientes/${cliente.id}`}
+                className={
+                  esInactivo
+                    ? 'profe-cliente-card profe-cliente-card-link profe-cliente-card-inactivo'
+                    : 'profe-cliente-card profe-cliente-card-link'
+                }
+              >
+                <div>
+                  <p className="profe-cliente-nombre">
+                    {cliente.nombre} {cliente.apellido}
+                  </p>
+                  <p className="profe-cliente-detalle">
+                    {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
+                    {esAdmin && ` · ${nombreDelProfe(cliente.profe_id)}`}
+                    {cliente.diasSinEntrenar !== null && (
+                      <>
+                        {' · '}
+                        {esInactivo ? (
+                          <span className="profe-cliente-inactivo-texto">
+                            {cliente.diasSinEntrenar === 0
+                              ? 'entrenó hoy'
+                              : `sin entrenar hace ${cliente.diasSinEntrenar} días`}
+                          </span>
+                        ) : cliente.diasSinEntrenar === 0 ? (
+                          'entrenó hoy'
+                        ) : (
+                          `última vez hace ${cliente.diasSinEntrenar} días`
+                        )}
+                      </>
+                    )}
+                  </p>
+                </div>
+                <span className="profe-cliente-flecha">→</span>
+              </Link>
+            )
+          })}
+        </div>
       )}
     </ProfeLayout>
   )

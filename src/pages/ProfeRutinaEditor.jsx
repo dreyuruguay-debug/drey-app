@@ -84,8 +84,9 @@ export default function ProfeRutinaEditor({ tipo }) {
   const [pausaEdit, setPausaEdit] = useState({ min: '', max: '' })
   const [semanasEdit, setSemanasEdit] = useState('')
 
-  // Asistente de bloque abierto: { indiceBloque, borrador } (indiceBloque
-  // null = bloque nuevo).
+  // Asistente de bloque abierto: { indiceBloque, borrador, calentamientoDe }
+  // (indiceBloque null = bloque nuevo; calentamientoDe = posición del
+  // ejercicio cuyas series de calentamiento se quieren cargar).
   const [asistente, setAsistente] = useState(null)
 
   useEffect(() => {
@@ -408,7 +409,7 @@ export default function ProfeRutinaEditor({ tipo }) {
         />
 
         {/* Ejercicios */}
-        <section className="seccion-rutina">
+        <section className="seccion-rutina seccion-rutina-ejercicios">
           <div className="seccion-rutina-cabecera">
             <p className="seccion-rutina-titulo">💪 Ejercicios</p>
           </div>
@@ -429,6 +430,13 @@ export default function ProfeRutinaEditor({ tipo }) {
                 }
                 onQuitar={() => quitarUnBloque(bloque, indiceBloque)}
                 onDuplicar={() => duplicarUnBloque(indiceBloque)}
+                onEditarCalentamiento={(posicion) =>
+                  setAsistente({
+                    indiceBloque,
+                    borrador: bloqueABorrador(bloque, semanasCiclo),
+                    calentamientoDe: posicion,
+                  })
+                }
               />
             ))
           )}
@@ -604,6 +612,7 @@ export default function ProfeRutinaEditor({ tipo }) {
           biblioteca={biblioteca}
           mostrarKgObjetivo={mostrarKgObjetivo}
           semanasCiclo={semanasCiclo}
+          calentamientoDe={asistente.calentamientoDe}
           onGuardar={guardarBloque}
           onCerrar={() => setAsistente(null)}
         />

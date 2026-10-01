@@ -116,6 +116,9 @@ export default function AdminInicio() {
               <Link to="/profe/equipo" className="acceso">
                 Profes y gimnasios
               </Link>
+              <Link to="/profe/solicitudes" className="acceso">
+                Solicitudes de alumnos
+              </Link>
               <Link to="/profe/codigos" className="acceso">
                 Códigos de descuento
               </Link>
@@ -150,29 +153,40 @@ export default function AdminInicio() {
 // Trae todo en un solo viaje y arma el resumen.
 async function cargar() {
   const hoy = obtenerFechaHoyISO()
-  const [{ data: clientes }, { data: pagos }, { count: profes }, { count: gimnasios }, planes] =
-    await Promise.all([
-      traerTodasLasFilas(() =>
-        supabase
-          .from('perfiles')
-          .select(
-            'id, nombre, apellido, estado, vencimiento, plan, profe_id, aviso_pago, baja_solicitada_en',
-          )
-          .match(SOLO_CLIENTES)
-          .order('id'),
-      ),
-      traerTodasLasFilas(() =>
-        supabase
-          .from('pagos')
-          .select('id, cliente_id, monto, estado, primer_mes, creado_en, aprobado_en')
-          .eq('estado', 'aprobado')
-          .gte('creado_en', desdeParaPagos(hoy))
-          .order('id'),
-      ),
-      supabase.from('perfiles').select('id', { count: 'exact', head: true }).eq('es_profe', true),
-      supabase.from('gimnasios').select('id', { count: 'exact', head: true }),
-      cargarPlanesConPrecios({ incluirOcultos: true }),
-    ])
+  const [
+    { data: clientes },
+    { data: pagos },
+    { count: profes },
+    { count: gimnasios },
+    planes,
+    { count: solicitudes },
+  ] = await Promise.all([
+    traerTodasLasFilas(() =>
+      supabase
+        .from('perfiles')
+        .select(
+          'id, nombre, apellido, estado, vencimiento, plan, profe_id, aviso_pago, baja_solicitada_en',
+        )
+        .match(SOLO_CLIENTES)
+        .order('id'),
+    ),
+    traerTodasLasFilas(() =>
+      supabase
+        .from('pagos')
+        .select('id, cliente_id, monto, estado, primer_mes, creado_en, aprobado_en')
+        .eq('estado', 'aprobado')
+        .gte('creado_en', desdeParaPagos(hoy))
+        .order('id'),
+    ),
+    supabase.from('perfiles').select('id', { count: 'exact', head: true }).eq('es_profe', true),
+    supabase.from('gimnasios').select('id', { count: 'exact', head: true }),
+    cargarPlanesConPrecios({ incluirOcultos: true }),
+    // Alumnos que pidieron un profe y esperan respuesta (026).
+    supabase
+      .from('solicitudes_profe')
+      .select('id', { count: 'exact', head: true })
+      .eq('estado', 'pendiente'),
+  ])
 
   const lista = clientes || []
   const numeros = calcularEstadisticas({ clientes: lista, pagos: pagos || [], planes, hoy })
@@ -213,9 +227,20 @@ async function cargar() {
         sinProfe === 1
           ? '1 cliente activo no tiene profe'
           : `${sinProfe} clientes activos no tienen profe`,
-      detalle: 'Asignales uno en Equipo → Clientes.',
+      detalle: 'Asignales uno desde su ficha o en Equipo → Clientes.',
       to: '/profe/equipo',
       boton: 'Asignar',
+    })
+  }
+  if (solicitudes > 0) {
+    pendientes.push({
+      texto:
+        solicitudes === 1
+          ? '1 alumno espera que un profe responda su solicitud'
+          : `${solicitudes} alumnos esperan que un profe responda su solicitud`,
+      detalle: 'Cada profe las responde desde su panel; vos también podés.',
+      to: '/profe/solicitudes',
+      boton: 'Ver',
     })
   }
 

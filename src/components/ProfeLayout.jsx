@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   contarPagosPendientes,
+  contarSolicitudesPendientes,
+  EVENTO_SOLICITUDES,
   esAdminConocido,
   esProfeConocido,
+  ultimasSolicitudesPendientes,
   ultimosPagosPendientes,
   verificarProfe,
 } from '../services/accesoProfe.js'
@@ -26,19 +29,34 @@ import Esqueleto from './Esqueleto.jsx'
 // base de datos igual lo controla; esto decide qué se dibuja.
 //
 // "rutas": las direcciones que marcan esa sección como activa.
+// "avisos": qué número se muestra encima ('pagos': cuentas nuevas y
+// avisos de pago; 'solicitudes': alumnos que piden entrenar).
+//
+// En la computadora (pantallas anchas) el mismo menú pasa a ser una barra
+// fija a la izquierda y el contenido usa más ancho (ver "Panel en la
+// computadora" en styles/globals.css). En el celular no cambia nada.
+const RUTAS_CLIENTES = [
+  '/profe/clientes',
+  '/profe/rutinas',
+  '/profe/calendario',
+  '/profe/progresion',
+  '/profe/solicitudes',
+]
+
 const SECCIONES_PROFE = [
   {
     to: '/profe',
     label: 'Inicio',
-    rutas: ['/profe', '/profe/estadisticas', '/profe/equipo'],
+    rutas: ['/profe', '/profe/estadisticas', '/profe/equipo', '/profe/mi-perfil'],
     exacta: true,
     Icono: IconoInicio,
   },
   {
     to: '/profe/clientes',
     label: 'Clientes',
-    rutas: ['/profe/clientes', '/profe/rutinas', '/profe/calendario', '/profe/progresion'],
+    rutas: RUTAS_CLIENTES,
     Icono: IconoClientes,
+    avisos: 'solicitudes',
   },
   {
     to: '/profe/ejercicios',
@@ -51,7 +69,7 @@ const SECCIONES_PROFE = [
     label: 'Pagos',
     rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
-    avisos: true,
+    avisos: 'pagos',
   },
 ]
 
@@ -66,13 +84,14 @@ const SECCIONES_ADMIN = [
   {
     to: '/profe/clientes',
     label: 'Clientes',
-    rutas: ['/profe/clientes', '/profe/rutinas', '/profe/calendario', '/profe/progresion'],
+    rutas: RUTAS_CLIENTES,
     Icono: IconoClientes,
+    avisos: 'solicitudes',
   },
   {
     to: '/profe/equipo',
     label: 'Equipo',
-    rutas: ['/profe/equipo'],
+    rutas: ['/profe/equipo', '/profe/mi-perfil'],
     Icono: IconoEquipo,
   },
   {
@@ -80,7 +99,7 @@ const SECCIONES_ADMIN = [
     label: 'Pagos',
     rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
-    avisos: true,
+    avisos: 'pagos',
   },
   {
     to: '/profe/ajustes',
@@ -103,6 +122,14 @@ export default function ProfeLayout({
   const [esProfe, setEsProfe] = useState(esProfeConocido)
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [pagosPendientes, setPagosPendientes] = useState(ultimosPagosPendientes)
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState(ultimasSolicitudesPendientes)
+
+  // El número de "Clientes" se actualiza cuando se responde una solicitud.
+  useEffect(() => {
+    const alContar = (event) => setSolicitudesPendientes(event.detail)
+    window.addEventListener(EVENTO_SOLICITUDES, alContar)
+    return () => window.removeEventListener(EVENTO_SOLICITUDES, alContar)
+  }, [])
 
   useEffect(() => {
     let activo = true
@@ -116,6 +143,7 @@ export default function ProfeLayout({
       setEsAdmin(Boolean(admin))
       if (!profe) return
       contarPagosPendientes().then((cantidad) => activo && setPagosPendientes(cantidad))
+      contarSolicitudesPendientes().then((cantidad) => activo && setSolicitudesPendientes(cantidad))
       // Deja descargadas las demás pantallas del panel, así la primera
       // vez que se abre cada una no hay que esperar su código.
       precargarPantallas('profe')
@@ -148,8 +176,10 @@ export default function ProfeLayout({
     )
   }
 
+  const numeros = { pagos: pagosPendientes, solicitudes: solicitudesPendientes }
+
   return (
-    <div className={sinMenu ? 'screen' : 'screen has-bottom-nav'}>
+    <div className={sinMenu ? 'screen pantalla-panel' : 'screen has-bottom-nav pantalla-panel'}>
       <TopPattern />
 
       {volverA && (
@@ -166,12 +196,21 @@ export default function ProfeLayout({
       </div>
 
       {!sinMenu && (
-        <nav className="bottom-nav" aria-label={esAdmin ? 'Menú del Admin' : 'Menú del profe'}>
+        <nav
+          className="bottom-nav panel-menu"
+          aria-label={esAdmin ? 'Menú del Admin' : 'Menú del profe'}
+        >
+          {/* Solo se ve en la computadora, arriba de la barra lateral. */}
+          <div className="panel-menu-marca" aria-hidden="true">
+            <img src="/drey-logo.png" alt="" />
+            <span>{esAdmin ? 'Admin' : 'Profe'}</span>
+          </div>
           {(esAdmin ? SECCIONES_ADMIN : SECCIONES_PROFE).map(
             ({ to, label, rutas, exacta, Icono, avisos }) => {
               const activo = rutas.some((ruta) =>
                 exacta ? pathname === ruta : pathname === ruta || pathname.startsWith(`${ruta}/`),
               )
+              const numero = avisos ? numeros[avisos] : 0
               return (
                 <Link
                   key={to}
@@ -179,12 +218,9 @@ export default function ProfeLayout({
                   className={activo ? 'bottom-nav-item bottom-nav-item-activo' : 'bottom-nav-item'}
                   aria-current={activo ? 'page' : undefined}
                 >
-                  {avisos && pagosPendientes > 0 && (
-                    <span
-                      className="bottom-nav-numero"
-                      aria-label={`${pagosPendientes} pendientes`}
-                    >
-                      {pagosPendientes}
+                  {numero > 0 && (
+                    <span className="bottom-nav-numero" aria-label={`${numero} pendientes`}>
+                      {numero}
                     </span>
                   )}
                   <Icono />

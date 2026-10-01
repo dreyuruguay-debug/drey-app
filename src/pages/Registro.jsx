@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
-import { obtenerOpcionesDeProfe } from '../services/profes.js'
+import { cargarProfesDisponibles, obtenerOpcionesDeProfe } from '../services/profes.js'
+import { textoExperiencia, textoModalidades } from '../data/especialidades.js'
 import EyeIcon from '../components/EyeIcon.jsx'
 import DatosDePago from '../components/DatosDePago.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
@@ -65,6 +66,8 @@ export default function Registro() {
   const [opcionesProfe, setOpcionesProfe] = useState([])
   const [cargandoOpciones, setCargandoOpciones] = useState(true)
   const [eleccion, setEleccion] = useState(null) // { tipo: 'profe' | 'gimnasio', id }
+  // Perfil público de cada profe (especialidades, modalidad), por id.
+  const [perfilesProfe, setPerfilesProfe] = useState({})
 
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -85,8 +88,12 @@ export default function Registro() {
 
   async function cargarOpcionesDeProfe() {
     setCargandoOpciones(true)
-    const { opciones } = await obtenerOpcionesDeProfe()
+    const [{ opciones }, { profes }] = await Promise.all([
+      obtenerOpcionesDeProfe(),
+      cargarProfesDisponibles(),
+    ])
     setOpcionesProfe(opciones)
+    setPerfilesProfe(Object.fromEntries(profes.map((profe) => [profe.id, profe])))
     // Si hay una sola opción, se deja elegida para ahorrar un toque.
     if (opciones.length === 1) {
       setEleccion({ tipo: opciones[0].tipo, id: opciones[0].id })
@@ -421,6 +428,11 @@ export default function Registro() {
                       {opcion.detalle && (
                         <span className="plan-card-precio-siguiente">{opcion.detalle}</span>
                       )}
+                      {opcion.tipo === 'profe' && textoPerfil(perfilesProfe[opcion.id]) && (
+                        <span className="plan-card-precio-siguiente">
+                          {textoPerfil(perfilesProfe[opcion.id])}
+                        </span>
+                      )}
                     </button>
                   )
                 })}
@@ -548,4 +560,17 @@ function textoDescuento(codigo) {
   if (codigo.monto_fijo) partes.push(`${formatearPrecio(codigo.monto_fijo)} de descuento`)
   if (codigo.solo_primer_mes) partes.push('el primer mes')
   return partes.join(' ') || codigo.descripcion || 'aplicado'
+}
+
+// Una línea con lo principal del perfil del profe: especialidades,
+// modalidad y experiencia (supabase/sql/026). '' si no lo completó.
+function textoPerfil(profe) {
+  if (!profe) return ''
+  return [
+    profe.especialidades?.slice(0, 3).join(', '),
+    textoModalidades(profe.modalidades),
+    textoExperiencia(profe.experiencia_anios),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }

@@ -1,4 +1,4 @@
-import { diasEntre, textoFechaCorta } from './dias.js'
+import { diasEntre, fechaLocalDeMomento, textoFechaCorta } from './dias.js'
 import { linkWhatsApp } from './whatsapp.js'
 import { estadoDelPlan } from '../data/vencimiento.js'
 
@@ -37,9 +37,36 @@ export function armarTareas({
   conMediciones = null,
   // Rutinas con ciclo terminado: [{ rutina, cliente }] (ver utils/ciclos.js).
   ciclosTerminados = [],
+  // Alumnos que pidieron entrenar con el profe (supabase/sql/026):
+  // [{ id, cliente_nombre }] de las pendientes.
+  solicitudes = [],
+  // ¿Le falta completar su perfil de profe? (null = no se sabe)
+  perfilIncompleto = null,
   hoy,
 }) {
   const tareas = []
+
+  // Alumnos que quieren entrenar con el profe: van primero.
+  if (solicitudes.length) {
+    const nombres = solicitudes.slice(0, 3).map((solicitud) => solicitud.cliente_nombre || 'Alumno')
+    const resto = solicitudes.length - nombres.length
+    tareas.push({
+      id: 'solicitudes',
+      nivel: 'urgente',
+      icono: 'solicitud',
+      titulo:
+        solicitudes.length === 1
+          ? `${nombres[0]} quiere entrenar con vos`
+          : `${solicitudes.length} alumnos quieren entrenar con vos`,
+      detalle:
+        solicitudes.length === 1
+          ? 'Aceptá o rechazá su solicitud'
+          : resto > 0
+            ? `${nombres.join(', ')} y ${resto} más`
+            : nombres.join(', '),
+      accion: { texto: 'Responder', to: '/profe/solicitudes' },
+    })
+  }
   const pendientes = clientes.filter((cliente) => cliente.estado === 'pendiente')
   const avisaronPago = clientes.filter(
     (cliente) => cliente.aviso_pago && cliente.estado !== 'pendiente',
@@ -54,7 +81,7 @@ export function armarTareas({
       nivel: 'urgente',
       icono: 'baja',
       titulo: `${nombreCompleto(cliente)} pidió la baja de su cuenta`,
-      detalle: `Desde el ${textoFechaCorta(cliente.baja_solicitada_en.slice(0, 10))} · hay que borrar sus datos`,
+      detalle: `Desde el ${textoFechaCorta(cliente.baja_solicitada_en)} · hay que borrar sus datos`,
       accion: { texto: 'Ver', to: `/profe/clientes/${cliente.id}?tab=pagos` },
     })
   }
@@ -108,7 +135,7 @@ export function armarTareas({
     if (guardadas.length && !conDias.has(cliente.id)) sinDias.push(cliente)
 
     if (guardadas.length && conDias.has(cliente.id)) {
-      const base = ultimaSesion[cliente.id] || cliente.creado_en?.slice(0, 10)
+      const base = ultimaSesion[cliente.id] || fechaLocalDeMomento(cliente.creado_en)
       const dias = base ? diasEntre(base, hoy) : null
       if (dias !== null && dias >= DIAS_PARA_INACTIVO) {
         inactivos.push({ cliente, dias, entreno: Boolean(ultimaSesion[cliente.id]) })
@@ -269,6 +296,17 @@ export function armarTareas({
         cliente,
         `Hola ${cliente.nombre || ''}! Tu plan de DREY vence el ${textoFechaCorta(cliente.vencimiento)}. Podés renovarlo desde la app (Perfil → Suscripción). 💪`,
       ),
+    })
+  }
+
+  if (perfilIncompleto) {
+    tareas.push({
+      id: 'perfil-profe',
+      nivel: 'aviso',
+      icono: 'perfil',
+      titulo: 'Completá tu perfil de profe',
+      detalle: 'Tu especialidad y una descripción: los alumnos lo ven para elegirte',
+      accion: { texto: 'Completar', to: '/profe/mi-perfil' },
     })
   }
 

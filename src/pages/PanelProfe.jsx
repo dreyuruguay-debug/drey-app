@@ -6,6 +6,7 @@ import { generarResumenesPendientes } from '../services/progreso.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
 import { traerTodasLasFilas } from '../services/paginado.js'
+import { cargarSolicitudesRecibidas, perfilCompleto } from '../services/profes.js'
 import { cargarActividadClientes } from '../services/actividad.js'
 import { armarTareas, primerosPasos } from '../utils/tareasProfe.js'
 import { semanaDelCiclo } from '../utils/ciclos.js'
@@ -66,6 +67,8 @@ export default function PanelProfe() {
       { count: ejercicios },
       { data: rol },
       { data: mediciones, error: errorMediciones },
+      { solicitudes, error: errorSolicitudes },
+      { data: perfilProfe, error: errorPerfil },
     ] = await Promise.all([
       supabase.from('perfiles').select('nombre').eq('id', usuario?.id).single(),
       traerTodasLasFilas(() =>
@@ -87,6 +90,14 @@ export default function PanelProfe() {
       supabase.rpc('mi_rol'),
       // Clientes con medidas (si la tabla todavía no existe, se ignora).
       supabase.from('mediciones').select('cliente_id'),
+      // Solicitudes de alumnos y su perfil público (si la base todavía no
+      // tiene el SQL 026, se ignoran).
+      cargarSolicitudesRecibidas(),
+      supabase
+        .from('perfiles_profe')
+        .select('descripcion, especialidades')
+        .eq('profe_id', usuario?.id)
+        .maybeSingle(),
     ])
     if (!sigueAbierta()) return
 
@@ -116,6 +127,10 @@ export default function PanelProfe() {
           ? null
           : new Set((mediciones || []).map((fila) => fila.cliente_id)),
         ciclosTerminados,
+        solicitudes: errorSolicitudes
+          ? []
+          : solicitudes.filter((solicitud) => solicitud.estado === 'pendiente'),
+        perfilIncompleto: errorPerfil ? null : !perfilCompleto(perfilProfe),
         hoy,
       }),
       pasos: primerosPasos({
@@ -211,6 +226,12 @@ export default function PanelProfe() {
               <Link to="/profe/estadisticas" className="acceso">
                 Estadísticas
               </Link>
+              <Link to="/profe/mi-perfil" className="acceso">
+                Mi perfil de profe
+              </Link>
+              <Link to="/profe/solicitudes" className="acceso">
+                Solicitudes de alumnos
+              </Link>
               {armaEquipo && (
                 <Link to="/profe/equipo" className="acceso">
                   Equipo y gimnasios
@@ -220,7 +241,7 @@ export default function PanelProfe() {
           </section>
 
           <div className="lista-tarjetas">
-            <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
+            <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando un alumno te pide entrenar con vos, cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
           </div>
 
           <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
@@ -270,6 +291,10 @@ function IconoTarea({ tipo }) {
     calendario: <path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4" />,
     baja: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />,
     medida: <path d="M3 17l14-14 4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2" />,
+    solicitud: (
+      <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c.8-3.5 3.5-6 7-6 1.5 0 2.8.4 3.9 1.1M19 14v6M16 17h6" />
+    ),
+    perfil: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1-4 4-6 8-6s7 2 8 6" />,
   }
   return (
     <svg

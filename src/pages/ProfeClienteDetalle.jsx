@@ -17,6 +17,8 @@ import {
   habilitarCliente,
 } from '../services/cuentas.js'
 import { mostrarAviso } from '../services/avisos.js'
+import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
+import { asignarProfe, cargarListaDeProfes, textoDeErrorProfes } from '../services/profes.js'
 import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import { formatearPrecio, obtenerPlan } from '../data/planes.js'
 import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
@@ -33,6 +35,8 @@ const PESTANAS = [
 // Ficha del cliente: todo lo de esa persona en un solo lugar, en 4
 // pestañas (Rutinas · Semana · Progreso · Pagos). La pestaña elegida
 // queda en la dirección (?tab=semana), así se puede entrar directo.
+// El Admin ve además "Profe" arriba, para asignarle o cambiarle el profe
+// (al alumno y a los profes les llega el aviso, supabase/sql/026).
 export default function ProfeClienteDetalle() {
   const { id } = useParams()
   const [parametros, setParametros] = useSearchParams()
@@ -47,10 +51,42 @@ export default function ProfeClienteDetalle() {
   const [calendario, setCalendario] = useState({})
   const [sesiones, setSesiones] = useState([])
   const [pagos, setPagos] = useState([])
+  const [esAdmin, setEsAdmin] = useState(esAdminConocido)
+  const [profes, setProfes] = useState([])
 
   useEffect(() => {
     cargarTodo()
   }, [id])
+
+  // Solo el Admin asigna el profe desde acá: necesita la lista de profes.
+  useEffect(() => {
+    let activo = true
+    verificarProfe().then(async ({ esAdmin: admin }) => {
+      if (!activo) return
+      setEsAdmin(Boolean(admin))
+      if (admin) {
+        const lista = await cargarListaDeProfes()
+        if (activo) setProfes(lista)
+      }
+    })
+    return () => {
+      activo = false
+    }
+  }, [])
+
+  async function cambiarProfe(profeId) {
+    const error = await asignarProfe(id, profeId)
+    const nombre = profes.find((profe) => profe.id === profeId)
+    mostrarAviso(
+      error
+        ? textoDeErrorProfes(error)
+        : nombre
+          ? `Ahora entrena con ${nombre.nombre}`
+          : 'Quedó sin profe',
+      error ? 'error' : 'ok',
+    )
+    cargarTodo({ silencioso: true })
+  }
 
   async function cargarTodo({ silencioso = false } = {}) {
     if (!silencioso) setCargando(true)
@@ -140,6 +176,25 @@ export default function ProfeClienteDetalle() {
         </div>
         <span className={`estado-chip estado-${estado.tono}`}>{estado.texto}</span>
       </header>
+
+      {esAdmin && (
+        <label className="ficha-profe">
+          <span>Profe</span>
+          <select
+            className="profe-calendario-select"
+            value={cliente.profe_id || ''}
+            onChange={(event) => cambiarProfe(event.target.value || null)}
+            aria-label={`Profe de ${cliente.nombre}`}
+          >
+            <option value="">Sin profe</option>
+            {profes.map((profe) => (
+              <option key={profe.id} value={profe.id}>
+                {profe.nombre} {profe.apellido}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <Pestanas
         etiqueta="Secciones del cliente"
@@ -234,13 +289,12 @@ export default function ProfeClienteDetalle() {
             {cliente.baja_solicitada_en && (
               <div className="aviso-baja">
                 <strong>
-                  Pidió la baja de su cuenta el{' '}
-                  {textoFechaCorta(cliente.baja_solicitada_en.slice(0, 10))}
+                  Pidió la baja de su cuenta el {textoFechaCorta(cliente.baja_solicitada_en)}
                 </strong>
                 <span>
                   Por la Ley de datos personales hay que borrar su cuenta y sus datos. Hacelo desde
-                  Supabase → Authentication → Users → buscá su email → "Delete user". Se borra
-                  todo lo suyo (rutinas, entrenamientos, pagos).
+                  Supabase → Authentication → Users → buscá su email → "Delete user". Se borra todo
+                  lo suyo (rutinas, entrenamientos, pagos).
                 </span>
               </div>
             )}
@@ -307,7 +361,7 @@ export default function ProfeClienteDetalle() {
                 <div className="lista-tarjetas">
                   {pagos.map((pago) => (
                     <p key={pago.id} className="pago-fila">
-                      <span>{textoFechaCorta(pago.creado_en.slice(0, 10))}</span>
+                      <span>{textoFechaCorta(pago.creado_en)}</span>
                       <span>
                         {formatearPrecio(pago.monto)}
                         {pago.codigo ? ` · ${pago.codigo}` : ''}

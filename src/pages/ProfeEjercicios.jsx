@@ -13,11 +13,12 @@ import {
   usoDeEjercicio,
 } from '../services/biblioteca.js'
 import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
-import { comprimirImagen, miniaturaDeEjercicio } from '../utils/imagenes.js'
+import { comprimirImagen } from '../utils/imagenes.js'
 import { ejerciciosActivos, estaArchivado, filtrarPorBusqueda } from '../utils/biblioteca.js'
 import { normalizarLinkVideo } from '../utils/linkVideo.js'
 import { normalizarTexto } from '../utils/texto.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import VisorEjercicios, { MiniaturaEjercicio } from '../components/VisorEjercicios.jsx'
 
 // Filtros para encontrar rápido lo que falta cargar, y los archivados.
 const FILTROS = [
@@ -38,7 +39,9 @@ const FILTROS = [
 // foto" / "Sin video" muestran solo los que falta completar. Las fotos se
 // achican solas antes de subirlas (cargan rápido en el celular). En la
 // lista se ve la versión chica y quieta de cada foto, y solo se descargan
-// las que aparecen en pantalla (la animación completa se ve al editar).
+// las que aparecen en pantalla. Tocando la foto chica se ve la animación
+// en grande (components/VisorEjercicios.jsx), para revisar que sea la
+// correcta, y se puede pasar al siguiente sin cerrar.
 //
 // El buscador no distingue tildes ni mayúsculas y también busca por
 // músculo (utils/biblioteca.js).
@@ -80,6 +83,8 @@ export default function ProfeEjercicios() {
   const [confirmacion, setConfirmacion] = useState(null)
   const [trabajando, setTrabajando] = useState(false)
   const [recuperandoId, setRecuperandoId] = useState(null)
+  // Visor de la animación en grande: posición dentro de "conFotoVisibles".
+  const [visor, setVisor] = useState(null)
 
   useEffect(() => {
     let activo = true
@@ -324,6 +329,27 @@ export default function ProfeEjercicios() {
           : true,
     )
   }, [activos, archivados, verArchivados, categoriaActiva, busqueda, filtro])
+  // Los que se pueden ver en grande, en el mismo orden que la lista.
+  const conFotoVisibles = useMemo(
+    () => visibles.filter((ejercicio) => ejercicio.imagen_url),
+    [visibles],
+  )
+
+  function abrirVisor(ejercicio) {
+    setVisor(conFotoVisibles.findIndex((item) => item.id === ejercicio.id))
+  }
+
+  function editarDesdeVisor(ejercicio) {
+    setVisor(null)
+    empezarEdicion(ejercicio)
+    // Espera a que se dibuje el formulario y baja hasta él.
+    requestAnimationFrame(() =>
+      document
+        .getElementById(`ejercicio-${ejercicio.id}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    )
+  }
+
   const conFoto = useMemo(
     () => activos.filter((ejercicio) => ejercicio.imagen_url).length,
     [activos],
@@ -419,7 +445,11 @@ export default function ProfeEjercicios() {
         <div className="profe-ejercicios-lista">
           {visibles.map((ejercicio) =>
             editandoId === ejercicio.id ? (
-              <div key={ejercicio.id} className="profe-ejercicio-edicion">
+              <div
+                key={ejercicio.id}
+                id={`ejercicio-${ejercicio.id}`}
+                className="profe-ejercicio-edicion"
+              >
                 <input
                   className="auth-input"
                   type="text"
@@ -506,6 +536,7 @@ export default function ProfeEjercicios() {
                 esAdmin={esAdmin}
                 recuperando={recuperandoId === ejercicio.id}
                 onEditar={() => empezarEdicion(ejercicio)}
+                onVer={() => abrirVisor(ejercicio)}
                 onArchivar={() => pedirConfirmacion(ejercicio, 'archivar')}
                 onRecuperar={() => recuperar(ejercicio)}
                 onBorrar={() => pedirConfirmacion(ejercicio, 'borrar')}
@@ -513,6 +544,26 @@ export default function ProfeEjercicios() {
             ),
           )}
         </div>
+      )}
+
+      {visor !== null && conFotoVisibles[visor] && (
+        <VisorEjercicios
+          ejercicios={conFotoVisibles}
+          indice={visor}
+          onCambiar={setVisor}
+          onCerrar={() => setVisor(null)}
+          acciones={(ejercicio) =>
+            !estaArchivado(ejercicio) && (
+              <button
+                type="button"
+                className="boton-principal"
+                onClick={() => editarDesdeVisor(ejercicio)}
+              >
+                Editar (cambiar foto o nombre)
+              </button>
+            )
+          }
+        />
       )}
 
       <p className="profe-seccion-label">Agregar ejercicio a {categoriaActiva}</p>
@@ -554,12 +605,14 @@ export default function ProfeEjercicios() {
 }
 
 // Un ejercicio de la lista. En uso: "Editar" y "Archivar". Archivado:
-// "Recuperar" y, solo para el Admin, "Borrar" (para siempre).
+// "Recuperar" y, solo para el Admin, "Borrar" (para siempre). La foto
+// chica abre la animación en grande (onVer).
 function FilaEjercicio({
   ejercicio,
   esAdmin,
   recuperando,
   onEditar,
+  onVer,
   onArchivar,
   onRecuperar,
   onBorrar,
@@ -568,17 +621,7 @@ function FilaEjercicio({
   return (
     <div className="profe-ejercicio-item">
       <div className="profe-ejercicio-item-info">
-        {ejercicio.imagen_url && (
-          <img
-            src={miniaturaDeEjercicio(ejercicio.imagen_url)}
-            alt=""
-            className="profe-ejercicio-foto-mini"
-            width="48"
-            height="48"
-            loading="lazy"
-            decoding="async"
-          />
-        )}
+        {ejercicio.imagen_url && <MiniaturaEjercicio ejercicio={ejercicio} onAbrir={onVer} />}
         <span>
           {ejercicio.nombre}
           {archivado && (

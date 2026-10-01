@@ -22,6 +22,15 @@ export function fechaLocalISO(fecha) {
   return `${anio}-${mes}-${dia}`
 }
 
+// La fecha de Uruguay ("YYYY-MM-DD") de un momento guardado en la base
+// ("2026-09-30T23:40:00+00:00"). '' si no hay. Cortar el texto (slice)
+// daba el día de Londres: después de las 21:00, el día siguiente.
+export function fechaLocalDeMomento(momento) {
+  if (!momento) return ''
+  const fecha = new Date(momento)
+  return Number.isNaN(fecha.getTime()) ? '' : fechaLocalISO(fecha)
+}
+
 // Suma (o resta, si es negativo) una cantidad de días a una fecha
 // "YYYY-MM-DD" y devuelve otra en el mismo formato.
 export function sumarDias(fechaISO, dias) {
@@ -114,10 +123,15 @@ export function textoFechaLarga(fecha = new Date()) {
   return `${NOMBRES_DIA_JS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`
 }
 
-// "15/10" a partir de "YYYY-MM-DD" ('' si no hay fecha).
+// "15/10" a partir de "YYYY-MM-DD" ('' si no hay fecha). También acepta
+// un momento completo de la base ("2026-09-30T23:40:00+00:00"): se pasa
+// a la fecha de Uruguay (si no, después de las 21:00 mostraba el día
+// siguiente).
 export function textoFechaCorta(fechaISO) {
   if (!fechaISO) return ''
-  const [, mes, dia] = fechaISO.slice(0, 10).split('-')
+  const texto = String(fechaISO)
+  const soloFecha = texto.length > 10 ? fechaLocalDeMomento(texto) : texto
+  const [, mes, dia] = soloFecha.split('-')
   return `${Number(dia)}/${Number(mes)}`
 }
 
