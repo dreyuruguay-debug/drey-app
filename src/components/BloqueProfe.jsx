@@ -87,8 +87,8 @@ export default function BloqueProfe({
               type="button"
               className={
                 textoSeriesCalentamiento(item.calentamiento)
-                  ? 'boton-calentamiento boton-calentamiento-cambiar'
-                  : 'boton-calentamiento'
+                  ? 'boton-sumar-calentamiento boton-sumar-calentamiento-cambiar'
+                  : 'boton-sumar-calentamiento'
               }
               onClick={() => onEditarCalentamiento(posicion)}
             >

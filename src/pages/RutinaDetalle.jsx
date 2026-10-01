@@ -22,6 +22,7 @@ import { agruparEnBloques } from '../utils/bloques.js'
 import { obtenerMetodo } from '../data/metodos.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
 import {
+  cambiarValorDeSerie,
   construirTurnos,
   contarSeries,
   crearSeriesIniciales,
@@ -423,18 +424,25 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     )
   }
 
-  function ajustarValor(exIndex, serieIndex, campo, delta) {
+  // Peso o repeticiones de una serie: con + / − (delta) o escritos a mano
+  // (valor). Ver cambiarValorDeSerie en utils/entrenamiento.js.
+  // nuevoValor: un número, o una función que lo calcula con el valor que
+  // tiene la serie en ese momento (para los + / − tocados rápido).
+  function fijarValor(exIndex, serieIndex, campo, nuevoValor) {
     setSeries((actual) =>
-      actual.map((filas, i) =>
-        i !== exIndex
-          ? filas
-          : filas.map((fila, j) =>
-              j !== serieIndex
-                ? fila
-                : { ...fila, [campo]: Math.max(0, Number(fila[campo]) + delta) },
-            ),
-      ),
+      actual.map((filas, i) => {
+        if (i !== exIndex || !filas[serieIndex]) return filas
+        const valor =
+          typeof nuevoValor === 'function'
+            ? nuevoValor(Number(filas[serieIndex][campo]))
+            : nuevoValor
+        return cambiarValorDeSerie(filas, serieIndex, campo, valor)
+      }),
     )
+  }
+
+  function ajustarValor(exIndex, serieIndex, campo, delta) {
+    fijarValor(exIndex, serieIndex, campo, (valor) => valor + delta)
   }
 
   function marcarSerie(exIndex, serieIndex) {
@@ -883,6 +891,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             onAjustar={(serieIndex, campo, delta) =>
               ajustarValor(visible, serieIndex, campo, delta)
             }
+            onFijar={(serieIndex, campo, valor) => fijarValor(visible, serieIndex, campo, valor)}
             onMarcar={(serieIndex) => marcarSerie(visible, serieIndex)}
           />
 

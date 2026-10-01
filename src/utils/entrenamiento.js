@@ -54,6 +54,57 @@ export function crearSeriesIniciales(ejercicios, sugerencias = []) {
   })
 }
 
+// --- Peso y repeticiones de una serie (+ / − o escritos a mano) ---
+
+export const PASO_KG = 2.5
+export const PASO_REPS = 1
+export const MAXIMO_KG = 999
+export const MAXIMO_REPS = 999
+
+// Lo que el alumno escribe en el casillero ("22,5", "22.5", " 30 ") →
+// número, o null si no se entiende o está fuera de rango. El peso admite
+// hasta 2 decimales (hay discos de 1,25 kg); las repeticiones, enteras.
+export function leerValorEscrito(texto, campo) {
+  const limpio = String(texto ?? '')
+    .trim()
+    .replace(',', '.')
+  if (!/^\d+(\.\d+)?$/.test(limpio)) return null
+  const numero = Number(limpio)
+  if (campo === 'reps') {
+    return Number.isInteger(numero) && numero <= MAXIMO_REPS ? numero : null
+  }
+  return numero <= MAXIMO_KG ? redondearPeso(numero) : null
+}
+
+export function redondearPeso(kg) {
+  return Math.round(Math.max(0, Number(kg) || 0) * 100) / 100
+}
+
+// Las series de un ejercicio con el peso o las repeticiones de una
+// cambiados (con + / − o escritos). Si cambia el peso, las series que
+// siguen, del mismo tipo, todavía sin hacer y con el mismo peso que tenía
+// esta, pasan al nuevo: si en el gimnasio el disco es de 22,5 en vez de
+// 20, no hay que corregirlo en cada serie. Las de calentamiento con pesos
+// distintos no se tocan.
+export function cambiarValorDeSerie(filas, serieIndex, campo, valor) {
+  const actual = filas[serieIndex]
+  if (!actual) return filas
+  const nuevo =
+    campo === 'kg'
+      ? Math.min(MAXIMO_KG, redondearPeso(valor))
+      : Math.min(MAXIMO_REPS, Math.max(0, Math.round(Number(valor) || 0)))
+  return filas.map((fila, j) => {
+    if (j === serieIndex) return { ...fila, [campo]: nuevo }
+    const siguePendiente =
+      campo === 'kg' &&
+      j > serieIndex &&
+      !fila.hecha &&
+      fila.tipo === actual.tipo &&
+      Number(fila.kg) === Number(actual.kg)
+    return siguePendiente ? { ...fila, kg: nuevo } : fila
+  })
+}
+
 // "Calentamiento 2" o "Serie 3" (las efectivas se cuentan aparte), con
 // cuántas hay de ese tipo: { tipo, numero, total, calentamiento }.
 export function etiquetaDeSerie(seriesDelEjercicio = [], indice) {

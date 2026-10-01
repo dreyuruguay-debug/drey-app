@@ -195,6 +195,12 @@ export function formatearNumero(valor) {
   return Number(valor || 0).toLocaleString('es-UY', { maximumFractionDigits: 1 })
 }
 
+// Peso de una serie: hasta 2 decimales ("23,75"), porque se puede
+// escribir a mano (discos de 1,25 kg).
+export function formatearPeso(valor) {
+  return Number(valor || 0).toLocaleString('es-UY', { maximumFractionDigits: 2 })
+}
+
 // Diferencia con signo para mostrar: "+1,5 kg", "−2 kg", "—" si no hay.
 export function formatearCambio(valor, unidad = ' kg') {
   if (valor == null) return '—'

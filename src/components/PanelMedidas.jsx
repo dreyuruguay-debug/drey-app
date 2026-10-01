@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import GraficoProgreso from './GraficoProgreso.jsx'
 import {
+  agregarFotos,
+  borrarFoto,
   borrarMedicion,
   cargarMediciones,
   guardarMedicion,
@@ -13,17 +15,26 @@ import {
   alturaConocida,
   calcularIMC,
   cambioDe,
+  CLAVE_OTRAS_FOTOS,
+  fotosDeMedicion,
   ordenarPorFecha,
+  rutasDeFotos,
   serieDe,
 } from '../utils/medidas.js'
+import VisorFotos from './VisorFotos.jsx'
 import { formatearNumero } from '../utils/progreso.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from './Esqueleto.jsx'
 
 // Todo lo de las medidas de un cliente: resumen (cuánto cambió cada
-// medida desde el inicio), gráfica, fotos de antes y ahora, historial y
-// el formulario para cargar una medición nueva. La usan la pantalla del
+// medida desde el inicio), gráfica, fotos de antes y ahora (se puede
+// elegir qué fechas comparar), TODAS las fotos por fecha, historial y el
+// formulario para cargar una medición nueva. La usan la pantalla del
 // alumno (Mis medidas) y la del profe (ficha del cliente → Medidas).
+//
+// Ninguna foto reemplaza a otra: se guardan todas (varias de la misma
+// vista, "otras" y las que se agregan después a una fecha). Tocando una
+// se ve en grande, con anterior / siguiente y "Borrar esta foto".
 //
 // La primera medición es la "evaluación inicial": además pide la altura.
 export default function PanelMedidas({ clienteId, esProfe = false }) {
@@ -35,6 +46,12 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
   const [vista, setVista] = useState('frente')
   const [links, setLinks] = useState({})
   const [borrandoId, setBorrandoId] = useState(null)
+  // Fechas elegidas para comparar (ids de medición); null = la primera y
+  // la última con foto de esa vista.
+  const [comparar, setComparar] = useState({ antes: null, ahora: null })
+  // Visor abierto: posición dentro de "todasLasFotos".
+  const [visor, setVisor] = useState(null)
+  const [borrandoFoto, setBorrandoFoto] = useState(null)
 
   useEffect(() => {
     cargar()
@@ -45,9 +62,7 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
     const resultado = await cargarMediciones(clienteId)
     setMediciones(resultado.mediciones)
     setError(resultado.error ? 'No pudimos cargar las medidas. Revisá tu conexión.' : '')
-    setLinks(
-      await linksDeFotos(resultado.mediciones.flatMap((medicion) => Object.values(medicion.fotos || {}))),
-    )
+    setLinks(await linksDeFotos(resultado.mediciones.flatMap(rutasDeFotos)))
     setCargando(false)
   }
 
@@ -64,8 +79,52 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
   const ultimoPeso = cambioDe(mediciones, 'peso')?.ultima
   const imc = calcularIMC(ultimoPeso, altura)
   const conFoto = ordenadas.filter((medicion) => medicion.fotos?.[vista])
-  const fotoAntes = conFoto[0]
-  const fotoAhora = conFoto.length > 1 ? conFoto[conFoto.length - 1] : null
+  const fotoAntes = conFoto.find((medicion) => medicion.id === comparar.antes) || conFoto[0]
+  const fotoAhora =
+    conFoto.find((medicion) => medicion.id === comparar.ahora) ||
+    (conFoto.length > 1 ? conFoto[conFoto.length - 1] : null)
+  // Todas las fotos, de la fecha más nueva a la más vieja (para la
+  // galería y el visor).
+  const todasLasFotos = [...ordenadas].reverse().flatMap((medicion) =>
+    fotosDeMedicion(medicion).map((foto) => ({
+      ...foto,
+      medicion,
+      url: links[foto.ruta],
+      titulo: `${foto.etiqueta} · ${textoFechaCorta(medicion.fecha)}`,
+      detalle: medicion.tipo === 'inicial' ? 'Evaluación inicial' : '',
+    })),
+  )
+
+  function abrirFoto(ruta) {
+    setBorrandoFoto(null)
+    setVisor(todasLasFotos.findIndex((foto) => foto.ruta === ruta))
+  }
+
+  async function quitarUnaFoto(foto) {
+    const problema = await borrarFoto(foto.medicion, foto.ruta)
+    setBorrandoFoto(null)
+    mostrarAviso(problema ? 'No pudimos borrarla' : 'Foto borrada', problema ? 'error' : 'ok')
+    if (problema) return
+    setVisor(null)
+    cargar()
+  }
+
+  async function sumarFotosA(medicion, vistaElegida, archivos) {
+    if (!archivos.length) return
+    const problema = await agregarFotos(
+      medicion,
+      archivos.map((archivo) => ({ vista: vistaElegida, archivo })),
+    )
+    mostrarAviso(
+      problema
+        ? problema.message || 'No pudimos guardar las fotos'
+        : archivos.length === 1
+          ? 'Foto agregada'
+          : `${archivos.length} fotos agregadas`,
+      problema ? 'error' : 'ok',
+    )
+    if (!problema) cargar()
+  }
 
   if (cargando) return <Esqueleto filas={2} />
 
@@ -110,7 +169,9 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
                     type="button"
                     key={campo.clave}
                     className={
-                      campo.clave === campoGrafica ? 'medida-tarjeta medida-activa' : 'medida-tarjeta'
+                      campo.clave === campoGrafica
+                        ? 'medida-tarjeta medida-activa'
+                        : 'medida-tarjeta'
                     }
                     onClick={() => setCampoGrafica(campo.clave)}
                   >
@@ -145,7 +206,7 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
             />
           )}
 
-          {ordenadas.some((medicion) => Object.keys(medicion.fotos || {}).length) && (
+          {todasLasFotos.length > 0 && (
             <section className="bloque-pagina">
               <p className="seccion-etiqueta">Fotos: antes y ahora</p>
               <div className="chips-lista">
@@ -154,21 +215,156 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
                     key={opcion.clave}
                     type="button"
                     className={opcion.clave === vista ? 'chip chip-activo' : 'chip'}
-                    onClick={() => setVista(opcion.clave)}
+                    onClick={() => {
+                      setVista(opcion.clave)
+                      setComparar({ antes: null, ahora: null })
+                    }}
                   >
                     {opcion.etiqueta}
                   </button>
                 ))}
               </div>
               {fotoAntes ? (
-                <div className="medidas-fotos">
-                  <Foto medicion={fotoAntes} vista={vista} links={links} titulo="Antes" />
-                  {fotoAhora && <Foto medicion={fotoAhora} vista={vista} links={links} titulo="Ahora" />}
-                </div>
+                <>
+                  <div className="medidas-fotos">
+                    <Foto
+                      medicion={fotoAntes}
+                      vista={vista}
+                      links={links}
+                      titulo="Antes"
+                      onAbrir={() => abrirFoto(fotoAntes.fotos[vista])}
+                    />
+                    {fotoAhora && (
+                      <Foto
+                        medicion={fotoAhora}
+                        vista={vista}
+                        links={links}
+                        titulo="Ahora"
+                        onAbrir={() => abrirFoto(fotoAhora.fotos[vista])}
+                      />
+                    )}
+                  </div>
+                  {conFoto.length > 2 && (
+                    <div className="medidas-comparar">
+                      <label className="editor-campo">
+                        <span>Antes</span>
+                        <select
+                          className="profe-calendario-select"
+                          value={fotoAntes.id}
+                          onChange={(event) =>
+                            setComparar((actual) => ({ ...actual, antes: event.target.value }))
+                          }
+                        >
+                          {conFoto.map((medicion) => (
+                            <option key={medicion.id} value={medicion.id}>
+                              {textoFechaCorta(medicion.fecha)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="editor-campo">
+                        <span>Ahora</span>
+                        <select
+                          className="profe-calendario-select"
+                          value={fotoAhora?.id || ''}
+                          onChange={(event) =>
+                            setComparar((actual) => ({ ...actual, ahora: event.target.value }))
+                          }
+                        >
+                          {conFoto.map((medicion) => (
+                            <option key={medicion.id} value={medicion.id}>
+                              {textoFechaCorta(medicion.fecha)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+                </>
               ) : (
-                <p className="profe-vacio">No hay fotos de {vista} todavía.</p>
+                <p className="profe-vacio">
+                  No hay fotos de{' '}
+                  {VISTAS_FOTO.find((opcion) => opcion.clave === vista)?.etiqueta.toLowerCase()}{' '}
+                  todavía.
+                </p>
               )}
             </section>
+          )}
+
+          {todasLasFotos.length > 0 && (
+            <section className="bloque-pagina">
+              <p className="seccion-etiqueta">Todas las fotos ({todasLasFotos.length})</p>
+              <div className="medidas-galeria">
+                {[...ordenadas].reverse().map((medicion) => {
+                  const fotos = fotosDeMedicion(medicion)
+                  if (!fotos.length) return null
+                  return (
+                    <div key={medicion.id} className="medidas-galeria-fecha">
+                      <div className="medidas-galeria-cabecera">
+                        <strong>
+                          {textoFechaCorta(medicion.fecha)}
+                          {medicion.tipo === 'inicial' ? ' · Evaluación inicial' : ''}
+                        </strong>
+                        <AgregarFotos
+                          onElegir={(vistaElegida, archivos) =>
+                            sumarFotosA(medicion, vistaElegida, archivos)
+                          }
+                        />
+                      </div>
+                      <div className="medidas-galeria-fotos">
+                        {fotos.map((foto) => (
+                          <button
+                            key={foto.ruta}
+                            type="button"
+                            className="medidas-galeria-foto"
+                            onClick={() => abrirFoto(foto.ruta)}
+                            aria-label={`Ver en grande: ${foto.etiqueta}, ${textoFechaCorta(medicion.fecha)}`}
+                          >
+                            {links[foto.ruta] ? (
+                              <img src={links[foto.ruta]} alt="" loading="lazy" />
+                            ) : (
+                              <span>Sin vista previa</span>
+                            )}
+                            <small>{foto.etiqueta}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {visor !== null && todasLasFotos[visor] && (
+            <VisorFotos
+              fotos={todasLasFotos}
+              indice={visor}
+              onCambiar={(indice) => {
+                setBorrandoFoto(null)
+                setVisor(indice)
+              }}
+              onCerrar={() => setVisor(null)}
+              acciones={(foto) =>
+                borrandoFoto === foto.ruta ? (
+                  <button
+                    type="button"
+                    className="boton-peligro"
+                    onClick={() => quitarUnaFoto(foto)}
+                  >
+                    Sí, borrar esta foto
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="boton-texto"
+                    onClick={() => setBorrandoFoto(foto.ruta)}
+                  >
+                    Borrar esta foto
+                  </button>
+                )
+              }
+            />
           )}
 
           <section className="bloque-pagina">
@@ -221,11 +417,17 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
   )
 }
 
-function Foto({ medicion, vista, links, titulo }) {
+function Foto({ medicion, vista, links, titulo, onAbrir }) {
   const url = links[medicion.fotos?.[vista]]
   return (
     <figure className="medidas-foto">
-      {url ? <img src={url} alt={`${titulo}: ${vista}`} /> : <span>Foto no disponible</span>}
+      {url ? (
+        <button type="button" className="medidas-foto-boton" onClick={onAbrir}>
+          <img src={url} alt={`${titulo}: ${vista}`} />
+        </button>
+      ) : (
+        <span>Foto no disponible</span>
+      )}
       <figcaption>
         {titulo} · {textoFechaCorta(medicion.fecha)}
       </figcaption>
@@ -233,18 +435,97 @@ function Foto({ medicion, vista, links, titulo }) {
   )
 }
 
+// Vista previa de una foto elegida en el formulario (todavía no subida),
+// con ✕ para sacarla.
+function MiniaturaArchivo({ archivo, etiqueta, onQuitar }) {
+  const [url, setUrl] = useState('')
+  useEffect(() => {
+    const direccion = URL.createObjectURL(archivo)
+    setUrl(direccion)
+    return () => URL.revokeObjectURL(direccion)
+  }, [archivo])
+  return (
+    <figure className="medidas-miniatura">
+      {url && <img src={url} alt="" />}
+      <figcaption>✓ {etiqueta}</figcaption>
+      <button type="button" onClick={onQuitar} aria-label={`Quitar la foto ${etiqueta}`}>
+        ✕
+      </button>
+    </figure>
+  )
+}
+
+// "+ Agregar fotos" a una fecha que ya está cargada: se elige qué vista
+// son y una o varias fotos. Se suman a las que ya había (no reemplazan).
+function AgregarFotos({ onElegir }) {
+  const [vista, setVista] = useState(CLAVE_OTRAS_FOTOS)
+  const [subiendo, setSubiendo] = useState(false)
+
+  async function elegir(event) {
+    const archivos = [...(event.target.files || [])]
+    event.target.value = ''
+    if (!archivos.length) return
+    setSubiendo(true)
+    await onElegir(vista, archivos)
+    setSubiendo(false)
+  }
+
+  return (
+    <div className="medidas-agregar">
+      <select
+        className="profe-calendario-select"
+        value={vista}
+        onChange={(event) => setVista(event.target.value)}
+        aria-label="Qué foto es"
+        disabled={subiendo}
+      >
+        {VISTAS_FOTO.map((opcion) => (
+          <option key={opcion.clave} value={opcion.clave}>
+            {opcion.etiqueta}
+          </option>
+        ))}
+        <option value={CLAVE_OTRAS_FOTOS}>Otra</option>
+      </select>
+      <label
+        className={
+          subiendo
+            ? 'boton-secundario boton-chico boton-deshabilitado'
+            : 'boton-secundario boton-chico'
+        }
+      >
+        {subiendo ? 'Subiendo…' : '+ Agregar fotos'}
+        <input type="file" accept="image/*" multiple hidden disabled={subiendo} onChange={elegir} />
+      </label>
+    </div>
+  )
+}
+
 function resumenDeMedicion(medicion) {
   const partes = CAMPOS_MEDIDA.filter((campo) => medicion[campo.clave] != null).map(
-    (campo) => `${campo.etiqueta} ${formatearNumero(Number(medicion[campo.clave]))} ${campo.unidad}`,
+    (campo) =>
+      `${campo.etiqueta} ${formatearNumero(Number(medicion[campo.clave]))} ${campo.unidad}`,
   )
-  const fotos = Object.keys(medicion.fotos || {}).length
+  const fotos = fotosDeMedicion(medicion).length
   if (fotos) partes.push(`${fotos} ${fotos === 1 ? 'foto' : 'fotos'}`)
   return partes.join(' · ') || 'Sin datos'
 }
 
-function FormularioMedicion({ clienteId, esInicial, esProfe, alturaAnterior, onGuardado, onCancelar }) {
-  const [valores, setValores] = useState({ fecha: obtenerFechaHoyISO(), altura: alturaAnterior || '' })
+function FormularioMedicion({
+  clienteId,
+  esInicial,
+  esProfe,
+  alturaAnterior,
+  onGuardado,
+  onCancelar,
+}) {
+  const [valores, setValores] = useState({
+    fecha: obtenerFechaHoyISO(),
+    altura: alturaAnterior || '',
+  })
+  // Una foto principal por vista ({ frente: File, ... }) y las "otras"
+  // (todas las que se quieran: ninguna reemplaza a otra).
   const [fotos, setFotos] = useState({})
+  const [otras, setOtras] = useState([])
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
@@ -256,16 +537,24 @@ function FormularioMedicion({ clienteId, esInicial, esProfe, alturaAnterior, onG
     event.preventDefault()
     const datos = { fecha: valores.fecha, tipo: esInicial ? 'inicial' : 'control' }
     for (const campo of CAMPOS_MEDIDA) {
-      const texto = String(valores[campo.clave] ?? '').replace(',', '.').trim()
+      const texto = String(valores[campo.clave] ?? '')
+        .replace(',', '.')
+        .trim()
       if (texto) datos[campo.clave] = Number(texto)
     }
     if (esInicial && String(valores.altura).trim()) {
       datos.altura = Number(String(valores.altura).replace(',', '.'))
     }
     if (valores.notas?.trim()) datos.notas = valores.notas.trim()
+    const archivos = [
+      ...VISTAS_FOTO.filter((opcion) => fotos[opcion.clave]).map((opcion) => ({
+        vista: opcion.clave,
+        archivo: fotos[opcion.clave],
+      })),
+      ...otras.map((archivo) => ({ vista: CLAVE_OTRAS_FOTOS, archivo })),
+    ]
     const hayAlgo =
-      CAMPOS_MEDIDA.some((campo) => datos[campo.clave] !== undefined) ||
-      Object.values(fotos).some(Boolean)
+      CAMPOS_MEDIDA.some((campo) => datos[campo.clave] !== undefined) || archivos.length > 0
     if (!hayAlgo) {
       setMensaje('Cargá al menos una medida o una foto.')
       return
@@ -276,10 +565,14 @@ function FormularioMedicion({ clienteId, esInicial, esProfe, alturaAnterior, onG
     }
     setGuardando(true)
     setMensaje('')
-    const error = await guardarMedicion(clienteId, datos, fotos)
+    const error = await guardarMedicion(clienteId, datos, archivos)
     setGuardando(false)
     if (error) {
-      setMensaje(error.message?.includes('check') ? 'Algún valor está fuera de rango.' : error.message || 'No pudimos guardar.')
+      setMensaje(
+        error.message?.includes('check')
+          ? 'Algún valor está fuera de rango.'
+          : error.message || 'No pudimos guardar.',
+      )
       return
     }
     mostrarAviso('Medidas guardadas')
@@ -337,26 +630,71 @@ function FormularioMedicion({ clienteId, esInicial, esProfe, alturaAnterior, onG
         ))}
       </div>
 
-      <p className="editor-rango-etiqueta">Fotos de progreso (opcional, solo las ven vos y tu profe)</p>
+      <p className="editor-rango-etiqueta">
+        Fotos de progreso (opcional, solo las ven vos y tu profe)
+      </p>
       <div className="medidas-fotos-carga">
         {VISTAS_FOTO.map((opcion) => (
-          <label key={opcion.clave} className="suscripcion-adjuntar medidas-adjuntar">
-            {fotos[opcion.clave] ? `✓ ${opcion.etiqueta}` : `+ ${opcion.etiqueta}`}
+          <div key={opcion.clave} className="medidas-carga-vista">
+            {fotos[opcion.clave] ? (
+              <MiniaturaArchivo
+                archivo={fotos[opcion.clave]}
+                etiqueta={opcion.etiqueta}
+                onQuitar={() => setFotos((actual) => ({ ...actual, [opcion.clave]: null }))}
+              />
+            ) : (
+              <label className="suscripcion-adjuntar medidas-adjuntar">
+                + {opcion.etiqueta}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    const archivo = event.target.files?.[0] || null
+                    event.target.value = ''
+                    setFotos((actual) => ({ ...actual, [opcion.clave]: archivo }))
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        ))}
+        {otras.map((archivo, indice) => (
+          <div key={`${archivo.name}-${indice}`} className="medidas-carga-vista">
+            <MiniaturaArchivo
+              archivo={archivo}
+              etiqueta="Otra"
+              onQuitar={() => setOtras((actual) => actual.filter((_, i) => i !== indice))}
+            />
+          </div>
+        ))}
+        <div className="medidas-carga-vista">
+          <label className="suscripcion-adjuntar medidas-adjuntar">
+            + Otras fotos
             <input
               type="file"
               accept="image/*"
+              multiple
               hidden
-              onChange={(event) =>
-                setFotos((actual) => ({ ...actual, [opcion.clave]: event.target.files?.[0] || null }))
-              }
+              onChange={(event) => {
+                const elegidas = [...(event.target.files || [])]
+                event.target.value = ''
+                setOtras((actual) => [...actual, ...elegidas])
+              }}
             />
           </label>
-        ))}
+        </div>
       </div>
+      <p className="profe-nota medidas-nota-fotos">
+        Se guardan todas: ninguna foto reemplaza a otra. Después también podés sumar fotos a esta
+        fecha desde "Todas las fotos".
+      </p>
 
       <textarea
         className="form-textarea"
-        placeholder={esProfe ? 'Observaciones (opcional)' : 'Notas (opcional): cómo te sentís, cambios…'}
+        placeholder={
+          esProfe ? 'Observaciones (opcional)' : 'Notas (opcional): cómo te sentís, cambios…'
+        }
         value={valores.notas || ''}
         onChange={(event) => cambiar('notas', event.target.value)}
       />

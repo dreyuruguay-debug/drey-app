@@ -205,6 +205,42 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   planilla y no se guarda para usar sin señal (`vite.config.js` y
   `herramientas/serviceWorkerDrey.js`).
 
+## Rutina completa antes de empezar
+
+- Al tocar una rutina en "Mis rutinas" (o "Ver la rutina antes de
+  empezar" en Inicio) se ve entera sin arrancar el entrenamiento:
+  cuántos ejercicios y minutos, la semana del ciclo, el calentamiento,
+  cada ejercicio con su foto (tocándola, la animación en grande con
+  anterior / siguiente), series × repeticiones, peso, RPE, tempo, sus
+  series de calentamiento y las notas del profe, la pausa y la vuelta a
+  la calma. Es la misma vista que "Ver toda la rutina" mientras entrena
+  (`components/entrenar/VistaGeneral.jsx`).
+
+## Peso y repeticiones escritos a mano
+
+- En la serie que toca, el número del medio se toca y se escribe
+  ("22,5", "23,75"): sirve en gimnasios donde los discos no van de a
+  2,5 kg. Los + / − siguen igual. Si se cambia el peso de una serie, las
+  que siguen del mismo tipo, sin hacer y con el mismo peso, pasan al
+  nuevo. Lógica en `utils/entrenamiento.js` (`leerValorEscrito`,
+  `cambiarValorDeSerie`); pantalla en `PantallaEjercicio.jsx` (Stepper).
+
+## Fotos de progreso: se guardan todas
+
+- Ninguna foto reemplaza a otra. Cada medición guarda una foto principal
+  por vista (frente, perfil, espalda: las de "antes y ahora") y la lista
+  `otras` (`[{ ruta, vista }]`) con las demás: una segunda de la misma
+  vista, "otras" o las que se suman después a esa fecha. Las mediciones
+  de antes se leen igual. Sin cambios en la base (es la misma columna
+  `fotos`).
+- `components/PanelMedidas.jsx`: "Antes y ahora" con las fechas a
+  elegir, "Todas las fotos" por fecha (con "+ Agregar fotos"), visor en
+  grande (`components/VisorFotos.jsx`) con "Borrar esta foto". Lógica en
+  `utils/medidas.js` (`fotosDeMedicion`, `sumarFotos`, `quitarFoto`) y
+  `services/medidas.js` (`agregarFotos`, `borrarFoto`).
+- Los visores a pantalla completa comparten el teclado, el deslizar y
+  el bloqueo del fondo (`components/useNavegacionVisor.js`).
+
 ## Tiempo y pausa del entrenamiento
 
 - El tiempo de arriba a la derecha arranca cuando el alumno empieza (el

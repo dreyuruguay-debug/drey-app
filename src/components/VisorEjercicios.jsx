@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useNavegacionVisor } from './useNavegacionVisor.js'
 import { categoriasDeEjercicio } from '../data/categorias.js'
 import { miniaturaDeEjercicio } from '../utils/imagenes.js'
 
@@ -15,50 +15,20 @@ import { miniaturaDeEjercicio } from '../utils/imagenes.js'
 // acciones(ejercicio): botones extra abajo (por ejemplo "Editar").
 export default function VisorEjercicios({ ejercicios, indice, onCambiar, onCerrar, acciones }) {
   const ejercicio = ejercicios[indice]
-  const inicioToque = useRef(null)
-  const hayAnterior = indice > 0
-  const haySiguiente = indice < ejercicios.length - 1
-
-  // Mientras está abierto, la página de atrás no se mueve.
-  useEffect(() => {
-    const anterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = anterior
-    }
-  }, [])
-
-  useEffect(() => {
-    function alApretarTecla(event) {
-      if (event.key === 'Escape') onCerrar()
-      if (event.key === 'ArrowLeft' && hayAnterior) onCambiar(indice - 1)
-      if (event.key === 'ArrowRight' && haySiguiente) onCambiar(indice + 1)
-    }
-    window.addEventListener('keydown', alApretarTecla)
-    return () => window.removeEventListener('keydown', alApretarTecla)
-  }, [indice, hayAnterior, haySiguiente, onCambiar, onCerrar])
-
-  // El siguiente se va descargando mientras se mira este.
-  useEffect(() => {
-    const siguiente = ejercicios[indice + 1]?.imagen_url
-    if (siguiente) new Image().src = siguiente
-  }, [ejercicios, indice])
+  const { hayAnterior, haySiguiente, gestos } = useNavegacionVisor({
+    cantidad: ejercicios.length,
+    indice,
+    onCambiar,
+    onCerrar,
+    siguienteUrl: ejercicios[indice + 1]?.imagen_url,
+  })
 
   if (!ejercicio) return null
 
-  function alTocar(event) {
-    inicioToque.current = event.touches[0]?.clientX ?? null
-  }
-
-  function alSoltar(event) {
-    if (inicioToque.current === null) return
-    const distancia = (event.changedTouches[0]?.clientX ?? 0) - inicioToque.current
-    inicioToque.current = null
-    if (distancia > 50 && hayAnterior) onCambiar(indice - 1)
-    if (distancia < -50 && haySiguiente) onCambiar(indice + 1)
-  }
-
-  const categorias = categoriasDeEjercicio(ejercicio)
+  // Sin repetir el grupo muscular si también es la categoría.
+  const categorias = categoriasDeEjercicio(ejercicio).filter(
+    (categoria) => categoria !== ejercicio.grupo_muscular,
+  )
 
   return (
     <div className="visor-fondo" onClick={onCerrar} role="presentation">
@@ -68,8 +38,7 @@ export default function VisorEjercicios({ ejercicios, indice, onCambiar, onCerra
         aria-modal="true"
         aria-label={`Animación de ${ejercicio.nombre}`}
         onClick={(event) => event.stopPropagation()}
-        onTouchStart={alTocar}
-        onTouchEnd={alSoltar}
+        {...gestos}
       >
         <div className="visor-cabecera">
           <span className="visor-contador">
@@ -109,9 +78,11 @@ export default function VisorEjercicios({ ejercicios, indice, onCambiar, onCerra
         </div>
 
         <p className="visor-nombre">{ejercicio.nombre}</p>
-        <p className="visor-detalle">
-          {[ejercicio.grupo_muscular, ...categorias].filter(Boolean).join(' · ')}
-        </p>
+        {[ejercicio.grupo_muscular, ...categorias].some(Boolean) && (
+          <p className="visor-detalle">
+            {[ejercicio.grupo_muscular, ...categorias].filter(Boolean).join(' · ')}
+          </p>
+        )}
         {ejercicio.video_url && (
           <a className="visor-video" href={ejercicio.video_url} target="_blank" rel="noreferrer">
             Ver video ↗
@@ -124,9 +95,11 @@ export default function VisorEjercicios({ ejercicios, indice, onCambiar, onCerra
             Cerrar
           </button>
         </div>
-        <p className="visor-ayuda">
-          Deslizá o usá las flechas para ver el anterior o el siguiente.
-        </p>
+        {ejercicios.length > 1 && (
+          <p className="visor-ayuda">
+            Deslizá o usá las flechas para ver el anterior o el siguiente.
+          </p>
+        )}
       </div>
     </div>
   )
