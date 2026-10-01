@@ -81,6 +81,17 @@ las siga en el gimnasio y registre lo que levantó.
 - Todo en `services/profes.js`; el número del menú en
   `services/accesoProfe.js` (`contarSolicitudesPendientes`).
 
+## Mi cuenta del profe
+
+El menú del profe tiene una quinta sección, **Mi cuenta**: en el celular
+es un botón del menú de abajo que abre `pages/ProfeMiCuenta.jsx`
+(`/profe/mi-cuenta`: Mi perfil de profe, Solicitudes de alumnos con las
+pendientes, Estadísticas, notificaciones y cerrar sesión); en la compu es
+un grupo de la barra lateral con **Mi perfil** y **Solicitudes** (con el
+número de pendientes). Se arma en `SECCIONES_PROFE`
+(`components/ProfeLayout.jsx`, campos `donde` y `grupo`). Los accesos
+rápidos del Inicio del profe no cambiaron. El menú del Admin tampoco.
+
 ## Panel en la computadora
 
 - En pantallas de 1024 px o más, el panel del profe y del Admin usa el

@@ -117,7 +117,7 @@ export default function ProfeMiPerfil() {
   }
 
   const titulo = profeId && esAdmin ? 'Perfil del profe' : 'Mi perfil de profe'
-  const volverA = profeId && esAdmin ? '/profe/equipo' : '/profe'
+  const volverA = profeId && esAdmin ? '/profe/equipo' : '/profe/mi-cuenta'
 
   if (cargando || !perfil) {
     return (

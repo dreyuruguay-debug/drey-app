@@ -22,7 +22,8 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 // Cada pantalla pone su contenido adentro de <ProfeLayout>, así la
 // revisión de acceso y la navegación no se repiten.
 //
-// El profe ve 4 secciones (Inicio, Clientes, Biblioteca, Pagos). El Admin
+// El profe ve 5 secciones (Inicio, Clientes, Biblioteca, Pagos y Mi
+// cuenta: su perfil y las solicitudes de alumnos). El Admin
 // tiene su propio menú de 5 (Inicio, Clientes, Equipo, Pagos, Ajustes);
 // la Biblioteca la abre desde su Inicio.
 //
@@ -44,20 +45,29 @@ const RUTAS_CLIENTES = [
   '/profe/solicitudes',
 ]
 
+// Para el profe, las solicitudes van en "Mi cuenta" (abajo).
+const RUTAS_CLIENTES_PROFE = RUTAS_CLIENTES.filter((ruta) => ruta !== '/profe/solicitudes')
+
+//
+// "Mi cuenta" del profe (su perfil y las solicitudes de alumnos): en el
+// celular es un botón más del menú de abajo que abre
+// pages/ProfeMiCuenta.jsx; en la compu, un grupo aparte en la barra
+// lateral con "Mi perfil" y "Solicitudes" a un toque.
+//   donde: 'celular' o 'compu' = solo se muestra ahí (si falta, en los dos).
+//   grupo: título de un grupo (solo en la compu), no es un botón.
 const SECCIONES_PROFE = [
   {
     to: '/profe',
     label: 'Inicio',
-    rutas: ['/profe', '/profe/estadisticas', '/profe/equipo', '/profe/mi-perfil'],
+    rutas: ['/profe', '/profe/estadisticas', '/profe/equipo'],
     exacta: true,
     Icono: IconoInicio,
   },
   {
     to: '/profe/clientes',
     label: 'Clientes',
-    rutas: RUTAS_CLIENTES,
+    rutas: RUTAS_CLIENTES_PROFE,
     Icono: IconoClientes,
-    avisos: 'solicitudes',
   },
   {
     to: '/profe/ejercicios',
@@ -71,6 +81,30 @@ const SECCIONES_PROFE = [
     rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
     avisos: 'pagos',
+  },
+  {
+    to: '/profe/mi-cuenta',
+    label: 'Mi cuenta',
+    rutas: ['/profe/mi-cuenta', '/profe/mi-perfil', '/profe/solicitudes'],
+    Icono: IconoCuenta,
+    avisos: 'solicitudes',
+    donde: 'celular',
+  },
+  { grupo: 'Mi cuenta' },
+  {
+    to: '/profe/mi-perfil',
+    label: 'Mi perfil',
+    rutas: ['/profe/mi-perfil', '/profe/mi-cuenta'],
+    Icono: IconoCuenta,
+    donde: 'compu',
+  },
+  {
+    to: '/profe/solicitudes',
+    label: 'Solicitudes',
+    rutas: ['/profe/solicitudes'],
+    Icono: IconoSolicitudes,
+    avisos: 'solicitudes',
+    donde: 'compu',
   },
 ]
 
@@ -207,16 +241,30 @@ export default function ProfeLayout({
             <span>{esAdmin ? 'Admin' : 'Profe'}</span>
           </div>
           {(esAdmin ? SECCIONES_ADMIN : SECCIONES_PROFE).map(
-            ({ to, label, rutas, exacta, Icono, avisos }) => {
+            ({ to, label, rutas, exacta, Icono, avisos, donde, grupo }) => {
+              if (grupo) {
+                return (
+                  <p key={`grupo-${grupo}`} className="panel-menu-grupo panel-solo-compu">
+                    {grupo}
+                  </p>
+                )
+              }
               const activo = rutas.some((ruta) =>
                 exacta ? pathname === ruta : pathname === ruta || pathname.startsWith(`${ruta}/`),
               )
               const numero = avisos ? numeros[avisos] : 0
+              const clases = [
+                'bottom-nav-item',
+                activo ? 'bottom-nav-item-activo' : '',
+                donde ? `panel-solo-${donde}` : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
               return (
                 <Link
                   key={to}
                   to={to}
-                  className={activo ? 'bottom-nav-item bottom-nav-item-activo' : 'bottom-nav-item'}
+                  className={clases}
                   aria-current={activo ? 'page' : undefined}
                 >
                   {numero > 0 && (
@@ -284,6 +332,24 @@ function IconoPagos() {
     <Svg>
       <rect x="2" y="6" width="20" height="13" rx="2" />
       <path d="M2 10h20" />
+    </Svg>
+  )
+}
+
+function IconoCuenta() {
+  return (
+    <Svg>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6" />
+    </Svg>
+  )
+}
+
+function IconoSolicitudes() {
+  return (
+    <Svg>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2 20c1-3.5 3.5-5 7-5s6 1.5 7 5M19 8v6M16 11h6" />
     </Svg>
   )
 }

@@ -80,7 +80,10 @@ export default function ProfeSolicitudes() {
   const respondidas = solicitudes.filter((solicitud) => solicitud.estado !== 'pendiente')
 
   return (
-    <ProfeLayout titulo="Solicitudes de alumnos" volverA="/profe/clientes">
+    <ProfeLayout
+      titulo="Solicitudes de alumnos"
+      volverA={esAdmin ? '/profe/clientes' : '/profe/mi-cuenta'}
+    >
       <p className="profe-nota">
         {esAdmin
           ? 'Alumnos que pidieron entrenar con un profe. Cada profe responde las suyas desde su panel; vos también podés responderlas.'

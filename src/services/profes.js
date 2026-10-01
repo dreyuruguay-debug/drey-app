@@ -111,12 +111,16 @@ export async function guardarPerfilDeProfe(perfil) {
 
 // Sube la foto de perfil (achicada) a la carpeta del profe y devuelve su
 // dirección pública, o null si no se pudo.
+//
+// Cada foto tiene un nombre nuevo (con la hora), así que nunca reemplaza
+// a otra: se sube sin "upsert". Con "upsert" la base pedía un permiso de
+// lectura que el bucket no tenía y la subida fallaba (arreglado 01/10).
 export async function subirFotoDeProfe(profeId, archivo) {
   const liviano = await comprimirImagen(archivo, 600)
   const ruta = `${profeId}/foto-${Date.now()}.jpg`
   const { error } = await supabase.storage
     .from('fotos-profes')
-    .upload(ruta, liviano, { contentType: liviano.type || 'image/jpeg', upsert: true })
+    .upload(ruta, liviano, { contentType: liviano.type || 'image/jpeg' })
   if (error) return null
   return supabase.storage.from('fotos-profes').getPublicUrl(ruta).data.publicUrl
 }

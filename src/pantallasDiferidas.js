@@ -88,6 +88,8 @@ export const AdminHistorial = pantallaDiferida(() => import('./pages/AdminHistor
 export const Profes = pantallaDiferida(() => import('./pages/Profes.jsx'), PANTALLAS_CLIENTE)
 export const ProfeMiPerfil = pantallaDiferida(() => import('./pages/ProfeMiPerfil.jsx'))
 export const ProfeSolicitudes = pantallaDiferida(() => import('./pages/ProfeSolicitudes.jsx'))
+// "Mi cuenta" del profe (perfil, solicitudes, notificaciones).
+export const ProfeMiCuenta = pantallaDiferida(() => import('./pages/ProfeMiCuenta.jsx'))
 
 // Descarga por adelantado el código de las pantallas diferidas, sin
 // mostrarlas: así la primera vez que se abren no hay que esperarlo.

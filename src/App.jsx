@@ -33,6 +33,7 @@ import {
   ProfeEquipo,
   ProfeEstadisticas,
   ProfeExcel,
+  ProfeMiCuenta,
   ProfeMiPerfil,
   ProfePlantillas,
   ProfeProgresion,
@@ -93,6 +94,7 @@ export default function App() {
             <Route path="/profe/codigos" element={<ProfeCodigos />} />
             <Route path="/profe/estadisticas" element={<ProfeEstadisticas />} />
             <Route path="/profe/equipo" element={<ProfeEquipo />} />
+            <Route path="/profe/mi-cuenta" element={<ProfeMiCuenta />} />
             <Route path="/profe/mi-perfil" element={<ProfeMiPerfil />} />
             <Route path="/profe/solicitudes" element={<ProfeSolicitudes />} />
             <Route path="/profe/ejercicios" element={<ProfeEjercicios />} />

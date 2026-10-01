@@ -7947,3 +7947,37 @@ div.tarjeta-rutina {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Menú del profe: "Mi cuenta" (components/ProfeLayout.jsx) ----------
+   En el celular: un botón "Mi cuenta" en el menú de abajo.
+   En la compu: un grupo "Mi cuenta" con "Mi perfil" y "Solicitudes". */
+.panel-menu .panel-solo-compu {
+  display: none;
+}
+
+/* Con 5 botones, que "Mi cuenta" no se parta en dos renglones. */
+.panel-menu .bottom-nav-item span {
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .pantalla-panel .panel-menu .panel-solo-celular {
+    display: none;
+  }
+
+  .pantalla-panel .panel-menu .bottom-nav-item.panel-solo-compu {
+    display: flex;
+  }
+
+  .pantalla-panel .panel-menu .panel-menu-grupo {
+    display: block;
+    margin: 1.1rem 0 0.25rem;
+    padding: 1rem 0.8rem 0;
+    border-top: 1px solid #1f1f1f;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--drey-texto-suave);
+  }
+}
