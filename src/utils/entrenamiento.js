@@ -80,6 +80,16 @@ export function redondearPeso(kg) {
   return Math.round(Math.max(0, Number(kg) || 0) * 100) / 100
 }
 
+// Un peso o unas repeticiones dentro de lo que la app acepta (nunca
+// negativo ni más que el máximo; el peso con 2 decimales, las
+// repeticiones enteras). Lo usan el modo entrenar y la corrección de un
+// entrenamiento ya guardado (utils/entrenamientoHecho.js).
+export function valorDeSerieValido(campo, valor) {
+  return campo === 'kg'
+    ? Math.min(MAXIMO_KG, redondearPeso(valor))
+    : Math.min(MAXIMO_REPS, Math.max(0, Math.round(Number(valor) || 0)))
+}
+
 // Las series de un ejercicio con el peso o las repeticiones de una
 // cambiados (con + / − o escritos). Si cambia el peso, las series que
 // siguen, del mismo tipo, todavía sin hacer y con el mismo peso que tenía
@@ -89,10 +99,7 @@ export function redondearPeso(kg) {
 export function cambiarValorDeSerie(filas, serieIndex, campo, valor) {
   const actual = filas[serieIndex]
   if (!actual) return filas
-  const nuevo =
-    campo === 'kg'
-      ? Math.min(MAXIMO_KG, redondearPeso(valor))
-      : Math.min(MAXIMO_REPS, Math.max(0, Math.round(Number(valor) || 0)))
+  const nuevo = valorDeSerieValido(campo, valor)
   return filas.map((fila, j) => {
     if (j === serieIndex) return { ...fila, [campo]: nuevo }
     const siguePendiente =

@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import ListaRutinasCliente from '../components/ListaRutinasCliente.jsx'
+import EditorEntrenamiento from '../components/EditorEntrenamiento.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import {
   asignarDia,
@@ -23,6 +24,7 @@ import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import { formatearPrecio, obtenerPlan } from '../data/planes.js'
 import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
+import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
 const PESTANAS = [
@@ -37,6 +39,8 @@ const PESTANAS = [
 // queda en la dirección (?tab=semana), así se puede entrar directo.
 // El Admin ve además "Profe" arriba, para asignarle o cambiarle el profe
 // (al alumno y a los profes les llega el aviso, supabase/sql/026).
+// En Progreso, cada uno de los últimos entrenamientos se puede abrir para
+// corregir un peso o una repetición mal anotados (EditorEntrenamiento.jsx).
 export default function ProfeClienteDetalle() {
   const { id } = useParams()
   const [parametros, setParametros] = useSearchParams()
@@ -53,6 +57,8 @@ export default function ProfeClienteDetalle() {
   const [pagos, setPagos] = useState([])
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [profes, setProfes] = useState([])
+  // El entrenamiento que se está corrigiendo (su id), o null.
+  const [corrigiendoId, setCorrigiendoId] = useState(null)
 
   useEffect(() => {
     cargarTodo()
@@ -112,6 +118,15 @@ export default function ProfeClienteDetalle() {
     setCargando(false)
   }
 
+  // Se guardó la corrección de un entrenamiento: se muestra ya corregido.
+  function alCorregir(cambios) {
+    setCorrigiendoId(null)
+    setSesiones((actual) =>
+      actual.map((sesion) => (sesion.id === cambios.id ? { ...sesion, ...cambios } : sesion)),
+    )
+    mostrarAviso('Corrección guardada ✓')
+  }
+
   function cambiarPestana(nueva) {
     setParametros({ tab: nueva }, { replace: true })
   }
@@ -160,6 +175,9 @@ export default function ProfeClienteDetalle() {
   const estado = estadoDeCuenta(cliente, obtenerFechaHoyISO())
   const rutinasGuardadas = rutinas.filter((rutina) => rutina.publicada !== false)
   const whatsapp = linkWhatsApp(cliente.celular, `Hola ${cliente.nombre}!`)
+  const corrigiendo = corrigiendoId
+    ? sesiones.find((sesion) => sesion.id === corrigiendoId)
+    : null
 
   return (
     <ProfeLayout volverA="/profe/clientes">
@@ -274,12 +292,30 @@ export default function ProfeClienteDetalle() {
                     {sesion.comentario && (
                       <p className="profe-progreso-comentario">"{sesion.comentario}"</p>
                     )}
+                    <div className="profe-progreso-pie">
+                      <span>
+                        {textoDeEntrenamiento(sesion)}
+                        {sesion.editado_en &&
+                          ` · Corregido el ${textoFechaCorta(sesion.editado_en)}${
+                            sesion.editado_por === id ? ' por el alumno' : ''
+                          }`}
+                      </span>
+                      <button
+                        type="button"
+                        className="boton-secundario boton-chico"
+                        onClick={() => setCorrigiendoId(sesion.id)}
+                      >
+                        Ver y corregir
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
             <p className="profe-nota">
-              Si viene levantando fácil, subile el peso objetivo en su rutina (Rutinas → Editar).
+              Si viene levantando fácil, subile el peso objetivo en su rutina (Rutinas → Editar). Si
+              quedó mal anotado un peso o una repetición, arreglalo con "Ver y corregir" (el alumno
+              también puede corregir los suyos desde su Progreso).
             </p>
           </>
         )}
@@ -377,6 +413,19 @@ export default function ProfeClienteDetalle() {
           </>
         )}
       </div>
+
+      {corrigiendo && (
+        <EditorEntrenamiento
+          key={corrigiendo.id}
+          sesion={corrigiendo}
+          clienteId={id}
+          titulo={`${corrigiendo.rutinas?.nombre || 'Rutina borrada'} · ${textoFechaCorta(
+            corrigiendo.fecha,
+          )}`}
+          onCerrar={() => setCorrigiendoId(null)}
+          onGuardado={alCorregir}
+        />
+      )}
     </ProfeLayout>
   )
 }

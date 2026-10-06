@@ -122,34 +122,37 @@ export async function cargarHistorial(usuarioId) {
   }
 }
 
-// Los entrenamientos nunca se editan (solo se agregan), así que no hace
-// falta bajar todo el historial cada vez: el celular ya tiene lo
-// anterior y solo se piden los nuevos. Una vez por día se baja todo,
-// para quedar exactamente igual al servidor pase lo que pase.
+// No hace falta bajar todo el historial cada vez: el celular ya tiene lo
+// anterior y solo se piden los entrenamientos NUEVOS y los CORREGIDOS
+// desde la última vez (un entrenamiento guardado se puede corregir: ver
+// services/entrenamientos.js; la base anota cuándo en "editado_en").
+// Una vez por día se baja todo, para quedar exactamente igual al
+// servidor pase lo que pase.
 const CAMPOS_HISTORIAL = 'id, rutina_id, fecha, esfuerzo, detalle, creado_en'
+const CAMPO_CORREGIDO = 'editado_en'
 const HISTORIAL_COMPLETO_CADA_MS = 24 * 60 * 60 * 1000
 // Margen al pedir "lo nuevo" (lo repetido se descarta por su id).
 const MARGEN_NUEVOS_MS = 60 * 1000
+// Error de la base cuando se le pide una columna que no existe.
+const COLUMNA_INEXISTENTE = '42703'
+// true si la base todavía no tiene "editado_en" (SQL 029 sin instalar):
+// se pide el historial como antes, sin correcciones.
+let sinCorrecciones = false
 
 async function traerHistorial(usuarioId) {
   const guardado = leerCopia(usuarioId, 'historial')
-  const ultimoCreado = Array.isArray(guardado)
-    ? guardado.reduce((mayor, sesion) => (sesion.creado_en > mayor ? sesion.creado_en : mayor), '')
-    : ''
-  // (Se recortan los microsegundos: algunos celulares no los entienden.)
-  const ultimoCreadoMs = Date.parse(ultimoCreado.replace(/(\.\d{3})\d+/, '$1'))
+  const ultimoCambioMs = Array.isArray(guardado)
+    ? guardado.reduce((mayor, sesion) => Math.max(mayor, ultimoCambioDe(sesion)), 0)
+    : 0
   const ultimoCompleto = leerCopia(usuarioId, 'historial-completo') || 0
   const soloNuevos =
-    Number.isFinite(ultimoCreadoMs) && Date.now() - ultimoCompleto < HISTORIAL_COMPLETO_CADA_MS
+    ultimoCambioMs > 0 && Date.now() - ultimoCompleto < HISTORIAL_COMPLETO_CADA_MS
+  const desde = soloNuevos ? new Date(ultimoCambioMs - MARGEN_NUEVOS_MS).toISOString() : null
 
-  const { data, error } = await traerTodasLasFilas(() => {
-    let consulta = supabase.from('sesiones').select(CAMPOS_HISTORIAL).eq('cliente_id', usuarioId)
-    if (soloNuevos) {
-      const desde = new Date(ultimoCreadoMs - MARGEN_NUEVOS_MS).toISOString()
-      consulta = consulta.gte('creado_en', desde)
-    }
-    return consulta.order('fecha').order('creado_en').order('id')
-  })
+  let respuesta = sinCorrecciones ? null : await pedirHistorial(usuarioId, desde, true)
+  if (respuesta?.error?.code === COLUMNA_INEXISTENTE) sinCorrecciones = true
+  if (sinCorrecciones) respuesta = await pedirHistorial(usuarioId, desde, false)
+  const { data, error } = respuesta
   if (error) return { error }
 
   if (!soloNuevos) {
@@ -157,9 +160,56 @@ async function traerHistorial(usuarioId) {
     return { datos: data }
   }
   if (data.length === 0) return { datos: guardado }
-  const porId = new Map(guardado.map((sesion) => [sesion.id, sesion]))
-  for (const sesion of data) porId.set(sesion.id, sesion)
-  return { datos: [...porId.values()].sort(compararSesiones) }
+  return { datos: mezclarSesiones(guardado, data) }
+}
+
+// Pide los entrenamientos del alumno: todos, o solo los creados o
+// corregidos desde "desde" (una fecha con hora, o null).
+function pedirHistorial(usuarioId, desde, conCorrecciones) {
+  const campos = conCorrecciones ? `${CAMPOS_HISTORIAL}, ${CAMPO_CORREGIDO}` : CAMPOS_HISTORIAL
+  return traerTodasLasFilas(() => {
+    let consulta = supabase.from('sesiones').select(campos).eq('cliente_id', usuarioId)
+    if (desde && conCorrecciones) {
+      consulta = consulta.or(`creado_en.gte."${desde}",${CAMPO_CORREGIDO}.gte."${desde}"`)
+    } else if (desde) {
+      consulta = consulta.gte('creado_en', desde)
+    }
+    return consulta.order('fecha').order('creado_en').order('id')
+  })
+}
+
+// Cuándo se creó o se corrigió por última vez un entrenamiento, en
+// milisegundos (0 si no se sabe).
+function ultimoCambioDe(sesion) {
+  return Math.max(enMilisegundos(sesion.creado_en), enMilisegundos(sesion[CAMPO_CORREGIDO]))
+}
+
+// (Se recortan los microsegundos: algunos celulares no los entienden.)
+function enMilisegundos(fechaConHora) {
+  const ms = Date.parse(String(fechaConHora || '').replace(/(\.\d{3})\d+/, '$1'))
+  return Number.isFinite(ms) ? ms : 0
+}
+
+// Los entrenamientos guardados con los que llegaron encima (los nuevos
+// se agregan y los corregidos reemplazan al anterior), en orden.
+function mezclarSesiones(guardadas, llegadas) {
+  const porId = new Map(guardadas.map((sesion) => [sesion.id, sesion]))
+  for (const sesion of llegadas) porId.set(sesion.id, sesion)
+  return [...porId.values()].sort(compararSesiones)
+}
+
+// Deja en la copia del celular un entrenamiento recién corregido, así
+// todas las pantallas (Progreso, "La vez pasada", récords) lo muestran
+// bien al instante. Si este celular no tiene el historial de ese alumno
+// (por ejemplo, el del profe), no hace nada.
+export function guardarSesionCorregida(usuarioId, sesion) {
+  const guardado = leerCopia(usuarioId, 'historial')
+  if (!Array.isArray(guardado) || !guardado.some((otra) => otra.id === sesion.id)) return
+  guardarCopia(
+    usuarioId,
+    'historial',
+    guardado.map((otra) => (otra.id === sesion.id ? { ...otra, ...sesion } : otra)),
+  )
 }
 
 function compararSesiones(a, b) {

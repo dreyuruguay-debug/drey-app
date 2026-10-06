@@ -15,6 +15,8 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 //
 // pendienteDeEnvio: se guardó en el celular porque no había señal; se
 // envía solo cuando vuelva la conexión.
+// corregirEn: adónde ir para corregir un peso o una repetición del
+// entrenamiento recién guardado (Progreso), o null.
 export default function PantallaFinal({
   vueltaCalma,
   resumen,
@@ -27,6 +29,7 @@ export default function PantallaFinal({
   guardando,
   guardado,
   pendienteDeEnvio,
+  corregirEn,
   modoPrevia,
 }) {
   if (guardado) {
@@ -56,6 +59,11 @@ export default function PantallaFinal({
         <Link to="/progreso" className="boton-secundario">
           Ver mi progreso
         </Link>
+        {corregirEn && (
+          <Link to={corregirEn} className="boton-texto">
+            ¿Anotaste mal un peso o una repetición? Corregilo
+          </Link>
+        )}
       </div>
     )
   }

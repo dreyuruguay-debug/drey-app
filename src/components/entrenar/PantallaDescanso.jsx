@@ -3,7 +3,9 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 
 // Pantalla completa de descanso: un reloj grande que baja solo, botones
 // para sumar tiempo o seguir antes, y qué viene después. Si el profe dio
-// un rango (60–90 s), se puede elegir otro valor con los chips.
+// un rango (60–90 s), se puede elegir otro valor con los chips: el reloj
+// NO vuelve a empezar, solo se le suma o se le resta la diferencia (ver
+// utils/descanso.js).
 // "aviso": un récord recién hecho, para festejarlo mientras descansa.
 // calentamiento: es el descanso después de una serie de calentamiento
 // (el que puso el profe para el calentamiento): se ve en amarillo.

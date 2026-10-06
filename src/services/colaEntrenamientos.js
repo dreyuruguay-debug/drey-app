@@ -72,46 +72,69 @@ export async function guardarEntrenamiento(fila) {
   return 'en-cola'
 }
 
-let enviando = false
+// El envío que está corriendo en este momento (o null).
+let envioEnCurso = null
 
 // Intenta mandar lo que quedó pendiente. Devuelve cuántos se enviaron.
+// Si ya hay un envío corriendo no arranca otro (devuelve 0).
 export async function enviarPendientes() {
-  if (enviando || sinSenal()) return 0
+  if (envioEnCurso || sinSenal()) return 0
+  envioEnCurso = enviarCola()
+  try {
+    return await envioEnCurso
+  } finally {
+    envioEnCurso = null
+  }
+}
+
+async function enviarCola() {
   const usuario = await obtenerUsuarioActual()
   if (!usuario) return 0
 
-  enviando = true
   let enviados = 0
-  try {
-    for (const item of leerCola()) {
-      if (item.fila.cliente_id !== usuario.id) continue
-      let error = null
-      try {
-        error = await insertar(item.fila)
-      } catch (excepcion) {
-        error = excepcion
-      }
-      if (error && esErrorDeRed(error)) break // sigue sin señal: se reintenta después
-
-      // Se vuelve a leer la cola en cada paso por si cambió mientras tanto.
-      const cola = leerCola()
-      if (!error) {
-        enviados += 1
-        guardarCola(cola.filter((otro) => otro.fila.id !== item.fila.id))
-      } else {
-        const intentos = (item.intentos || 0) + 1
-        if (intentos === INTENTOS_ANTES_DE_AVISAR) {
-          reportarError(error, { donde: 'reenviar entrenamiento', intentos })
-        }
-        guardarCola(
-          cola.map((otro) => (otro.fila.id === item.fila.id ? { ...otro, intentos } : otro)),
-        )
-      }
+  for (const item of leerCola()) {
+    if (item.fila.cliente_id !== usuario.id) continue
+    let error = null
+    try {
+      error = await insertar(item.fila)
+    } catch (excepcion) {
+      error = excepcion
     }
-  } finally {
-    enviando = false
+    if (error && esErrorDeRed(error)) break // sigue sin señal: se reintenta después
+
+    // Se vuelve a leer la cola en cada paso por si cambió mientras tanto.
+    const cola = leerCola()
+    if (!error) {
+      enviados += 1
+      guardarCola(cola.filter((otro) => otro.fila.id !== item.fila.id))
+    } else {
+      const intentos = (item.intentos || 0) + 1
+      if (intentos === INTENTOS_ANTES_DE_AVISAR) {
+        reportarError(error, { donde: 'reenviar entrenamiento', intentos })
+      }
+      guardarCola(
+        cola.map((otro) => (otro.fila.id === item.fila.id ? { ...otro, intentos } : otro)),
+      )
+    }
   }
   return enviados
+}
+
+// Corrige el peso o las repeticiones de un entrenamiento que todavía
+// espera señal: se cambia en el celular y viaja ya corregido.
+// Devuelve true si estaba en la cola; false si ya se envió (en ese caso
+// hay que corregirlo en la base: services/entrenamientos.js).
+//
+// Si justo se está enviando, espera a que termine: así la corrección no
+// se pierde por pisarse con el envío.
+export async function corregirPendiente(id, detalle) {
+  if (envioEnCurso) await envioEnCurso.catch(() => {})
+  const cola = leerCola()
+  if (!cola.some((item) => item.fila.id === id)) return false
+  guardarCola(
+    cola.map((item) => (item.fila.id === id ? { ...item, fila: { ...item.fila, detalle } } : item)),
+  )
+  return true
 }
 
 // Se llama una sola vez al abrir la app (main.jsx).

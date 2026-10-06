@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
-import { cargarHistorial, historialGuardado } from '../services/datosCliente.js'
+import {
+  cargarHistorial,
+  historialGuardado,
+  misRutinasGuardadas,
+} from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import NotificacionAvance from '../components/NotificacionAvance.jsx'
+import EntrenamientosHechos from '../components/EntrenamientosHechos.jsx'
 import { calcularRachaSemanas, textoFechaCorta } from '../utils/dias.js'
 import {
   ejerciciosEntrenados,
@@ -20,11 +25,16 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 const RECORDS_A_MOSTRAR = 5
 
 // "Progreso" del cliente: cuánto entrenó, sus récords, cómo viene
-// subiendo la carga en cada ejercicio y los resúmenes de 4 semanas que
-// publicó su profe. Todo sale de la tabla "sesiones" (más los
-// entrenamientos guardados en el celular que esperan señal).
+// subiendo la carga en cada ejercicio, sus últimos entrenamientos (para
+// corregir un peso o una repetición mal anotados) y los resúmenes de 4
+// semanas que publicó su profe. Todo sale de la tabla "sesiones" (más
+// los entrenamientos guardados en el celular que esperan señal).
+//
+// Con ?corregir=<id> abre directo la corrección de ese entrenamiento
+// (así llega desde el final del modo entrenar).
 export default function Progreso() {
   const navigate = useNavigate()
+  const [parametros, setParametros] = useSearchParams()
   // Lo último guardado se muestra al instante y se actualiza por detrás.
   const [guardado] = useState(() => {
     const usuario = usuarioGuardado()
@@ -60,6 +70,20 @@ export default function Progreso() {
     [sesiones, elegido],
   )
   const racha = calcularRachaSemanas(sesiones.map((sesion) => sesion.fecha))
+  // Nombre de cada rutina (de la copia guardada en el celular), para
+  // titular los entrenamientos.
+  const nombresDeRutinas = useMemo(() => {
+    const rutinas = usuarioId ? misRutinasGuardadas(usuarioId)?.rutinas : null
+    return Object.fromEntries((rutinas || []).map((rutina) => [rutina.id, rutina.nombre]))
+  }, [usuarioId])
+
+  // Una corrección guardada: se refleja al instante en los récords y las
+  // gráficas (la copia del celular ya quedó corregida).
+  function alCorregir(cambios) {
+    setSesiones((actual) =>
+      actual.map((sesion) => (sesion.id === cambios.id ? { ...sesion, ...cambios } : sesion)),
+    )
+  }
 
   return (
     <div className="screen has-bottom-nav pagina-cliente">
@@ -162,6 +186,15 @@ export default function Progreso() {
               }))}
             />
           </section>
+
+          <EntrenamientosHechos
+            sesiones={sesiones}
+            nombresDeRutinas={nombresDeRutinas}
+            clienteId={usuarioId}
+            abrirId={parametros.get('corregir')}
+            alAbrir={() => setParametros({}, { replace: true })}
+            onCorregido={alCorregir}
+          />
         </>
       )}
 

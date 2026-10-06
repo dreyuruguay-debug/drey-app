@@ -303,6 +303,43 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - Lo guardado en el celular y las funciones para pausar/seguir:
   `utils/entrenamientoEnCurso.js`.
 
+## Descanso entre series
+
+- Al marcar una serie arranca solo el descanso a pantalla completa
+  (`components/entrenar/PantallaDescanso.jsx`). La cuenta la lleva
+  `utils/descanso.js` (se calcula contra la hora de fin, así no se atrasa
+  con la pantalla bloqueada).
+- Cambiar los segundos con los chips (60 s, 75 s, 90 s) **no reinicia** el
+  conteo: solo suma o resta la diferencia. Si iba descansando 60 s y elige
+  90 s, se agregan los 30 que faltan; si elige menos de lo que ya
+  descansó, el descanso termina. "+15 s" suma 15 al total.
+
+## Corregir un entrenamiento guardado (SQL 029)
+
+- Si quedó mal anotado un peso o una repetición, se corrige después de
+  guardado. El alumno, desde Progreso → "Tus entrenamientos" (y con el
+  enlace que aparece al terminar de entrenar). El profe o el Admin, desde
+  la ficha del alumno → Progreso → "Ver y corregir". La ventana es la
+  misma (`components/EditorEntrenamiento.jsx`).
+- Solo se corrigen el peso y las repeticiones de las series hechas. La
+  base no deja cambiar nada más (fecha, rutina, esfuerzo, comentario) y
+  anota cuándo y quién corrigió (`editado_en`, `editado_por`).
+- Los récords, las gráficas y "La vez pasada" cambian solos, porque se
+  calculan a partir de los entrenamientos. Si el entrenamiento era de un
+  resumen de 4 semanas todavía en borrador, la base borra ese borrador y
+  la app lo vuelve a armar con los números corregidos (los ya publicados
+  no se tocan).
+- Sin señal: un entrenamiento que todavía espera señal se corrige en el
+  celular y viaja ya corregido (`corregirPendiente` en
+  `services/colaEntrenamientos.js`); uno ya enviado necesita conexión.
+- Código: `services/entrenamientos.js` (guardar la corrección),
+  `utils/entrenamientoHecho.js` (la lógica, sin base de datos),
+  `components/EntrenamientosHechos.jsx` (la lista del alumno) y
+  `components/entrenar/CasilleroNumero.jsx` (el casillero para escribir
+  un número, compartido con el modo entrenar).
+- Si el SQL 029 todavía no está instalado, la app sigue andando como
+  antes y al querer corregir avisa que falta activarlo.
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),
@@ -326,7 +363,7 @@ entrenamientos hechos sin señal, que se envían solos al volver la conexión.
 - Las pantallas diferidas se descargan por adelantado (`pantallasDiferidas.js`).
 - Supabase corta en 1000 filas: las consultas que pueden crecer usan
   `services/paginado.js`. El historial del alumno se baja una vez y
-  después solo lo nuevo.
+  después solo lo nuevo y lo corregido (`editado_en`, SQL 029).
 - La actividad de los clientes la calcula la base (`services/actividad.js`
   + función `actividad_clientes`, SQL 019, que también agrega índices).
 

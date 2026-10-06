@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import InfoMetodo from '../InfoMetodo.jsx'
+import CasilleroNumero from './CasilleroNumero.jsx'
 import Ayuda from '../Ayuda.jsx'
 import { nombreCortoDeMetodo } from '../../data/metodos.js'
 import { TERMINOS } from '../../data/terminos.js'
 import { formatearNumero, formatearPeso } from '../../utils/progreso.js'
 import { linkVideoSeguro } from '../../utils/linkVideo.js'
-import { PASO_KG, PASO_REPS, etiquetaDeSerie, leerValorEscrito } from '../../utils/entrenamiento.js'
+import { PASO_KG, PASO_REPS, etiquetaDeSerie } from '../../utils/entrenamiento.js'
 import { esSerieDeCalentamiento, normalizarCalentamiento } from '../../utils/seriesCalentamiento.js'
 
 // Lo que tapan la barra de arriba y la de abajo (para saber si la serie
@@ -258,42 +259,16 @@ function FilaSerie({
   )
 }
 
-// − número + . El número se puede tocar y escribir: se guarda al salir
-// del casillero o con "Listo" / Enter; si no se entiende, vuelve al de
-// antes. Los + / − siguen igual (de a 2,5 kg y de a 1 repetición).
+// − número + . El número se puede tocar y escribir (CasilleroNumero.jsx).
+// Los + / − siguen igual (de a 2,5 kg y de a 1 repetición).
 function Stepper({ valor, campo, unidad, onRestar, onSumar, onFijar, etiqueta }) {
-  // null = no se está escribiendo (se muestra el valor de la serie).
-  const [texto, setTexto] = useState(null)
-
-  function confirmar() {
-    if (texto === null) return
-    const numero = leerValorEscrito(texto, campo)
-    if (numero !== null) onFijar(numero)
-    setTexto(null)
-  }
-
   return (
     <div className="entrenar-stepper">
       <button type="button" onClick={onRestar} aria-label={`Restar ${etiqueta}`}>
         −
       </button>
       <label className="entrenar-stepper-valor">
-        <input
-          className="entrenar-stepper-input"
-          type="text"
-          inputMode={campo === 'kg' ? 'decimal' : 'numeric'}
-          enterKeyHint="done"
-          autoComplete="off"
-          value={texto ?? String(valor)}
-          onFocus={(event) => {
-            setTexto(String(valor))
-            event.target.select()
-          }}
-          onChange={(event) => setTexto(event.target.value)}
-          onBlur={confirmar}
-          onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-          aria-label={`${etiqueta}: tocá para escribirlo`}
-        />
+        <CasilleroNumero valor={valor} campo={campo} etiqueta={etiqueta} onFijar={onFijar} />
         <small>{unidad} ✎</small>
       </label>
       <button type="button" onClick={onSumar} aria-label={`Sumar ${etiqueta}`}>

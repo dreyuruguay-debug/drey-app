@@ -52,6 +52,12 @@ import {
   reanudarEnCurso,
 } from '../utils/entrenamientoEnCurso.js'
 import { relojCorriendo, relojEnMarcha, relojParado, segundosDeReloj } from '../utils/reloj.js'
+import {
+  cambiarDuracion,
+  empezarDescanso,
+  segundosRestantes,
+  sumarAlDescanso,
+} from '../utils/descanso.js'
 import { formatearNumero } from '../utils/progreso.js'
 import { ejerciciosDeLaSemana, semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -139,6 +145,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [pendienteDeEnvio, setPendienteDeEnvio] = useState(false)
+  // El entrenamiento recién guardado (para ofrecer corregirlo).
+  const [sesionGuardadaId, setSesionGuardadaId] = useState(null)
 
   useEffect(() => {
     cargar()
@@ -171,15 +179,15 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     }
   }, [])
 
-  // Reloj del descanso: se calcula contra la hora de fin, así no se
-  // atrasa si el celular bloquea la pantalla un rato.
+  // Reloj del descanso (utils/descanso.js): se calcula contra la hora de
+  // fin, así no se atrasa si el celular bloquea la pantalla un rato.
   useEffect(() => {
     if (!descanso) return undefined
     const intervalo = setInterval(() => setAhora(Date.now()), 250)
     return () => clearInterval(intervalo)
   }, [descanso])
 
-  const restante = descanso ? Math.max(0, Math.ceil((descanso.fin - ahora) / 1000)) : 0
+  const restante = segundosRestantes(descanso, ahora)
   useEffect(() => {
     if (descanso && restante === 0) {
       navigator.vibrate?.(VIBRACION_FIN_TIEMPO)
@@ -484,16 +492,25 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       ejercicios,
       rutina,
     )
+    const momento = Date.now()
     setVisible(siguiente.exIndex)
+    setAhora(momento)
+    setDescanso(
+      empezarDescanso(segundos, momento, {
+        opciones,
+        titulo: tituloDelDescanso(turno),
+        calentamiento: turno?.tipo === TIPO_CALENTAMIENTO,
+        loQueSigue: textoDelTurno(siguiente, nuevas),
+      }),
+    )
+  }
+
+  // Cambia el descanso que está corriendo (otra duración o "+15 s") sin
+  // reiniciarlo: ver utils/descanso.js. Si mientras tanto el descanso
+  // terminó, no hay nada que cambiar.
+  function cambiarElDescanso(cambio) {
     setAhora(Date.now())
-    setDescanso({
-      fin: Date.now() + segundos * 1000,
-      total: segundos,
-      opciones,
-      titulo: tituloDelDescanso(turno),
-      calentamiento: turno?.tipo === TIPO_CALENTAMIENTO,
-      loQueSigue: textoDelTurno(siguiente, nuevas),
-    })
+    setDescanso((actual) => (actual ? cambio(actual) : actual))
   }
 
   // "Sentadilla · Calentamiento 2 de 3" / "Sentadilla · Serie 1 de 4",
@@ -659,19 +676,19 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
         ...(calentamiento.length ? { calentamiento } : {}),
       }
     })
-    const resultado = await guardarEntrenamiento(
-      nuevaFilaDeEntrenamiento({
-        cliente_id: usuarioId,
-        rutina_id: rutina.id,
-        fecha: hoy,
-        esfuerzo,
-        comentario: comentario.trim() || null,
-        detalle,
-      }),
-    )
+    const fila = nuevaFilaDeEntrenamiento({
+      cliente_id: usuarioId,
+      rutina_id: rutina.id,
+      fecha: hoy,
+      esfuerzo,
+      comentario: comentario.trim() || null,
+      detalle,
+    })
+    const resultado = await guardarEntrenamiento(fila)
     // Enviado o guardado en el celular: en los dos casos ya no se pierde.
     setGuardando(false)
     setPendienteDeEnvio(resultado === 'en-cola')
+    setSesionGuardadaId(fila.id)
     borrarEnCurso(id)
     setFase('guardado')
   }
@@ -766,6 +783,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           guardando={guardando}
           guardado={fase === 'guardado'}
           pendienteDeEnvio={pendienteDeEnvio}
+          corregirEn={sesionGuardadaId ? `/progreso?corregir=${sesionGuardadaId}` : null}
           modoPrevia={modoPrevia}
         />
       </div>
@@ -953,19 +971,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           loQueSigue={descanso.loQueSigue}
           aviso={aviso?.tipo === 'record' ? aviso.texto : null}
           onElegir={(segundos) =>
-            setDescanso((actual) => ({
-              ...actual,
-              total: segundos,
-              fin: Date.now() + segundos * 1000,
-            }))
+            cambiarElDescanso((actual) => cambiarDuracion(actual, segundos))
           }
-          onSumar={(segundos) =>
-            setDescanso((actual) => ({
-              ...actual,
-              total: actual.total + segundos,
-              fin: actual.fin + segundos * 1000,
-            }))
-          }
+          onSumar={(segundos) => cambiarElDescanso((actual) => sumarAlDescanso(actual, segundos))}
           onListo={() => setDescanso(null)}
         />
       )}
@@ -1006,8 +1014,14 @@ function claseDeTramo(completo, parcial, actual) {
 
 // Resumen de lo que se muestra (rutina, ejercicios y entrenamientos),
 // para saber si lo que llegó del servidor es distinto a lo guardado.
+// (Un entrenamiento corregido cuenta como distinto: cambia "La vez
+// pasada" y los récords.)
 function huella({ rutina, ejercicios }, sesiones) {
-  return JSON.stringify([rutina, ejercicios, sesiones.map((sesion) => sesion.id)])
+  return JSON.stringify([
+    rutina,
+    ejercicios,
+    sesiones.map((sesion) => [sesion.id, sesion.editado_en || '']),
+  ])
 }
 
 // true si el progreso guardado corresponde a esta misma rutina (mismos

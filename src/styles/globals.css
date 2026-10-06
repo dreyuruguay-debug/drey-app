@@ -7981,3 +7981,169 @@ div.tarjeta-rutina {
     color: var(--drey-texto-suave);
   }
 }
+
+/* ---------- Corregir un entrenamiento ya guardado ----------
+   components/EditorEntrenamiento.jsx (la ventana, igual para el alumno y
+   el profe) y components/EntrenamientosHechos.jsx (la lista del alumno
+   en Progreso). La ventana usa la hoja del asistente (.asistente-hoja). */
+.corregir-hoja {
+  max-width: 520px;
+  margin: auto 0;
+}
+
+.corregir-subtitulo {
+  margin: -0.5rem 0 0;
+  font-weight: 700;
+  color: var(--drey-accent);
+}
+
+.corregir-hoja .profe-nota {
+  margin: 0;
+}
+
+.corregir-ejercicio {
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+}
+
+.corregir-ejercicio-nombre {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.corregir-series {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.corregir-serie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.65rem;
+  border-radius: 10px;
+  background: var(--drey-black);
+  border-left: 3px solid var(--drey-accent);
+}
+
+.corregir-serie-calentamiento {
+  border-left-color: var(--drey-amarillo);
+}
+
+.corregir-serie-pendiente {
+  border-left-color: #444444;
+}
+
+.corregir-serie-nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.corregir-serie-valores {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--drey-texto-suave);
+}
+
+.corregir-serie-valores label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.corregir-serie-valores small {
+  font-size: 0.75rem;
+}
+
+.corregir-casillero {
+  width: 3.7rem;
+  min-height: 2.6rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: var(--drey-white);
+  font-family: var(--fuente-texto);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.corregir-casillero:focus {
+  outline: none;
+  border-color: var(--drey-accent);
+}
+
+.corregir-serie-sin-hacer {
+  margin: 0;
+  padding-right: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.corregir-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Celulares angostos: menos margen, para que entren los dos casilleros. */
+@media (max-width: 400px) {
+  .corregir-hoja {
+    padding: 1rem 0.75rem;
+  }
+
+  .corregir-ejercicio {
+    padding: 0.75rem 0.6rem;
+  }
+
+  .corregir-casillero {
+    width: 3.3rem;
+  }
+}
+
+/* Lista "Tus entrenamientos" (Progreso del alumno) */
+.entrenamientos-nota {
+  margin: 0 0 0.6rem;
+}
+
+.entrenamiento-fecha {
+  flex: 0 0 auto;
+  min-width: 2.8rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--drey-accent);
+}
+
+.entrenamiento-corregir {
+  flex: 0 0 auto;
+  color: var(--drey-texto-suave);
+  font-size: 1.1rem;
+}
+
+/* "Ver y corregir" en los últimos entrenamientos (ficha del alumno) */
+.profe-progreso-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
