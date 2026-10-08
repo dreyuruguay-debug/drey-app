@@ -23,6 +23,7 @@ import {
   textoDe,
 } from '../data/paginaInicio.js'
 import { numeroInternacional } from '../utils/whatsapp.js'
+import { RUTA_VISTA_PREVIA } from '../data/rutas.js'
 
 // Ajustes → Portada (solo el Admin): todo lo de la página de inicio.
 //
@@ -61,7 +62,7 @@ export default function AjustesPortada() {
       </p>
       <a
         className="boton-secundario boton-chico portada-ajustes-ver"
-        href="/?vista=previa"
+        href={RUTA_VISTA_PREVIA}
         target="_blank"
         rel="noreferrer"
       >

@@ -7,7 +7,7 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 import LogoDrey from '../components/LogoDrey.jsx'
 
 // "Elegí tu contraseña nueva". Acá llega la persona desde el link del
-// mail de "Olvidé mi contraseña" (Login). Supabase la deja con una sesión
+// mail de "Olvidé mi contraseña" (FormularioIngreso.jsx). Supabase la deja con una sesión
 // temporal y desde acá guarda la contraseña nueva.
 //
 // Para que el link del mail traiga acá, esta dirección tiene que estar en

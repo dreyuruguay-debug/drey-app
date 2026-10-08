@@ -22,6 +22,9 @@
   /* Series de calentamiento (aproximación) de cada ejercicio */
   --drey-amarillo: #f5d547;
   --drey-amarillo-fondo: #2c2710;
+  /* "Llegué al fallo" en una serie */
+  --drey-rojo: #ff6b5a;
+  --drey-rojo-fondo: #3a1613;
   --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --fuente-texto: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -8146,4 +8149,427 @@ div.tarjeta-rutina {
   margin-top: 0.5rem;
   font-size: 0.78rem;
   color: var(--drey-texto-suave);
+}
+
+/* ------------------------------------------------------------------ */
+/* Llegué al fallo (08/10/2026)                                        */
+/* Interruptor en la serie que toca del modo entrenar, marca "Fallo"   */
+/* en las series hechas y botón en la ventana para corregir.           */
+/* ------------------------------------------------------------------ */
+
+.entrenar-fallo-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entrenar-fallo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.1rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  background: #1a1a1a;
+  color: var(--drey-white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.entrenar-fallo:focus-visible {
+  outline: 2px solid var(--drey-rojo);
+  outline-offset: 2px;
+}
+
+.entrenar-fallo-casilla {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #555555;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.entrenar-fallo-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.entrenar-fallo-texto small {
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-fallo-activo {
+  border-color: var(--drey-rojo);
+  background: var(--drey-rojo-fondo);
+}
+
+.entrenar-fallo-activo .entrenar-fallo-casilla {
+  border-color: var(--drey-rojo);
+  background: var(--drey-rojo);
+  color: var(--drey-black);
+}
+
+.entrenar-fallo-activo .entrenar-fallo-texto small {
+  color: #f3c2bb;
+}
+
+.marca-fallo {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-rojo);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.corregir-fallo {
+  flex: 0 0 auto;
+  min-height: 2.2rem;
+  margin-left: auto;
+  padding: 0 0.55rem;
+  border: 1px dashed #444444;
+  border-radius: 999px;
+  background: none;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.corregir-fallo-activo {
+  padding: 0 0.15rem;
+  border: none;
+}
+
+.corregir-fallo-activo .marca-fallo {
+  padding: 0.35rem 0.6rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Iniciar sesión en la página de inicio (08/10/2026)                 */
+/* components/portada/HojaIngreso.jsx: hoja que sube desde abajo con  */
+/* el email y la contraseña (FormularioIngreso.jsx), sobre el video.  */
+/* En la compu, la misma hoja centrada.                               */
+/* ------------------------------------------------------------------ */
+
+.hoja-ingreso-capa {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hoja-ingreso-fondo {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  animation: hoja-ingreso-aparece 0.25s ease both;
+}
+
+.hoja-ingreso {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100dvh - var(--hoja-teclado, 0px) - 1rem);
+  margin-bottom: var(--hoja-teclado, 0px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-white);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+  animation: hoja-ingreso-sube 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: margin-bottom 0.15s ease;
+}
+
+@keyframes hoja-ingreso-sube {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes hoja-ingreso-aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hoja-ingreso-agarre {
+  align-self: center;
+  width: 44px;
+  height: 5px;
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+  background: #444444;
+}
+
+.hoja-ingreso-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.hoja-ingreso-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hoja-ingreso-cerrar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #242424;
+  color: var(--drey-white);
+  cursor: pointer;
+}
+
+/* En la compu: la hoja centrada, con las cuatro puntas redondeadas. */
+@media (min-width: 720px) and (min-height: 600px) {
+  .hoja-ingreso-capa {
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  .hoja-ingreso {
+    max-width: 440px;
+    margin-bottom: 0;
+    padding: 1.25rem 1.75rem 1.75rem;
+    border: 1px solid var(--drey-borde);
+    border-radius: 24px;
+    animation-name: hoja-ingreso-aparece-centrada;
+  }
+
+  .hoja-ingreso-agarre {
+    display: none;
+  }
+}
+
+@keyframes hoja-ingreso-aparece-centrada {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoja-ingreso,
+  .hoja-ingreso-fondo {
+    animation: none;
+  }
+}
+
+/* El formulario (components/FormularioIngreso.jsx) */
+.ingreso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ingreso-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ingreso-etiqueta {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+}
+
+.ingreso-input-con-ojo {
+  position: relative;
+  display: block;
+}
+
+.ingreso-input {
+  width: 100%;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  border: 1.5px solid #2f2f2f;
+  border-radius: 14px;
+  background: var(--drey-black);
+  color: var(--drey-white);
+  font: inherit;
+  font-size: 1rem; /* 16 px: el iPhone no hace zoom al tocar el campo */
+  transition: border-color 0.2s;
+}
+
+.ingreso-input-con-ojo .ingreso-input {
+  padding-right: 3rem;
+}
+
+.ingreso-input::placeholder {
+  color: #8a8a8a;
+}
+
+.ingreso-input:focus {
+  outline: none;
+  border-color: var(--drey-accent);
+}
+
+.ingreso-ojo {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #9a9a9a;
+  cursor: pointer;
+}
+
+.ingreso-olvide {
+  align-self: flex-end;
+  min-height: 2.2rem;
+  margin-top: -0.3rem;
+  padding: 0.25rem 0.2rem;
+  border: none;
+  background: none;
+  color: var(--drey-gray-light);
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.ingreso-mensaje {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  background: var(--drey-verde-fondo);
+  color: #cfeedd;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.ingreso-mensaje-error {
+  background: var(--drey-rojo-fondo);
+  color: #ffd2cc;
+}
+
+.ingreso-entrar {
+  min-height: 3.4rem;
+  border: none;
+  border-radius: 16px;
+  background: var(--drey-accent);
+  color: var(--drey-black);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ingreso-entrar:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ingreso-enlace {
+  align-self: center;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ingreso-enlace strong {
+  color: var(--drey-white);
+}
+
+.ingreso-enlace:hover strong {
+  color: var(--drey-accent);
+}
+
+.hoja-ingreso-cerrar:focus-visible,
+.ingreso-olvide:focus-visible,
+.ingreso-enlace:focus-visible,
+.ingreso-ojo:focus-visible,
+.ingreso-entrar:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 2px;
+}
+
+/* "Volver a mi cuenta" / "Compartir DREY" (con la sesión abierta) */
+.portada-entrada {
+  width: 100%;
+  animation: hoja-ingreso-aparece 0.28s ease both;
+}
+
+.portada-entrada-aviso {
+  min-height: 1.2rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--drey-accent);
 }

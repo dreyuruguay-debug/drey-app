@@ -9,6 +9,8 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // "aviso": un récord recién hecho, para festejarlo mientras descansa.
 // calentamiento: es el descanso después de una serie de calentamiento
 // (el que puso el profe para el calentamiento): se ve en amarillo.
+// loQueSigue.pendiente: lo que sigue es un ejercicio que el alumno salteó
+// antes (por ejemplo, la máquina estaba ocupada): dice "Te quedó pendiente".
 export default function PantallaDescanso({
   restante,
   total,
@@ -75,7 +77,9 @@ export default function PantallaDescanso({
               : 'entrenar-tarjeta descanso-sigue'
           }
         >
-          <span className="entrenar-etiqueta-chica">Lo que sigue</span>
+          <span className="entrenar-etiqueta-chica">
+            {loQueSigue.pendiente ? 'Te quedó pendiente' : 'Lo que sigue'}
+          </span>
           <strong>{loQueSigue.titulo}</strong>
           {loQueSigue.detalle && <span>{loQueSigue.detalle}</span>}
         </div>

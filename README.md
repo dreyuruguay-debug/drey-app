@@ -33,11 +33,26 @@ las siga en el gimnasio y registre lo que levantó.
   Ajustes; "Empezar" abre `/registro?plan=…` con ese plan elegido), para
   profes y gimnasios, preguntas frecuentes y el cierre. Al pasar el video
   aparece una barra fija con "Ingresar".
-- **Iniciar sesión** pasó a **"/ingresar"** (`pages/Login.jsx`). Todas las
+- **Iniciar sesión es en la misma portada** (08/10/2026): "Iniciar
+  sesión" (arriba, "Ingresar" de la barra fija o el del cierre) abre una
+  hoja que sube desde abajo sobre el video, con email, contraseña,
+  "Olvidé mi contraseña", "Entrar" y "Registrarme"
+  (`components/portada/HojaIngreso.jsx` + `components/FormularioIngreso.jsx`).
+  Se cierra con la ✕, tocando lo oscuro o con Escape; Tab no sale de la
+  hoja; la página de atrás no se mueve; en el celular la hoja sube con el
+  teclado (`visualViewport`). En la compu es la misma hoja, centrada.
+  `components/portada/EntradaPortada.jsx` son los botones (o "Volver a mi
+  cuenta" / "Compartir DREY" con la sesión abierta). **"/ingresar"** abre
+  la portada con la hoja ya abierta (`<Portada ingresar />`); todas las
   pantallas que mandan a iniciar sesión usan `RUTA_INGRESAR`
-  (`data/rutas.js`). Quien ya tiene la sesión abierta y entra a "/" va
-  directo a su pantalla (`/inicio` o `/profe`); `/?vista=previa` muestra
-  la portada igual (la usa el Admin).
+  (`data/rutas.js`). La vieja `pages/Login.jsx` ya no existe.
+- Quien ya tiene la sesión abierta y entra a "/" va directo a su pantalla
+  (`/inicio` o `/profe`). Dos excepciones (`VISTA_PREVIA`, `VISTA_MOSTRAR`
+  en `data/rutas.js`): `/?vista=previa` la muestra como a alguien sin
+  cuenta (la usa el Admin) y `/?vista=portada` es **"Mostrar DREY a un
+  amigo"** (Perfil del alumno y Mi cuenta del profe): la portada sin
+  cerrar sesión, con "Volver a mi cuenta" y "Compartir DREY" (compartir
+  del celular o copiar el link) en vez de los botones de entrar.
 - **Textos editables**: Ajustes → Portada (`components/AjustesPortada.jsx`).
   Tabla `pagina_inicio` (una fila: `textos`, `secciones`, foto del
   fundador y videos), función `guardar_pagina_inicio()` y bucket público
@@ -303,6 +318,33 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - Lo guardado en el celular y las funciones para pausar/seguir:
   `utils/entrenamientoEnCurso.js`.
 
+## Saltear un ejercicio (máquina ocupada)
+
+- El alumno puede ir a otro ejercicio con las flechas o "Ver toda la
+  rutina" y marcar ahí. Al marcar una serie, lo que sigue sale de
+  `turnoSiguiente` (`utils/entrenamiento.js`): primero lo que falta de
+  ese mismo ejercicio (o de su superserie), y recién al terminarlo vuelve
+  a lo que quedó pendiente, en el orden de la rutina. Antes volvía siempre
+  a la primera serie sin hacer (la del ejercicio salteado).
+- Cuando vuelve a un ejercicio salteado, el descanso dice "Te quedó
+  pendiente" en vez de "Lo que sigue" (`vuelveAPendiente`,
+  `PantallaDescanso.jsx`).
+- En una superserie, si ya hizo el otro ejercicio de esa vuelta, la vuelta
+  terminó: toca descanso (antes pasaba sin descanso).
+
+## Llegué al fallo
+
+- En cada serie efectiva (no en las de calentamiento), antes de "Serie
+  hecha", el interruptor "Llegué al fallo" (no podía hacer ni una
+  repetición más), con su ⓘ (`TERMINOS.fallo`). Las hechas al fallo
+  muestran la marca roja "Fallo" (`components/entrenar/MarcaFallo.jsx`).
+- Se guarda en el entrenamiento como `fallo: true` en esa serie de
+  `detalle[].series` (solo si es true; sin cambios en la base de datos).
+  `alternarFallo` en `utils/entrenamiento.js`.
+- Se ve y se corrige en la ventana de corregir un entrenamiento (botón
+  "Fallo" de cada serie) y las listas de entrenamientos dicen "· 3 al
+  fallo" (`textoDeEntrenamiento`, `utils/entrenamientoHecho.js`).
+
 ## Descanso entre series
 
 - Al marcar una serie arranca solo el descanso a pantalla completa
@@ -321,7 +363,7 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   enlace que aparece al terminar de entrenar). El profe o el Admin, desde
   la ficha del alumno → Progreso → "Ver y corregir". La ventana es la
   misma (`components/EditorEntrenamiento.jsx`).
-- Solo se corrigen el peso y las repeticiones de las series hechas. La
+- Solo se corrigen el peso, las repeticiones y el fallo de las series hechas. La
   base no deja cambiar nada más (fecha, rutina, esfuerzo, comentario) y
   anota cuándo y quién corrigió (`editado_en`, `editado_por`).
 - Los récords, las gráficas y "La vez pasada" cambian solos, porque se

@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import CasilleroNumero from './entrenar/CasilleroNumero.jsx'
+import MarcaFallo from './entrenar/MarcaFallo.jsx'
 import { corregirEntrenamiento, textoDeErrorAlCorregir } from '../services/entrenamientos.js'
 import { corregirDetalle, mismoDetalle, seriesGuardadas } from '../utils/entrenamientoHecho.js'
 import { formatearPeso } from '../utils/progreso.js'
 
-// Ventana para corregir un entrenamiento YA GUARDADO: el peso y las
-// repeticiones de cada serie, por si quedó algo mal anotado. La usan el
+// Ventana para corregir un entrenamiento YA GUARDADO: el peso, las
+// repeticiones y si llegó al fallo en cada serie, por si quedó algo mal
+// anotado. La usan el
 // alumno (Progreso → "Tus entrenamientos") y el profe o el Admin (ficha
 // del alumno → Progreso → "Últimos entrenamientos"): es la misma.
 //
-// Se toca un número, se escribe el correcto y "Guardar corrección". Las
+// Se toca un número, se escribe el correcto y "Guardar corrección". El
+// botón "Fallo" de cada serie efectiva se prende y se apaga. Las
 // series que no hizo se muestran pero no se corrigen. Con la corrección
 // cambian solos los récords, las gráficas y "La vez pasada".
 //
@@ -66,8 +69,8 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
         ) : (
           <>
             <p className="profe-nota">
-              Tocá el número que quedó mal, escribí el correcto y guardá. Solo se corrigen el peso y
-              las repeticiones.
+              Tocá el número que quedó mal, escribí el correcto y guardá. Se corrigen el peso, las
+              repeticiones y si llegó al fallo (botón &quot;Fallo&quot;).
             </p>
             {detalle.map((item, ejercicioIndex) => (
               <EjercicioGuardado
@@ -105,7 +108,7 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
 
 // Un ejercicio del entrenamiento con sus series: las de calentamiento
 // (en amarillo) y las efectivas, cada una con su peso y sus repeticiones
-// para corregir.
+// para corregir y, las efectivas, el botón "Fallo".
 function EjercicioGuardado({ item, onCorregir }) {
   const series = seriesGuardadas(item)
   return (
@@ -122,6 +125,18 @@ function EjercicioGuardado({ item, onCorregir }) {
               aria-label={serie.texto}
             >
               <span className="corregir-serie-nombre">{serie.texto}</span>
+              {serie.hecha && !serie.calentamiento && (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={serie.fallo}
+                  aria-label={`${serie.texto}: llegó al fallo`}
+                  className={serie.fallo ? 'corregir-fallo corregir-fallo-activo' : 'corregir-fallo'}
+                  onClick={() => onCorregir(serie, 'fallo', !serie.fallo)}
+                >
+                  {serie.fallo ? <MarcaFallo /> : 'Fallo'}
+                </button>
+              )}
               {serie.hecha ? (
                 <span className="corregir-serie-valores">
                   <label>

@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Portada from './pages/Portada.jsx'
-import Login from './pages/Login.jsx'
 import Registro from './pages/Registro.jsx'
 import Home from './pages/Home.jsx'
 import Rutinas from './pages/Rutinas.jsx'
@@ -66,9 +65,10 @@ export default function App() {
         <Suspense fallback={<CargandoPantalla />}>
           <Routes>
             {/* "/" es la página de inicio (quien ya inició sesión va directo a
-                su pantalla) y "/ingresar" la de iniciar sesión. */}
+                su pantalla) y "/ingresar" la misma con el formulario para
+                iniciar sesión ya abierto. */}
             <Route path={RUTA_PORTADA} element={<Portada />} />
-            <Route path={RUTA_INGRESAR} element={<Login />} />
+            <Route path={RUTA_INGRESAR} element={<Portada ingresar />} />
             <Route path="/registro" element={<Registro />} />
             <Route path="/nueva-contrasena" element={<NuevaContrasena />} />
             <Route path="/inicio" element={<Home />} />

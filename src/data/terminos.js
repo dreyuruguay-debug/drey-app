@@ -16,6 +16,11 @@ export const TERMINOS = {
     texto:
       'Cuántos segundos dura cada parte de la repetición: bajar, pausa abajo, subir y pausa arriba. Ejemplo: 3-1-1-0 es bajar en 3 segundos, 1 de pausa, subir en 1 y seguir sin pausa arriba.',
   },
+  fallo: {
+    titulo: 'Llegar al fallo',
+    texto:
+      'Es terminar la serie sin poder hacer ni una repetición más con buena técnica. Marcalo solo si te pasó de verdad: a tu profe le sirve para saber si el peso está bien o si hay que ajustarlo.',
+  },
   pausa: {
     titulo: 'Pausa entre ejercicios',
     texto:

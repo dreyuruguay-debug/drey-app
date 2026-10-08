@@ -11,7 +11,7 @@ import {
   verificarProfe,
 } from '../services/accesoProfe.js'
 import { cargarPerfilDeProfe, perfilCompleto } from '../services/profes.js'
-import { RUTA_INGRESAR } from '../data/rutas.js'
+import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 
 // "Mi cuenta" del profe ("/profe/mi-cuenta"): todo lo de su cuenta en un
 // solo lugar. En el celular se abre desde el menú de abajo; en la compu
@@ -19,7 +19,8 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 //
 //   · Mi perfil de profe (lo que ven los alumnos al elegir profe).
 //   · Solicitudes de alumnos (con las que esperan respuesta).
-//   · Estadísticas, notificaciones y cerrar sesión.
+//   · Estadísticas, "Mostrar DREY a alguien" (la página de inicio sin
+//     cerrar sesión), notificaciones y cerrar sesión.
 //
 // El Admin no tiene perfil de profe: si entra acá, vuelve a su Inicio.
 export default function ProfeMiCuenta() {
@@ -71,6 +72,11 @@ export default function ProfeMiCuenta() {
       to: '/profe/estadisticas',
       titulo: 'Estadísticas',
       detalle: 'Clientes activos, bajas e ingresos del mes',
+    },
+    {
+      to: RUTA_MOSTRAR_PORTADA,
+      titulo: 'Mostrar DREY a alguien',
+      detalle: 'La página de inicio, sin cerrar tu sesión',
     },
   ]
 

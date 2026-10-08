@@ -14,10 +14,11 @@ import {
 } from '../services/profes.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
-import { RUTA_INGRESAR } from '../data/rutas.js'
+import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 
 // "Perfil" del cliente: su profe (o elegir uno), sus datos, la
-// suscripción, la comunidad, la privacidad, volver a ver la bienvenida,
+// suscripción, la comunidad, la privacidad, mostrarle DREY a un amigo (la
+// página de inicio sin cerrar sesión), volver a ver la bienvenida,
 // avisarle un problema al profe y cerrar sesión. Reemplaza a la vieja
 // pantalla "Más".
 const OPCIONES = [
@@ -32,6 +33,11 @@ const OPCIONES = [
     to: '/mi-privacidad',
     titulo: 'Privacidad y mis datos',
     detalle: 'Descargar tus datos, términos, pedir la baja',
+  },
+  {
+    to: RUTA_MOSTRAR_PORTADA,
+    titulo: 'Mostrar DREY a un amigo',
+    detalle: 'La página de inicio, sin cerrar tu sesión',
   },
 ]
 

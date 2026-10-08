@@ -22,6 +22,7 @@ import { agruparEnBloques } from '../utils/bloques.js'
 import { obtenerMetodo } from '../data/metodos.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
 import {
+  alternarFallo,
   cambiarValorDeSerie,
   construirTurnos,
   contarSeries,
@@ -30,7 +31,8 @@ import {
   estadoDeEjercicio,
   etiquetaDeSerie,
   mejorSerieAnterior,
-  turnoPendiente,
+  turnoSiguiente,
+  vuelveAPendiente,
 } from '../utils/entrenamiento.js'
 import { TIPO_CALENTAMIENTO, esSerieDeCalentamiento } from '../utils/seriesCalentamiento.js'
 import {
@@ -454,6 +456,14 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     fijarValor(exIndex, serieIndex, campo, (valor) => valor + delta)
   }
 
+  // "Llegué al fallo" de una serie (se prende y se apaga). Ver
+  // alternarFallo en utils/entrenamiento.js.
+  function cambiarFallo(exIndex, serieIndex) {
+    setSeries((actual) =>
+      actual.map((filas, i) => (i === exIndex ? alternarFallo(filas, serieIndex) : filas)),
+    )
+  }
+
   function marcarSerie(exIndex, serieIndex) {
     const relojActual = iniciarReloj()
     const hecha = !series[exIndex][serieIndex].hecha
@@ -468,20 +478,23 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     revisarRecord(exIndex, serieIndex)
 
     const turno = turnos.find((item) => item.exIndex === exIndex && item.serieIndex === serieIndex)
-    const siguiente = turnoPendiente(turnos, nuevas)
+    // Si salteó un ejercicio (máquina ocupada) y está haciendo otro, sigue
+    // con ese y recién al terminarlo vuelve a lo pendiente (turnoSiguiente).
+    const siguiente = turnoSiguiente(turnos, nuevas, turno)
     if (!siguiente) {
       terminar(relojActual)
       return
     }
 
-    // Superserie o circuito: sin descanso, se pasa al próximo de la vuelta.
-    if (turno && !turno.finDeRonda) {
-      const proximo = turnos[turnos.indexOf(turno) + 1]
-      const destino =
-        proximo && !nuevas[proximo.exIndex][proximo.serieIndex].hecha ? proximo : siguiente
-      setVisible(destino.exIndex)
+    // Superserie o circuito: sin descanso, se pasa al próximo de la vuelta
+    // (si ese todavía no lo hizo; si ya lo hizo, la vuelta terminó y toca
+    // descansar).
+    const proximo = turno ? turnos[turnos.indexOf(turno) + 1] : null
+    const proximoPendiente = proximo && !nuevas[proximo.exIndex][proximo.serieIndex].hecha
+    if (turno && !turno.finDeRonda && proximoPendiente) {
+      setVisible(siguiente.exIndex)
       mostrarAvisoTemporal(
-        `Sin descanso: seguí con ${ejercicios[destino.exIndex].ejercicios?.nombre || 'el próximo'}`,
+        `Sin descanso: seguí con ${ejercicios[siguiente.exIndex].ejercicios?.nombre || 'el próximo'}`,
         'bloque',
       )
       return
@@ -500,7 +513,10 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
         opciones,
         titulo: tituloDelDescanso(turno),
         calentamiento: turno?.tipo === TIPO_CALENTAMIENTO,
-        loQueSigue: textoDelTurno(siguiente, nuevas),
+        loQueSigue: {
+          ...textoDelTurno(siguiente, nuevas),
+          pendiente: vuelveAPendiente(siguiente, turno),
+        },
       }),
     )
   }
@@ -665,7 +681,13 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     // Las series efectivas en "series" (de ahí salen los récords y las
     // gráficas) y las de calentamiento aparte, en "calentamiento".
     const detalle = ejercicios.map((ejercicio, exIndex) => {
-      const aGuardar = (fila) => ({ kg: fila.kg, reps: fila.reps, hecha: fila.hecha })
+      // "fallo" solo se guarda en las series que llegaron al fallo.
+      const aGuardar = (fila) => ({
+        kg: fila.kg,
+        reps: fila.reps,
+        hecha: fila.hecha,
+        ...(fila.hecha && fila.fallo ? { fallo: true } : {}),
+      })
       const filas = series[exIndex]
       const calentamiento = filas.filter(esSerieDeCalentamiento).map(aGuardar)
       return {
@@ -912,6 +934,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             }
             onFijar={(serieIndex, campo, valor) => fijarValor(visible, serieIndex, campo, valor)}
             onMarcar={(serieIndex) => marcarSerie(visible, serieIndex)}
+            onFallo={(serieIndex) => cambiarFallo(visible, serieIndex)}
           />
 
           {/* En el primer ejercicio, la flecha de volver lleva al

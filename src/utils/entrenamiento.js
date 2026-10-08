@@ -15,7 +15,8 @@ import {
 //
 // Las series de cada ejercicio van en una sola lista, cada una con su
 // tipo: primero las de calentamiento (aproximación, en amarillo) y
-// después las efectivas: [{ kg, reps, hecha, tipo }]. Se hacen igual
+// después las efectivas: [{ kg, reps, hecha, tipo, fallo }] (fallo: llegó
+// al fallo en esa serie, solo en las efectivas). Se hacen igual
 // (peso y repeticiones editables, "hecha", descanso); lo que cambia es el
 // descanso (el de calentamiento que puso el profe) y que las de
 // calentamiento no cuentan para récords ni gráficas.
@@ -48,6 +49,7 @@ export function crearSeriesIniciales(ejercicios, sugerencias = []) {
         reps: sugerencias[indice]?.reps || repsBase,
         hecha: false,
         tipo: TIPO_EFECTIVA,
+        fallo: false,
       }),
     )
     return [...calentamiento, ...efectivas]
@@ -110,6 +112,15 @@ export function cambiarValorDeSerie(filas, serieIndex, campo, valor) {
       Number(fila.kg) === Number(actual.kg)
     return siguePendiente ? { ...fila, kg: nuevo } : fila
   })
+}
+
+// Prende o apaga "Llegué al fallo" en una serie (el alumno no podía hacer
+// ni una repetición más). Solo en las efectivas: las de calentamiento son
+// livianas y nunca van al fallo. Devuelve una copia.
+export function alternarFallo(filas, serieIndex) {
+  const serie = filas[serieIndex]
+  if (!serie || esSerieDeCalentamiento(serie)) return filas
+  return filas.map((fila, j) => (j === serieIndex ? { ...fila, fallo: !fila.fallo } : fila))
 }
 
 // "Calentamiento 2" o "Serie 3" (las efectivas se cuentan aparte), con
@@ -184,7 +195,41 @@ export function construirTurnos(ejercicios) {
 
 // Primer turno sin hacer (el que toca ahora), o null si ya terminó todo.
 export function turnoPendiente(turnos, series) {
-  return turnos.find((turno) => !series[turno.exIndex]?.[turno.serieIndex]?.hecha) || null
+  return turnos.find((turno) => sinHacer(turno, series)) || null
+}
+
+function sinHacer(turno, series) {
+  return !series[turno.exIndex]?.[turno.serieIndex]?.hecha
+}
+
+// El turno que sigue después de marcar uno ("marcado"), o null si ya
+// terminó todo. Respeta el orden de la rutina, pero da libertad si una
+// máquina está ocupada: si el alumno salteó un ejercicio y marcó una serie
+// de otro, sigue con ese otro (y con su bloque, si es una superserie)
+// hasta terminarlo. Recién ahí vuelve a lo que quedó pendiente, en el
+// orden de la rutina.
+//   1. Lo que falta del mismo bloque, después del turno marcado.
+//   2. Lo que falta del mismo bloque, antes (por ejemplo, la serie 1 de
+//      la superserie que salteó).
+//   3. Lo primero que falta de toda la rutina.
+// Devuelve siempre la primera serie sin hacer de ese ejercicio, que es
+// la que la pantalla muestra como "ahora".
+export function turnoSiguiente(turnos, series, marcado) {
+  const posicion = marcado ? turnos.indexOf(marcado) : -1
+  if (posicion === -1) return turnoPendiente(turnos, series)
+  const delBloque = (turno) => turno.bloque === marcado.bloque && sinHacer(turno, series)
+  const elegido =
+    turnos.slice(posicion + 1).find(delBloque) ||
+    turnos.slice(0, posicion).find(delBloque) ||
+    turnoPendiente(turnos, series)
+  if (!elegido) return null
+  return turnos.find((turno) => turno.exIndex === elegido.exIndex && sinHacer(turno, series))
+}
+
+// true si el turno "siguiente" vuelve a un bloque de antes que quedó sin
+// terminar (el alumno lo había salteado). Sirve para avisarle.
+export function vuelveAPendiente(siguiente, marcado) {
+  return Boolean(siguiente && marcado && siguiente.bloque < marcado.bloque)
 }
 
 // Cuántas series efectivas lleva hechas un ejercicio, cuántas de
