@@ -7,7 +7,11 @@ import MensajesPlanilla from '../components/planilla/MensajesPlanilla.jsx'
 import ResolverEjercicios from '../components/planilla/ResolverEjercicios.jsx'
 import VistaPreviaDia from '../components/planilla/VistaPreviaDia.jsx'
 import { cargarBiblioteca } from '../services/biblioteca.js'
-import { cargarRutinasParaPlanilla, guardarPrograma } from '../services/programas.js'
+import {
+  cargarEntrenamientosParaPlanilla,
+  cargarRutinasParaPlanilla,
+  guardarPrograma,
+} from '../services/programas.js'
 import { crearArchivoDePlanilla, leerArchivoDePlanilla } from '../services/planillaExcel.js'
 import { CAMPOS_EJERCICIO } from '../services/rutinas.js'
 import { mostrarAviso } from '../services/avisos.js'
@@ -106,19 +110,37 @@ export default function ProfeExcel() {
 
   // --- Descargar ---
 
+  // Con sus rutinas, la planilla trae además lo que el alumno levantó cada
+  // semana (columna "Hizo"). Si eso no se puede traer, la planilla sale
+  // igual, sin esa columna, y se avisa.
   async function descargar({ rutinaIds, semanas, dias }) {
     setDescargando(true)
     setMensaje('')
     try {
-      const programa = dias
-        ? programaVacio(datosCliente, dias, semanas)
-        : programaDesdeRutinas({
-            cliente: datosCliente,
-            rutinas: actuales.filter(({ rutina }) => rutinaIds.includes(rutina.id)),
-            semanas,
-          })
-      const bytes = await crearArchivoDePlanilla(contenidoDePlanilla(programa, biblioteca))
+      let programa
+      let sesiones = null
+      let sinLoHecho = false
+      if (dias) {
+        programa = programaVacio(datosCliente, dias, semanas)
+      } else {
+        programa = programaDesdeRutinas({
+          cliente: datosCliente,
+          rutinas: actuales.filter(({ rutina }) => rutinaIds.includes(rutina.id)),
+          semanas,
+        })
+        const entrenamientos = await cargarEntrenamientosParaPlanilla(id, rutinaIds)
+        if (entrenamientos.error) sinLoHecho = true
+        else sesiones = entrenamientos.sesiones
+      }
+      const bytes = await crearArchivoDePlanilla(
+        contenidoDePlanilla(programa, biblioteca, { sesiones }),
+      )
       bajarArchivo(bytes, nombreDeArchivo(cliente.nombreCompleto, hoy))
+      if (sinLoHecho) {
+        setMensaje(
+          'La planilla salió sin la columna "Hizo" (lo que levantó cada semana): no pudimos traer sus entrenamientos. Revisá tu conexión y descargala de nuevo.',
+        )
+      }
     } catch {
       setMensaje('No pudimos armar la planilla. Revisá tu conexión y probá de nuevo.')
     }

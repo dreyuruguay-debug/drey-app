@@ -61,7 +61,7 @@ export default function PantallaFinal({
         </Link>
         {corregirEn && (
           <Link to={corregirEn} className="boton-texto">
-            ¿Anotaste mal un peso o una repetición? Corregilo
+            ¿Anotaste mal algo o te olvidaste de marcar un ejercicio? Corregilo
           </Link>
         )}
       </div>

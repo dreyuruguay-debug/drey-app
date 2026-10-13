@@ -258,6 +258,21 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   la revisión; `planDeGuardado` (`utils/programa.js`) muestra qué cambia
   y `services/programas.js` lo guarda con las funciones de siempre
   (`services/rutinas.js`). Lo que no está en la planilla no se toca.
+- **"Hizo" (lo que levantó el alumno)** (12/10/2026): al bajar la planilla
+  "Con sus rutinas", cada semana trae una columna más, "Hizo", con lo que
+  el alumno hizo esa semana en cada ejercicio ("45 kg × 10, 10, 9F";
+  F = al fallo; "No lo hizo" si entrenó ese día pero no marcó ese
+  ejercicio). La semana sale del ciclo de la rutina (`ciclo_inicio` +
+  7 días por semana, como `semanaDelCiclo`); lo de antes del inicio es de
+  un ciclo anterior y no va; después del final cuenta como la última.
+  Rutina sin ciclo: en la semana 1 va la última vez. Si en una semana hizo
+  el mismo día dos veces, vale la última. Los ejercicios se emparejan por
+  ejercicio de la biblioteca (y por orden si se repite en el día). Es solo
+  para mirar: no está en `COLUMNAS_SEMANA`, así que al subir la planilla no
+  se lee. Lógica: `utils/loHechoPorSemana.js`; entrenamientos:
+  `cargarEntrenamientosParaPlanilla` (`services/programas.js`); columna:
+  `COLUMNA_HECHO` (`data/planillaExcel.js`). Si no hay entrenamientos (o
+  no se pudieron traer) la planilla sale como antes, sin esa columna.
 - **Exportar**: `utils/exportarPlanilla.js` (qué va en cada celda) +
   `services/planillaExcel.js` (cómo se ve y cómo se lee el .xlsx, con la
   librería ExcelJS). ExcelJS pesa ~1 MB: se descarga recién al usar la
@@ -363,9 +378,19 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   enlace que aparece al terminar de entrenar). El profe o el Admin, desde
   la ficha del alumno → Progreso → "Ver y corregir". La ventana es la
   misma (`components/EditorEntrenamiento.jsx`).
-- Solo se corrigen el peso, las repeticiones y el fallo de las series hechas. La
+- Se corrigen el peso, las repeticiones y el fallo de cada serie. La
   base no deja cambiar nada más (fecha, rutina, esfuerzo, comentario) y
   anota cuándo y quién corrigió (`editado_en`, `editado_por`).
+- **Completar lo que se olvidó de marcar** (12/10/2026): si terminó un
+  ejercicio con la app ya cerrada, en la misma ventana cada serie que no
+  hizo tiene "✓ Hecha" (queda hecha con el peso y las repeticiones
+  planificados, para corregirlos), el ejercicio con varias sin hacer
+  tiene "Marcar todo hecho" y todos tienen "+ Agregar serie" (copia la
+  última; máximo 20). Lo marcado o agregado recién se puede deshacer
+  ("Deshacer" / "Quitar") antes de guardar. Es el mismo `detalle`
+  (`hecha: true`), sin cambios en la base. Lógica: `marcarSerieHecha`,
+  `marcarEjercicioHecho`, `agregarSerie`, `quitarSerie` en
+  `utils/entrenamientoHecho.js`.
 - Los récords, las gráficas y "La vez pasada" cambian solos, porque se
   calculan a partir de los entrenamientos. Si el entrenamiento era de un
   resumen de 4 semanas todavía en borrador, la base borra ese borrador y

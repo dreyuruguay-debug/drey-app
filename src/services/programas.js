@@ -54,6 +54,23 @@ export async function cargarRutinasParaPlanilla(clienteId) {
   }
 }
 
+// Los entrenamientos del cliente en esas rutinas, para la columna "Hizo"
+// de la planilla (utils/loHechoPorSemana.js). Solo lo necesario: rutina,
+// fecha y detalle. Devuelve { sesiones, error }.
+export async function cargarEntrenamientosParaPlanilla(clienteId, rutinaIds) {
+  if (!rutinaIds?.length) return { sesiones: [], error: null }
+  const { data, error } = await traerTodasLasFilas(() =>
+    supabase
+      .from('sesiones')
+      .select('id, rutina_id, fecha, detalle')
+      .eq('cliente_id', clienteId)
+      .in('rutina_id', rutinaIds)
+      .order('fecha')
+      .order('id'),
+  )
+  return { sesiones: error ? [] : data, error }
+}
+
 // Guarda el programa ya revisado. Pasos:
 //   1. Crea los ejercicios nuevos de la biblioteca (una sola vez cada uno).
 //   2. Cada día: crea su rutina (si es nueva) o la actualiza, y deja sus

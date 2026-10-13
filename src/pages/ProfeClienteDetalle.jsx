@@ -314,8 +314,9 @@ export default function ProfeClienteDetalle() {
             )}
             <p className="profe-nota">
               Si viene levantando fácil, subile el peso objetivo en su rutina (Rutinas → Editar). Si
-              quedó mal anotado un peso o una repetición, arreglalo con "Ver y corregir" (el alumno
-              también puede corregir los suyos desde su Progreso).
+              quedó mal anotado un peso o una repetición, o se olvidó de marcar un ejercicio,
+              arreglalo con "Ver y corregir" (el alumno también puede corregir los suyos desde su
+              Progreso).
             </p>
           </>
         )}

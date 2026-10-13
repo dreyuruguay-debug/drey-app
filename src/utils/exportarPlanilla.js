@@ -9,6 +9,7 @@ import {
   VERSION_PLANILLA,
 } from '../data/planillaExcel.js'
 import { estaArchivado } from './biblioteca.js'
+import { loHechoDelDia } from './loHechoPorSemana.js'
 import { separarReps } from './formatos.js'
 import { semanasDelEjercicio } from './programa.js'
 import { borradorACalentamiento } from './seriesCalentamiento.js'
@@ -24,14 +25,22 @@ const VACIAS_POR_DIA = 2
 const VACIAS_POR_DIA_NUEVO = 8
 
 // programa: el programa a exportar. biblioteca: todos los ejercicios.
-// fecha: Date de la descarga.
-export function contenidoDePlanilla(programa, biblioteca, fecha = new Date()) {
+// Opciones:
+//   fecha: Date de la descarga.
+//   sesiones: los entrenamientos del alumno ({ rutina_id, fecha, detalle })
+//     para la columna "Hizo" de cada semana (lo que levantó). Sin
+//     sesiones (planilla vacía, o no se pudieron traer) no hay columna.
+export function contenidoDePlanilla(programa, biblioteca, { fecha = new Date(), sesiones = null } = {}) {
   const semanas = Math.max(1, programa.semanas || 1)
+  const ejercicios = filasDeEjercicios(programa, semanas, sesiones)
   return {
     semanas,
     cliente: programa.cliente,
     dias: programa.dias.map(filaDeDia),
-    ejercicios: filasDeEjercicios(programa, semanas),
+    ejercicios,
+    // La columna "Hizo" va solo si el alumno entrenó algo de lo que se
+    // descarga (si no, serían columnas vacías).
+    conLoHecho: ejercicios.some((fila) => fila.hecho?.some(Boolean)),
     calentamiento: filasDeCalentamiento(programa),
     actividades: filasDeActividades(programa),
     configuracion: datosDeConfiguracion(programa, semanas, fecha),
@@ -72,11 +81,13 @@ function filaDeDia(dia) {
 }
 
 // Un renglón por ejercicio: { dia, orden, bloque, tipo, ejercicio,
-// idEjercicio, semanas: [{ series, reps, kg }], descanso, rpe, tempo,
+// idEjercicio, semanas: [{ series, reps, kg }], hecho: ['45 kg × 10, 10, 9',
+// ...] (lo que hizo cada semana, '' = no entrenó), descanso, rpe, tempo,
 // notas, datosMetodo, idFila }. Los renglones vacíos solo traen día y orden.
-function filasDeEjercicios(programa, semanas) {
+function filasDeEjercicios(programa, semanas, sesiones) {
   const filas = []
   for (const dia of programa.dias) {
+    const hecho = sesiones ? loHechoDelDia(dia, sesiones, semanas) : null
     let orden = 0
     for (const bloque of dia.bloques) {
       const varios = bloque.ejercicios.length > 1
@@ -91,6 +102,7 @@ function filasDeEjercicios(programa, semanas) {
           ejercicio: item.ejercicio?.nombre || '',
           idEjercicio: item.ejercicio?.id || '',
           semanas: semanasDelEjercicio(item, semanas).map(valoresDeSemana),
+          hecho: hecho?.get(item) || Array(semanas).fill(''),
           // En un bloque de varios ejercicios, el descanso va al final (es
           // el descanso al terminar la vuelta).
           descanso: ultimo ? valorDeRango(bloque.descansoMin, bloque.descansoMax) : '',

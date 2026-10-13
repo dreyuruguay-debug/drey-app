@@ -108,6 +108,8 @@ export default function DescargarPlanilla({ actuales, descargando, onDescargar }
       <p className="profe-nota planilla-nota">
         Cada semana tiene sus series, repeticiones y peso. Si no cambia nada de una semana a otra,
         la rutina queda sin ciclo.
+        {conRutinas &&
+          ' Al lado de cada semana, en "Hizo", viene lo que levantó el alumno esa semana en cada ejercicio, para que ajustes las que siguen.'}
       </p>
 
       <button

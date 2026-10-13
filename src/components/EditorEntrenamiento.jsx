@@ -2,7 +2,16 @@ import { useState } from 'react'
 import CasilleroNumero from './entrenar/CasilleroNumero.jsx'
 import MarcaFallo from './entrenar/MarcaFallo.jsx'
 import { corregirEntrenamiento, textoDeErrorAlCorregir } from '../services/entrenamientos.js'
-import { corregirDetalle, mismoDetalle, seriesGuardadas } from '../utils/entrenamientoHecho.js'
+import {
+  MAXIMO_SERIES_POR_EJERCICIO,
+  agregarSerie,
+  corregirDetalle,
+  marcarEjercicioHecho,
+  marcarSerieHecha,
+  mismoDetalle,
+  quitarSerie,
+  seriesGuardadas,
+} from '../utils/entrenamientoHecho.js'
 import { formatearPeso } from '../utils/progreso.js'
 
 // Ventana para corregir un entrenamiento YA GUARDADO: el peso, las
@@ -12,9 +21,13 @@ import { formatearPeso } from '../utils/progreso.js'
 // del alumno → Progreso → "Últimos entrenamientos"): es la misma.
 //
 // Se toca un número, se escribe el correcto y "Guardar corrección". El
-// botón "Fallo" de cada serie efectiva se prende y se apaga. Las
-// series que no hizo se muestran pero no se corrigen. Con la corrección
-// cambian solos los récords, las gráficas y "La vez pasada".
+// botón "Fallo" de cada serie efectiva se prende y se apaga. Si se olvidó
+// de marcar algo (terminó un ejercicio con la app ya cerrada): "✓ Hecha"
+// en cada serie que no hizo (o "Marcar todo hecho" en el ejercicio) y se
+// corrigen el peso y las repeticiones; "+ Agregar serie" suma una que no
+// estaba. Lo marcado o agregado recién se puede deshacer antes de
+// guardar. Con la corrección cambian solos los récords, las gráficas y
+// "La vez pasada".
 //
 //   sesion: el entrenamiento ({ id, detalle }).
 //   clienteId: de quién es.
@@ -28,9 +41,13 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
   const [error, setError] = useState('')
   const hayCambios = !mismoDetalle(original, detalle)
 
-  function corregir(ejercicioIndex, serie, campo, valor) {
+  function cambiar(transformar) {
     setError('')
-    setDetalle((actual) =>
+    setDetalle(transformar)
+  }
+
+  function corregir(ejercicioIndex, serie, campo, valor) {
+    cambiar((actual) =>
       corregirDetalle(actual, ejercicioIndex, serie.lista, serie.indice, campo, valor),
     )
   }
@@ -70,13 +87,26 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
           <>
             <p className="profe-nota">
               Tocá el número que quedó mal, escribí el correcto y guardá. Se corrigen el peso, las
-              repeticiones y si llegó al fallo (botón &quot;Fallo&quot;).
+              repeticiones y si llegó al fallo (botón &quot;Fallo&quot;). ¿Te olvidaste de marcar
+              un ejercicio? Tocá &quot;✓ Hecha&quot; en cada serie (o &quot;Marcar todo
+              hecho&quot;), poné el peso y las repeticiones, y guardá.
             </p>
             {detalle.map((item, ejercicioIndex) => (
               <EjercicioGuardado
                 key={ejercicioIndex}
                 item={item}
+                original={original[ejercicioIndex]}
                 onCorregir={(serie, campo, valor) => corregir(ejercicioIndex, serie, campo, valor)}
+                onMarcar={(serie, hecha) =>
+                  cambiar((actual) =>
+                    marcarSerieHecha(actual, ejercicioIndex, serie.lista, serie.indice, hecha),
+                  )
+                }
+                onMarcarTodo={() => cambiar((actual) => marcarEjercicioHecho(actual, ejercicioIndex))}
+                onAgregar={() => cambiar((actual) => agregarSerie(actual, ejercicioIndex))}
+                onQuitar={(serie) =>
+                  cambiar((actual) => quitarSerie(actual, ejercicioIndex, serie.indice))
+                }
               />
             ))}
           </>
@@ -108,75 +138,150 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
 
 // Un ejercicio del entrenamiento con sus series: las de calentamiento
 // (en amarillo) y las efectivas, cada una con su peso y sus repeticiones
-// para corregir y, las efectivas, el botón "Fallo".
-function EjercicioGuardado({ item, onCorregir }) {
+// para corregir y, las efectivas, el botón "Fallo". Las que no hizo
+// tienen "✓ Hecha"; lo marcado o agregado recién (comparando con
+// "original", lo guardado) se puede deshacer.
+function EjercicioGuardado({
+  item,
+  original,
+  onCorregir,
+  onMarcar,
+  onMarcarTodo,
+  onAgregar,
+  onQuitar,
+}) {
   const series = seriesGuardadas(item)
+  const antes = seriesGuardadas(original)
+  const deAntes = (serie) =>
+    antes.find((otra) => otra.lista === serie.lista && otra.indice === serie.indice) || null
+  const sinHacer = series.filter((serie) => !serie.hecha).length
+  const efectivas = series.filter((serie) => serie.lista === 'series').length
+  const nombre = item.nombre || 'Ejercicio'
+
   return (
     <section className="corregir-ejercicio">
-      <h3 className="corregir-ejercicio-nombre">{item.nombre || 'Ejercicio'}</h3>
+      <div className="corregir-ejercicio-cabecera">
+        <h3 className="corregir-ejercicio-nombre">{nombre}</h3>
+        {sinHacer > 1 && (
+          <button type="button" className="corregir-marcar-todo" onClick={onMarcarTodo}>
+            ✓ Marcar todo hecho
+          </button>
+        )}
+      </div>
       {series.length === 0 ? (
         <p className="corregir-serie-sin-hacer">Sin series anotadas</p>
       ) : (
         <ul className="corregir-series">
-          {series.map((serie) => (
-            <li
-              key={`${serie.lista}-${serie.indice}`}
-              className={claseDeSerie(serie)}
-              aria-label={serie.texto}
-            >
-              <span className="corregir-serie-nombre">{serie.texto}</span>
-              {serie.hecha && !serie.calentamiento && (
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={serie.fallo}
-                  aria-label={`${serie.texto}: llegó al fallo`}
-                  className={serie.fallo ? 'corregir-fallo corregir-fallo-activo' : 'corregir-fallo'}
-                  onClick={() => onCorregir(serie, 'fallo', !serie.fallo)}
-                >
-                  {serie.fallo ? <MarcaFallo /> : 'Fallo'}
-                </button>
-              )}
-              {serie.hecha ? (
-                <span className="corregir-serie-valores">
-                  <label>
-                    <CasilleroNumero
-                      className="corregir-casillero"
-                      enVivo
-                      valor={formatearPeso(serie.kg)}
-                      campo="kg"
-                      etiqueta={`${serie.texto}, kilos`}
-                      onFijar={(valor) => onCorregir(serie, 'kg', valor)}
-                    />
-                    <small>kg</small>
-                  </label>
-                  <span aria-hidden="true">×</span>
-                  <label>
-                    <CasilleroNumero
-                      className="corregir-casillero"
-                      enVivo
-                      valor={serie.reps}
-                      campo="reps"
-                      etiqueta={`${serie.texto}, repeticiones`}
-                      onFijar={(valor) => onCorregir(serie, 'reps', valor)}
-                    />
-                    <small>reps</small>
-                  </label>
+          {series.map((serie) => {
+            const anterior = deAntes(serie)
+            // Agregada recién (no estaba) o marcada recién (no la había hecho).
+            const agregada = !anterior
+            const marcadaRecien = Boolean(anterior) && !anterior.hecha && serie.hecha
+            return (
+              <li
+                key={`${serie.lista}-${serie.indice}`}
+                className={claseDeSerie(serie, agregada || marcadaRecien)}
+                aria-label={serie.texto}
+              >
+                <span className="corregir-serie-nombre">
+                  {serie.texto}
+                  {agregada && (
+                    <button
+                      type="button"
+                      className="corregir-deshacer"
+                      onClick={() => onQuitar(serie)}
+                      aria-label={`Quitar ${serie.texto}`}
+                    >
+                      Quitar
+                    </button>
+                  )}
+                  {marcadaRecien && (
+                    <button
+                      type="button"
+                      className="corregir-deshacer"
+                      onClick={() => onMarcar(serie, false)}
+                      aria-label={`${serie.texto}: deshacer, no la hizo`}
+                    >
+                      Deshacer
+                    </button>
+                  )}
                 </span>
-              ) : (
-                <span className="corregir-serie-sin-hacer">No la hizo</span>
-              )}
-            </li>
-          ))}
+                {serie.hecha && !serie.calentamiento && (
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={serie.fallo}
+                    aria-label={`${serie.texto}: llegó al fallo`}
+                    className={
+                      serie.fallo ? 'corregir-fallo corregir-fallo-activo' : 'corregir-fallo'
+                    }
+                    onClick={() => onCorregir(serie, 'fallo', !serie.fallo)}
+                  >
+                    {serie.fallo ? <MarcaFallo /> : 'Fallo'}
+                  </button>
+                )}
+                {serie.hecha ? (
+                  <span className="corregir-serie-valores">
+                    <label>
+                      <CasilleroNumero
+                        className="corregir-casillero"
+                        enVivo
+                        valor={formatearPeso(serie.kg)}
+                        campo="kg"
+                        etiqueta={`${serie.texto}, kilos`}
+                        onFijar={(valor) => onCorregir(serie, 'kg', valor)}
+                      />
+                      <small>kg</small>
+                    </label>
+                    <span aria-hidden="true">×</span>
+                    <label>
+                      <CasilleroNumero
+                        className="corregir-casillero"
+                        enVivo
+                        valor={serie.reps}
+                        campo="reps"
+                        etiqueta={`${serie.texto}, repeticiones`}
+                        onFijar={(valor) => onCorregir(serie, 'reps', valor)}
+                      />
+                      <small>reps</small>
+                    </label>
+                  </span>
+                ) : (
+                  <span className="corregir-serie-pendiente-acciones">
+                    <span className="corregir-serie-sin-hacer">No la hizo</span>
+                    <button
+                      type="button"
+                      className="corregir-la-hice"
+                      onClick={() => onMarcar(serie, true)}
+                      aria-label={`${serie.texto}: marcar como hecha`}
+                    >
+                      ✓ Hecha
+                    </button>
+                  </span>
+                )}
+              </li>
+            )
+          })}
         </ul>
+      )}
+      {efectivas < MAXIMO_SERIES_POR_EJERCICIO && (
+        <button
+          type="button"
+          className="corregir-agregar-serie"
+          onClick={onAgregar}
+          aria-label={`Agregar una serie a ${nombre}`}
+        >
+          + Agregar serie
+        </button>
       )}
     </section>
   )
 }
 
-function claseDeSerie(serie) {
+function claseDeSerie(serie, cambiadaRecien) {
   let clase = 'corregir-serie'
   if (serie.calentamiento) clase += ' corregir-serie-calentamiento'
   if (!serie.hecha) clase += ' corregir-serie-pendiente'
+  if (cambiadaRecien) clase += ' corregir-serie-nueva'
   return clase
 }

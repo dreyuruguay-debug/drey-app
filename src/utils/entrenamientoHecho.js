@@ -4,7 +4,9 @@ import { TIPO_CALENTAMIENTO, TIPO_EFECTIVA } from './seriesCalentamiento.js'
 // Un entrenamiento YA GUARDADO (una fila de la tabla "sesiones") y cómo
 // se corrige. El alumno y el profe pueden cambiar el peso, las
 // repeticiones y si llegó al fallo en cada serie, si quedó algo mal
-// anotado; nada más.
+// anotado. Y si se olvidó de marcar algo (por ejemplo, terminó un
+// ejercicio con la app ya cerrada), puede marcar como hechas las series
+// que quedaron sin hacer y agregar series que no estaban.
 //
 // "detalle" es lo que se guardó al terminar (ver finalizar en
 // pages/RutinaDetalle.jsx): una fila por ejercicio,
@@ -73,13 +75,85 @@ function serieCorregida(serie, campo, valor) {
   return valor ? { ...resto, fallo: true } : resto
 }
 
-// true si los dos detalles tienen los mismos pesos, repeticiones y fallos
-// (para saber si hay algo para guardar).
+// Una serie que no hizo pasa a hecha (hecha = true), con el peso y las
+// repeticiones que ya tenía (los planificados), para corregirlos después.
+// Con hecha = false vuelve a "no la hizo" (y pierde el fallo). Devuelve
+// una copia.
+export function marcarSerieHecha(detalle, ejercicioIndex, lista, serieIndex, hecha) {
+  return (detalle || []).map((item, i) => {
+    if (i !== ejercicioIndex || !Array.isArray(item?.[lista])) return item
+    return {
+      ...item,
+      [lista]: item[lista].map((serie, j) => {
+        if (j !== serieIndex) return serie
+        const { fallo: _fallo, ...resto } = serie || {}
+        return hecha ? { ...serie, hecha: true } : { ...resto, hecha: false }
+      }),
+    }
+  })
+}
+
+// Todas las series que no hizo de un ejercicio (de calentamiento y
+// efectivas) pasan a hechas: "Lo hice todo", para el ejercicio que se
+// olvidó de marcar entero. Devuelve una copia.
+export function marcarEjercicioHecho(detalle, ejercicioIndex) {
+  return (detalle || []).map((item, i) => {
+    if (i !== ejercicioIndex) return item
+    const copia = { ...item }
+    for (const { lista } of LISTAS) {
+      if (!Array.isArray(item?.[lista])) continue
+      copia[lista] = item[lista].map((serie) =>
+        serie?.hecha === false ? { ...serie, hecha: true } : serie,
+      )
+    }
+    return copia
+  })
+}
+
+// Máximo de series efectivas de un ejercicio (como en el editor del profe).
+export const MAXIMO_SERIES_POR_EJERCICIO = 20
+
+// Suma una serie efectiva hecha al final del ejercicio, con el peso y las
+// repeticiones de la última efectiva (la que más se parece). Devuelve una
+// copia (igual, si ya tiene el máximo).
+export function agregarSerie(detalle, ejercicioIndex) {
+  return (detalle || []).map((item, i) => {
+    if (i !== ejercicioIndex) return item
+    const series = Array.isArray(item?.series) ? item.series : []
+    if (series.length >= MAXIMO_SERIES_POR_EJERCICIO) return item
+    const ultima = series[series.length - 1]
+    const nueva = {
+      kg: valorDeSerieValido('kg', ultima?.kg),
+      reps: valorDeSerieValido('reps', ultima?.reps),
+      hecha: true,
+    }
+    return { ...item, series: [...series, nueva] }
+  })
+}
+
+// Saca una serie efectiva (solo se usa con las que se agregaron recién,
+// antes de guardar). Devuelve una copia.
+export function quitarSerie(detalle, ejercicioIndex, serieIndex) {
+  return (detalle || []).map((item, i) => {
+    if (i !== ejercicioIndex || !Array.isArray(item?.series)) return item
+    return { ...item, series: item.series.filter((_, j) => j !== serieIndex) }
+  })
+}
+
+// true si los dos detalles tienen las mismas series, hechas o no, con los
+// mismos pesos, repeticiones y fallos (para saber si hay algo para
+// guardar).
 export function mismoDetalle(uno, otro) {
   const numeros = (detalle) =>
     JSON.stringify(
       (detalle || []).map((item) =>
-        seriesGuardadas(item).map((serie) => [serie.lista, serie.kg, serie.reps, serie.fallo]),
+        seriesGuardadas(item).map((serie) => [
+          serie.lista,
+          serie.hecha,
+          serie.kg,
+          serie.reps,
+          serie.fallo,
+        ]),
       ),
     )
   return numeros(uno) === numeros(otro)

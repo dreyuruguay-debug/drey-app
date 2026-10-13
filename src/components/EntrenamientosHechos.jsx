@@ -55,7 +55,7 @@ export default function EntrenamientosHechos({
     <section className="bloque-pagina">
       <p className="seccion-etiqueta">Tus entrenamientos</p>
       <p className="profe-nota entrenamientos-nota">
-        ¿Anotaste mal un peso o una repetición? Tocá el entrenamiento y corregilo.
+        ¿Anotaste mal un peso o te olvidaste de marcar un ejercicio? Tocá el entrenamiento y corregilo.
       </p>
       <div className="lista-tarjetas">
         {recientes.slice(0, cantidad).map((sesion) => (

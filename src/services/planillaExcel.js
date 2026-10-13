@@ -5,6 +5,7 @@ import {
   COLUMNAS_EJERCICIOS_ANTES,
   COLUMNAS_EJERCICIOS_DESPUES,
   COLUMNAS_SEMANA,
+  COLUMNA_HECHO,
   HOJAS,
   INSTRUCCIONES,
   MAXIMO_FILAS_POR_HOJA,
@@ -34,6 +35,7 @@ const COLORES = {
   verdeClaro: 'FFE8F8EF',
   azulClaro: 'FFEAF2FF',
   gris: 'FF8C8C8C',
+  verdeOscuro: 'FF146B3D',
   borde: 'FFD9D9D9',
   amarillo: 'FFF5D547',
   amarilloClaro: 'FFFFF8D6',
@@ -127,8 +129,11 @@ function hojaEjercicios(libro, contenido, listas) {
   const semanas = contenido.semanas
   const antes = COLUMNAS_EJERCICIOS_ANTES
   const despues = COLUMNAS_EJERCICIOS_DESPUES
+  // Cada semana: Series, Repeticiones, Peso y, si el alumno ya entrenó,
+  // "Hizo" (lo que levantó; solo para mirar).
+  const deUnaSemana = contenido.conLoHecho ? [...COLUMNAS_SEMANA, COLUMNA_HECHO] : COLUMNAS_SEMANA
   const columnasSemanas = Array.from({ length: semanas }, (_, indice) =>
-    COLUMNAS_SEMANA.map((columna) => ({ ...columna, semana: indice + 1 })),
+    deUnaSemana.map((columna) => ({ ...columna, semana: indice + 1 })),
   ).flat()
   const columnas = [...antes, ...columnasSemanas, ...despues]
   prepararColumnas(hoja, columnas)
@@ -141,15 +146,18 @@ function hojaEjercicios(libro, contenido, listas) {
     1
   const numeroSemana = (semana, clave) =>
     antes.length +
-    (semana - 1) * COLUMNAS_SEMANA.length +
-    COLUMNAS_SEMANA.findIndex((c) => c.clave === clave) +
+    (semana - 1) * deUnaSemana.length +
+    deUnaSemana.findIndex((c) => c.clave === clave) +
     1
 
   titulo(hoja, 1, 'Ejercicios de cada día')
   nota(
     hoja,
     2,
-    'Elegí el ejercicio de la lista · Lo gris copia la semana anterior: escribí solo lo que cambia · Superserie: misma letra en Bloque (A1, A2).',
+    'Elegí el ejercicio de la lista · Lo gris copia la semana anterior: escribí solo lo que cambia · Superserie: misma letra en Bloque (A1, A2).' +
+      (contenido.conLoHecho
+        ? ' · "Hizo": lo que levantó el alumno esa semana (F = al fallo), solo para mirar.'
+        : ''),
   )
 
   // Renglón 3: SEMANA 1, SEMANA 2... sobre sus tres columnas.
@@ -157,7 +165,7 @@ function hojaEjercicios(libro, contenido, listas) {
   const FILA_TITULOS = 4
   for (let semana = 1; semana <= semanas; semana++) {
     const desde = numeroSemana(semana, 'series')
-    hoja.mergeCells(FILA_SEMANAS, desde, FILA_SEMANAS, desde + COLUMNAS_SEMANA.length - 1)
+    hoja.mergeCells(FILA_SEMANAS, desde, FILA_SEMANAS, desde + deUnaSemana.length - 1)
     const celda = hoja.getCell(FILA_SEMANAS, desde)
     celda.value = tituloDeSemana(semana)
     celda.font = { bold: true, color: { argb: COLORES.negro } }
@@ -169,6 +177,12 @@ function hojaEjercicios(libro, contenido, listas) {
     FILA_TITULOS,
     columnas.map((columna) => columna.titulo),
   )
+  // El título "Hizo" en verde, para que se distinga de lo que se carga.
+  if (contenido.conLoHecho) {
+    for (let semana = 1; semana <= semanas; semana++) {
+      hoja.getCell(FILA_TITULOS, numeroSemana(semana, 'hecho')).fill = relleno(COLORES.verde)
+    }
+  }
 
   const primeraFila = FILA_TITULOS + 1
   const ultimaFila = primeraFila + contenido.ejercicios.length - 1
@@ -212,6 +226,12 @@ function hojaEjercicios(libro, contenido, listas) {
         }
         celda.fill = relleno(colorDeSemana(semana))
         celda.alignment = { horizontal: 'center' }
+      }
+      if (contenido.conLoHecho) {
+        const celda = fila.getCell(numeroSemana(semana, 'hecho'))
+        celda.value = ejercicio.vacia ? null : vacioANull(ejercicio.hecho?.[semana - 1])
+        celda.fill = relleno(colorDeSemana(semana))
+        celda.font = { italic: true, size: 10, color: { argb: COLORES.verdeOscuro } }
       }
     }
     bordes(fila, columnas.length)

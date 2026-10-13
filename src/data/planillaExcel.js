@@ -69,6 +69,12 @@ export const COLUMNAS_SEMANA = [
   { clave: 'kg', titulo: 'Peso (kg)', ancho: 10, otros: ['Peso', 'Kg', 'Carga'] },
 ]
 
+// "Hizo": al final de cada semana, lo que levantó el alumno esa semana
+// ("45 kg × 10, 10, 9"; ver utils/loHechoPorSemana.js). Solo para mirar:
+// al subir la planilla no se lee (no está en COLUMNAS_SEMANA), así que
+// escribir ahí no cambia nada. Va solo si el alumno ya entrenó.
+export const COLUMNA_HECHO = { clave: 'hecho', titulo: 'Hizo', ancho: 22, texto: true }
+
 export const COLUMNAS_EJERCICIOS_DESPUES = [
   { clave: 'descanso', titulo: 'Descanso (s)', ancho: 12, texto: true, otros: ['Descanso'] },
   { clave: 'rpe', titulo: 'RPE', ancho: 8, texto: true, otros: ['RIR / RPE', 'RPE / RIR', 'RIR'] },
@@ -136,6 +142,7 @@ export const INSTRUCCIONES = [
   'Hoja "Rutina": un renglón por cada día de entrenamiento (Día 1, Día 2...), con su nombre y datos generales.',
   'Hoja "Ejercicios": un renglón por ejercicio. Elegí el ejercicio de la lista (podés escribir para buscarlo) y cargá series, repeticiones y peso de cada semana.',
   'Semanas: lo que está en gris copia la semana anterior. Escribí un valor solo donde cambia (por ejemplo, el peso de la semana 3).',
+  'Columna "Hizo" de cada semana (si aparece): lo que levantó el alumno esa semana ("45 kg × 10, 10, 9"; F = al fallo). Es solo para mirar y decidir: al subir la planilla no se lee. Si la rutina no tiene ciclo, en la semana 1 está la última vez que la hizo.',
   'Superseries y circuitos: poné la misma letra en "Bloque" (A1, A2) y elegí el "Tipo de bloque". Si el bloque queda vacío, el ejercicio va solo.',
   'Repeticiones: un número (10) o un rango (8-12). Peso vacío o "-": sin peso. Descanso en segundos (90) o rango (60-90).',
   'Hoja "Calentamiento" (opcional): las series de aproximación de cada ejercicio (Día, Orden y Ejercicio como en la hoja Ejercicios).',

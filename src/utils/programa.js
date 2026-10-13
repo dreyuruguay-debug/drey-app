@@ -20,6 +20,7 @@ import { MAXIMO_SEMANAS } from './semanas.js'
 //       rutinaId,                       // la rutina de la app (null = nueva)
 //       nombre, grupos, musculos, descripcion, pausaMin, pausaMax,
 //       calentamiento, vueltaCalma,     // actividades (Cinta, Movilidad...)
+//       ciclo: { semanas, inicio },     // el de la rutina en la app (solo al exportar)
 //       bloques: [{ codigo: 'A', ...borrador }],
 //     }],
 //   }
@@ -74,6 +75,9 @@ function diaDesdeRutina({ rutina, ejercicios }, numero, semanas) {
     pausaMax: rutina.pausa_max ?? null,
     calentamiento: rutina.calentamiento || [],
     vueltaCalma: rutina.vuelta_calma || [],
+    // El ciclo de la rutina en la app (para ubicar en qué semana cayó cada
+    // entrenamiento: utils/loHechoPorSemana.js).
+    ciclo: { semanas: rutina.ciclo_semanas || null, inicio: rutina.ciclo_inicio || null },
     bloques: agruparEnBloques(ejercicios).map((bloque, indice) => ({
       ...bloqueABorrador(bloque, semanas),
       codigo: codigoDeBloque(indice),

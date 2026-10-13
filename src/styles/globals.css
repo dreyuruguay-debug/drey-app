@@ -8104,6 +8104,77 @@ div.tarjeta-rutina {
   gap: 0.5rem;
 }
 
+/* Completar lo que se olvidó de marcar (12/10/2026): "✓ Hecha" en las
+   series que no hizo, "Marcar todo hecho" en el ejercicio, "+ Agregar
+   serie" y "Quitar" / "Deshacer" para lo marcado o agregado recién. */
+.corregir-ejercicio-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.corregir-ejercicio-cabecera .corregir-ejercicio-nombre {
+  margin: 0;
+}
+
+.corregir-marcar-todo,
+.corregir-la-hice,
+.corregir-agregar-serie {
+  flex: 0 0 auto;
+  min-height: 2.2rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--drey-accent);
+  border-radius: 999px;
+  background: none;
+  color: var(--drey-accent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.corregir-la-hice {
+  background: var(--drey-accent);
+  color: var(--drey-black);
+}
+
+.corregir-agregar-serie {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-style: dashed;
+}
+
+.corregir-serie-pendiente-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.corregir-serie-pendiente-acciones .corregir-serie-sin-hacer {
+  padding-right: 0;
+}
+
+.corregir-serie-nueva {
+  outline: 1px dashed var(--drey-accent);
+  outline-offset: -1px;
+}
+
+.corregir-deshacer {
+  display: block;
+  margin-top: 0.1rem;
+  padding: 0.15rem 0;
+  border: none;
+  background: none;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* Celulares angostos: menos margen, para que entren los dos casilleros. */
 @media (max-width: 400px) {
   .corregir-hoja {
