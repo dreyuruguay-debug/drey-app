@@ -4583,6 +4583,42 @@ div.tarjeta-rutina {
   color: var(--drey-gray-light);
 }
 
+.estado-conexion.con-problema {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-rojo);
+}
+
+.estado-conexion-boton {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.estado-conexion-boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.final-error-guardar {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-rojo);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .final-sin-senal {
   margin: 0;
   padding: 0.85rem 1rem;

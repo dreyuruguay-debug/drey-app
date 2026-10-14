@@ -420,6 +420,14 @@ Web Push: `src/services/notificaciones.js` (activar en el celular),
 `datosCliente.js` y `colaEntrenamientos.js` guardan las rutinas y los
 entrenamientos hechos sin señal, que se envían solos al volver la conexión.
 
+Al tocar "Guardar entrenamiento" el entrenamiento se anota PRIMERO en el
+celular (bandeja de salida) y recién después se manda a la base: si el
+alumno cierra la app mientras se envía, no se pierde. Si la sesión venció
+se renueva sola; si el profe borró la rutina, se guarda igual sin rutina.
+Si la base lo rechaza por otro motivo, queda en el celular, la franja de
+arriba (`components/EstadoConexion.jsx`) muestra "sin enviar · Reintentar"
+y llega el aviso de Sentry con el motivo.
+
 ## Rendimiento (que cambiar de pantalla sea instantáneo)
 
 - Las pantallas muestran al instante lo último cargado y se actualizan por

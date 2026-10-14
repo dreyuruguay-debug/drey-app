@@ -17,7 +17,12 @@ import {
   historialGuardado,
   rutinaGuardada,
 } from '../services/datosCliente.js'
-import { guardarEntrenamiento, nuevaFilaDeEntrenamiento } from '../services/colaEntrenamientos.js'
+import {
+  EN_COLA,
+  NO_GUARDADO,
+  guardarEntrenamiento,
+  nuevaFilaDeEntrenamiento,
+} from '../services/colaEntrenamientos.js'
 import { agruparEnBloques } from '../utils/bloques.js'
 import { obtenerMetodo } from '../data/metodos.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
@@ -147,6 +152,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [pendienteDeEnvio, setPendienteDeEnvio] = useState(false)
+  // No se pudo guardar (ni enviar ni anotar en el celular): se avisa en
+  // el final y el botón queda para reintentar.
+  const [errorAlGuardar, setErrorAlGuardar] = useState(false)
   // El entrenamiento recién guardado (para ofrecer corregirlo).
   const [sesionGuardadaId, setSesionGuardadaId] = useState(null)
 
@@ -676,8 +684,17 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   }
 
   async function finalizar() {
-    if (!usuarioId || modoPrevia) return
+    if (modoPrevia || guardando) return
     setGuardando(true)
+    setErrorAlGuardar(false)
+    // Normalmente ya se sabe quién es; si no, se averigua ahora (sin
+    // señal usa la sesión guardada en el celular).
+    const clienteId = usuarioId || (await obtenerUsuarioActual())?.id
+    if (!clienteId) {
+      setGuardando(false)
+      setErrorAlGuardar(true)
+      return
+    }
     // Las series efectivas en "series" (de ahí salen los récords y las
     // gráficas) y las de calentamiento aparte, en "calentamiento".
     const detalle = ejercicios.map((ejercicio, exIndex) => {
@@ -699,7 +716,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       }
     })
     const fila = nuevaFilaDeEntrenamiento({
-      cliente_id: usuarioId,
+      cliente_id: clienteId,
       rutina_id: rutina.id,
       fecha: hoy,
       esfuerzo,
@@ -707,9 +724,14 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       detalle,
     })
     const resultado = await guardarEntrenamiento(fila)
-    // Enviado o guardado en el celular: en los dos casos ya no se pierde.
     setGuardando(false)
-    setPendienteDeEnvio(resultado === 'en-cola')
+    if (resultado === NO_GUARDADO) {
+      // Sigue en el final (y guardado como "en curso"): puede reintentar.
+      setErrorAlGuardar(true)
+      return
+    }
+    // Enviado o guardado en el celular: en los dos casos ya no se pierde.
+    setPendienteDeEnvio(resultado === EN_COLA)
     setSesionGuardadaId(fila.id)
     borrarEnCurso(id)
     setFase('guardado')
@@ -805,6 +827,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           guardando={guardando}
           guardado={fase === 'guardado'}
           pendienteDeEnvio={pendienteDeEnvio}
+          errorAlGuardar={errorAlGuardar}
           corregirEn={sesionGuardadaId ? `/progreso?corregir=${sesionGuardadaId}` : null}
           modoPrevia={modoPrevia}
         />

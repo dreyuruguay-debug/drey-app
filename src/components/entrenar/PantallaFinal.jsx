@@ -13,8 +13,10 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // y seriesCalentamiento las series de calentamiento de los ejercicios
 // ({ hechas, total }).
 //
-// pendienteDeEnvio: se guardó en el celular porque no había señal; se
-// envía solo cuando vuelva la conexión.
+// pendienteDeEnvio: quedó guardado en el celular y todavía no llegó a la
+// base (sin señal, o la base no lo tomó); se envía solo.
+// errorAlGuardar: no se pudo guardar de ninguna forma; se muestra el
+// aviso y el botón sirve para reintentar.
 // corregirEn: adónde ir para corregir un peso o una repetición del
 // entrenamiento recién guardado (Progreso), o null.
 export default function PantallaFinal({
@@ -29,6 +31,7 @@ export default function PantallaFinal({
   guardando,
   guardado,
   pendienteDeEnvio,
+  errorAlGuardar,
   corregirEn,
   modoPrevia,
 }) {
@@ -43,8 +46,8 @@ export default function PantallaFinal({
         </h1>
         {pendienteDeEnvio && (
           <p className="final-sin-senal">
-            No hay señal ahora. Se lo mandamos a tu profe solo, apenas vuelva la conexión. No tenés
-            que hacer nada.
+            Todavía no le llegó a tu profe (sin señal o conexión lenta). Se lo mandamos solo, apenas
+            se pueda. No tenés que hacer nada.
           </p>
         )}
         <p className="entrenar-objetivo">
@@ -135,13 +138,20 @@ export default function PantallaFinal({
 
       {modoPrevia && <p className="profe-nota">Vista previa: este botón no guarda nada.</p>}
 
+      {errorAlGuardar && (
+        <p className="final-error-guardar" role="alert">
+          No pudimos guardar el entrenamiento. Tocá “Reintentar”. Si sigue pasando, avisale a tu
+          profe antes de cerrar la app.
+        </p>
+      )}
+
       <button
         type="button"
         className="boton-principal"
         onClick={onFinalizar}
         disabled={guardando || modoPrevia}
       >
-        {guardando ? 'Guardando…' : 'Guardar entrenamiento'}
+        {guardando ? 'Guardando…' : errorAlGuardar ? 'Reintentar' : 'Guardar entrenamiento'}
       </button>
       <button type="button" className="boton-texto" onClick={onVolver}>
         ← Volver a los ejercicios
