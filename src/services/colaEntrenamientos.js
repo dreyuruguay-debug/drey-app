@@ -31,11 +31,17 @@ const REVISAR_CADA_MS = 60 * 1000
 const ESPERA_ENVIO_MS = 15000
 // A partir de cuántos intentos fallidos (no por señal) se avisa al alumno.
 const INTENTOS_PARA_AVISAR = 2
+// Si falla "como si no hubiera señal" pero el celular dice que SÍ tiene
+// señal, a partir de cuántos intentos se considera trabado (puede ser un
+// bloqueador de anuncios, una VPN o una red que no deja pasar a la base).
+const FALLAS_CON_SENAL_PARA_AVISAR = 5
 
 // Códigos de error de la base (Postgres / PostgREST).
 const DUPLICADO = '23505' // ya estaba guardado: cuenta como enviado
 const RUTINA_INEXISTENTE = '23503' // la rutina ya no existe
 const CODIGOS_SESION_VENCIDA = ['PGRST301', 'PGRST302', 'PGRST303']
+// "No tiene permiso": puede ser una sesión vencida que no se renovó.
+const SIN_PERMISO = '42501'
 
 // Lo que devuelve guardarEntrenamiento.
 export const ENVIADO = 'enviado' // ya está en la base
@@ -71,12 +77,23 @@ export function entrenamientosPendientes(usuarioId) {
   return usuarioId ? cola.filter((item) => item.fila.cliente_id === usuarioId) : cola
 }
 
-// Los pendientes que la base rechazó (no por falta de señal) varias
-// veces: no se van a enviar solos y hay que avisarle al alumno.
+// Los pendientes que no se van a enviar solos y hay que avisarle al
+// alumno: la base los rechazó varias veces, o fallan una y otra vez
+// aunque el celular tiene señal.
 export function entrenamientosTrabados(usuarioId) {
   return entrenamientosPendientes(usuarioId).filter(
-    (item) => item.problema && (item.intentos || 0) >= INTENTOS_PARA_AVISAR,
+    (item) =>
+      (item.problema && (item.intentos || 0) >= INTENTOS_PARA_AVISAR) ||
+      (item.fallasConSenal || 0) >= FALLAS_CON_SENAL_PARA_AVISAR,
   )
+}
+
+// El motivo del último fallo de un pendiente trabado, corto, para que el
+// alumno lo pueda mandar en una captura (ej. "42501" o "Load failed").
+export function motivoDelFallo(item) {
+  const problema = item?.problema
+  if (!problema) return ''
+  return String(problema.codigo || problema.mensaje || '').slice(0, 60)
 }
 
 // Prepara la fila de un entrenamiento nuevo (con su id propio).
@@ -88,7 +105,8 @@ export function nuevaFilaDeEntrenamiento(datos) {
 
 function esSesionVencida(error) {
   if (!error) return false
-  if (CODIGOS_SESION_VENCIDA.includes(error.code) || error.status === 401) return true
+  if (CODIGOS_SESION_VENCIDA.includes(error.code) || error.code === SIN_PERMISO) return true
+  if (error.status === 401) return true
   return /jwt|token.*expir|expired/i.test(`${error.message || ''}`)
 }
 
@@ -154,7 +172,19 @@ async function intentarEnvio(item) {
     sacarDeLaCola(id)
     return true
   }
-  if (esErrorDeRed(error)) return false // sin señal: se reintenta después
+  const problema = { codigo: error.code || null, mensaje: error.message || String(error) }
+
+  if (esErrorDeRed(error)) {
+    if (sinSenal()) return false // sin señal de verdad: se reintenta después
+    // Falla como si no hubiera señal, pero el celular dice que tiene: se
+    // cuenta, y si se repite se avisa (al alumno y a vos).
+    const fallasConSenal = (item.fallasConSenal || 0) + 1
+    if (fallasConSenal === FALLAS_CON_SENAL_PARA_AVISAR) {
+      reportarError(error, { donde: 'enviar entrenamiento con señal', fallasConSenal })
+    }
+    cambiarEnLaCola(id, { fallasConSenal, problema })
+    return false
+  }
 
   // La base lo rechazó por otro motivo: queda en la cola, se anota el
   // motivo y te llega el aviso (la primera vez y al avisarle al alumno).
@@ -162,11 +192,7 @@ async function intentarEnvio(item) {
   if (intentos === 1 || intentos === INTENTOS_PARA_AVISAR) {
     reportarError(error, { donde: 'guardar entrenamiento', intentos })
   }
-  cambiarEnLaCola(id, {
-    fila,
-    intentos,
-    problema: { codigo: error.code || null, mensaje: error.message || String(error) },
-  })
+  cambiarEnLaCola(id, { fila, intentos, problema })
   return false
 }
 

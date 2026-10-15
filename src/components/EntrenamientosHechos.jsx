@@ -70,7 +70,7 @@ export default function EntrenamientosHechos({
             <span className="tarjeta-rutina-textos">
               <strong>{titulo(sesion)}</strong>
               <small>{textoDeEntrenamiento(sesion)}</small>
-              {sesion.pendiente && <small className="texto-alerta">Esperando señal</small>}
+              {sesion.pendiente && <small className="texto-alerta">Sin enviar todavía</small>}
               {sesion.editado_en && <small>Corregido el {textoFechaCorta(sesion.editado_en)}</small>}
             </span>
             <span className="entrenamiento-corregir" aria-hidden="true">

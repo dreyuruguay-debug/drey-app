@@ -4,6 +4,7 @@ import {
   enviarPendientes,
   entrenamientosPendientes,
   entrenamientosTrabados,
+  motivoDelFallo,
 } from '../services/colaEntrenamientos.js'
 import { mostrarAviso } from '../services/avisos.js'
 
@@ -18,7 +19,7 @@ import { mostrarAviso } from '../services/avisos.js'
 export default function EstadoConexion() {
   const [enLinea, setEnLinea] = useState(() => navigator.onLine !== false)
   const [pendientes, setPendientes] = useState(() => entrenamientosPendientes().length)
-  const [trabados, setTrabados] = useState(() => entrenamientosTrabados().length)
+  const [trabados, setTrabados] = useState(() => entrenamientosTrabados())
   const [reintentando, setReintentando] = useState(false)
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function EstadoConexion() {
     const sinSenal = () => setEnLinea(false)
     const cambioCola = (evento) => {
       setPendientes(evento.detail?.cantidad ?? 0)
-      setTrabados(entrenamientosTrabados().length)
+      setTrabados(entrenamientosTrabados())
     }
     window.addEventListener('online', conSenal)
     window.addEventListener('offline', sinSenal)
@@ -63,10 +64,12 @@ export default function EstadoConexion() {
     )
   }
 
-  if (trabados > 0) {
+  if (trabados.length > 0) {
+    // El motivo va chiquito: sirve si el alumno le manda una captura al profe.
+    const motivo = motivoDelFallo(trabados[0])
     return (
       <div className="estado-conexion con-problema" role="alert">
-        <span>{`${cantidad(trabados)} sin enviar (está guardado en tu celular)`}</span>
+        <span>{`${cantidad(trabados.length)} sin enviar (está guardado en tu celular)`}</span>
         <button
           type="button"
           className="estado-conexion-boton"
@@ -75,6 +78,7 @@ export default function EstadoConexion() {
         >
           {reintentando ? 'Enviando…' : 'Reintentar'}
         </button>
+        {motivo && <small className="estado-conexion-motivo">Motivo: {motivo}</small>}
       </div>
     )
   }

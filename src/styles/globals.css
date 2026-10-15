@@ -4608,6 +4608,13 @@ div.tarjeta-rutina {
   cursor: default;
 }
 
+.estado-conexion-motivo {
+  flex-basis: 100%;
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 .final-error-guardar {
   margin: 0;
   padding: 0.85rem 1rem;
