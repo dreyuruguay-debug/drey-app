@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
+import SelectorTema from '../components/SelectorTema.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import Numero from '../components/Numero.jsx'
 import { supabase } from '../services/supabaseClient.js'
@@ -141,6 +142,8 @@ export default function AdminInicio() {
           <div className="lista-tarjetas">
             <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando se registra o paga un cliente que no tiene profe." />
           </div>
+
+          <SelectorTema />
 
           <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
             Cerrar sesión

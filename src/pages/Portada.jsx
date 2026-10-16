@@ -16,6 +16,7 @@ import {
 } from '../components/portada/SeccionesPortada.jsx'
 import { cargarPaginaInicio, usePaginaInicio } from '../services/paginaInicio.js'
 import { useConfiguracion } from '../services/configuracion.js'
+import { useTemaFijo } from '../services/tema.js'
 import { esProfeConocido, verificarProfe } from '../services/accesoProfe.js'
 import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import {
@@ -44,6 +45,8 @@ import { VISTA_MOSTRAR, VISTA_PREVIA } from '../data/rutas.js'
 //     fundador, profes, planes, para profes y gimnasios, preguntas y el
 //     cierre con los botones otra vez.
 //   · Al pasar el video aparece una barra fija arriba con "Ingresar".
+//   · Va siempre en modo oscuro (el video y los textos están pensados
+//     así), aunque el usuario tenga elegido el modo claro.
 //
 // Todos los textos, las secciones visibles, la foto del fundador y los
 // videos los cambia el Admin en Ajustes → Portada (data/paginaInicio.js).
@@ -85,6 +88,7 @@ function destinoConocido() {
 }
 
 function EsperandoSesion({ onSinSesion }) {
+  useTemaFijo('oscuro')
   const navigate = useNavigate()
   useEffect(() => {
     let activo = true
@@ -101,6 +105,7 @@ function EsperandoSesion({ onSinSesion }) {
 }
 
 function PaginaPortada({ previa, mostrando, ingresar }) {
+  useTemaFijo('oscuro')
   const navigate = useNavigate()
   const pagina = usePaginaInicio()
   const config = useConfiguracion()

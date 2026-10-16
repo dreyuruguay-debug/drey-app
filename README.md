@@ -407,6 +407,22 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - Si el SQL 029 todavía no está instalado, la app sigue andando como
   antes y al querer corregir avisa que falta activarlo.
 
+## Modo claro, oscuro y automático
+
+- Cada usuario lo elige en **Apariencia**: Perfil (alumno), Mi cuenta
+  (profe) o al final del Inicio (Admin). Se guarda en ese celular o compu.
+- **Automático según la hora** (viene así de entrada): claro de 8:00 a
+  20:00 y oscuro el resto, con la hora del celular. Cambia solo aunque la
+  app esté abierta. Apagándolo queda fijo **Claro** u **Oscuro**.
+- La página de inicio (con video) va siempre oscura.
+- Cómo está hecho: `src/services/tema.js` (reglas y horario),
+  `src/components/SelectorTema.jsx` (la opción), un script chiquito en
+  `index.html` (pinta el modo antes de cargar, sin parpadeo) y las
+  variables de colores al principio de `src/styles/globals.css`: arriba
+  los valores del modo oscuro y en `[data-tema='claro']` los del claro.
+  Todos los colores de la app salen de esas variables; un color nuevo se
+  define en los dos bloques.
+
 ## Notificaciones
 
 Web Push: `src/services/notificaciones.js` (activar en el celular),

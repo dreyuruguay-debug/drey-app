@@ -18,6 +18,36 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0d0d0d" />
 
+    <!-- Modo claro u oscuro ANTES de dibujar la página, para que no parpadee.
+         Es la misma regla que src/services/tema.js (si se cambia el horario
+         o la clave "drey-tema", cambiarlo en los dos lugares):
+         automático = claro de 8:00 a 20:00 y oscuro el resto. -->
+    <script>
+      (function () {
+        try {
+          var p = JSON.parse(localStorage.getItem('drey-tema') || 'null') || {}
+          var automatico = typeof p.automatico === 'boolean' ? p.automatico : true
+          var hora = new Date().getHours()
+          var tema = automatico
+            ? hora >= 8 && hora < 20 ? 'claro' : 'oscuro'
+            : p.fijo === 'claro' ? 'claro' : 'oscuro'
+          // La página de inicio (con video) va siempre oscura: la ve quien
+          // no inició sesión, o quien la muestra con "?vista=...".
+          var enPortada = location.pathname === '/' || location.pathname === '/ingresar'
+          var conSesion = Object.keys(localStorage).some(function (clave) {
+            return clave.indexOf('sb-') === 0 && clave.slice(-11) === '-auth-token'
+          })
+          if (enPortada && (!conSesion || location.search.indexOf('vista=') !== -1)) tema = 'oscuro'
+          document.documentElement.setAttribute('data-tema', tema)
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute('content', tema === 'claro' ? '#f3f4f2' : '#0d0d0d')
+        } catch (e) {
+          // Si el navegador no deja leer lo guardado, queda el modo oscuro.
+        }
+      })()
+    </script>
+
     <!-- iOS no lee manifest.json para el ícono ni el modo pantalla completa:
          necesita estas etiquetas propias además del manifest de arriba. -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

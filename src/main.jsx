@@ -6,7 +6,12 @@ import { iniciarAvisoDeErrores } from './services/errores.js'
 import { iniciarEnvioAutomatico } from './services/colaEntrenamientos.js'
 import { mostrarAviso } from './services/avisos.js'
 import { cargarConfiguracion } from './services/configuracion.js'
+import { iniciarTema } from './services/tema.js'
 import './styles/globals.css'
+
+// Modo claro / oscuro / automático por horario (Perfil → Apariencia).
+// index.html ya pintó el modo correcto; esto lo mantiene al día.
+iniciarTema()
 
 // Aviso de errores por mail (solo si está configurado, ver errores.js).
 iniciarAvisoDeErrores(supabase)

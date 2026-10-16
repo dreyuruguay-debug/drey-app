@@ -1,32 +1,225 @@
-/* Paleta de la marca DREY: negro, gris, blanco y un acento verde */
-:root {
+/* ==========================================================================
+   COLORES DE DREY: MODO OSCURO Y MODO CLARO
+   --------------------------------------------------------------------------
+   Toda la app usa estas variables en vez de colores fijos. El modo lo
+   elige cada usuario en Perfil / Mi cuenta → Apariencia (automático por
+   horario, claro u oscuro; ver services/tema.js) y queda marcado en
+   <html data-tema="claro"> o "oscuro".
+
+   · :root               → modo OSCURO (el diseño original de DREY).
+   · [data-tema="claro"]  → modo CLARO: mismos nombres, otros valores.
+   · .portada (página de inicio con video) queda siempre oscura.
+
+   Para agregar un color nuevo: definirlo en los DOS bloques.
+   ========================================================================== */
+:root,
+.portada,
+.portada-esperando {
+  /* Colores de la marca (fijos, no cambian con el modo) */
   --drey-black: #0d0d0d;
-  --drey-gray: #6b6b6b;
-  --drey-gray-light: #e5e5e5;
   --drey-white: #ffffff;
   --drey-green: #3ddc84;
 
-  --drey-bg: var(--drey-black);
-  --drey-text: var(--drey-white);
-  --drey-accent: var(--drey-green);
-
-  /* Rediseño 24/09/2026: superficies, alertas y tipografías */
-  --drey-superficie: #161616;
-  --drey-borde: #2a2a2a;
+  /* Fondo de la página, textos y verde de la marca */
+  --drey-bg: #0d0d0d;
+  --drey-text: #ffffff;
+  --drey-texto-claro: #e5e5e5;
+  --drey-texto-2: #cfcfcf;
   --drey-texto-suave: #a3a3a3;
-  --drey-naranja: #f5a54a;
-  --drey-naranja-fondo: #3d2a12;
-  --drey-azul: #7cb8ff;
-  --drey-azul-fondo: #1c2d42;
+  --drey-texto-tenue: #8a8a8a;
+  --drey-texto-apagado: #6b6b6b;
+  --drey-accent: #3ddc84;
+  --drey-accent-texto: #3ddc84;
+  --drey-sobre-accent: #0d0d0d;
+  /* Elementos "al revés" (fondo del color del texto): chips y pestañas elegidas */
+  --drey-invertido-fondo: #ffffff;
+  --drey-invertido-texto: #0d0d0d;
+
+  /* Superficies: tarjetas, barras, menús */
+  --drey-superficie: #161616;
+  --drey-superficie-baja: #141414;
+  --drey-superficie-alta: #1a1a1a;
+  --drey-superficie-2: #1f1f1f;
+  --drey-superficie-3: #262626;
+  --drey-flotante: #1c1c1c;
+  --drey-hover: #1a1a1a;
+  --drey-barra: #111111;
+  --drey-relleno: #3a3a3a;
+  --drey-pildora: #4d4d4d;
+  --drey-degradado-1: #4d4d4d;
+  --drey-degradado-2: #202020;
+  --drey-campo-fondo: #ffffff;
+  --drey-campo-borde: transparent;
+  --drey-sombra: none;
+  --drey-brillo: rgba(255, 255, 255, 0.05);
+
+  /* Bordes, de más suave a más marcado */
+  --drey-borde-suave: #222222;
+  --drey-borde: #2a2a2a;
+  --drey-borde-fuerte: #333333;
+  --drey-borde-control: #444444;
+
+  /* Avisos: verde (listo), naranja (en curso / atención), azul (info),
+     amarillo (series de calentamiento) y rojo ("Llegué al fallo", errores).
+     El color "base" es para rellenos, el "-texto" para letras y el
+     "-trazo" para bordes y anillos de los relojes. */
   --drey-verde-fondo: #10261a;
-  /* Series de calentamiento (aproximación) de cada ejercicio */
+  --drey-texto-verde: #cfeedd;
+  --drey-texto-verde-suave: #9fd8b8;
+  --drey-naranja: #f5a54a;
+  --drey-naranja-texto: #f5a54a;
+  --drey-naranja-fondo: #3d2a12;
+  --drey-naranja-borde: #4a3419;
+  --drey-naranja-trazo: #f5a54a;
+  --drey-azul: #7cb8ff;
+  --drey-azul-texto: #7cb8ff;
+  --drey-azul-fondo: #1c2d42;
   --drey-amarillo: #f5d547;
+  --drey-amarillo-texto: #f5d547;
   --drey-amarillo-fondo: #2c2710;
-  /* "Llegué al fallo" en una serie */
+  --drey-amarillo-borde: #4a4320;
+  --drey-amarillo-trazo: #f5d547;
+  --drey-texto-amarillo: #f3eac2;
   --drey-rojo: #ff6b5a;
+  --drey-rojo-texto: #ff6b5a;
   --drey-rojo-fondo: #3a1613;
+  --drey-texto-rojo: #ffd2cc;
+  --drey-peligro: #e05656;
+  --drey-peligro-texto: #f08a8a;
+  --drey-peligro-suave: #5c2626;
+
+  /* Imágenes del logo (blancas): en modo claro se invierten */
+  --drey-logo-filtro: none;
+  --drey-franja-filtro: none;
+
   --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --fuente-texto: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+
+/* MODO CLARO: blanco y gris cálido, el mismo verde DREY. Los textos
+   verdes, naranjas, etc. son más oscuros para que se lean sobre blanco. */
+:root[data-tema='claro'] {
+  --drey-bg: #f3f4f2;
+  --drey-text: #101211;
+  --drey-texto-claro: #2c302d;
+  --drey-texto-2: #3b3f3c;
+  --drey-texto-suave: #5f6460;
+  --drey-texto-tenue: #6d726e;
+  --drey-texto-apagado: #8b908c;
+  --drey-accent: #3ddc84;
+  --drey-accent-texto: #0e8f4a;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-invertido-fondo: #101211;
+  --drey-invertido-texto: #ffffff;
+
+  --drey-superficie: #ffffff;
+  --drey-superficie-baja: #ffffff;
+  --drey-superficie-alta: #ffffff;
+  --drey-superficie-2: #eef0ec;
+  --drey-superficie-3: #e6e9e4;
+  --drey-flotante: #ffffff;
+  --drey-hover: #eceeea;
+  --drey-barra: #ffffff;
+  --drey-relleno: #cdd2cb;
+  --drey-pildora: #e2e5df;
+  --drey-degradado-1: #ffffff;
+  --drey-degradado-2: #eceeea;
+  --drey-campo-fondo: #ffffff;
+  --drey-campo-borde: #cfd3cd;
+  --drey-sombra: 0 1px 2px rgba(16, 18, 17, 0.06), 0 2px 8px rgba(16, 18, 17, 0.04);
+  --drey-brillo: rgba(255, 255, 255, 0.7);
+
+  --drey-borde-suave: #e8eae6;
+  --drey-borde: #e1e4df;
+  --drey-borde-fuerte: #d4d8d2;
+  --drey-borde-control: #b3b9b2;
+
+  --drey-verde-fondo: #e3f6ea;
+  --drey-texto-verde: #0b5e33;
+  --drey-texto-verde-suave: #2e7a52;
+  --drey-naranja: #f5a54a;
+  --drey-naranja-texto: #b05f08;
+  --drey-naranja-fondo: #fdf0e0;
+  --drey-naranja-borde: #ebc597;
+  --drey-naranja-trazo: #ee8a1c;
+  --drey-azul: #7cb8ff;
+  --drey-azul-texto: #1f68c7;
+  --drey-azul-fondo: #e4effc;
+  --drey-amarillo: #f5d547;
+  --drey-amarillo-texto: #8a6a00;
+  --drey-amarillo-fondo: #fcf5d4;
+  --drey-amarillo-borde: #e3d48a;
+  --drey-amarillo-trazo: #e0b20f;
+  --drey-texto-amarillo: #6b5600;
+  --drey-rojo: #e5533f;
+  --drey-rojo-texto: #c0362a;
+  --drey-rojo-fondo: #fde6e2;
+  --drey-texto-rojo: #8f1f14;
+  --drey-peligro: #d23f3f;
+  --drey-peligro-texto: #c0392b;
+  --drey-peligro-suave: #f0b9b5;
+
+  --drey-logo-filtro: invert(1);
+  --drey-franja-filtro: invert(1);
+  color-scheme: light;
+}
+
+/* Al cambiar de modo, los colores pasan suave (no de golpe). La clase la
+   pone services/tema.js solo durante el cambio. */
+html.drey-cambiando-tema *,
+html.drey-cambiando-tema *::before,
+html.drey-cambiando-tema *::after {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    fill 0.35s ease,
+    stroke 0.35s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.drey-cambiando-tema *,
+  html.drey-cambiando-tema *::before,
+  html.drey-cambiando-tema *::after {
+    transition: none !important;
+  }
+}
+
+/* Modo claro: sombra suave en las tarjetas para que se despeguen del
+   fondo (en modo oscuro --drey-sombra es "none" y no cambia nada). */
+.tarjeta-rutina,
+.hoy-tarjeta,
+.dato-tarjeta,
+.tarjeta-record,
+.entrenar-tarjeta,
+.tarea,
+.grafico,
+.resumen-caja,
+.avance-item,
+.plan-card,
+.comunidad-post,
+.profe-cliente-card,
+.profe-rutina-tarjeta,
+.profe-ejercicio-item,
+.profe-progreso-item,
+.seccion-rutina,
+.config-bloque,
+.codigo-item,
+.medida-tarjeta,
+.medicion-fila,
+.ajustes-tarjeta,
+.historial-item,
+.tarjeta-profe,
+.solicitud,
+.solicitud-fila,
+.ficha-profe,
+.corregir-ejercicio,
+.pago-mp,
+.dia-fila,
+.paso-item,
+.planilla-dia {
+  box-shadow: var(--drey-sombra);
 }
 
 * {
@@ -56,8 +249,8 @@ textarea {
 .pill-button {
   display: block;
   text-align: center;
-  background: #4d4d4d;
-  color: var(--drey-white);
+  background: var(--drey-pildora);
+  color: var(--drey-text);
   border: none;
   border-radius: 999px;
   padding: 0.95rem 1.5rem;
@@ -124,6 +317,8 @@ textarea {
   max-width: 60vw;
   height: auto;
   margin: 0 auto;
+  /* Logo blanco: en modo claro se ve negro. */
+  filter: var(--drey-logo-filtro);
 }
 
 .auth-form {
@@ -143,7 +338,9 @@ textarea {
   padding: 0.9rem 1.25rem;
   border-radius: 999px;
   border: none;
-  background: var(--drey-white);
+  background: var(--drey-campo-fondo);
+  /* Borde fino solo en modo claro (campo blanco sobre fondo claro). */
+  box-shadow: inset 0 0 0 1px var(--drey-campo-borde);
   color: #111;
   font-size: 0.95rem;
 }
@@ -173,7 +370,7 @@ textarea {
   align-self: flex-start;
   background: none;
   border: none;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.7rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -185,13 +382,13 @@ textarea {
 .auth-message {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .auth-submit {
   background: none;
   border: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -208,7 +405,7 @@ textarea {
 .auth-switch {
   background: none;
   border: none;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -223,11 +420,13 @@ textarea {
    velocidad lenta y pareja — un detalle visual, no interactivo. */
 .top-pattern {
   height: 32px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--drey-borde-suave);
   background-image: url('/drey-tile.png');
   background-repeat: repeat-x;
   background-size: 104px 32px;
   animation: top-pattern-scroll 6s linear infinite;
+  /* La imagen es negra con el logo gris: en modo claro se invierte. */
+  filter: var(--drey-franja-filtro);
 }
 
 @keyframes top-pattern-scroll {
@@ -251,7 +450,7 @@ textarea {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: var(--drey-white);
+  background: var(--drey-invertido-fondo);
   overflow: hidden;
   margin: 0 auto;
 }
@@ -264,7 +463,7 @@ textarea {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--drey-black);
+  background: var(--drey-invertido-texto);
 }
 
 .profile-avatar-body {
@@ -275,7 +474,7 @@ textarea {
   width: 56px;
   height: 40px;
   border-radius: 50% 50% 0 0;
-  background: var(--drey-black);
+  background: var(--drey-invertido-texto);
 }
 
 /* Pantalla de Rutinas: tarjetas + Organización */
@@ -285,7 +484,7 @@ textarea {
   margin: 1.5rem auto 0;
   background: none;
   border: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 1rem;
   cursor: pointer;
   padding: 0.5rem;
@@ -311,7 +510,7 @@ textarea {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  background: #4d4d4d;
+  background: var(--drey-pildora);
   border-radius: 999px;
   padding: 0.9rem 1.5rem;
   font-weight: 600;
@@ -323,23 +522,23 @@ textarea {
 .ejercicio-objetivo {
   margin: 0.75rem 0 0.5rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .descanso-chip {
   background: none;
-  border: 1px solid #555;
+  border: 1px solid var(--drey-borde-control);
   border-radius: 999px;
-  color: var(--drey-white);
+  color: var(--drey-text);
   padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .descanso-chip-activo {
-  background: var(--drey-white);
-  color: var(--drey-black);
-  border-color: var(--drey-white);
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+  border-color: var(--drey-invertido-fondo);
   font-weight: 700;
 }
 
@@ -353,7 +552,7 @@ textarea {
   margin: 0 0 0.75rem;
   padding: 0.75rem 1.25rem;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-weight: 700;
   text-align: center;
   animation: record-banner-entrada 0.25s ease-out;
@@ -384,8 +583,8 @@ textarea {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  background: #161616;
-  border-top: 1px solid #262626;
+  background: var(--drey-barra);
+  border-top: 1px solid var(--drey-borde-suave);
   padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
   z-index: 20;
 }
@@ -395,7 +594,7 @@ textarea {
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
-  color: #8a8a8a;
+  color: var(--drey-texto-tenue);
   text-decoration: none;
   font-size: 0.65rem;
   letter-spacing: 0.02em;
@@ -408,7 +607,7 @@ textarea {
 }
 
 .bottom-nav-item-activo {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 /* Aviso de cuenta pendiente en Inicio */
@@ -419,7 +618,7 @@ textarea {
   background: rgba(61, 220, 132, 0.12);
   border: 1px solid var(--drey-accent);
   border-radius: 14px;
-  color: var(--drey-white);
+  color: var(--drey-text);
   text-decoration: none;
   font-size: 0.8rem;
   text-align: center;
@@ -445,33 +644,33 @@ textarea {
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
-  border: 1px solid #444;
+  border: 1px solid var(--drey-borde-control);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .week-dot-cumplido {
   background: var(--drey-accent);
   border-color: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .week-dot-descanso {
   border-style: dashed;
-  color: #555;
+  color: var(--drey-texto-apagado);
 }
 
 .week-dot-hoy {
-  box-shadow: 0 0 0 2px var(--drey-white);
+  box-shadow: 0 0 0 2px var(--drey-text);
 }
 
 .week-dot-letra {
   font-size: 0.7rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 /* Pantalla "Más": lista simple de accesos */
@@ -506,7 +705,7 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .form-row {
@@ -531,7 +730,8 @@ textarea {
   min-height: 70px;
   border-radius: 16px;
   border: none;
-  background: var(--drey-white);
+  background: var(--drey-campo-fondo);
+  box-shadow: inset 0 0 0 1px var(--drey-campo-borde);
   color: #111;
   padding: 0.75rem 1rem;
   font-family: inherit;
@@ -546,7 +746,7 @@ textarea {
 .registro-edad {
   margin: 0.35rem 0 0;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 /* Selector de plan (Registro) */
@@ -561,11 +761,11 @@ textarea {
   flex-direction: column;
   gap: 0.2rem;
   text-align: left;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 16px;
   padding: 0.9rem 1.1rem;
-  color: var(--drey-white);
+  color: var(--drey-text);
   cursor: pointer;
 }
 
@@ -582,7 +782,7 @@ textarea {
 
 .plan-card-descripcion {
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .plan-card-precio {
@@ -592,7 +792,7 @@ textarea {
 
 .plan-card-precio-siguiente {
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .form-checkbox-row {
@@ -600,7 +800,7 @@ textarea {
   align-items: flex-start;
   gap: 0.6rem;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   text-align: left;
   cursor: pointer;
 }
@@ -630,7 +830,7 @@ textarea {
   font-size: 0.65rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
 }
 
 .registro-paso-numero {
@@ -640,31 +840,31 @@ textarea {
   width: 1.8rem;
   height: 1.8rem;
   border-radius: 50%;
-  border: 1px solid #444;
+  border: 1px solid var(--drey-borde-control);
   font-weight: 700;
   font-size: 0.8rem;
 }
 
 .registro-paso-actual {
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .registro-paso-actual .registro-paso-numero {
   border-color: var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .registro-paso-hecho .registro-paso-numero {
   background: var(--drey-accent);
   border-color: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .registro-boton-secundario {
   background: none;
   border: none;
   padding: 0.6rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -675,7 +875,7 @@ textarea {
 
 .pago-etiqueta {
   font-weight: 700;
-  color: var(--drey-white);
+  color: var(--drey-text);
   text-transform: capitalize;
 }
 
@@ -688,7 +888,7 @@ textarea {
 .registro-gracias-texto {
   margin: 0;
   max-width: 320px;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .registro-gracias-boton {
@@ -707,7 +907,7 @@ textarea {
 }
 
 .suscripcion-plan-card {
-  background: linear-gradient(#4d4d4d, #202020);
+  background: linear-gradient(var(--drey-degradado-1), var(--drey-degradado-2));
   border-radius: 20px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
@@ -723,20 +923,20 @@ textarea {
 .suscripcion-plan-descripcion {
   margin: 0.2rem 0 0.75rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .suscripcion-plan-precio {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .suscripcion-vencimiento {
   margin: 0.35rem 0 0;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .suscripcion-bloque {
@@ -754,7 +954,7 @@ textarea {
 .suscripcion-bloque-texto {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .suscripcion-pendiente {
@@ -776,11 +976,11 @@ textarea {
   display: block;
   text-align: center;
   background: none;
-  border: 1px dashed #555;
+  border: 1px dashed var(--drey-borde-control);
   border-radius: 999px;
   padding: 0.75rem 1rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   cursor: pointer;
 }
 
@@ -801,11 +1001,11 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .comunidad-post {
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border-radius: 16px;
   padding: 1rem 1.1rem;
   margin-bottom: 0.85rem;
@@ -815,13 +1015,13 @@ textarea {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   margin-bottom: 0.35rem;
 }
 
 .comunidad-post-autor {
   font-weight: 700;
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .comunidad-post-texto {
@@ -832,7 +1032,7 @@ textarea {
 .comunidad-comentario {
   margin: 0.3rem 0 0;
   padding: 0.4rem 0.6rem;
-  background: #262626;
+  background: var(--drey-superficie-3);
   border-radius: 10px;
   font-size: 0.8rem;
 }
@@ -847,9 +1047,9 @@ textarea {
   flex: 1;
   min-width: 0;
   border-radius: 999px;
-  border: 1px solid #444;
-  background: #111;
-  color: var(--drey-white);
+  border: 1px solid var(--drey-borde-control);
+  background: var(--drey-bg);
+  color: var(--drey-text);
   padding: 0.5rem 0.9rem;
   font-size: 0.8rem;
 }
@@ -857,7 +1057,7 @@ textarea {
 .comunidad-comentar-boton {
   background: none;
   border: none;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -875,7 +1075,7 @@ textarea {
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border: 1px dashed var(--drey-accent);
   border-radius: 14px;
   padding: 0.75rem 1rem;
@@ -884,18 +1084,18 @@ textarea {
 .comunidad-codigo-valor {
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .comunidad-codigo-descripcion {
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   text-align: right;
 }
 
 .comunidad-whatsapp {
   background: #25d366;
-  color: #0d0d0d;
+  color: var(--drey-sobre-accent);
 }
 
 /* Pantalla de Mis datos */
@@ -913,7 +1113,7 @@ textarea {
 .profe-mensaje-carga {
   text-align: center;
   padding: 2rem 1.5rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .profe-contenido {
@@ -929,7 +1129,7 @@ textarea {
 .profe-nota {
   margin: 0 0 1.5rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .profe-seccion-label {
@@ -938,13 +1138,13 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .profe-vacio {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-style: italic;
 }
 
@@ -954,7 +1154,7 @@ textarea {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border-radius: 16px;
   padding: 1rem 1.25rem;
   margin-bottom: 0.75rem;
@@ -968,7 +1168,7 @@ textarea {
 .profe-cliente-detalle {
   margin: 0.2rem 0 0;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .profe-boton-habilitar {
@@ -990,15 +1190,15 @@ textarea {
 .profe-tabla th {
   text-align: left;
   padding: 0.5rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.75rem;
   text-transform: uppercase;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--drey-borde-fuerte);
 }
 
 .profe-tabla td {
   padding: 0.5rem;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--drey-borde-suave);
 }
 
 /* Menú fijo y barra superior del panel del profe (ProfeLayout) */
@@ -1012,7 +1212,7 @@ textarea {
 }
 
 .profe-volver {
-  color: var(--drey-white);
+  color: var(--drey-text);
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
@@ -1021,7 +1221,7 @@ textarea {
 /* Clientes y rutinas: lista con acceso al detalle */
 .profe-cliente-card-link {
   text-decoration: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .profe-cliente-card-inactivo {
@@ -1029,17 +1229,17 @@ textarea {
 }
 
 .profe-cliente-inactivo-texto {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 600;
 }
 
 .profe-cliente-flecha {
   font-size: 1.2rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .profe-aviso-inactivos {
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border: 1px solid var(--drey-accent);
   border-radius: 16px;
   padding: 0.85rem 1.1rem;
@@ -1049,13 +1249,13 @@ textarea {
 .profe-aviso-inactivos-titulo {
   margin: 0;
   font-weight: 700;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .profe-aviso-inactivos-lista {
   margin: 0.3rem 0 0;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 /* Biblioteca de ejercicios */
@@ -1069,8 +1269,8 @@ textarea {
 .profe-grupo-card {
   padding: 0.75rem;
   border-radius: 12px;
-  background: #1a1a1a;
-  color: var(--drey-white);
+  background: var(--drey-superficie-alta);
+  color: var(--drey-text);
   border: 1px solid transparent;
   font-size: 0.85rem;
   font-weight: 600;
@@ -1079,7 +1279,7 @@ textarea {
 
 .profe-grupo-card-activo {
   border-color: var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .profe-buscador {
@@ -1096,7 +1296,7 @@ textarea {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border-radius: 12px;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
@@ -1138,7 +1338,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border: 1px solid var(--drey-accent);
   border-radius: 12px;
   padding: 0.85rem 1rem;
@@ -1169,18 +1369,18 @@ textarea {
   display: block;
   text-align: center;
   background: none;
-  border: 1px dashed #555;
+  border: 1px dashed var(--drey-borde-control);
   border-radius: 999px;
   padding: 0.75rem 1rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   cursor: pointer;
 }
 
 .profe-ejercicio-borrar {
   background: none;
   border: none;
-  color: #e05656;
+  color: var(--drey-peligro-texto);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -1190,7 +1390,7 @@ textarea {
 .profe-ejercicio-agregar {
   background: none;
   border: none;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -1210,7 +1410,7 @@ textarea {
 }
 
 .confirmacion-ejercicio {
-  border-color: var(--drey-naranja);
+  border-color: var(--drey-naranja-trazo);
 }
 
 .confirmacion-ejercicio .profe-ejercicio-edicion-botones {
@@ -1232,7 +1432,7 @@ textarea {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.4;
-  color: #d4d4d4;
+  color: var(--drey-texto-2);
 }
 
 .profe-cerrar-selector:disabled {
@@ -1261,10 +1461,10 @@ textarea {
 
 .profe-input-tabla {
   width: 3.5rem;
-  background: #0d0d0d;
-  border: 1px solid #333;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 8px;
-  color: var(--drey-white);
+  color: var(--drey-text);
   padding: 0.35rem;
   font-size: 0.85rem;
 }
@@ -1274,9 +1474,9 @@ textarea {
   width: 100%;
   padding: 0.6rem;
   border-radius: 10px;
-  border: 1px dashed #333;
+  border: 1px dashed var(--drey-borde-fuerte);
   background: none;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -1286,17 +1486,17 @@ textarea {
   margin-top: 0.5rem;
   background: none;
   border: none;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
 }
 
 .profe-calendario-select {
-  background: #0d0d0d;
-  border: 1px solid #333;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 8px;
-  color: var(--drey-white);
+  color: var(--drey-text);
   padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
 }
@@ -1312,17 +1512,17 @@ textarea {
 }
 
 .profe-tabla-cliente-link {
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-weight: 600;
   text-decoration: none;
 }
 
 .profe-tabla-cliente-link:hover {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .profe-tabla-sin-rutinas {
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 /* Progreso reciente (detalle de cliente, panel del profe) */
@@ -1334,7 +1534,7 @@ textarea {
 }
 
 .profe-progreso-item {
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border-radius: 12px;
   padding: 0.75rem 1rem;
 }
@@ -1348,7 +1548,7 @@ textarea {
 
 .profe-progreso-fecha {
   font-size: 0.75rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   text-transform: capitalize;
 }
 
@@ -1360,13 +1560,13 @@ textarea {
 .profe-progreso-esfuerzo {
   margin-left: auto;
   font-size: 0.75rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .profe-progreso-comentario {
   margin: 0.4rem 0 0;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-style: italic;
 }
 
@@ -1381,7 +1581,7 @@ textarea {
 .profe-ver-comprobante {
   background: none;
   border: none;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -1392,12 +1592,12 @@ textarea {
 /* Botón ⓘ y ventana con la explicación de un método de entrenamiento */
 .info-metodo-boton {
   background: none;
-  border: 1px solid #555;
+  border: 1px solid var(--drey-borde-control);
   border-radius: 50%;
   width: 1.7rem;
   height: 1.7rem;
   flex: 0 0 auto;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
@@ -1417,8 +1617,8 @@ textarea {
 .info-metodo-caja {
   width: 100%;
   max-width: 420px;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 20px;
   padding: 1.25rem;
   display: flex;
@@ -1436,12 +1636,12 @@ textarea {
 .info-metodo-texto {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   line-height: 1.45;
 }
 
 .info-metodo-google {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.85rem;
   text-decoration: none;
 }
@@ -1460,7 +1660,7 @@ textarea {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border-radius: 16px;
   padding: 1rem 1.25rem;
 }
@@ -1476,7 +1676,7 @@ textarea {
   margin-top: 0.25rem;
   font-size: 0.65rem;
   font-weight: 400;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
 }
 
 .categorias-chips {
@@ -1501,7 +1701,7 @@ textarea {
 .editor-ejercicio-categorias {
   margin: 0.15rem 0 0;
   font-size: 0.7rem;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
 }
 
 .editor-ejercicio-acciones {
@@ -1512,12 +1712,12 @@ textarea {
 }
 
 .editor-mover {
-  background: #262626;
+  background: var(--drey-superficie-3);
   border: none;
   border-radius: 8px;
   width: 1.9rem;
   height: 1.9rem;
-  color: var(--drey-white);
+  color: var(--drey-text);
   cursor: pointer;
 }
 
@@ -1537,7 +1737,7 @@ textarea {
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.7rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .editor-campo-ancho {
@@ -1568,17 +1768,17 @@ textarea {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .bloque-instruccion {
   margin: 0.3rem 0 0;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .bloque-banner {
-  background: var(--drey-white);
+  background: var(--drey-invertido-fondo);
 }
 
 /* Tabla de series en celulares: más compacta para que entre en pantalla
@@ -1603,7 +1803,7 @@ textarea {
 /* Gráficos de progresión (GraficoProgreso) */
 .grafico {
   margin: 0 0 1rem;
-  background: #141414;
+  background: var(--drey-superficie-baja);
   border-radius: 16px;
   padding: 0.75rem 0.5rem 0.25rem;
 }
@@ -1611,7 +1811,7 @@ textarea {
 .grafico-titulo {
   padding: 0 0.5rem 0.4rem;
   font-size: 0.75rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .grafico-svg {
@@ -1621,24 +1821,24 @@ textarea {
 }
 
 .grafico-guia {
-  stroke: #2a2a2a;
+  stroke: var(--drey-borde);
   stroke-width: 1;
 }
 
 .grafico-eje {
-  fill: var(--drey-gray);
+  fill: var(--drey-texto-apagado);
   font-size: 9px;
 }
 
 .grafico-linea {
   fill: none;
-  stroke: var(--drey-accent);
+  stroke: var(--drey-accent-texto);
   stroke-width: 2.5;
   stroke-linejoin: round;
 }
 
 .grafico-punto {
-  fill: var(--drey-black);
+  fill: var(--drey-bg);
   stroke: var(--drey-accent);
   stroke-width: 2;
 }
@@ -1655,7 +1855,7 @@ textarea {
 }
 
 .resumen-caja {
-  background: #141414;
+  background: var(--drey-superficie-baja);
   border-radius: 16px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -1667,11 +1867,11 @@ textarea {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #f5c542;
+  color: var(--drey-amarillo-texto);
 }
 
 .resumen-estado-publicado {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .resumen-acciones {
@@ -1691,7 +1891,7 @@ textarea {
 .resumen-periodo {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .resumen-cifras {
@@ -1703,7 +1903,7 @@ textarea {
 .resumen-cifra {
   display: flex;
   flex-direction: column;
-  background: #1f1f1f;
+  background: var(--drey-superficie-2);
   border-radius: 12px;
   padding: 0.6rem 0.75rem;
 }
@@ -1711,12 +1911,12 @@ textarea {
 .resumen-cifra-valor {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .resumen-cifra-etiqueta {
   font-size: 0.7rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .resumen-tabla td,
@@ -1725,12 +1925,12 @@ textarea {
 }
 
 .resumen-sube {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
 .resumen-baja {
-  color: #ff6b6b;
+  color: var(--drey-peligro-texto);
   font-weight: 700;
 }
 
@@ -1756,7 +1956,7 @@ textarea {
 }
 
 .avance-item {
-  background: #141414;
+  background: var(--drey-superficie-baja);
   border-radius: 16px;
   padding: 0.25rem 0.9rem 0.9rem;
 }
@@ -1769,7 +1969,7 @@ textarea {
   padding: 0.75rem 0;
   background: none;
   border: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-weight: 700;
   font-size: 0.9rem;
   text-align: left;
@@ -1778,7 +1978,7 @@ textarea {
 
 .avance-nuevo {
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
   font-size: 0.65rem;
@@ -1787,7 +1987,7 @@ textarea {
 
 .avance-flecha {
   margin-left: auto;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
   font-size: 0.7rem;
 }
 
@@ -1847,7 +2047,7 @@ a.profe-boton-agregar-ejercicio {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1887,10 +2087,10 @@ a.profe-boton-agregar-ejercicio {
 }
 
 .chip {
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 999px;
-  color: var(--drey-white);
+  color: var(--drey-text);
   padding: 0.35rem 0.8rem;
   font-size: 0.8rem;
   cursor: pointer;
@@ -1898,14 +2098,14 @@ a.profe-boton-agregar-ejercicio {
 
 .chip-activo {
   border-color: var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
 .chip-sugerencia {
   background: none;
   border-style: dashed;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .chip-quitable {
@@ -1918,7 +2118,7 @@ a.profe-boton-agregar-ejercicio {
 .chip-quitable button {
   background: none;
   border: none;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   cursor: pointer;
   padding: 0;
   font-size: 0.75rem;
@@ -1937,9 +2137,9 @@ a.profe-boton-agregar-ejercicio {
   gap: 0.6rem;
   padding: 0.75rem 0.9rem;
   border-radius: 12px;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border: 1px solid transparent;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 0.9rem;
   font-weight: 600;
   text-align: left;
@@ -1954,7 +2154,7 @@ a.profe-boton-agregar-ejercicio {
   width: 1.3rem;
   height: 1.3rem;
   border-radius: 6px;
-  border: 1px solid #555;
+  border: 1px solid var(--drey-borde-control);
   font-size: 0.8rem;
 }
 
@@ -1965,7 +2165,7 @@ a.profe-boton-agregar-ejercicio {
 .selector-grupo-activo .selector-grupo-check {
   background: var(--drey-accent);
   border-color: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-weight: 700;
 }
 
@@ -1978,8 +2178,8 @@ a.profe-boton-agregar-ejercicio {
 
 .rutina-vista-cabecera,
 .seccion-rutina {
-  background: #141414;
-  border: 1px solid #222;
+  background: var(--drey-superficie-baja);
+  border: 1px solid var(--drey-borde-suave);
   border-radius: 16px;
   padding: 1rem;
 }
@@ -1990,7 +2190,7 @@ a.profe-boton-agregar-ejercicio {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
 }
 
 .rutina-vista-cabecera .rutina-detalle-titulo {
@@ -2000,17 +2200,17 @@ a.profe-boton-agregar-ejercicio {
 .rutina-grupos {
   margin: 0 0 0.5rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .rutina-grupos strong {
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .rutina-vista-descripcion {
   margin: 0 0 0.5rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .seccion-rutina-cabecera {
@@ -2064,14 +2264,14 @@ a.profe-boton-agregar-ejercicio {
 
 .actividad-duracion {
   font-weight: 400;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .actividad-items {
   margin: 0.3rem 0 0;
   padding-left: 1.2rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .editor-actividades {
@@ -2086,8 +2286,8 @@ a.profe-boton-agregar-ejercicio {
   gap: 0.5rem;
   padding: 0.75rem;
   border-radius: 12px;
-  background: #0d0d0d;
-  border: 1px solid #262626;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-suave);
 }
 
 .editor-actividad-fila {
@@ -2112,7 +2312,7 @@ a.profe-boton-agregar-ejercicio {
 }
 
 .editor-actividad-reloj-libre {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .editor-actividad-items {
@@ -2157,7 +2357,7 @@ a.profe-boton-agregar-ejercicio {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .editor-rango-campos {
@@ -2168,7 +2368,7 @@ a.profe-boton-agregar-ejercicio {
 
 .editor-rango-flecha {
   padding-bottom: 0.4rem;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
 }
 
 .editor-rango-input {
@@ -2210,13 +2410,13 @@ a.profe-boton-agregar-ejercicio {
 .ejercicio-calentamiento {
   margin: -0.25rem 0 0.5rem;
   font-size: 0.8rem;
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 .bloque-descanso {
   margin: 0 0 0.5rem;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 /* Ventana del asistente para agregar ejercicios */
@@ -2235,8 +2435,8 @@ a.profe-boton-agregar-ejercicio {
 .asistente-hoja {
   width: 100%;
   max-width: 640px;
-  background: var(--drey-black);
-  border: 1px solid #262626;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-suave);
   border-radius: 20px;
   padding: 1.25rem;
   display: flex;
@@ -2257,12 +2457,12 @@ a.profe-boton-agregar-ejercicio {
 }
 
 .asistente-cerrar {
-  background: #262626;
+  background: var(--drey-superficie-3);
   border: none;
   border-radius: 50%;
   width: 2rem;
   height: 2rem;
-  color: var(--drey-white);
+  color: var(--drey-text);
   cursor: pointer;
 }
 
@@ -2282,7 +2482,7 @@ a.profe-boton-agregar-ejercicio {
   display: flex;
   align-items: flex-start;
   border-radius: 14px;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
   border: 1px solid transparent;
 }
 
@@ -2298,7 +2498,7 @@ a.profe-boton-agregar-ejercicio {
   padding: 0.9rem;
   background: none;
   border: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   text-align: left;
   cursor: pointer;
 }
@@ -2313,7 +2513,7 @@ a.profe-boton-agregar-ejercicio {
 
 .tipo-bloque-resumen {
   font-size: 0.75rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .asistente-otros-toggle {
@@ -2368,7 +2568,7 @@ a.profe-boton-agregar-ejercicio {
 .selector-item-categorias {
   display: block;
   font-size: 0.7rem;
-  color: var(--drey-gray);
+  color: var(--drey-texto-apagado);
   font-weight: 400;
 }
 
@@ -2377,9 +2577,9 @@ a.profe-boton-agregar-ejercicio {
   min-width: 4.5rem;
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
-  border: 1px solid #444;
+  border: 1px solid var(--drey-borde-control);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -2388,7 +2588,7 @@ a.profe-boton-agregar-ejercicio {
 .selector-elegir-activo {
   background: var(--drey-accent);
   border-color: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .selector-elegir:disabled {
@@ -2404,8 +2604,8 @@ a.profe-boton-agregar-ejercicio {
   gap: 0.75rem;
   padding: 0.9rem;
   border-radius: 14px;
-  background: #141414;
-  border: 1px solid #222;
+  background: var(--drey-superficie-baja);
+  border: 1px solid var(--drey-borde-suave);
 }
 
 .config-ejercicio-nombre {
@@ -2442,7 +2642,7 @@ a.profe-boton-agregar-ejercicio {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 @media (max-width: 480px) {
@@ -2474,7 +2674,7 @@ a.profe-boton-agregar-ejercicio {
 .pill-button,
 .boton-principal {
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-weight: 800;
 }
 
@@ -2500,13 +2700,13 @@ a.profe-boton-agregar-ejercicio {
 
 .boton-principal {
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .boton-secundario {
   background: none;
-  border: 1px solid #3a3a3a;
-  color: var(--drey-white);
+  border: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-text);
   font-weight: 700;
 }
 
@@ -2551,7 +2751,7 @@ a.profe-boton-agregar-ejercicio {
 }
 
 a.boton-texto {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 /* El botón de ingresar / registrarse también es el verde principal */
@@ -2560,7 +2760,7 @@ a.boton-texto {
   min-height: 3.4rem;
   border-radius: 16px;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-weight: 800;
   font-size: 1rem;
 }
@@ -2568,7 +2768,7 @@ a.boton-texto {
 .volver-enlace {
   display: inline-block;
   margin-bottom: 0.75rem;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-weight: 700;
   text-decoration: none;
 }
@@ -2608,7 +2808,7 @@ a.boton-texto {
   border-radius: 14px;
   background: var(--drey-verde-fondo);
   border: 1px solid var(--drey-accent);
-  color: #dff7e9;
+  color: var(--drey-texto-verde);
   font-weight: 700;
   font-size: 0.9rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -2616,9 +2816,9 @@ a.boton-texto {
 }
 
 .aviso-global-error {
-  background: #3a1616;
-  border-color: #e05656;
-  color: #ffdede;
+  background: var(--drey-rojo-fondo);
+  border-color: var(--drey-peligro);
+  color: var(--drey-texto-rojo);
 }
 
 .aviso-global-icono {
@@ -2629,12 +2829,12 @@ a.boton-texto {
   height: 1.5rem;
   border-radius: 50%;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-size: 0.8rem;
 }
 
 .aviso-global-error .aviso-global-icono {
-  background: #e05656;
+  background: var(--drey-peligro);
 }
 
 @keyframes aviso-entrada {
@@ -2650,8 +2850,8 @@ a.boton-texto {
 
 /* ---------- Menú de abajo (alumno y profe) ---------- */
 .bottom-nav {
-  background: #111111;
-  border-top: 1px solid #222222;
+  background: var(--drey-barra);
+  border-top: 1px solid var(--drey-borde-suave);
   padding: 0.55rem 0.5rem calc(0.8rem + env(safe-area-inset-bottom));
 }
 
@@ -2668,7 +2868,7 @@ a.boton-texto {
 }
 
 .bottom-nav-item-activo {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 800;
 }
 
@@ -2681,7 +2881,7 @@ a.boton-texto {
   padding: 0 0.3rem;
   border-radius: 999px;
   background: var(--drey-naranja);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-size: 0.7rem;
   font-weight: 800;
   display: flex;
@@ -2711,6 +2911,7 @@ a.boton-texto {
 .pagina-cliente > .bloque-pagina,
 .pagina-cliente > .inicio-datos,
 .pagina-cliente > .perfil-cabecera,
+.pagina-cliente > .apariencia,
 .pagina-cliente > .perfil-salir {
   margin-left: 1.25rem;
   margin-right: 1.25rem;
@@ -2754,7 +2955,7 @@ a.boton-texto {
   border-radius: 18px;
   background: var(--drey-superficie);
   border: 1px solid transparent;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font: inherit;
   text-align: left;
   text-decoration: none;
@@ -2771,7 +2972,7 @@ div.tarjeta-rutina {
 }
 
 .tarjeta-borrador {
-  border: 1px dashed #5a4526;
+  border: 1px dashed var(--drey-naranja-borde);
 }
 
 .tarjeta-rutina-textos {
@@ -2806,7 +3007,7 @@ div.tarjeta-rutina {
 
 .texto-alerta,
 .tarjeta-rutina-textos small.texto-alerta {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
   font-weight: 600;
 }
 
@@ -2816,19 +3017,19 @@ div.tarjeta-rutina {
   gap: 0.3rem;
   padding: 1.25rem;
   border-radius: 18px;
-  border: 1px dashed #333333;
+  border: 1px dashed var(--drey-borde-fuerte);
   color: var(--drey-texto-suave);
   font-size: 0.9rem;
 }
 
 .tarjeta-vacia strong {
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 1rem;
 }
 
 .chip-dato {
-  background: #232323;
-  border-color: #232323;
+  background: var(--drey-superficie-3);
+  border-color: var(--drey-superficie-3);
   font-weight: 700;
   cursor: default;
 }
@@ -2839,8 +3040,8 @@ div.tarjeta-rutina {
 }
 
 .chip-alerta {
-  border-color: var(--drey-naranja);
-  color: var(--drey-naranja);
+  border-color: var(--drey-naranja-trazo);
+  color: var(--drey-naranja-texto);
   background: none;
   cursor: default;
 }
@@ -2850,8 +3051,8 @@ div.tarjeta-rutina {
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 50%;
-  background: #1f1f1f;
-  border: 1px solid #333333;
+  background: var(--drey-superficie-2);
+  border: 1px solid var(--drey-borde-fuerte);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2894,7 +3095,7 @@ div.tarjeta-rutina {
 .inicio-plan {
   margin: 0;
   font-size: 0.9rem;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
 }
 
 .inicio-avatar {
@@ -2902,9 +3103,9 @@ div.tarjeta-rutina {
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background: #1a1a1a;
-  border: 1px solid #333333;
-  color: var(--drey-white);
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-text);
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -2941,13 +3142,13 @@ div.tarjeta-rutina {
 .week-dot-hoy {
   box-shadow: none;
   border: 2px solid var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.6rem;
   font-weight: 800;
 }
 
 .week-dot-hoy.week-dot-cumplido {
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-size: 0.95rem;
 }
 
@@ -2974,7 +3175,7 @@ div.tarjeta-rutina {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .hoy-nombre {
@@ -2996,7 +3197,7 @@ div.tarjeta-rutina {
 
 .hoy-mensaje-texto {
   margin: 0;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -3023,7 +3224,7 @@ div.tarjeta-rutina {
   padding: 0.9rem 1rem;
   border-radius: 18px;
   background: var(--drey-superficie);
-  color: var(--drey-white);
+  color: var(--drey-text);
   text-decoration: none;
   min-width: 0;
 }
@@ -3096,7 +3297,7 @@ div.tarjeta-rutina {
 
 .perfil-salir {
   margin-top: 1rem;
-  color: #e08a8a;
+  color: var(--drey-peligro-texto);
 }
 
 .pagina-cliente .grafico {
@@ -3159,7 +3360,7 @@ div.tarjeta-rutina {
   margin: 0;
   font-size: 1.05rem;
   line-height: 1.55;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
 }
 
 .bienvenida-puntos {
@@ -3172,7 +3373,7 @@ div.tarjeta-rutina {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 999px;
-  background: #3a3a3a;
+  background: var(--drey-relleno);
   transition: width 0.2s;
 }
 
@@ -3187,8 +3388,8 @@ div.tarjeta-rutina {
   box-sizing: border-box;
   padding: 24px 18px;
   border-radius: 32px;
-  border: 2px solid #333333;
-  background: #141414;
+  border: 2px solid var(--drey-borde-fuerte);
+  background: var(--drey-superficie-baja);
   display: flex;
   flex-direction: column;
   gap: 11px;
@@ -3199,7 +3400,7 @@ div.tarjeta-rutina {
   height: 8px;
   flex: 1;
   border-radius: 4px;
-  background: #3a3a3a;
+  background: var(--drey-relleno);
 }
 
 .dibujo-linea-corta {
@@ -3211,12 +3412,12 @@ div.tarjeta-rutina {
 .dibujo-tarjeta {
   height: 70px;
   border-radius: 14px;
-  background: #1f1f1f;
+  background: var(--drey-superficie-2);
 }
 
 .dibujo-tarjeta {
   height: 100px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--drey-borde);
 }
 
 .dibujo-fila {
@@ -3225,7 +3426,7 @@ div.tarjeta-rutina {
   gap: 10px;
   padding: 9px;
   border-radius: 12px;
-  background: #1a1a1a;
+  background: var(--drey-superficie-alta);
 }
 
 .dibujo-fila-hecha {
@@ -3247,7 +3448,7 @@ div.tarjeta-rutina {
 
 .dibujo-check-vacio {
   background: none;
-  border: 1px solid #444444;
+  border: 1px solid var(--drey-borde-control);
   box-sizing: border-box;
 }
 
@@ -3267,7 +3468,7 @@ div.tarjeta-rutina {
 .dibujo-dia {
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 1px dashed #3a3a3a;
+  border: 1px dashed var(--drey-borde-fuerte);
 }
 
 .dibujo-dia-hecho {
@@ -3303,14 +3504,14 @@ div.tarjeta-rutina {
   align-items: center;
   padding: 0.25rem 1.25rem;
   background: var(--drey-azul-fondo);
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .entrenar-previa .boton-texto {
   width: auto;
-  color: var(--drey-white);
+  color: var(--drey-text);
   padding: 0.5rem;
 }
 
@@ -3354,9 +3555,9 @@ div.tarjeta-rutina {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 12px;
-  border: 1px solid #333333;
+  border: 1px solid var(--drey-borde-fuerte);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3373,7 +3574,7 @@ div.tarjeta-rutina {
   flex: 1;
   height: 6px;
   border-radius: 3px;
-  background: #2a2a2a;
+  background: var(--drey-superficie-3);
 }
 
 .entrenar-avance-tramo.parcial {
@@ -3385,7 +3586,7 @@ div.tarjeta-rutina {
 }
 
 .entrenar-avance-tramo.actual {
-  outline: 2px solid var(--drey-white);
+  outline: 2px solid var(--drey-text);
   outline-offset: 1px;
 }
 
@@ -3407,7 +3608,7 @@ div.tarjeta-rutina {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .entrenar-etiqueta-chica {
@@ -3447,7 +3648,7 @@ div.tarjeta-rutina {
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
   border: 1px solid var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -3466,7 +3667,7 @@ div.tarjeta-rutina {
   height: 220px;
   border-radius: 20px;
   overflow: hidden;
-  background: #1e1e1e;
+  background: var(--drey-superficie-2);
   border: 1px solid var(--drey-borde);
   display: flex;
   align-items: center;
@@ -3487,7 +3688,7 @@ div.tarjeta-rutina {
 
 .entrenar-foto-vacia {
   font-size: 0.85rem;
-  color: #8f8f8f;
+  color: var(--drey-texto-tenue);
 }
 
 .entrenar-video {
@@ -3496,8 +3697,8 @@ div.tarjeta-rutina {
   bottom: 0.75rem;
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
-  background: var(--drey-white);
-  color: var(--drey-black);
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
   font-size: 0.85rem;
   font-weight: 800;
   text-decoration: none;
@@ -3506,7 +3707,7 @@ div.tarjeta-rutina {
 /* Sobre la foto de fondo blanco, el botón del video va oscuro. */
 .entrenar-foto-con-imagen .entrenar-video {
   background: var(--drey-black);
-  color: var(--drey-white);
+  color: #ffffff;
 }
 
 .entrenar-encabezado {
@@ -3552,7 +3753,7 @@ div.tarjeta-rutina {
   border-radius: 14px;
   border: none;
   background: var(--drey-superficie);
-  color: #8f8f8f;
+  color: var(--drey-texto-tenue);
   font: inherit;
   text-align: left;
   box-sizing: border-box;
@@ -3564,7 +3765,7 @@ div.tarjeta-rutina {
 
 .entrenar-serie-hecha {
   background: var(--drey-verde-fondo);
-  color: #cfeedd;
+  color: var(--drey-texto-verde);
   cursor: pointer;
 }
 
@@ -3579,8 +3780,8 @@ div.tarjeta-rutina {
   gap: 0.75rem;
   padding: 1rem;
   border: 2px solid var(--drey-accent);
-  background: #141414;
-  color: var(--drey-white);
+  background: var(--drey-superficie-baja);
+  color: var(--drey-text);
 }
 
 .entrenar-serie-titulo {
@@ -3593,7 +3794,7 @@ div.tarjeta-rutina {
   height: 1.8rem;
   border-radius: 50%;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-weight: 800;
   font-size: 0.85rem;
   display: flex;
@@ -3604,7 +3805,7 @@ div.tarjeta-rutina {
 
 .entrenar-check-vacio {
   background: none;
-  border: 1px solid #444444;
+  border: 1px solid var(--drey-borde-control);
 }
 
 .entrenar-check-parcial {
@@ -3624,7 +3825,7 @@ div.tarjeta-rutina {
   justify-content: space-between;
   padding: 0.25rem;
   border-radius: 12px;
-  background: var(--drey-black);
+  background: var(--drey-bg);
 }
 
 .entrenar-stepper button {
@@ -3632,8 +3833,8 @@ div.tarjeta-rutina {
   height: 2.9rem;
   border-radius: 10px;
   border: none;
-  background: #262626;
-  color: var(--drey-white);
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
   font-size: 1.4rem;
   cursor: pointer;
 }
@@ -3658,7 +3859,7 @@ div.tarjeta-rutina {
   padding: 0.75rem 1rem;
   border-radius: 12px;
   background: var(--drey-verde-fondo);
-  color: #cfeedd;
+  color: var(--drey-texto-verde);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -3676,8 +3877,8 @@ div.tarjeta-rutina {
   margin: 0 auto;
   box-sizing: border-box;
   padding: 0.75rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom));
-  background: #111111;
-  border-top: 1px solid #222222;
+  background: var(--drey-barra);
+  border-top: 1px solid var(--drey-borde-suave);
 }
 
 .entrenar-flecha {
@@ -3685,9 +3886,9 @@ div.tarjeta-rutina {
   width: 3.2rem;
   height: 3.2rem;
   border-radius: 14px;
-  border: 1px solid #333333;
+  border: 1px solid var(--drey-borde-fuerte);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 1.6rem;
   cursor: pointer;
 }
@@ -3726,7 +3927,7 @@ div.tarjeta-rutina {
   align-items: center;
   gap: 1.25rem;
   padding: 2.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
-  background: var(--drey-black);
+  background: var(--drey-bg);
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -3762,7 +3963,7 @@ div.tarjeta-rutina {
 
 .reloj-circular-fondo {
   fill: none;
-  stroke: #222222;
+  stroke: var(--drey-borde-suave);
   stroke-width: 14;
 }
 
@@ -3775,7 +3976,7 @@ div.tarjeta-rutina {
 }
 
 .reloj-circular-calentamiento .reloj-circular-avance {
-  stroke: var(--drey-naranja);
+  stroke: var(--drey-naranja-trazo);
 }
 
 .reloj-circular-texto {
@@ -3816,7 +4017,7 @@ div.tarjeta-rutina {
 }
 
 .descanso-sigue span:last-child {
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
   font-size: 0.9rem;
 }
 
@@ -3831,7 +4032,7 @@ div.tarjeta-rutina {
    entrenamiento, con su reloj grande como el del descanso y sus
    actividades marcadas como series. El naranja es su color (🔥). */
 .calentamiento-etiqueta {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .calentamiento-reloj {
@@ -3855,7 +4056,7 @@ div.tarjeta-rutina {
 .calentamiento-items {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--drey-white);
+  color: var(--drey-text);
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -3866,23 +4067,23 @@ div.tarjeta-rutina {
 }
 
 .calentamiento-fila:not(:disabled) {
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
   cursor: pointer;
 }
 
 .calentamiento-fila-actual {
-  border: 1px solid var(--drey-naranja);
+  border: 1px solid var(--drey-naranja-trazo);
   background: var(--drey-naranja-fondo);
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .calentamiento-fila-actual .entrenar-serie-valor {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
   font-weight: 800;
 }
 
 .calentamiento-check-actual {
-  border-color: var(--drey-naranja);
+  border-color: var(--drey-naranja-trazo);
 }
 
 .calentamiento-completo {
@@ -3895,7 +4096,7 @@ div.tarjeta-rutina {
 }
 
 .vista-general-calentamiento .vista-general-bloque {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .vista-general-bloque-estado {
@@ -3917,7 +4118,7 @@ div.tarjeta-rutina {
 .final-calentamiento.completo {
   background: var(--drey-verde-fondo);
   border-color: transparent;
-  color: #cfeedd;
+  color: var(--drey-texto-verde);
 }
 
 .final-calentamiento-texto {
@@ -3932,7 +4133,7 @@ div.tarjeta-rutina {
 }
 
 .final-calentamiento.completo .final-calentamiento-texto small {
-  color: #9fd8b8;
+  color: var(--drey-texto-verde-suave);
 }
 
 /* Final del entrenamiento */
@@ -3942,7 +4143,7 @@ div.tarjeta-rutina {
   height: 4.5rem;
   border-radius: 50%;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-size: 2.2rem;
   font-weight: 800;
   display: flex;
@@ -3993,9 +4194,9 @@ div.tarjeta-rutina {
   gap: 0.2rem;
   padding: 0.6rem 0.2rem;
   border-radius: 14px;
-  border: 1px solid #333333;
+  border: 1px solid var(--drey-borde-fuerte);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   cursor: pointer;
 }
 
@@ -4019,7 +4220,7 @@ div.tarjeta-rutina {
   inset: 0;
   z-index: 30;
   overflow-y: auto;
-  background: var(--drey-black);
+  background: var(--drey-bg);
   padding: 1.25rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
   box-sizing: border-box;
   display: flex;
@@ -4053,7 +4254,7 @@ div.tarjeta-rutina {
 
 .vista-general-descripcion {
   margin: 0;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
   font-size: 0.9rem;
 }
 
@@ -4070,7 +4271,7 @@ div.tarjeta-rutina {
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .vista-general-ejercicio {
@@ -4081,9 +4282,9 @@ div.tarjeta-rutina {
   min-height: 3.2rem;
   padding: 0.4rem 0;
   border: none;
-  border-top: 1px solid #222222;
+  border-top: 1px solid var(--drey-borde-suave);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -4109,7 +4310,7 @@ div.tarjeta-rutina {
 .vista-general-pausa {
   margin: 0;
   font-size: 0.9rem;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
 }
 
 .vista-general-botones {
@@ -4168,17 +4369,17 @@ div.tarjeta-rutina {
   align-items: center;
   justify-content: center;
   background: var(--drey-azul-fondo);
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
 }
 
 .tarea-icono-urgente {
   background: var(--drey-naranja-fondo);
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .tarea-icono-ok {
   background: var(--drey-verde-fondo);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 800;
 }
 
@@ -4204,7 +4405,7 @@ div.tarjeta-rutina {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .paso-item {
@@ -4215,7 +4416,7 @@ div.tarjeta-rutina {
   padding: 0 1rem;
   border-radius: 14px;
   background: var(--drey-superficie);
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-weight: 700;
   text-decoration: none;
 }
@@ -4230,7 +4431,7 @@ div.tarjeta-rutina {
   height: 1.8rem;
   border-radius: 50%;
   border: 2px solid var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4240,7 +4441,7 @@ div.tarjeta-rutina {
 
 .paso-item-hecho .paso-numero {
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .accesos-grilla {
@@ -4256,8 +4457,8 @@ div.tarjeta-rutina {
   min-height: 3.4rem;
   padding: 0.5rem;
   border-radius: 16px;
-  border: 1px dashed #3a3a3a;
-  color: var(--drey-white);
+  border: 1px dashed var(--drey-borde-fuerte);
+  color: var(--drey-text);
   font-weight: 700;
   font-size: 0.9rem;
   text-align: center;
@@ -4266,7 +4467,7 @@ div.tarjeta-rutina {
 
 .acceso-principal {
   border-color: var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 800;
 }
 
@@ -4288,7 +4489,7 @@ div.tarjeta-rutina {
   border-radius: 10px;
   border: none;
   background: none;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
   font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
@@ -4297,8 +4498,8 @@ div.tarjeta-rutina {
 }
 
 .pestana-activa {
-  background: var(--drey-white);
-  color: var(--drey-black);
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
   font-weight: 800;
 }
 
@@ -4325,17 +4526,17 @@ div.tarjeta-rutina {
 
 .estado-ok {
   background: var(--drey-verde-fondo);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .estado-alerta {
   background: var(--drey-naranja-fondo);
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .estado-neutro {
-  background: #232323;
-  color: #cfcfcf;
+  background: var(--drey-superficie-3);
+  color: var(--drey-texto-2);
 }
 
 .ficha-contenido .seccion-etiqueta {
@@ -4382,7 +4583,7 @@ div.tarjeta-rutina {
 }
 
 .enlace-tabla {
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-weight: 700;
 }
 
@@ -4396,9 +4597,9 @@ div.tarjeta-rutina {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 12px;
-  border: 1px solid #333333;
+  border: 1px solid var(--drey-borde-fuerte);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 1.2rem;
   font-weight: 800;
   cursor: pointer;
@@ -4418,8 +4619,8 @@ div.tarjeta-rutina {
   min-width: 13rem;
   padding: 0.35rem;
   border-radius: 14px;
-  background: #1c1c1c;
-  border: 1px solid #333333;
+  background: var(--drey-flotante);
+  border: 1px solid var(--drey-borde-fuerte);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
@@ -4433,7 +4634,7 @@ div.tarjeta-rutina {
   border: none;
   border-radius: 10px;
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 0.92rem;
   font-weight: 600;
   text-align: left;
@@ -4444,11 +4645,11 @@ div.tarjeta-rutina {
 
 .menu-acciones-item:hover,
 .menu-acciones-item:focus-visible {
-  background: #2a2a2a;
+  background: var(--drey-hover);
 }
 
 .menu-acciones-item.peligro {
-  color: #f08a8a;
+  color: var(--drey-peligro-texto);
 }
 
 /* Asignar días */
@@ -4468,7 +4669,7 @@ div.tarjeta-rutina {
   border-radius: 14px;
   border: 2px solid transparent;
   background: var(--drey-superficie);
-  color: var(--drey-white);
+  color: var(--drey-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -4487,14 +4688,14 @@ div.tarjeta-rutina {
 }
 
 .dia-opcion-activa small {
-  color: #cfeedd;
+  color: var(--drey-texto-verde);
 }
 
 .dia-check {
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 8px;
-  border: 1px solid #444444;
+  border: 1px solid var(--drey-borde-control);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4506,7 +4707,7 @@ div.tarjeta-rutina {
 .dia-opcion-activa .dia-check {
   background: var(--drey-accent);
   border-color: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 /* Casilleros del profe un poco más grandes, cómodos en el celular */
@@ -4530,7 +4731,7 @@ div.tarjeta-rutina {
   padding: 0.75rem 1rem;
   border-radius: 14px;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-weight: 800;
   text-align: center;
   animation: record-banner-entrada 0.25s ease-out;
@@ -4572,15 +4773,15 @@ div.tarjeta-rutina {
   z-index: 70;
   padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem;
   background: var(--drey-azul-fondo);
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
   font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
 }
 
 .estado-conexion.sin-senal {
-  background: #262626;
-  color: var(--drey-gray-light);
+  background: var(--drey-superficie-3);
+  color: var(--drey-texto-claro);
 }
 
 .estado-conexion.con-problema {
@@ -4590,7 +4791,7 @@ div.tarjeta-rutina {
   flex-wrap: wrap;
   gap: 0.35rem 0.75rem;
   background: var(--drey-rojo-fondo);
-  color: var(--drey-rojo);
+  color: var(--drey-rojo-texto);
 }
 
 .estado-conexion-boton {
@@ -4620,7 +4821,7 @@ div.tarjeta-rutina {
   padding: 0.85rem 1rem;
   border-radius: 14px;
   background: var(--drey-rojo-fondo);
-  color: var(--drey-rojo);
+  color: var(--drey-rojo-texto);
   font-size: 0.9rem;
   line-height: 1.4;
   text-align: center;
@@ -4631,7 +4832,7 @@ div.tarjeta-rutina {
   padding: 0.85rem 1rem;
   border-radius: 14px;
   background: var(--drey-azul-fondo);
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
   font-size: 0.9rem;
   line-height: 1.4;
   text-align: center;
@@ -4640,8 +4841,8 @@ div.tarjeta-rutina {
 /* ---------- Avisos de vencimiento en Inicio ---------- */
 .home-aviso-urgente {
   background: var(--drey-naranja-fondo);
-  border-color: var(--drey-naranja);
-  color: var(--drey-white);
+  border-color: var(--drey-naranja-trazo);
+  color: var(--drey-text);
 }
 
 /* ---------- Botón para acciones que no se pueden deshacer ---------- */
@@ -4653,9 +4854,9 @@ div.tarjeta-rutina {
   min-height: 3.4rem;
   padding: 0.75rem 1.25rem;
   border-radius: 16px;
-  border: 1px solid #e5484d;
+  border: 1px solid var(--drey-peligro);
   background: rgba(229, 72, 77, 0.12);
-  color: #ff8a8d;
+  color: var(--drey-peligro-texto);
   font-family: var(--fuente-texto);
   font-size: 1rem;
   font-weight: 800;
@@ -4685,7 +4886,7 @@ div.tarjeta-rutina {
 }
 
 .consentimiento a {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
@@ -4709,7 +4910,7 @@ div.tarjeta-rutina {
   padding: 0.6rem 0.85rem;
   border-radius: 12px;
   background: var(--drey-naranja-fondo);
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
   font-weight: 700;
 }
 
@@ -4726,7 +4927,7 @@ div.tarjeta-rutina {
 
 .legal-seccion p {
   margin: 0 0 0.6rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 0.92rem;
   line-height: 1.55;
 }
@@ -4739,7 +4940,7 @@ div.tarjeta-rutina {
 
 /* ---------- Suscripción: vencimiento y Mercado Pago ---------- */
 .suscripcion-vencida {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
   font-weight: 700;
 }
 
@@ -4783,7 +4984,7 @@ div.tarjeta-rutina {
 
 .pago-mp-codigo {
   flex: 1 1 100%;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
@@ -4810,23 +5011,23 @@ div.tarjeta-rutina {
   padding: 0.85rem 1rem;
   border-radius: 14px;
   background: var(--drey-azul-fondo);
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
   font-size: 0.88rem;
 }
 
 .aviso-pago-aprobado {
   background: var(--drey-verde-fondo);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .aviso-pago-error,
 .aviso-pago-pendiente {
   background: var(--drey-naranja-fondo);
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .aviso-pago span {
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .pago-fila {
@@ -4835,7 +5036,7 @@ div.tarjeta-rutina {
   gap: 0.75rem;
   margin: 0 0 0.35rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .pago-estado {
@@ -4843,16 +5044,16 @@ div.tarjeta-rutina {
 }
 
 .pago-estado-aprobado {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .pago-estado-rechazado,
 .pago-estado-cancelado {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .registro-codigo-ok {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
@@ -4944,14 +5145,14 @@ div.tarjeta-rutina {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;
   border-radius: 14px;
-  border: 1px solid #e5484d;
+  border: 1px solid var(--drey-peligro);
   background: rgba(229, 72, 77, 0.1);
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .aviso-baja strong {
-  color: #ff8a8d;
+  color: var(--drey-peligro-texto);
 }
 
 /* ==================================================================
@@ -4978,7 +5179,7 @@ div.tarjeta-rutina {
   width: 46px;
   height: 26px;
   border-radius: 999px;
-  background: #3a3a3a;
+  background: var(--drey-relleno);
   transition: background 0.2s;
 }
 
@@ -5010,7 +5211,7 @@ div.tarjeta-rutina {
   background: var(--drey-superficie);
   font-size: 0.9rem;
   line-height: 1.45;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .invitacion-avisos p {
@@ -5018,7 +5219,7 @@ div.tarjeta-rutina {
 }
 
 .invitacion-avisos strong {
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .invitacion-avisos-botones {
@@ -5036,7 +5237,7 @@ div.tarjeta-rutina {
   display: block;
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   letter-spacing: 0.03em;
 }
 
@@ -5045,7 +5246,7 @@ div.tarjeta-rutina {
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
   background: var(--drey-verde-fondo);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.85rem;
   font-weight: 700;
 }
@@ -5053,7 +5254,7 @@ div.tarjeta-rutina {
 .ejercicio-progresion {
   margin: -0.25rem 0 0.5rem;
   font-size: 0.8rem;
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
 }
 
 .config-progresion {
@@ -5076,7 +5277,7 @@ div.tarjeta-rutina {
 .home-aviso-medidas {
   margin-top: 0.6rem;
   background: var(--drey-azul-fondo);
-  border-color: var(--drey-azul);
+  border-color: var(--drey-azul-texto);
 }
 
 .medidas {
@@ -5099,7 +5300,7 @@ div.tarjeta-rutina {
   border-radius: 14px;
   border: 1px solid var(--drey-borde);
   background: var(--drey-superficie);
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-family: var(--fuente-texto);
   text-align: left;
   cursor: pointer;
@@ -5119,7 +5320,7 @@ div.tarjeta-rutina {
 }
 
 .medida-tarjeta .medida-cambio {
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
   font-weight: 700;
 }
 
@@ -5143,7 +5344,7 @@ div.tarjeta-rutina {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 12px;
-  background: #1c1c1c;
+  background: var(--drey-superficie-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5238,7 +5439,7 @@ div.tarjeta-rutina {
 .barra-avance-fondo {
   height: 8px;
   border-radius: 999px;
-  background: #262626;
+  background: var(--drey-superficie-3);
   overflow: hidden;
 }
 
@@ -5277,7 +5478,7 @@ div.tarjeta-rutina {
 }
 
 .estadistica-alerta .dato-valor {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 /* ---------- Equipo y gimnasios ---------- */
@@ -5357,7 +5558,7 @@ div.tarjeta-rutina {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, var(--drey-brillo), transparent);
   animation: esqueleto-brillo 1.4s ease-in-out infinite;
 }
 
@@ -5510,7 +5711,7 @@ div.tarjeta-rutina {
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .clientes-filtros {
@@ -5523,24 +5724,24 @@ div.tarjeta-rutina {
    y la pantalla "En pausa" del modo entrenar (PantallaPausa.jsx). */
 .boton-seguir {
   background: var(--drey-naranja);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .hoy-tarjeta-en-curso,
 .tarjeta-rutina-en-curso {
-  border-color: var(--drey-naranja);
+  border-color: var(--drey-naranja-trazo);
 }
 
 .hoy-etiqueta-en-curso {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .reloj-circular-pausa .reloj-circular-avance {
-  stroke: var(--drey-naranja);
+  stroke: var(--drey-naranja-trazo);
 }
 
 .pausa-etiqueta {
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .pausa-titulo,
@@ -5551,7 +5752,7 @@ div.tarjeta-rutina {
 .pausa-avance {
   margin: 0;
   font-weight: 700;
-  color: #cfcfcf;
+  color: var(--drey-texto-2);
 }
 
 .pausa-botones {
@@ -5579,7 +5780,7 @@ div.tarjeta-rutina {
 
 .entrenar-series-titulo-calentamiento {
   margin-top: 0;
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 .entrenar-series-nota {
@@ -5588,22 +5789,22 @@ div.tarjeta-rutina {
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 /* Pendiente: una línea amarilla a la izquierda la identifica. */
 .entrenar-serie-calentamiento {
-  box-shadow: inset 4px 0 0 var(--drey-amarillo);
+  box-shadow: inset 4px 0 0 var(--drey-amarillo-trazo);
 }
 
 .entrenar-serie-actual.entrenar-serie-calentamiento {
-  border-color: var(--drey-amarillo);
+  border-color: var(--drey-amarillo-trazo);
   box-shadow: none;
 }
 
 .entrenar-serie-hecha.entrenar-serie-calentamiento {
   background: var(--drey-amarillo-fondo);
-  color: #f3eac2;
+  color: var(--drey-texto-amarillo);
 }
 
 .entrenar-serie-calentamiento .entrenar-check:not(.entrenar-check-vacio) {
@@ -5612,30 +5813,30 @@ div.tarjeta-rutina {
 
 .boton-calentamiento {
   background: var(--drey-amarillo);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 /* Descanso después de una serie de calentamiento */
 .etiqueta-serie-calentamiento {
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 .reloj-circular-serie-calentamiento .reloj-circular-avance {
-  stroke: var(--drey-amarillo);
+  stroke: var(--drey-amarillo-trazo);
 }
 
 .descanso-sigue-calentamiento {
-  border-left: 4px solid var(--drey-amarillo);
+  border-left: 4px solid var(--drey-amarillo-trazo);
 }
 
 /* Final: series de calentamiento hechas */
 .final-cifras .final-cifra-calentamiento {
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 /* Vista general: cuántas de calentamiento lleva */
 .vista-general-calentamiento-series {
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 /* Editor del profe: series de calentamiento */
@@ -5645,7 +5846,7 @@ div.tarjeta-rutina {
   gap: 0.5rem;
   margin-top: 0.5rem;
   padding-left: 0.75rem;
-  border-left: 3px solid var(--drey-amarillo);
+  border-left: 3px solid var(--drey-amarillo-trazo);
 }
 
 .config-calentamiento-fila {
@@ -5659,7 +5860,7 @@ div.tarjeta-rutina {
   min-width: 1.5rem;
   padding-bottom: 0.6rem;
   font-weight: 800;
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 .config-calentamiento-nota {
@@ -5676,7 +5877,7 @@ div.tarjeta-rutina {
   background: var(--drey-superficie);
   border: 1px solid var(--drey-borde);
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .ejercicio-semanas .ejercicio-objetivo {
@@ -5691,11 +5892,11 @@ div.tarjeta-rutina {
   flex-wrap: wrap;
   gap: 0.3rem 0.9rem;
   font-size: 0.8rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .ejercicio-semanas-lista strong {
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
   margin-right: 0.2rem;
 }
 
@@ -5723,14 +5924,14 @@ div.tarjeta-rutina {
 .config-semanas-primera {
   align-items: center;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .config-semanas-numero {
   min-width: 1.8rem;
   padding-bottom: 0.6rem;
   font-weight: 800;
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
 }
 
 .config-semanas-primera .config-semanas-numero {
@@ -5766,7 +5967,7 @@ div.tarjeta-rutina {
 
 .planilla-mensaje {
   margin-bottom: 1rem;
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .planilla-rutinas {
@@ -5818,7 +6019,7 @@ div.tarjeta-rutina {
 .planilla-archivo-nombre {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   word-break: break-all;
 }
 
@@ -5829,13 +6030,13 @@ div.tarjeta-rutina {
 }
 
 .planilla-errores {
-  background: #2a1414;
-  border: 1px solid #5c2626;
+  background: var(--drey-rojo-fondo);
+  border: 1px solid var(--drey-peligro-suave);
 }
 
 .planilla-avisos {
   background: var(--drey-amarillo-fondo);
-  border: 1px solid #4d4418;
+  border: 1px solid var(--drey-amarillo-borde);
 }
 
 .planilla-mensajes-titulo {
@@ -5844,11 +6045,11 @@ div.tarjeta-rutina {
 }
 
 .planilla-errores .planilla-mensajes-titulo {
-  color: #ff8a8a;
+  color: var(--drey-peligro-texto);
 }
 
 .planilla-avisos .planilla-mensajes-titulo {
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
 }
 
 .planilla-mensajes ul {
@@ -5864,7 +6065,7 @@ div.tarjeta-rutina {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   line-height: 1.35;
 }
 
@@ -5872,10 +6073,10 @@ div.tarjeta-rutina {
   align-self: flex-start;
   padding: 0.05rem 0.5rem;
   border-radius: 6px;
-  background: #0d0d0d;
+  background: var(--drey-bg);
   font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 0.75rem;
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .planilla-revisar {
@@ -5884,13 +6085,13 @@ div.tarjeta-rutina {
   gap: 0.75rem;
   padding: 0.75rem 0.9rem;
   border-radius: 14px;
-  border: 1px solid var(--drey-naranja);
+  border: 1px solid var(--drey-naranja-trazo);
   background: var(--drey-naranja-fondo);
 }
 
 .planilla-revisar > .planilla-mensajes-titulo {
   margin: 0;
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
 }
 
 .planilla-desconocido {
@@ -5898,7 +6099,7 @@ div.tarjeta-rutina {
   flex-direction: column;
   gap: 0.5rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #4a3419;
+  border-top: 1px solid var(--drey-naranja-borde);
 }
 
 .planilla-desconocido-nombre {
@@ -5923,9 +6124,9 @@ div.tarjeta-rutina {
   width: 100%;
   padding: 0.6rem 0.8rem;
   border-radius: 12px;
-  border: 1px solid #333;
+  border: 1px solid var(--drey-borde-fuerte);
   background: var(--drey-superficie);
-  color: var(--drey-white);
+  color: var(--drey-text);
   font: inherit;
   font-size: 0.9rem;
   text-align: left;
@@ -5942,7 +6143,7 @@ div.tarjeta-rutina {
   list-style: none;
   margin: 0;
   padding: 0.75rem 0 0;
-  border-top: 1px solid #4a3419;
+  border-top: 1px solid var(--drey-naranja-borde);
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -5954,7 +6155,7 @@ div.tarjeta-rutina {
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
 }
 
 .planilla-dia {
@@ -6012,7 +6213,7 @@ div.tarjeta-rutina {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .planilla-ejercicio {
@@ -6037,12 +6238,12 @@ div.tarjeta-rutina {
   align-items: flex-start;
   gap: 0.75rem;
   font-size: 0.85rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   cursor: pointer;
 }
 
 .planilla-listo .planilla-paso-titulo {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .planilla-listo-texto {
@@ -6084,7 +6285,7 @@ div.tarjeta-rutina {
 }
 
 .planilla-desde-excel a {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
@@ -6100,9 +6301,9 @@ div.tarjeta-rutina {
   margin-top: 0.45rem;
   padding: 0.35rem 0.75rem;
   border-radius: 10px;
-  border: 1px dashed var(--drey-amarillo);
+  border: 1px dashed var(--drey-amarillo-trazo);
   background: none;
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
   font-family: var(--fuente-texto);
   font-size: 0.8rem;
   font-weight: 700;
@@ -6111,7 +6312,7 @@ div.tarjeta-rutina {
 
 .boton-sumar-calentamiento-cambiar {
   border-style: solid;
-  border-color: #4a4320;
+  border-color: var(--drey-amarillo-borde);
   color: var(--drey-texto-suave);
 }
 
@@ -6124,17 +6325,17 @@ div.tarjeta-rutina {
 
 .config-calentamiento-enfocado {
   border-radius: 14px;
-  outline: 2px solid var(--drey-amarillo);
+  outline: 2px solid var(--drey-amarillo-trazo);
   outline-offset: 6px;
   animation: calentamiento-enfoque 2.4s ease-out 1;
 }
 
 @keyframes calentamiento-enfoque {
   0% {
-    outline-color: var(--drey-amarillo);
+    outline-color: var(--drey-amarillo-trazo);
   }
   70% {
-    outline-color: var(--drey-amarillo);
+    outline-color: var(--drey-amarillo-trazo);
   }
   100% {
     outline-color: transparent;
@@ -6161,8 +6362,8 @@ div.tarjeta-rutina {
   height: 18px;
   border-radius: 999px;
   background: var(--drey-black);
-  border: 1px solid #444;
-  color: var(--drey-white);
+  border: 1px solid var(--drey-borde-control);
+  color: #ffffff;
   font-size: 0.65rem;
   line-height: 16px;
   text-align: center;
@@ -6183,8 +6384,8 @@ div.tarjeta-rutina {
 .visor-caja {
   width: 100%;
   max-width: 560px;
-  background: #141414;
-  border: 1px solid #2a2a2a;
+  background: var(--drey-superficie-baja);
+  border: 1px solid var(--drey-borde);
   border-radius: 22px;
   padding: 1rem 1rem 0.75rem;
 }
@@ -6206,9 +6407,9 @@ div.tarjeta-rutina {
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 999px;
-  border: 1px solid #333;
+  border: 1px solid var(--drey-borde-fuerte);
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 1rem;
   cursor: pointer;
 }
@@ -6237,7 +6438,7 @@ div.tarjeta-rutina {
   border-radius: 999px;
   border: none;
   background: rgba(13, 13, 13, 0.75);
-  color: var(--drey-white);
+  color: #ffffff;
   font-size: 1.8rem;
   line-height: 1;
   cursor: pointer;
@@ -6273,7 +6474,7 @@ div.tarjeta-rutina {
 .visor-video {
   display: inline-block;
   margin-top: 0.4rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
   font-size: 0.9rem;
   text-decoration: none;
@@ -6301,7 +6502,7 @@ div.tarjeta-rutina {
   padding: 1rem;
   border-radius: 18px;
   background: var(--drey-superficie);
-  border: 1px solid #222;
+  border: 1px solid var(--drey-borde-suave);
 }
 
 .tarjeta-profe-cabecera {
@@ -6316,7 +6517,7 @@ div.tarjeta-rutina {
   flex-shrink: 0;
   border-radius: 999px;
   object-fit: cover;
-  background: #262626;
+  background: var(--drey-superficie-3);
 }
 
 .tarjeta-profe-iniciales {
@@ -6326,7 +6527,7 @@ div.tarjeta-rutina {
   font-family: var(--fuente-titulos);
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .tarjeta-profe-titulo {
@@ -6365,7 +6566,7 @@ div.tarjeta-rutina {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.45;
-  color: #d9d9d9;
+  color: var(--drey-texto-2);
   white-space: pre-line;
 }
 
@@ -6373,13 +6574,13 @@ div.tarjeta-rutina {
   display: inline;
   width: auto;
   padding: 0 0 0 0.35rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.85rem;
 }
 
 .tarjeta-profe-instagram {
   align-self: flex-start;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.85rem;
   font-weight: 700;
   text-decoration: none;
@@ -6388,7 +6589,7 @@ div.tarjeta-rutina {
 .tarjeta-profe-completo {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--drey-naranja);
+  color: var(--drey-naranja-texto);
   font-weight: 700;
 }
 
@@ -6429,20 +6630,20 @@ div.tarjeta-rutina {
   padding: 0.9rem 1rem;
   border-radius: 16px;
   background: var(--drey-azul-fondo);
-  border: 1px solid var(--drey-azul);
+  border: 1px solid var(--drey-azul-texto);
   font-size: 0.9rem;
 }
 
 .aviso-solicitud-no {
   background: var(--drey-naranja-fondo);
-  border-color: var(--drey-naranja);
+  border-color: var(--drey-naranja-trazo);
 }
 
 .aviso-solicitud-cancelar {
   align-self: flex-start;
   width: auto;
   padding: 0.35rem 0 0;
-  color: var(--drey-azul);
+  color: var(--drey-azul-texto);
 }
 
 .solicitud-formulario {
@@ -6501,8 +6702,8 @@ div.tarjeta-rutina {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1f1f1f;
-  border: 1px dashed #444;
+  background: var(--drey-superficie-2);
+  border: 1px dashed var(--drey-borde-control);
   color: var(--drey-texto-suave);
   font-size: 0.75rem;
 }
@@ -6566,7 +6767,7 @@ div.tarjeta-rutina {
   padding: 1rem;
   border-radius: 18px;
   background: var(--drey-superficie);
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--drey-borde);
 }
 
 .solicitud-cabecera {
@@ -6594,7 +6795,7 @@ div.tarjeta-rutina {
   margin: 0;
   padding: 0.65rem 0.8rem;
   border-radius: 12px;
-  background: #1f1f1f;
+  background: var(--drey-superficie-2);
   font-size: 0.9rem;
   line-height: 1.4;
   white-space: pre-line;
@@ -6647,13 +6848,13 @@ div.tarjeta-rutina {
   border-radius: 16px;
   background: var(--drey-verde-fondo);
   border: 1px solid var(--drey-accent);
-  color: var(--drey-white);
+  color: var(--drey-text);
   text-decoration: none;
 }
 
 .aviso-solicitudes-nuevas span {
   font-size: 0.85rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-weight: 700;
 }
 
@@ -6716,8 +6917,8 @@ div.tarjeta-rutina {
     gap: 0.25rem;
     padding: 1.25rem 0.9rem;
     border-top: none;
-    border-right: 1px solid #222222;
-    background: #0f0f0f;
+    border-right: 1px solid var(--drey-borde-suave);
+    background: var(--drey-barra);
     overflow-y: auto;
   }
 
@@ -6727,12 +6928,13 @@ div.tarjeta-rutina {
     gap: 0.6rem;
     padding: 0.25rem 0.6rem 1.25rem;
     margin-bottom: 0.5rem;
-    border-bottom: 1px solid #1f1f1f;
+    border-bottom: 1px solid var(--drey-borde-suave);
   }
 
   .pantalla-panel .panel-menu-marca img {
     height: 22px;
     width: auto;
+    filter: var(--drey-logo-filtro);
   }
 
   .pantalla-panel .panel-menu-marca span {
@@ -6756,14 +6958,14 @@ div.tarjeta-rutina {
   }
 
   .pantalla-panel .panel-menu .bottom-nav-item:hover {
-    background: #1a1a1a;
-    color: var(--drey-white);
+    background: var(--drey-hover);
+    color: var(--drey-text);
   }
 
   .pantalla-panel .panel-menu .bottom-nav-item-activo,
   .pantalla-panel .panel-menu .bottom-nav-item-activo:hover {
     background: var(--drey-verde-fondo);
-    color: var(--drey-accent);
+    color: var(--drey-accent-texto);
   }
 
   .pantalla-panel .panel-menu .bottom-nav-numero {
@@ -6828,7 +7030,8 @@ div.tarjeta-rutina {
     max-width: 50%;
   }
 
-  .pantalla-panel .profe-contenido > .perfil-salir {
+  .pantalla-panel .profe-contenido > .perfil-salir,
+  .pantalla-panel .profe-contenido > .apariencia {
     max-width: 560px;
   }
 
@@ -6964,8 +7167,8 @@ div.tarjeta-rutina {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1f1f1f;
-  color: var(--drey-accent);
+  background: var(--drey-superficie-2);
+  color: var(--drey-accent-texto);
   font-weight: 800;
   cursor: default;
 }
@@ -6978,7 +7181,7 @@ div.tarjeta-rutina {
   height: 22px;
   border-radius: 999px;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font-size: 0.75rem;
   font-weight: 800;
   line-height: 22px;
@@ -6994,7 +7197,7 @@ div.tarjeta-rutina {
   padding: 0;
   border: none;
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -7009,7 +7212,7 @@ div.tarjeta-rutina {
 }
 
 .vista-general-notas {
-  color: #d9d9d9;
+  color: var(--drey-texto-2);
 }
 
 /* ---------- Peso y repeticiones: también se escriben ---------- */
@@ -7024,10 +7227,10 @@ div.tarjeta-rutina {
   max-width: 5.5rem;
   padding: 0.1rem 0.2rem;
   border: none;
-  border-bottom: 1px dashed #4a4a4a;
+  border-bottom: 1px dashed var(--drey-borde-control);
   border-radius: 0;
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-family: var(--fuente-texto);
   font-size: 1.4rem;
   font-weight: 800;
@@ -7037,7 +7240,7 @@ div.tarjeta-rutina {
 .entrenar-stepper-input:focus {
   outline: none;
   border-bottom: 2px solid var(--drey-accent);
-  background: #1a1a1a;
+  background: var(--drey-hover);
   border-radius: 6px 6px 0 0;
 }
 
@@ -7104,7 +7307,7 @@ div.tarjeta-rutina {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 10px;
-  background: #1c1c1c;
+  background: var(--drey-superficie-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7155,13 +7358,13 @@ div.tarjeta-rutina {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 12px;
-  background: #1c1c1c;
+  background: var(--drey-superficie-2);
 }
 
 .medidas-miniatura figcaption {
   margin-top: 0.2rem;
   font-size: 0.72rem;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   text-align: center;
   font-weight: 700;
 }
@@ -7175,7 +7378,7 @@ div.tarjeta-rutina {
   border-radius: 999px;
   border: none;
   background: rgba(13, 13, 13, 0.8);
-  color: var(--drey-white);
+  color: #ffffff;
   font-size: 0.8rem;
   cursor: pointer;
 }
@@ -7196,7 +7399,7 @@ div.tarjeta-rutina {
   justify-content: center;
   aspect-ratio: 1 / 1;
   border-radius: 16px;
-  background: #1c1c1c;
+  background: var(--drey-superficie-2);
   color: var(--drey-texto-suave);
 }
 
@@ -7208,13 +7411,13 @@ div.tarjeta-rutina {
    ================================================================== */
 .portada {
   min-height: 100vh;
-  background: var(--drey-black);
-  color: var(--drey-white);
+  background: var(--drey-bg);
+  color: var(--drey-text);
 }
 
 .portada-esperando {
   min-height: 100vh;
-  background: var(--drey-black);
+  background: var(--drey-bg);
 }
 
 .portada-aviso-previa {
@@ -7228,7 +7431,7 @@ div.tarjeta-rutina {
   padding: 0.55rem 1rem;
   border-radius: 999px;
   background: var(--drey-amarillo-fondo);
-  color: var(--drey-amarillo);
+  color: var(--drey-amarillo-texto);
   font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
@@ -7257,8 +7460,8 @@ div.tarjeta-rutina {
 }
 
 .portada-boton-lleno {
-  background: var(--drey-white);
-  color: var(--drey-black);
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
 }
 
 .portada-boton-lleno:hover {
@@ -7268,13 +7471,13 @@ div.tarjeta-rutina {
 .portada-boton-borde {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.7);
-  color: var(--drey-white);
+  color: var(--drey-text);
   backdrop-filter: blur(4px);
 }
 
 .portada-boton-borde:hover {
   border-color: var(--drey-accent);
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .portada-boton-chico {
@@ -7333,7 +7536,7 @@ div.tarjeta-rutina {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: var(--drey-black);
+  background: var(--drey-bg);
 }
 
 /* Oscurece el video para que los textos se lean bien. */
@@ -7381,7 +7584,7 @@ div.tarjeta-rutina {
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 /* Más chico que el logo, para que no compita con él. */
@@ -7400,7 +7603,7 @@ div.tarjeta-rutina {
 .portada-subtitulo {
   max-width: 40ch;
   margin: 0.85rem auto 0;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -7417,7 +7620,7 @@ div.tarjeta-rutina {
   padding: 0.5rem 0.75rem;
   border: none;
   background: none;
-  color: var(--drey-white);
+  color: var(--drey-text);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -7502,7 +7705,7 @@ div.tarjeta-rutina {
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .portada-h2 {
@@ -7524,7 +7727,7 @@ div.tarjeta-rutina {
 .portada-texto {
   max-width: 60ch;
   margin: 1.1rem 0 0;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font-size: 1.05rem;
   line-height: 1.6;
   white-space: pre-line;
@@ -7587,7 +7790,7 @@ div.tarjeta-rutina {
   font-size: 3rem;
   font-weight: 800;
   line-height: 1;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .portada-paso h3 {
@@ -7640,7 +7843,7 @@ div.tarjeta-rutina {
 
 .portada-cita::before,
 .portada-cita::after {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .portada-cita::before {
@@ -7688,12 +7891,12 @@ div.tarjeta-rutina {
   padding: 1.6rem 1.4rem;
   border-radius: 18px;
   border: 1px solid var(--drey-borde);
-  background: var(--drey-black);
+  background: var(--drey-bg);
 }
 
 .portada-plan-destacado {
   border-color: var(--drey-accent);
-  background: linear-gradient(180deg, var(--drey-verde-fondo), var(--drey-black) 70%);
+  background: linear-gradient(180deg, var(--drey-verde-fondo), var(--drey-bg) 70%);
 }
 
 .portada-plan h3 {
@@ -7767,7 +7970,7 @@ div.tarjeta-rutina {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr);
   gap: 0.75rem;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   line-height: 1.5;
 }
 
@@ -7810,7 +8013,7 @@ div.tarjeta-rutina {
 .portada-pregunta summary::after {
   content: '+';
   flex: 0 0 auto;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 1.3rem;
   line-height: 1;
 }
@@ -7862,7 +8065,7 @@ div.tarjeta-rutina {
 }
 
 .portada-pie a:hover {
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 /* Celular: todo en una columna */
@@ -7912,12 +8115,12 @@ div.tarjeta-rutina {
 }
 
 .portada-ajustes-pendiente {
-  color: var(--drey-amarillo) !important;
+  color: var(--drey-amarillo-texto) !important;
 }
 
 .portada-ajustes-original {
   align-self: flex-start;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -7947,7 +8150,7 @@ div.tarjeta-rutina {
   height: 64px;
   border-radius: 10px;
   object-fit: cover;
-  background: #1f1f1f;
+  background: var(--drey-superficie-2);
 }
 
 .portada-ajustes-vista-vertical {
@@ -7964,7 +8167,7 @@ div.tarjeta-rutina {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #444;
+  border: 1px dashed var(--drey-borde-control);
   color: var(--drey-texto-suave);
   font-size: 0.72rem;
 }
@@ -8019,7 +8222,7 @@ div.tarjeta-rutina {
     display: block;
     margin: 1.1rem 0 0.25rem;
     padding: 1rem 0.8rem 0;
-    border-top: 1px solid #1f1f1f;
+    border-top: 1px solid var(--drey-borde-suave);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.1em;
@@ -8040,7 +8243,7 @@ div.tarjeta-rutina {
 .corregir-subtitulo {
   margin: -0.5rem 0 0;
   font-weight: 700;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .corregir-hoja .profe-nota {
@@ -8076,16 +8279,16 @@ div.tarjeta-rutina {
   min-height: 3rem;
   padding: 0.3rem 0.4rem 0.3rem 0.65rem;
   border-radius: 10px;
-  background: var(--drey-black);
+  background: var(--drey-bg);
   border-left: 3px solid var(--drey-accent);
 }
 
 .corregir-serie-calentamiento {
-  border-left-color: var(--drey-amarillo);
+  border-left-color: var(--drey-amarillo-trazo);
 }
 
 .corregir-serie-pendiente {
-  border-left-color: #444444;
+  border-left-color: var(--drey-borde-control);
 }
 
 .corregir-serie-nombre {
@@ -8119,10 +8322,10 @@ div.tarjeta-rutina {
   width: 3.7rem;
   min-height: 2.6rem;
   padding: 0.2rem 0.3rem;
-  border: 1px solid #3a3a3a;
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 10px;
-  background: #1a1a1a;
-  color: var(--drey-white);
+  background: var(--drey-superficie-alta);
+  color: var(--drey-text);
   font-family: var(--fuente-texto);
   font-size: 1.05rem;
   font-weight: 800;
@@ -8171,7 +8374,7 @@ div.tarjeta-rutina {
   border: 1px solid var(--drey-accent);
   border-radius: 999px;
   background: none;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 800;
@@ -8180,7 +8383,7 @@ div.tarjeta-rutina {
 
 .corregir-la-hice {
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .corregir-agregar-serie {
@@ -8244,7 +8447,7 @@ div.tarjeta-rutina {
   font-family: var(--fuente-titulos);
   font-size: 1.25rem;
   font-weight: 800;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .entrenamiento-corregir {
@@ -8284,10 +8487,10 @@ div.tarjeta-rutina {
   gap: 0.75rem;
   min-height: 3.1rem;
   padding: 0.45rem 0.8rem;
-  border: 1px solid #3a3a3a;
+  border: 1px solid var(--drey-borde-fuerte);
   border-radius: 12px;
-  background: #1a1a1a;
-  color: var(--drey-white);
+  background: var(--drey-superficie-alta);
+  color: var(--drey-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -8297,7 +8500,7 @@ div.tarjeta-rutina {
 }
 
 .entrenar-fallo:focus-visible {
-  outline: 2px solid var(--drey-rojo);
+  outline: 2px solid var(--drey-rojo-texto);
   outline-offset: 2px;
 }
 
@@ -8305,7 +8508,7 @@ div.tarjeta-rutina {
   flex: 0 0 auto;
   width: 1.5rem;
   height: 1.5rem;
-  border: 2px solid #555555;
+  border: 2px solid var(--drey-borde-control);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -8329,18 +8532,18 @@ div.tarjeta-rutina {
 }
 
 .entrenar-fallo-activo {
-  border-color: var(--drey-rojo);
+  border-color: var(--drey-rojo-texto);
   background: var(--drey-rojo-fondo);
 }
 
 .entrenar-fallo-activo .entrenar-fallo-casilla {
-  border-color: var(--drey-rojo);
+  border-color: var(--drey-rojo-texto);
   background: var(--drey-rojo);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
 }
 
 .entrenar-fallo-activo .entrenar-fallo-texto small {
-  color: #f3c2bb;
+  color: var(--drey-texto-rojo);
 }
 
 .marca-fallo {
@@ -8350,7 +8553,7 @@ div.tarjeta-rutina {
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   background: var(--drey-rojo-fondo);
-  color: var(--drey-rojo);
+  color: var(--drey-rojo-texto);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -8362,7 +8565,7 @@ div.tarjeta-rutina {
   min-height: 2.2rem;
   margin-left: auto;
   padding: 0 0.55rem;
-  border: 1px dashed #444444;
+  border: 1px dashed var(--drey-borde-control);
   border-radius: 999px;
   background: none;
   color: var(--drey-texto-suave);
@@ -8425,7 +8628,7 @@ div.tarjeta-rutina {
   border-radius: 24px 24px 0 0;
   border-top: 1px solid var(--drey-borde);
   background: var(--drey-superficie);
-  color: var(--drey-white);
+  color: var(--drey-text);
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
   animation: hoja-ingreso-sube 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   transition: margin-bottom 0.15s ease;
@@ -8455,7 +8658,7 @@ div.tarjeta-rutina {
   height: 5px;
   margin-bottom: 0.5rem;
   border-radius: 999px;
-  background: #444444;
+  background: var(--drey-relleno);
 }
 
 .hoja-ingreso-cabecera {
@@ -8485,8 +8688,8 @@ div.tarjeta-rutina {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #242424;
-  color: var(--drey-white);
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
   cursor: pointer;
 }
 
@@ -8558,10 +8761,10 @@ div.tarjeta-rutina {
   min-height: 3.25rem;
   box-sizing: border-box;
   padding: 0.8rem 1rem;
-  border: 1.5px solid #2f2f2f;
+  border: 1.5px solid var(--drey-borde);
   border-radius: 14px;
-  background: var(--drey-black);
-  color: var(--drey-white);
+  background: var(--drey-bg);
+  color: var(--drey-text);
   font: inherit;
   font-size: 1rem; /* 16 px: el iPhone no hace zoom al tocar el campo */
   transition: border-color 0.2s;
@@ -8572,7 +8775,7 @@ div.tarjeta-rutina {
 }
 
 .ingreso-input::placeholder {
-  color: #8a8a8a;
+  color: var(--drey-texto-tenue);
 }
 
 .ingreso-input:focus {
@@ -8594,7 +8797,7 @@ div.tarjeta-rutina {
   border: none;
   border-radius: 50%;
   background: none;
-  color: #9a9a9a;
+  color: var(--drey-texto-tenue);
   cursor: pointer;
 }
 
@@ -8605,7 +8808,7 @@ div.tarjeta-rutina {
   padding: 0.25rem 0.2rem;
   border: none;
   background: none;
-  color: var(--drey-gray-light);
+  color: var(--drey-texto-claro);
   font: inherit;
   font-size: 0.82rem;
   text-decoration: underline;
@@ -8618,14 +8821,14 @@ div.tarjeta-rutina {
   padding: 0.6rem 0.9rem;
   border-radius: 12px;
   background: var(--drey-verde-fondo);
-  color: #cfeedd;
+  color: var(--drey-texto-verde);
   font-size: 0.85rem;
   line-height: 1.4;
 }
 
 .ingreso-mensaje-error {
   background: var(--drey-rojo-fondo);
-  color: #ffd2cc;
+  color: var(--drey-texto-rojo);
 }
 
 .ingreso-entrar {
@@ -8633,7 +8836,7 @@ div.tarjeta-rutina {
   border: none;
   border-radius: 16px;
   background: var(--drey-accent);
-  color: var(--drey-black);
+  color: var(--drey-sobre-accent);
   font: inherit;
   font-size: 1rem;
   font-weight: 800;
@@ -8658,11 +8861,11 @@ div.tarjeta-rutina {
 }
 
 .ingreso-enlace strong {
-  color: var(--drey-white);
+  color: var(--drey-text);
 }
 
 .ingreso-enlace:hover strong {
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
 }
 
 .hoja-ingreso-cerrar:focus-visible,
@@ -8685,5 +8888,122 @@ div.tarjeta-rutina {
   margin: 0.75rem 0 0;
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--drey-accent);
+  color: var(--drey-accent-texto);
+}
+
+/* ==========================================================================
+   APARIENCIA: modo claro, oscuro o automático (components/SelectorTema.jsx)
+   ========================================================================== */
+.apariencia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.apariencia .seccion-etiqueta {
+  margin: 0;
+}
+
+.apariencia-opciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.apariencia-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border-radius: 18px;
+  border: 2px solid transparent;
+  background: var(--drey-superficie);
+  box-shadow: var(--drey-sombra);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.apariencia-opcion-elegida {
+  border-color: var(--drey-accent);
+}
+
+.apariencia-opcion:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.apariencia-opcion:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 2px;
+}
+
+.apariencia-opcion strong {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.apariencia-opcion small {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+/* Muestra de cómo se ve cada modo: colores fijos a propósito (la del
+   modo claro es clara y la del oscuro, oscura, estés en el modo que estés). */
+.apariencia-muestra {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  height: 54px;
+  padding: 7px;
+  border-radius: 10px;
+  border: 1px solid var(--drey-borde);
+}
+
+.apariencia-muestra i {
+  display: block;
+  height: 7px;
+  border-radius: 4px;
+}
+
+.apariencia-muestra i:first-child {
+  width: 55%;
+  background: var(--drey-green);
+}
+
+.apariencia-muestra-claro {
+  background: #f3f4f2;
+}
+
+.apariencia-muestra-claro i + i {
+  background: #dfe2dd;
+}
+
+.apariencia-muestra-oscuro {
+  background: #0d0d0d;
+}
+
+.apariencia-muestra-oscuro i + i {
+  background: #2a2a2a;
+}
+
+.apariencia-nota {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-2);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.apariencia-nota strong {
+  color: var(--drey-text);
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
+import SelectorTema from '../components/SelectorTema.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import {
   EVENTO_SOLICITUDES,
@@ -20,7 +21,8 @@ import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 //   · Mi perfil de profe (lo que ven los alumnos al elegir profe).
 //   · Solicitudes de alumnos (con las que esperan respuesta).
 //   · Estadísticas, "Mostrar DREY a alguien" (la página de inicio sin
-//     cerrar sesión), notificaciones y cerrar sesión.
+//     cerrar sesión), notificaciones, apariencia (modo claro / oscuro /
+//     automático) y cerrar sesión.
 //
 // El Admin no tiene perfil de profe: si entra acá, vuelve a su Inicio.
 export default function ProfeMiCuenta() {
@@ -100,6 +102,8 @@ export default function ProfeMiCuenta() {
         ))}
         <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando un alumno te pide entrenar con vos, cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
       </nav>
+
+      <SelectorTema />
 
       <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
         Cerrar sesión
