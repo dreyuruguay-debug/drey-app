@@ -9,7 +9,8 @@ import { fechaLocalISO, textoFechaCorta } from '../utils/dias.js'
 // precios y planes, ajustes, profes, gimnasios, clientes reasignados y
 // pagos confirmados. También quién archiva, recupera o borra ejercicios
 // de la Biblioteca, sea profe o Admin (supabase/sql/024), y los cambios
-// de la página de inicio (supabase/sql/027). Acá se ven los
+// de la página de inicio (supabase/sql/027) y de las notificaciones
+// (supabase/sql/030). Acá se ven los
 // últimos 200, agrupados por día.
 const TIPOS = {
   plan: 'Planes',
@@ -20,6 +21,7 @@ const TIPOS = {
   pago: 'Pagos',
   biblioteca: 'Biblioteca',
   pagina: 'Página de inicio',
+  avisos: 'Notificaciones',
 }
 
 export default function AdminHistorial() {

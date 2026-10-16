@@ -427,9 +427,31 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 
 ## Notificaciones
 
-Web Push: `src/services/notificaciones.js` (activar en el celular),
-`public/sw.js` (las muestra) y la función `supabase/functions/enviar-avisos`
-(las manda). La clave pública está en `src/data/notificaciones.js`.
+- **Administrador** (Ajustes → 🔔 Notificaciones, solo el Admin;
+  `pages/AdminNotificaciones.jsx` + `components/avisos/`): las 23
+  notificaciones en una lista (Alumnos / Profes, agrupadas en Programadas,
+  Cuando pasa algo y Durante el entrenamiento). Cada una se prende o apaga
+  con su interruptor; tocándola se cambia a quién le llega (planes, o profe
+  / Admin), la hora o los días, y los textos con datos como `{nombre}` o
+  `{rutina}` (vista previa, "Volver al texto original" y "Enviarme una
+  prueba"). "Enviadas" muestra las últimas 100 con su estado. Cada cambio
+  queda en el Historial de cambios.
+- **Base** (`supabase/sql/030`): tabla `tipos_aviso` (el catálogo) y
+  `avisar()`, la única puerta para mandar una notificación (mira si está
+  prendida y el plan, arma el texto y la pone en la cola `avisos`). Las
+  programadas salen cada una a su hora (`generar_avisos_programados`, cada
+  5 minutos); la cola se manda cada 10 segundos (`disparar_envio_de_avisos`
+  → función `supabase/functions/enviar-avisos`, que "reclama" los avisos
+  para no mandar ninguno dos veces). Un aviso puede salir más tarde
+  (`enviar_desde`): fin del descanso y "rutina actualizada" (10 minutos
+  después del último cambio).
+- **Alumno**: Perfil → Recordatorio para entrenar (hora propia de "Hoy te
+  toca", `components/RecordatorioEntreno.jsx`) y, en el descanso,
+  "Avisarme al terminar" (`components/entrenar/InterruptorAvisoDescanso.jsx`
+  + `useAvisoDeDescanso.js`): si sale de DREY mientras descansa, le llega
+  una notificación al terminar. Se recuerda en el celular.
+- Activar en el celular: `src/services/notificaciones.js`; mostrarlas:
+  `public/sw.js`. La clave pública está en `src/data/notificaciones.js`.
 
 ## Instalar DREY en el celular
 

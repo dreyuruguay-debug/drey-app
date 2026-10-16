@@ -28,15 +28,12 @@ export default function HojaInferior({
   const hoja = useRef(null)
   useFondoQuieto(abierta)
   useFocoAlAbrir(abierta, hoja, enfocarCampo)
+  useEscapeCierra(abierta, onCerrar)
 
   if (!abierta) return null
 
+  // Tab da la vuelta dentro de la hoja (no se va a la página de atrás).
   function alApretarTecla(event) {
-    if (event.key === 'Escape') {
-      event.stopPropagation()
-      onCerrar()
-      return
-    }
     if (event.key !== 'Tab') return
     const enfocables = [...hoja.current.querySelectorAll(ENFOCABLES)]
     if (!enfocables.length) return
@@ -97,7 +94,22 @@ export default function HojaInferior({
   )
 }
 
-const ENFOCABLES = 'button:not([disabled]), input, a[href]'
+const ENFOCABLES = 'button:not([disabled]), input, select, textarea, a[href]'
+
+// Escape cierra la hoja aunque el cursor no esté adentro (por ejemplo,
+// después de tocar un botón que se desactiva mientras trabaja).
+function useEscapeCierra(activo, onCerrar) {
+  const cerrar = useRef(onCerrar)
+  cerrar.current = onCerrar
+  useEffect(() => {
+    if (!activo) return undefined
+    function alApretar(event) {
+      if (event.key === 'Escape') cerrar.current()
+    }
+    document.addEventListener('keydown', alApretar)
+    return () => document.removeEventListener('keydown', alApretar)
+  }, [activo])
+}
 
 // Mientras la hoja está abierta, la página de atrás no se desplaza.
 function useFondoQuieto(activo) {

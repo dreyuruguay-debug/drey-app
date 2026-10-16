@@ -26,6 +26,9 @@ import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 //   · Plazos: días de aviso antes del vencimiento y días de gracia.
 //   · Portada: textos, secciones, foto del fundador y videos de la página
 //     de inicio (components/AjustesPortada.jsx, supabase/sql/027).
+//
+// Arriba, el acceso al administrador de notificaciones (pantalla propia:
+// pages/AdminNotificaciones.jsx, supabase/sql/030).
 const PESTANAS = [
   { id: 'planes', label: 'Planes' },
   { id: 'cobro', label: 'Cobro' },
@@ -48,6 +51,16 @@ export default function AdminAjustes() {
 
   return (
     <ProfeLayout titulo="Ajustes" soloAdmin>
+      <Link to="/profe/ajustes/notificaciones" className="tarjeta-rutina ajustes-acceso-avisos">
+        <span className="tarjeta-rutina-textos">
+          <strong>🔔 Notificaciones</strong>
+          <small>Qué avisos salen, a quién, a qué hora y con qué texto</small>
+        </span>
+        <span className="tarjeta-flecha" aria-hidden="true">
+          ›
+        </span>
+      </Link>
+
       <Pestanas
         etiqueta="Sección de ajustes"
         opciones={PESTANAS}

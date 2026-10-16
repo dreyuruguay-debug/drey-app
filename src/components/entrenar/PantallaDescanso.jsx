@@ -1,4 +1,5 @@
 import RelojCircular from './RelojCircular.jsx'
+import InterruptorAvisoDescanso from './InterruptorAvisoDescanso.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
 
 // Pantalla completa de descanso: un reloj grande que baja solo, botones
@@ -11,6 +12,9 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // (el que puso el profe para el calentamiento): se ve en amarillo.
 // loQueSigue.pendiente: lo que sigue es un ejercicio que el alumno salteó
 // antes (por ejemplo, la máquina estaba ocupada): dice "Te quedó pendiente".
+// avisoAlTerminar / onCambiarAviso: el interruptor "Avisarme al terminar"
+// (notificación si sale de DREY mientras descansa, InterruptorAvisoDescanso.jsx).
+// Sin onCambiarAviso (vista previa del profe) no se muestra.
 export default function PantallaDescanso({
   restante,
   total,
@@ -22,6 +26,8 @@ export default function PantallaDescanso({
   onElegir,
   onSumar,
   onListo,
+  avisoAlTerminar = false,
+  onCambiarAviso,
 }) {
   return (
     <div className="descanso-pantalla" role="dialog" aria-modal="true" aria-label="Descanso">
@@ -85,7 +91,11 @@ export default function PantallaDescanso({
         </div>
       )}
 
-      <p className="descanso-nota">El celular vibra cuando termina el descanso</p>
+      {onCambiarAviso ? (
+        <InterruptorAvisoDescanso prendido={avisoAlTerminar} onCambiar={onCambiarAviso} />
+      ) : (
+        <p className="descanso-nota">El celular vibra cuando termina el descanso</p>
+      )}
     </div>
   )
 }

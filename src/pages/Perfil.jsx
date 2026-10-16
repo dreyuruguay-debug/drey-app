@@ -15,6 +15,7 @@ import {
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import OpcionInstalar from '../components/instalar/OpcionInstalar.jsx'
+import RecordatorioEntreno from '../components/RecordatorioEntreno.jsx'
 import SelectorTema from '../components/SelectorTema.jsx'
 import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 
@@ -151,6 +152,7 @@ export default function Perfil() {
         )}
         <OpcionInstalar />
         <InterruptorNotificaciones textoActivar="Te avisamos el día que te toca entrenar, cuando tenés rutina nueva y antes de que venza tu plan." />
+        <RecordatorioEntreno />
         <button type="button" className="tarjeta-rutina" onClick={verBienvenida}>
           <span className="tarjeta-rutina-textos">
             <strong>Cómo usar la app</strong>

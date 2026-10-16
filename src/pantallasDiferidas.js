@@ -76,6 +76,7 @@ export const Medidas = pantallaDiferida(() => import('./pages/Medidas.jsx'), PAN
 export const ProfeClienteMedidas = pantallaDiferida(() => import('./pages/ProfeClienteMedidas.jsx'))
 // Rutinas en Excel (la librería de Excel se descarga recién al usarla).
 export const ProfeExcel = pantallaDiferida(() => import('./pages/ProfeExcel.jsx'))
+export const AdminNotificaciones = pantallaDiferida(() => import('./pages/AdminNotificaciones.jsx'))
 
 // Panel del Admin (supabase/sql/020 y 022).
 export const InicioPanel = pantallaDiferida(() => import('./pages/InicioPanel.jsx'))

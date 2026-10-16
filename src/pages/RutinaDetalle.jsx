@@ -9,6 +9,8 @@ import PantallaFinal from '../components/entrenar/PantallaFinal.jsx'
 import PantallaPausa from '../components/entrenar/PantallaPausa.jsx'
 import PieEntrenar from '../components/entrenar/PieEntrenar.jsx'
 import VistaGeneral from '../components/entrenar/VistaGeneral.jsx'
+import { useAvisoDeDescanso } from '../components/entrenar/useAvisoDeDescanso.js'
+import { avisoDeDescansoPrendido, guardarAvisoDeDescanso } from '../services/avisosAlumno.js'
 import { cargarRutinaCompleta } from '../services/rutinas.js'
 import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import {
@@ -143,6 +145,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [visible, setVisible] = useState(0)
   const [records, setRecords] = useState(0)
   const [descanso, setDescanso] = useState(null)
+  // "Avisarme al terminar" el descanso (se recuerda en el celular).
+  const [avisoDescanso, setAvisoDescanso] = useState(() => avisoDeDescansoPrendido())
   const [ahora, setAhora] = useState(() => Date.now())
   const [aviso, setAviso] = useState(null)
   const [vistaGeneral, setVistaGeneral] = useState(parametros.get('vista') === 'completa')
@@ -198,6 +202,15 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   }, [descanso])
 
   const restante = segundosRestantes(descanso, ahora)
+
+  // Notificación al terminar el descanso si sale de DREY (no en la vista
+  // previa del profe). Ver components/entrenar/useAvisoDeDescanso.js.
+  useAvisoDeDescanso(descanso, avisoDescanso && !modoPrevia)
+
+  function cambiarAvisoDescanso(prendido) {
+    setAvisoDescanso(prendido)
+    guardarAvisoDeDescanso(prendido)
+  }
   useEffect(() => {
     if (descanso && restante === 0) {
       navigator.vibrate?.(VIBRACION_FIN_TIEMPO)
@@ -1016,11 +1029,11 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           calentamiento={descanso.calentamiento}
           loQueSigue={descanso.loQueSigue}
           aviso={aviso?.tipo === 'record' ? aviso.texto : null}
-          onElegir={(segundos) =>
-            cambiarElDescanso((actual) => cambiarDuracion(actual, segundos))
-          }
+          onElegir={(segundos) => cambiarElDescanso((actual) => cambiarDuracion(actual, segundos))}
           onSumar={(segundos) => cambiarElDescanso((actual) => sumarAlDescanso(actual, segundos))}
           onListo={() => setDescanso(null)}
+          avisoAlTerminar={avisoDescanso}
+          onCambiarAviso={modoPrevia ? undefined : cambiarAvisoDescanso}
         />
       )}
 

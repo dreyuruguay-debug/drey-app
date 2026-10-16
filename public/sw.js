@@ -192,7 +192,15 @@ self.addEventListener('push', (event) => {
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: datos.etiqueta || undefined,
-      data: { url: datos.url || '/' },
+      // Fin del descanso: vibra fuerte, y al tocarlo vuelve al
+      // entrenamiento tal como estaba (no cambia de pantalla).
+      ...(datos.etiqueta === 'descanso'
+        ? {
+            vibrate: [400, 150, 400, 150, 400],
+            renotify: true,
+            data: { volver: true, url: '/inicio' },
+          }
+        : { data: { url: datos.url || '/' } }),
     }),
   )
 })
@@ -206,7 +214,7 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
       for (const ventana of ventanas) {
         if (ventana.url.startsWith(self.location.origin) && 'focus' in ventana) {
-          ventana.navigate?.(destino)
+          if (!event.notification.data?.volver) ventana.navigate?.(destino)
           return ventana.focus()
         }
       }

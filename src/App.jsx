@@ -16,6 +16,7 @@ import PantallaError from './components/PantallaError.jsx'
 import {
   AdminAjustes,
   AdminHistorial,
+  AdminNotificaciones,
   InicioPanel,
   Legal,
   Medidas,
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/profe" element={<InicioPanel />} />
             <Route path="/profe/ajustes" element={<AdminAjustes />} />
             <Route path="/profe/ajustes/historial" element={<AdminHistorial />} />
+            <Route path="/profe/ajustes/notificaciones" element={<AdminNotificaciones />} />
             <Route path="/profe/cuentas" element={<ProfeCuentas />} />
             <Route path="/profe/codigos" element={<ProfeCodigos />} />
             <Route path="/profe/estadisticas" element={<ProfeEstadisticas />} />
