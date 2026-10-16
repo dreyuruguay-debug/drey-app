@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
+import OpcionInstalar from '../components/instalar/OpcionInstalar.jsx'
 import SelectorTema from '../components/SelectorTema.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import {
@@ -100,6 +101,7 @@ export default function ProfeMiCuenta() {
             </span>
           </Link>
         ))}
+        <OpcionInstalar />
         <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando un alumno te pide entrenar con vos, cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
       </nav>
 

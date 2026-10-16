@@ -5,14 +5,19 @@ import {
   estadoNotificaciones,
 } from '../services/notificaciones.js'
 import { mostrarAviso } from '../services/avisos.js'
+import GuiaInstalacion from './instalar/GuiaInstalacion.jsx'
 
 // Tarjeta para prender o apagar las notificaciones en ESTE celular. La
 // usan el Perfil del alumno y el Inicio del profe.
 //
 // "textoActivar": qué avisos va a recibir (distinto para alumno y profe).
+//
+// En un iPhone sin DREY instalada los avisos no pueden llegar: tocar la
+// tarjeta abre la guía para instalarla (instalar/GuiaInstalacion.jsx).
 export default function InterruptorNotificaciones({ textoActivar }) {
   const [estado, setEstado] = useState('cargando')
   const [ocupado, setOcupado] = useState(false)
+  const [guiaAbierta, setGuiaAbierta] = useState(false)
 
   useEffect(() => {
     estadoNotificaciones().then(setEstado)
@@ -42,11 +47,33 @@ export default function InterruptorNotificaciones({ textoActivar }) {
     ],
     'instalar-primero': [
       'Notificaciones',
-      'En iPhone llegan solo con la app instalada: botón compartir → "Agregar a inicio", y abrila desde el ícono.',
+      'En iPhone llegan solo con DREY instalada. Tocá acá para ver cómo instalarla.',
     ],
   }
   const [titulo, detalle] = textos[estado]
   const sePuedeTocar = estado === 'activado' || estado === 'desactivado'
+  const faltaInstalar = estado === 'instalar-primero'
+
+  if (faltaInstalar) {
+    return (
+      <>
+        <button
+          type="button"
+          className="tarjeta-rutina notificaciones-tarjeta"
+          onClick={() => setGuiaAbierta(true)}
+        >
+          <span className="tarjeta-rutina-textos">
+            <strong>{titulo}</strong>
+            <small>{detalle}</small>
+          </span>
+          <span className="tarjeta-flecha" aria-hidden="true">
+            ›
+          </span>
+        </button>
+        <GuiaInstalacion abierta={guiaAbierta} onCerrar={() => setGuiaAbierta(false)} />
+      </>
+    )
+  }
 
   return (
     <button

@@ -37,7 +37,9 @@ las siga en el gimnasio y registre lo que levantó.
   sesión" (arriba, "Ingresar" de la barra fija o el del cierre) abre una
   hoja que sube desde abajo sobre el video, con email, contraseña,
   "Olvidé mi contraseña", "Entrar" y "Registrarme"
-  (`components/portada/HojaIngreso.jsx` + `components/FormularioIngreso.jsx`).
+  (`components/portada/HojaIngreso.jsx` + `components/FormularioIngreso.jsx`;
+  la hoja en sí es `components/HojaInferior.jsx`, compartida con la guía
+  para instalar DREY).
   Se cierra con la ✕, tocando lo oscuro o con Escape; Tab no sale de la
   hoja; la página de atrás no se mueve; en el celular la hoja sube con el
   teclado (`visualViewport`). En la compu es la misma hoja, centrada.
@@ -428,6 +430,29 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 Web Push: `src/services/notificaciones.js` (activar en el celular),
 `public/sw.js` (las muestra) y la función `supabase/functions/enviar-avisos`
 (las manda). La clave pública está en `src/data/notificaciones.js`.
+
+## Instalar DREY en el celular
+
+- **Inicio del alumno**: tarjeta "Instalá DREY en tu celular" mientras no
+  la tenga instalada (solo en el celular). "Ahora no" la esconde 14 días
+  en ese celular. Mientras se ve, no aparece la invitación a los avisos
+  (una invitación por vez).
+- **Perfil (alumno) y Mi cuenta (profe)**: opción fija "Instalar DREY en
+  este celular" (en la compu, "en esta compu", solo si el navegador lo
+  permite). No aparece si ya se usa como app.
+- **Android con Chrome y la compu**: el botón la instala con un toque.
+  **iPhone**: Apple no lo permite; se abre una guía paso a paso con
+  dibujos (Safari 26 con el menú "···" o Safari de antes). Dentro de
+  Instagram/Facebook, o en iPhone con Chrome, la guía explica cómo abrirla
+  en el navegador correcto y copia el link.
+- En iPhone sin instalar, la tarjeta "Notificaciones" de Perfil abre la
+  misma guía (sin instalar no pueden llegar avisos).
+- Cómo está hecho: `src/services/instalacion.js` (detecta celular y
+  navegador, guarda el aviso de Chrome desde que abre la app en
+  `main.jsx`) y `src/components/instalar/` (tarjeta, opción, guía y
+  dibujos). `public/manifest.json`: la app instalada abre en "/" (cada uno
+  va a su pantalla: alumno al Inicio, profe al panel); el `"id"` quedó en
+  "/inicio" para que las instalaciones viejas se sigan reconociendo.
 
 ## Funciona sin señal
 

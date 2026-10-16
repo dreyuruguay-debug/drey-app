@@ -7,11 +7,16 @@ import { iniciarEnvioAutomatico } from './services/colaEntrenamientos.js'
 import { mostrarAviso } from './services/avisos.js'
 import { cargarConfiguracion } from './services/configuracion.js'
 import { iniciarTema } from './services/tema.js'
+import { iniciarInstalacion } from './services/instalacion.js'
 import './styles/globals.css'
 
 // Modo claro / oscuro / automático por horario (Perfil → Apariencia).
 // index.html ya pintó el modo correcto; esto lo mantiene al día.
 iniciarTema()
+
+// Instalar DREY como app: escucha desde el primer momento el aviso del
+// navegador de que se puede instalar (ver services/instalacion.js).
+iniciarInstalacion()
 
 // Aviso de errores por mail (solo si está configurado, ver errores.js).
 iniciarAvisoDeErrores(supabase)

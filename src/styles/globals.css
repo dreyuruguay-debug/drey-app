@@ -8587,13 +8587,13 @@ div.tarjeta-rutina {
 }
 
 /* ------------------------------------------------------------------ */
-/* Iniciar sesión en la página de inicio (08/10/2026)                 */
-/* components/portada/HojaIngreso.jsx: hoja que sube desde abajo con  */
-/* el email y la contraseña (FormularioIngreso.jsx), sobre el video.  */
-/* En la compu, la misma hoja centrada.                               */
+/* Hoja que sube desde abajo (08/10/2026, general desde 16/10/2026)   */
+/* components/HojaInferior.jsx. La usan "Iniciar sesión" de la página */
+/* de inicio (portada/HojaIngreso.jsx, sobre el video) y la guía para */
+/* instalar DREY (instalar/GuiaInstalacion.jsx). En la compu, centrada.*/
 /* ------------------------------------------------------------------ */
 
-.hoja-ingreso-capa {
+.hoja-inferior-capa {
   position: fixed;
   inset: 0;
   z-index: 60;
@@ -8602,17 +8602,17 @@ div.tarjeta-rutina {
   justify-content: center;
 }
 
-.hoja-ingreso-fondo {
+.hoja-inferior-fondo {
   position: absolute;
   inset: 0;
   padding: 0;
   border: none;
   background: rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  animation: hoja-ingreso-aparece 0.25s ease both;
+  animation: hoja-inferior-aparece 0.25s ease both;
 }
 
-.hoja-ingreso {
+.hoja-inferior {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -8630,11 +8630,11 @@ div.tarjeta-rutina {
   background: var(--drey-superficie);
   color: var(--drey-text);
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
-  animation: hoja-ingreso-sube 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: hoja-inferior-sube 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   transition: margin-bottom 0.15s ease;
 }
 
-@keyframes hoja-ingreso-sube {
+@keyframes hoja-inferior-sube {
   from {
     transform: translateY(100%);
   }
@@ -8643,7 +8643,7 @@ div.tarjeta-rutina {
   }
 }
 
-@keyframes hoja-ingreso-aparece {
+@keyframes hoja-inferior-aparece {
   from {
     opacity: 0;
   }
@@ -8652,7 +8652,11 @@ div.tarjeta-rutina {
   }
 }
 
-.hoja-ingreso-agarre {
+.hoja-inferior:focus {
+  outline: none;
+}
+
+.hoja-inferior-agarre {
   align-self: center;
   width: 44px;
   height: 5px;
@@ -8661,7 +8665,7 @@ div.tarjeta-rutina {
   background: var(--drey-relleno);
 }
 
-.hoja-ingreso-cabecera {
+.hoja-inferior-cabecera {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8669,7 +8673,7 @@ div.tarjeta-rutina {
   margin-bottom: 0.5rem;
 }
 
-.hoja-ingreso-titulo {
+.hoja-inferior-titulo {
   margin: 0;
   font-family: var(--fuente-titulos);
   font-size: 1.9rem;
@@ -8678,7 +8682,7 @@ div.tarjeta-rutina {
   text-transform: uppercase;
 }
 
-.hoja-ingreso-cerrar {
+.hoja-inferior-cerrar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -8695,26 +8699,26 @@ div.tarjeta-rutina {
 
 /* En la compu: la hoja centrada, con las cuatro puntas redondeadas. */
 @media (min-width: 720px) and (min-height: 600px) {
-  .hoja-ingreso-capa {
+  .hoja-inferior-capa {
     align-items: center;
     padding: 1.5rem;
   }
 
-  .hoja-ingreso {
+  .hoja-inferior {
     max-width: 440px;
     margin-bottom: 0;
     padding: 1.25rem 1.75rem 1.75rem;
     border: 1px solid var(--drey-borde);
     border-radius: 24px;
-    animation-name: hoja-ingreso-aparece-centrada;
+    animation-name: hoja-inferior-aparece-centrada;
   }
 
-  .hoja-ingreso-agarre {
+  .hoja-inferior-agarre {
     display: none;
   }
 }
 
-@keyframes hoja-ingreso-aparece-centrada {
+@keyframes hoja-inferior-aparece-centrada {
   from {
     opacity: 0;
     transform: translateY(16px) scale(0.98);
@@ -8726,8 +8730,8 @@ div.tarjeta-rutina {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hoja-ingreso,
-  .hoja-ingreso-fondo {
+  .hoja-inferior,
+  .hoja-inferior-fondo {
     animation: none;
   }
 }
@@ -8868,7 +8872,7 @@ div.tarjeta-rutina {
   color: var(--drey-accent-texto);
 }
 
-.hoja-ingreso-cerrar:focus-visible,
+.hoja-inferior-cerrar:focus-visible,
 .ingreso-olvide:focus-visible,
 .ingreso-enlace:focus-visible,
 .ingreso-ojo:focus-visible,
@@ -8880,7 +8884,7 @@ div.tarjeta-rutina {
 /* "Volver a mi cuenta" / "Compartir DREY" (con la sesión abierta) */
 .portada-entrada {
   width: 100%;
-  animation: hoja-ingreso-aparece 0.28s ease both;
+  animation: hoja-inferior-aparece 0.28s ease both;
 }
 
 .portada-entrada-aviso {
@@ -9006,4 +9010,200 @@ div.tarjeta-rutina {
 
 .apariencia-nota strong {
   color: var(--drey-text);
+}
+
+/* ==========================================================================
+   INSTALAR DREY EN EL CELULAR (16/10/2026)
+   --------------------------------------------------------------------------
+   components/instalar/: tarjeta del Inicio (TarjetaInstalar.jsx), opción
+   de Perfil / Mi cuenta (OpcionInstalar.jsx) y la guía con dibujos
+   (GuiaInstalacion.jsx, dentro de la hoja de HojaInferior.jsx).
+   ========================================================================== */
+
+/* Tarjeta del Inicio (mismo lugar y estilo que la invitación a los avisos) */
+.instalar-tarjeta {
+  margin: 1rem 1.25rem 0;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--drey-texto-claro);
+}
+
+.instalar-tarjeta-cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.instalar-tarjeta-cabecera p {
+  margin: 0;
+}
+
+.instalar-tarjeta-cabecera strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--drey-text);
+  font-size: 0.95rem;
+}
+
+.instalar-tarjeta-botones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.instalar-tarjeta-botones .boton-texto {
+  width: auto;
+}
+
+/* El ícono de DREY, como queda en la pantalla de inicio */
+.instalar-icono-drey {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  box-shadow: 0 0 0 1px var(--drey-borde-fuerte);
+}
+
+/* La opción de Perfil / Mi cuenta es un botón con aspecto de tarjeta */
+.instalar-opcion {
+  font-family: var(--fuente-texto);
+}
+
+/* ---------- La guía ---------- */
+.instalar-guia {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.instalar-guia-intro {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--drey-texto-2);
+}
+
+.instalar-guia-nota {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-superficie-2);
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.instalar-pasos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.instalar-paso {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 3.5rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  background: var(--drey-superficie-2);
+}
+
+.instalar-paso-numero {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-family: var(--fuente-titulos);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.instalar-paso-textos {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.instalar-paso-textos strong {
+  font-size: 0.92rem;
+  line-height: 1.3;
+  color: var(--drey-text);
+}
+
+.instalar-paso-textos small {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--drey-texto-suave);
+}
+
+/* El dibujo de cada paso: el botón tal como se ve en el celular */
+.instalar-paso-dibujo {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--drey-accent-texto);
+}
+
+.instalar-paso-dibujo > svg[role='img'] {
+  box-sizing: content-box;
+  padding: 7px;
+  border-radius: 12px;
+  background: var(--drey-superficie-3);
+}
+
+.instalar-paso-dibujo .instalar-icono-drey {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+/* El celular chico que marca dónde está el botón */
+.instalar-telefono {
+  color: var(--drey-texto-tenue);
+}
+
+.instalar-telefono-punto {
+  fill: var(--drey-accent);
+}
+
+.instalar-telefono-pulso {
+  fill: var(--drey-accent);
+  opacity: 0.35;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: instalar-pulso 1.6s ease-out infinite;
+}
+
+@keyframes instalar-pulso {
+  from {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .instalar-telefono-pulso {
+    animation: none;
+  }
 }

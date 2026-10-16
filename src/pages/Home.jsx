@@ -6,6 +6,8 @@ import BottomNav from '../components/BottomNav.jsx'
 import Bienvenida from '../components/Bienvenida.jsx'
 import ConsentimientoPendiente from '../components/ConsentimientoPendiente.jsx'
 import InvitacionNotificaciones from '../components/InvitacionNotificaciones.jsx'
+import TarjetaInstalar from '../components/instalar/TarjetaInstalar.jsx'
+import { useInstalacion } from '../services/instalacion.js'
 import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import {
   cargarHistorial,
@@ -75,6 +77,7 @@ function leerGuardado() {
 // data/vencimiento.js).
 export default function Home() {
   useConfiguracion() // nombre del plan y reglas de vencimiento (Ajustes del Admin)
+  const instalacion = useInstalacion()
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   // Lo último guardado en el celular se muestra al instante (sin
@@ -327,8 +330,13 @@ export default function Home() {
         )}
       </section>
 
-      {sesiones.length > 0 && !cuentaPendiente && (
-        <InvitacionNotificaciones usuarioId={usuarioId} />
+      {/* Una invitación por vez: primero instalar DREY en el celular (en
+          iPhone, sin instalar no llegan los avisos) y después los avisos. */}
+      {instalacion.ofrecerEnInicio ? (
+        <TarjetaInstalar />
+      ) : (
+        sesiones.length > 0 &&
+        !cuentaPendiente && <InvitacionNotificaciones usuarioId={usuarioId} />
       )}
 
       {datos?.ultimaMedicion !== undefined &&

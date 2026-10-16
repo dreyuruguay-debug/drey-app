@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js'
 import { VAPID_PUBLICA } from '../data/notificaciones.js'
+import { esIOS, estaInstalada } from './instalacion.js'
 
 // Notificaciones en el celular (Web Push). Ver supabase/sql/015.
 //
@@ -12,23 +13,14 @@ import { VAPID_PUBLICA } from '../data/notificaciones.js'
 //   'activado'         → este celular ya recibe avisos.
 //   'desactivado'      → se pueden activar con un toque.
 
-function esIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent)
-}
-
-function estaInstalada() {
-  return (
-    window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true
-  )
-}
-
 async function registroDelServiceWorker() {
   if (!('serviceWorker' in navigator)) return null
   return (await navigator.serviceWorker.getRegistration()) || null
 }
 
 export async function estadoNotificaciones() {
-  const soporta = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
+  const soporta =
+    'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
   if (!soporta) return esIOS() && !estaInstalada() ? 'instalar-primero' : 'no-soportado'
   if (Notification.permission === 'denied') return 'bloqueado'
   const registro = await registroDelServiceWorker()
