@@ -175,9 +175,7 @@ export default function ProfeClienteDetalle() {
   const estado = estadoDeCuenta(cliente, obtenerFechaHoyISO())
   const rutinasGuardadas = rutinas.filter((rutina) => rutina.publicada !== false)
   const whatsapp = linkWhatsApp(cliente.celular, `Hola ${cliente.nombre}!`)
-  const corrigiendo = corrigiendoId
-    ? sesiones.find((sesion) => sesion.id === corrigiendoId)
-    : null
+  const corrigiendo = corrigiendoId ? sesiones.find((sesion) => sesion.id === corrigiendoId) : null
 
   return (
     <ProfeLayout volverA="/profe/clientes">
@@ -266,7 +264,7 @@ export default function ProfeClienteDetalle() {
         {pestana === 'progreso' && (
           <>
             <Link to={`/profe/clientes/${id}/progreso`} className="boton-principal">
-              Ver gráficas y resúmenes
+              Evaluaciones y gráficas
             </Link>
             <Link to={`/profe/clientes/${id}/medidas`} className="boton-secundario ficha-medidas">
               Medidas y fotos (evaluación inicial)

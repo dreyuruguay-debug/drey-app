@@ -43,7 +43,7 @@ export const POLITICA_PRIVACIDAD = {
     {
       titulo: '3. Para qué los usamos',
       parrafos: [
-        'Para darte el servicio: que tu profe arme rutinas adaptadas a vos, siga tu progreso y te arme los resúmenes de avance; para cobrar tu plan y avisarte cuando vence; y para que la app funcione bien.',
+        'Para darte el servicio: que tu profe arme rutinas adaptadas a vos, siga tu progreso y te arme las evaluaciones mensuales; para cobrar tu plan y avisarte cuando vence; y para que la app funcione bien.',
         'No vendemos ni alquilamos tus datos, y no los usamos para publicidad de terceros.',
       ],
     },
@@ -58,7 +58,7 @@ export const POLITICA_PRIVACIDAD = {
       titulo: '5. Quién más accede',
       parrafos: [
         'Tu profe o el gimnasio que elegiste al registrarte. Cada profe ve solamente a sus clientes.',
-        'Proveedores que necesitamos para que la app funcione, que solo guardan o procesan los datos por cuenta nuestra: Supabase (base de datos), Cloudflare (publicación de la web), Mercado Pago (pagos) y Sentry (registro de errores, sin datos personales). Algunos de estos servicios tienen sus servidores fuera de Uruguay; al aceptar esta política autorizás esa transferencia, que se hace con proveedores que aplican medidas de seguridad adecuadas.',
+        'Proveedores que necesitamos para que la app funcione, que solo guardan o procesan los datos por cuenta nuestra: Supabase (base de datos), Cloudflare (publicación de la web), Mercado Pago (pagos), Sentry (registro de errores, sin datos personales) y Google (Google Drive: una copia en PDF de tus evaluaciones mensuales, en una carpeta privada de DREY). Algunos de estos servicios tienen sus servidores fuera de Uruguay; al aceptar esta política autorizás esa transferencia, que se hace con proveedores que aplican medidas de seguridad adecuadas.',
         'Si te unís al grupo de WhatsApp de la comunidad, lo que compartas ahí se rige por las reglas de WhatsApp.',
       ],
     },

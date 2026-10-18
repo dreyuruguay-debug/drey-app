@@ -394,10 +394,11 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   `marcarEjercicioHecho`, `agregarSerie`, `quitarSerie` en
   `utils/entrenamientoHecho.js`.
 - Los récords, las gráficas y "La vez pasada" cambian solos, porque se
-  calculan a partir de los entrenamientos. Si el entrenamiento era de un
-  resumen de 4 semanas todavía en borrador, la base borra ese borrador y
-  la app lo vuelve a armar con los números corregidos (los ya publicados
-  no se tocan).
+  calculan a partir de los entrenamientos. Si el entrenamiento era de una
+  evaluación mensual todavía en borrador, la base la marca
+  "desactualizada" y la app la vuelve a calcular con los números
+  corregidos, sin borrar lo que escribió el profe (SQL 031; las ya
+  publicadas no se tocan).
 - Sin señal: un entrenamiento que todavía espera señal se corrige en el
   celular y viaja ya corregido (`corregirPendiente` en
   `services/colaEntrenamientos.js`); uno ya enviado necesita conexión.
@@ -408,6 +409,51 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   un número, compartido con el modo entrenar).
 - Si el SQL 029 todavía no está instalado, la app sigue andando como
   antes y al querer corregir avisa que falta activarlo.
+
+## Evaluación mensual y Google Drive (SQL 031)
+
+- Cada 4 semanas de entrenamiento (desde el primero del alumno) la app
+  arma sola un borrador (tabla `resumenes_progreso`, ver
+  `services/progreso.js`). Es la **evaluación mensual**: compara TODOS
+  los ejercicios del mes (mejor serie, carga, 1RM estimado con Epley,
+  volumen por sesión, veces, series, repeticiones y récords), el mes
+  contra el anterior (entrenamientos, volumen, series, repeticiones) y
+  semana por semana, y arma sola las frases de "lo más destacado". El
+  punto de partida de cada ejercicio es la última vez que lo hizo antes
+  del mes. Cálculos: `utils/evaluacion.js` (sin base de datos).
+- **El profe** la abre en la ficha del alumno → Progreso → "Evaluaciones
+  y gráficas" (`pages/ProfeClienteProgreso.jsx` +
+  `components/evaluacion/EditorEvaluacion.jsx`). Ve la vista previa tal
+  cual la va a ver el alumno y completa: incluir o no las medidas
+  corporales (`incluir_medidas`, viene apagado; salen de `mediciones`:
+  inicio del mes contra ahora y desde el principio), algo particular del
+  mes, una nota por ejercicio, el comentario y los objetivos del mes
+  que viene (columna `notas`). "Guardar borrador" o "Aprobar y
+  publicar". Los borradores se recalculan con todo el historial al
+  abrirlos y se guardan solos si cambiaron (sin tocar las notas); las
+  del formato anterior (`datos.version` 1) se pasan solas al nuevo.
+- **La plantilla** es una sola (`components/evaluacion/EvaluacionMensual.jsx`):
+  la usan el profe, el alumno (Progreso → Evaluaciones,
+  `components/NotificacionAvance.jsx`) y el PDF. Las gráficas
+  (`GraficosEvaluacion.jsx`) llevan los colores escritos en cada figura
+  (`colores.js`) para que salgan igual en el PDF.
+- **PDF** (`services/pdfEvaluacion.js`): se arma en el celular o la compu
+  con jsPDF + html2canvas-pro (grupo `pdf` en `vite.config.js`: se
+  descarga recién al usarlo y no se guarda para usar sin señal). Cada
+  parte (`data-bloque`) va entera a la hoja A4; fondo blanco y cabecera
+  negra con el logo, sin importar el modo claro u oscuro. Botón
+  "Descargar PDF" para el profe y el alumno (`BotonPdf.jsx`).
+- **Google Drive** (`services/drive.js`): un programa de Google (Apps
+  Script, `herramientas/drive-evaluaciones.gs`) publicado por la cuenta
+  dueña de la carpeta "Clientes evaluaciones" recibe el PDF, busca la
+  carpeta del alumno (por su id en la descripción, o por su nombre) o la
+  crea, y lo guarda (si había uno con el mismo nombre, lo reemplaza). El
+  Admin pega el link `/exec` y la clave en Ajustes → Drive
+  (`components/AjustesDrive.jsx`, tabla `ajustes_drive`: la leen solo el
+  Admin y los profes) y lo prueba con "Probar conexión". Al publicar,
+  la evaluación se guarda sola en Drive (casilla, viene marcada); también
+  hay un botón "Guardar en Drive". Queda anotado en `drive_url`,
+  `drive_carpeta_url` y `drive_guardado_en`.
 
 ## Modo claro, oscuro y automático
 

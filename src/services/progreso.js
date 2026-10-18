@@ -2,11 +2,15 @@ import { supabase } from './supabaseClient.js'
 import { unaVezCada } from './memoriaSesion.js'
 import { traerTodasLasFilas } from './paginado.js'
 import { cargarActividadClientes } from './actividad.js'
-import { ciclosTerminados, calcularResumenCiclo } from '../utils/progreso.js'
-import { obtenerFechaHoyISO } from '../utils/dias.js'
+import { ciclosTerminados, DIAS_POR_CICLO } from '../utils/progreso.js'
+import { calcularEvaluacion, notasLimpias } from '../utils/evaluacion.js'
+import { obtenerFechaHoyISO, sumarDias } from '../utils/dias.js'
 import { SOLO_CLIENTES } from '../utils/roles.js'
 
-// Genera los resúmenes de 4 semanas que falten, en estado "borrador",
+// Evaluaciones mensuales (tabla resumenes_progreso, SQL 009 y 031). Los
+// cálculos están en utils/evaluacion.js.
+//
+// Genera las evaluaciones de 4 semanas que falten, en estado "borrador",
 // para todos los clientes activos. Se llama sola al abrir el panel del
 // profe (Resumen y Progresión): así el profe no tiene que hacer nada
 // para que aparezcan. Si ya existe el resumen de un ciclo no lo toca,
@@ -52,10 +56,19 @@ async function armarResumenesPendientes() {
   if (faltan.length === 0) return 0
 
   // Se traen los entrenamientos (con su detalle) SOLO de esas fechas y
-  // de esos clientes: normalmente, las últimas 4 semanas.
+  // de esos clientes, más el mes anterior (el punto de partida de cada
+  // ejercicio): normalmente, las últimas 8 semanas. Al abrir la
+  // evaluación, el profe la ve recalculada con todo el historial
+  // (récords incluidos).
   const ids = [...new Set(faltan.map((item) => item.clienteId))]
-  const desde = faltan.reduce((menor, item) => (item.desde < menor ? item.desde : menor), faltan[0].desde)
-  const hasta = faltan.reduce((mayor, item) => (item.hasta > mayor ? item.hasta : mayor), faltan[0].hasta)
+  const desde = sumarDias(
+    faltan.reduce((menor, item) => (item.desde < menor ? item.desde : menor), faltan[0].desde),
+    -DIAS_POR_CICLO,
+  )
+  const hasta = faltan.reduce(
+    (mayor, item) => (item.hasta > mayor ? item.hasta : mayor),
+    faltan[0].hasta,
+  )
   const { data: sesiones, error: errorSesiones } = await traerTodasLasFilas(() =>
     supabase
       .from('sesiones')
@@ -76,9 +89,16 @@ async function armarResumenesPendientes() {
 
   const nuevos = []
   for (const { clienteId, ciclo, desde: inicio, hasta: fin } of faltan) {
-    const datos = calcularResumenCiclo(porCliente.get(clienteId) || [], inicio, fin)
+    const datos = calcularEvaluacion(porCliente.get(clienteId) || [], inicio, fin)
     if (datos.entrenamientos === 0) continue
-    nuevos.push({ cliente_id: clienteId, ciclo, desde: inicio, hasta: fin, datos, estado: 'borrador' })
+    nuevos.push({
+      cliente_id: clienteId,
+      ciclo,
+      desde: inicio,
+      hasta: fin,
+      datos,
+      estado: 'borrador',
+    })
   }
   if (nuevos.length === 0) return 0
 
@@ -88,16 +108,57 @@ async function armarResumenesPendientes() {
   return error ? 0 : nuevos.length
 }
 
-export async function publicarResumen(id, comentario) {
+// Lo que el profe completa en la evaluación: comentario general, notas
+// (algo particular del mes, objetivos y una nota por ejercicio) y si
+// muestra las medidas. "datos" va también, recalculado con todo el
+// historial y las medidas del momento (así queda fija la foto del mes).
+function filaDeEvaluacion({ comentario, notas, incluirMedidas, datos }) {
+  const fila = {
+    comentario_profe: comentario?.trim() || null,
+    notas: notasLimpias(notas),
+    incluir_medidas: Boolean(incluirMedidas),
+    actualizado_en: new Date().toISOString(),
+  }
+  if (datos) fila.datos = datos
+  return fila
+}
+
+export async function guardarEvaluacion(id, evaluacion) {
+  const { error } = await supabase
+    .from('resumenes_progreso')
+    .update(filaDeEvaluacion(evaluacion))
+    .eq('id', id)
+  return error
+}
+
+export async function publicarResumen(id, evaluacion) {
   const { error } = await supabase
     .from('resumenes_progreso')
     .update({
+      ...filaDeEvaluacion(evaluacion),
       estado: 'publicado',
-      comentario_profe: comentario?.trim() || null,
       publicado_en: new Date().toISOString(),
     })
     .eq('id', id)
   return error
+}
+
+// Solo los números (cuando cambiaron: un entrenamiento corregido, una
+// evaluación del formato anterior). No toca lo que escribió el profe.
+export async function actualizarDatosEvaluacion(id, datos) {
+  const { error } = await supabase.from('resumenes_progreso').update({ datos }).eq('id', id)
+  return error
+}
+
+// Dónde quedó el PDF en Google Drive.
+export async function anotarGuardadoEnDrive(id, { archivoUrl, carpetaUrl }) {
+  const fila = {
+    drive_url: archivoUrl || null,
+    drive_carpeta_url: carpetaUrl || null,
+    drive_guardado_en: new Date().toISOString(),
+  }
+  const { error } = await supabase.from('resumenes_progreso').update(fila).eq('id', id)
+  return error ? null : fila
 }
 
 export async function despublicarResumen(id) {

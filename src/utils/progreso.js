@@ -1,4 +1,4 @@
-import { obtenerLunesDeSemana, sumarDias, diasEntre } from './dias.js'
+import { obtenerLunesDeSemana, sumarDias } from './dias.js'
 
 // Cálculos de progresión a partir de las sesiones guardadas (tabla
 // "sesiones"). Cada sesión tiene "detalle": una lista de ejercicios con
@@ -20,23 +20,35 @@ function seriesValidas(itemDetalle) {
     .filter((serie) => serie.reps > 0)
 }
 
-function redondear(valor, decimales = 1) {
+export function redondear(valor, decimales = 1) {
   const factor = 10 ** decimales
   return Math.round(valor * factor) / factor
 }
 
 // Números de un ejercicio en una sesión: carga máxima, volumen (kg ×
-// reps sumado) y mejor serie. null si no hizo ninguna serie válida.
-function numerosDeEjercicio(itemDetalle) {
+// reps sumado), mejor serie, cantidad de series y de repeticiones, la
+// mayor cantidad de repeticiones en una serie y el 1RM estimado (fórmula
+// de Epley: kg × (1 + reps / 30), el peso que podría levantar una sola
+// vez). null si no hizo ninguna serie válida. La usa también
+// utils/evaluacion.js.
+export function numerosDeEjercicio(itemDetalle) {
   const series = seriesValidas(itemDetalle)
   if (series.length === 0) return null
   const kgMax = Math.max(...series.map((serie) => serie.kg))
   const volumen = series.reduce((total, serie) => total + serie.kg * serie.reps, 0)
   const mejor = series.reduce((a, b) => (b.kg > a.kg || (b.kg === a.kg && b.reps > a.reps) ? b : a))
-  return { kgMax, volumen, mejorSerie: mejor, series: series.length }
+  return {
+    kgMax,
+    volumen,
+    mejorSerie: mejor,
+    series: series.length,
+    reps: series.reduce((total, serie) => total + serie.reps, 0),
+    repsMax: Math.max(...series.map((serie) => serie.reps)),
+    rmEstimado: Math.max(...series.map((serie) => serie.kg * (1 + serie.reps / 30))),
+  }
 }
 
-function ordenarPorFecha(sesiones) {
+export function ordenarPorFecha(sesiones) {
   return [...sesiones].sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0))
 }
 
@@ -123,71 +135,6 @@ export function ciclosTerminados(fechaPrimerEntrenamiento, hoyISO) {
     numero += 1
   }
   return ciclos
-}
-
-// Resumen de un ciclo (lo que ve el profe para aprobar y después el
-// cliente en "Notificación de avance"). Se guarda tal cual en la columna
-// "datos" de la tabla resumenes_progreso.
-export function calcularResumenCiclo(sesiones, desde, hasta) {
-  const delCiclo = ordenarPorFecha(sesiones.filter((s) => s.fecha >= desde && s.fecha <= hasta))
-
-  const volumenSemanal = [0, 0, 0, 0]
-  const entrenamientosSemana = [0, 0, 0, 0]
-  const porEjercicio = new Map()
-  const esfuerzos = []
-
-  for (const sesion of delCiclo) {
-    const semana = Math.min(3, Math.floor(diasEntre(desde, sesion.fecha) / 7))
-    entrenamientosSemana[semana] += 1
-    if (sesion.esfuerzo) esfuerzos.push(Number(sesion.esfuerzo))
-
-    for (const item of sesion.detalle || []) {
-      const numeros = numerosDeEjercicio(item)
-      if (!numeros) continue
-      volumenSemanal[semana] += numeros.volumen
-      const registro = porEjercicio.get(item.ejercicio_id)
-      if (!registro) {
-        porEjercicio.set(item.ejercicio_id, {
-          ejercicio_id: item.ejercicio_id,
-          nombre: item.nombre || 'Ejercicio',
-          kgInicio: numeros.kgMax,
-          kgFin: numeros.kgMax,
-          kgMejor: numeros.kgMax,
-          veces: 1,
-        })
-      } else {
-        registro.kgFin = numeros.kgMax
-        registro.kgMejor = Math.max(registro.kgMejor, numeros.kgMax)
-        registro.veces += 1
-      }
-    }
-  }
-
-  const ejercicios = [...porEjercicio.values()]
-    .map((registro) => ({
-      ...registro,
-      diferenciaKg: redondear(registro.kgFin - registro.kgInicio),
-    }))
-    .sort((a, b) => b.diferenciaKg - a.diferenciaKg)
-
-  const primeraSemana = volumenSemanal[0]
-  const ultimaSemana = volumenSemanal[3]
-  const cambioVolumenPorcentaje =
-    primeraSemana > 0 ? Math.round(((ultimaSemana - primeraSemana) / primeraSemana) * 100) : null
-
-  return {
-    desde,
-    hasta,
-    entrenamientos: delCiclo.length,
-    entrenamientosPorSemana: entrenamientosSemana,
-    esfuerzoPromedio: esfuerzos.length
-      ? redondear(esfuerzos.reduce((a, b) => a + b, 0) / esfuerzos.length)
-      : null,
-    volumenPorSemana: volumenSemanal.map((valor) => Math.round(valor)),
-    cambioVolumenPorcentaje,
-    ejerciciosQueSubieron: ejercicios.filter((e) => e.diferenciaKg > 0).length,
-    ejercicios,
-  }
 }
 
 // Número para mostrar con el formato de Uruguay: 107,5 y 5.160.

@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 
 // Pestañas tipo "interruptor" (Rutinas · Semana · Progreso · Pagos).
-// Cada opción puede ser un enlace (to) o un botón (onCambiar).
+// Cada opción puede ser un enlace (to) o un botón (onCambiar). Con más de
+// cinco, la letra es un poco más chica para que entren en el celular.
 export default function Pestanas({ opciones, activa, onCambiar, etiqueta }) {
   return (
     <div
-      className="pestanas"
+      className={opciones.length > 5 ? 'pestanas pestanas-muchas' : 'pestanas'}
       role="tablist"
       aria-label={etiqueta}
       style={{ gridTemplateColumns: `repeat(${opciones.length}, minmax(0, 1fr))` }}

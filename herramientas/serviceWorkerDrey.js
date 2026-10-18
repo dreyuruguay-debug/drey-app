@@ -16,8 +16,9 @@ process.env.VITE_VERSION = version
 
 // Partes de la web que NO se guardan en el celular al instalar la app:
 // la librería de Excel (cerca de 1 MB) solo la usa el profe en "Rutinas
-// en Excel" y se descarga cuando la abre (ver vite.config.js).
-const SIN_GUARDAR = ['excel']
+// en Excel" y las del PDF solo hacen falta al descargar una evaluación;
+// se descargan cuando se usan (ver vite.config.js).
+const SIN_GUARDAR = ['excel', 'pdf']
 
 // Completa public/sw.js con la lista de archivos de esta versión, para
 // que la app se guarde entera en el celular y abra sin señal.

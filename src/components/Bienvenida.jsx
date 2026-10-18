@@ -19,7 +19,7 @@ const PANTALLAS = [
   {
     titulo: 'Mirá cómo progresás',
     texto:
-      'Cada entrenamiento queda guardado: vas a ver tus récords, tus gráficas y un resumen de tu profe cada 4 semanas.',
+      'Cada entrenamiento queda guardado: vas a ver tus récords, tus gráficas y una evaluación de tu profe cada 4 semanas.',
     dibujo: 'progreso',
   },
 ]

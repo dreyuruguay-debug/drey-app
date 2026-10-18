@@ -4,6 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import AjustesPortada from '../components/AjustesPortada.jsx'
+import AjustesDrive from '../components/AjustesDrive.jsx'
 import { mostrarAviso } from '../services/avisos.js'
 import {
   cargarConfiguracion,
@@ -26,6 +27,8 @@ import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 //   · Plazos: días de aviso antes del vencimiento y días de gracia.
 //   · Portada: textos, secciones, foto del fundador y videos de la página
 //     de inicio (components/AjustesPortada.jsx, supabase/sql/027).
+//   · Drive: conexión con la carpeta de Google Drive donde se guardan las
+//     evaluaciones de cada alumno (components/AjustesDrive.jsx, SQL 031).
 //
 // Arriba, el acceso al administrador de notificaciones (pantalla propia:
 // pages/AdminNotificaciones.jsx, supabase/sql/030).
@@ -35,6 +38,7 @@ const PESTANAS = [
   { id: 'whatsapp', label: 'WhatsApp' },
   { id: 'plazos', label: 'Plazos' },
   { id: 'portada', label: 'Portada' },
+  { id: 'drive', label: 'Drive' },
 ]
 
 export default function AdminAjustes() {
@@ -78,6 +82,8 @@ export default function AdminAjustes() {
         <SeccionWhatsapp config={config} />
       ) : pestana === 'portada' ? (
         <AjustesPortada />
+      ) : pestana === 'drive' ? (
+        <AjustesDrive />
       ) : (
         <SeccionPlazos config={config} />
       )}

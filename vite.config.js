@@ -19,6 +19,9 @@ export default defineConfig({
           // La librería de Excel: solo la usa el profe en "Rutinas en
           // Excel" y se descarga recién ahí (no se guarda para usar sin señal).
           excel: ['exceljs'],
+          // Las del PDF de la evaluación mensual: se descargan recién cuando
+          // alguien arma un PDF (tampoco se guardan para usar sin señal).
+          pdf: ['jspdf', 'html2canvas-pro', 'html2canvas', 'dompurify', 'canvg'],
         },
       },
     },

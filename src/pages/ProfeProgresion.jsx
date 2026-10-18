@@ -6,9 +6,9 @@ import { generarResumenesPendientes } from '../services/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { SOLO_CLIENTES } from '../utils/roles.js'
 
-// Progresión: los resúmenes de 4 semanas que esperan revisión del profe
+// Progresión: las evaluaciones mensuales que esperan revisión del profe
 // y el acceso a las gráficas de cada cliente. Al abrir esta pantalla se
-// generan solos los resúmenes de los ciclos que ya terminaron.
+// generan solas las evaluaciones de los ciclos que ya terminaron.
 export default function ProfeProgresion() {
   const [cargando, setCargando] = useState(true)
   const [borradores, setBorradores] = useState([])
@@ -46,8 +46,10 @@ export default function ProfeProgresion() {
   return (
     <ProfeLayout titulo="Progresión" volverA="/profe">
       <p className="profe-nota">
-        Cada 4 semanas de entrenamiento la app arma sola un resumen de cada cliente. Revisalo,
-        sumale un comentario si querés y publicalo: el cliente lo ve en "Mis datos".
+        Cada 4 semanas de entrenamiento la app arma sola la evaluación de cada alumno: cargas,
+        repeticiones y volumen de todos sus ejercicios. Revisala, sumale tus comentarios (y las
+        medidas, si querés) y publicala: el alumno la ve en Progreso y queda el PDF en su carpeta de
+        Drive.
       </p>
 
       {cargando ? (
@@ -55,10 +57,10 @@ export default function ProfeProgresion() {
       ) : (
         <>
           <p className="profe-seccion-label">
-            Resúmenes para revisar {borradores.length > 0 && `(${borradores.length})`}
+            Evaluaciones para revisar {borradores.length > 0 && `(${borradores.length})`}
           </p>
           {borradores.length === 0 ? (
-            <p className="profe-vacio">No hay resúmenes esperando revisión.</p>
+            <p className="profe-vacio">No hay evaluaciones esperando revisión.</p>
           ) : (
             borradores.map((resumen) => (
               <Link
@@ -72,7 +74,7 @@ export default function ProfeProgresion() {
                   </p>
                   <p className="profe-cliente-detalle">
                     Ciclo {resumen.ciclo} · {resumen.datos?.entrenamientos ?? 0} entrenamientos ·{' '}
-                    {resumen.datos?.ejerciciosQueSubieron ?? 0} ejercicios con más carga
+                    {resumen.datos?.ejerciciosQueSubieron ?? 0} ejercicios mejoraron
                   </p>
                 </div>
                 <span className="profe-cliente-flecha">→</span>

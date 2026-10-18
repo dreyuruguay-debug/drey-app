@@ -221,7 +221,7 @@ export default function Home() {
 
       {datos?.avanceNuevo && (
         <Link to="/progreso#avance" className="home-aviso-pendiente home-aviso-avance">
-          📈 Tu profe publicó tu resumen de avance. Tocá acá para verlo.
+          📈 Tu profe publicó tu evaluación del mes. Tocá acá para verla.
         </Link>
       )}
 

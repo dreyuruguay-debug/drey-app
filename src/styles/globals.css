@@ -9558,3 +9558,598 @@ div.tarjeta-rutina {
   outline: 2px solid var(--drey-accent);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   EVALUACIÓN MENSUAL (components/evaluacion/EvaluacionMensual.jsx)
+   --------------------------------------------------------------------------
+   La misma plantilla en la app (profe y alumno) y en el PDF. En el PDF
+   (.evaluacion-pdf) se fuerzan los colores del modo claro sobre blanco,
+   con la cabecera negra de la marca, sin importar el modo del celular.
+   ========================================================================== */
+.evaluacion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  color: var(--drey-text);
+  font-family: var(--fuente-texto);
+}
+
+.evaluacion-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.evaluacion-cabecera-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.evaluacion-sobretitulo {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.evaluacion-alumno {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.evaluacion-periodo {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--drey-texto-suave);
+}
+
+.evaluacion-bloque,
+.evaluacion-ejercicio {
+  background: var(--drey-superficie-2);
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+}
+
+.evaluacion-titulo {
+  margin: 0 0 0.5rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.evaluacion-aclaracion {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--drey-texto-tenue);
+}
+
+.evaluacion-destacados {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.evaluacion-destacados li::marker {
+  color: var(--drey-accent-texto);
+}
+
+.evaluacion-nota-profe {
+  margin: 0.6rem 0 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--drey-verde-fondo);
+  border-left: 3px solid var(--drey-accent);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--drey-texto-verde);
+}
+
+.evaluacion-nota-profe span {
+  font-weight: 800;
+}
+
+.evaluacion-cifras {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.evaluacion-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  background: var(--drey-superficie);
+  border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+}
+
+.evaluacion-cifra-valor {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--drey-text);
+}
+
+.evaluacion-cifra-etiqueta {
+  font-size: 0.7rem;
+  color: var(--drey-texto-suave);
+}
+
+.evaluacion-cifra-cambio,
+.evaluacion-dato-cambio {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--drey-texto-suave);
+}
+
+.evaluacion-sube {
+  color: var(--drey-accent-texto);
+}
+
+.evaluacion-baja {
+  color: var(--drey-peligro-texto);
+}
+
+.evaluacion-svg {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  margin: 0.4rem auto 0;
+}
+
+.evaluacion-referencia span {
+  font-weight: 800;
+  color: var(--drey-naranja-texto);
+}
+
+.evaluacion-ejercicios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.evaluacion-ejercicios > .evaluacion-titulo {
+  margin: 0.3rem 0 0;
+}
+
+.evaluacion-ejercicio {
+  border-left: 4px solid var(--drey-relleno);
+}
+
+.evaluacion-ejercicio-sube {
+  border-left-color: var(--drey-accent);
+}
+
+.evaluacion-ejercicio-baja {
+  border-left-color: var(--drey-peligro);
+}
+
+.evaluacion-ejercicio-nuevo {
+  border-left-color: var(--drey-azul);
+}
+
+.evaluacion-ejercicio-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.evaluacion-ejercicio-nombre {
+  font-size: 0.95rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.evaluacion-record {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--drey-amarillo-fondo);
+  color: var(--drey-amarillo-texto);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.evaluacion-estado {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--drey-superficie-3);
+  color: var(--drey-texto-suave);
+}
+
+.evaluacion-estado-sube {
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-verde);
+}
+
+.evaluacion-estado-baja {
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-texto-rojo);
+}
+
+.evaluacion-estado-nuevo {
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+}
+
+.evaluacion-ejercicio-texto {
+  margin: 0.3rem 0 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--drey-texto-claro);
+}
+
+.evaluacion-ejercicio-cuerpo {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.evaluacion-datos {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.evaluacion-dato {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.5rem;
+  font-size: 0.78rem;
+}
+
+.evaluacion-dato dt {
+  min-width: 7.5rem;
+  color: var(--drey-texto-tenue);
+}
+
+.evaluacion-dato dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.evaluacion-mini-caja {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.evaluacion-mini {
+  width: 96px;
+  height: auto;
+}
+
+.evaluacion-mini-caja small {
+  font-size: 0.62rem;
+  color: var(--drey-texto-tenue);
+}
+
+.evaluacion-tabla td,
+.evaluacion-tabla th {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.evaluacion-profe {
+  border: 1px solid var(--drey-accent);
+}
+
+.evaluacion-texto-profe {
+  margin: 0 0 0.6rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.evaluacion-texto-profe:last-child {
+  margin-bottom: 0;
+}
+
+.evaluacion-pie {
+  font-size: 0.66rem;
+  line-height: 1.4;
+  color: var(--drey-texto-tenue);
+}
+
+@media (min-width: 560px) {
+  .evaluacion-cifras {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* --- Versión PDF: hoja blanca, colores fijos del modo claro --- */
+.evaluacion-pdf {
+  --drey-bg: #ffffff;
+  --drey-text: #101211;
+  --drey-texto-claro: #2c302d;
+  --drey-texto-suave: #5f6460;
+  --drey-texto-tenue: #6d726e;
+  --drey-accent: #3ddc84;
+  --drey-accent-texto: #0e8f4a;
+  --drey-superficie: #ffffff;
+  --drey-superficie-2: #f3f4f2;
+  --drey-superficie-3: #e6e9e4;
+  --drey-relleno: #cdd2cb;
+  --drey-borde-suave: #e8eae6;
+  --drey-borde-fuerte: #d4d8d2;
+  --drey-verde-fondo: #e3f6ea;
+  --drey-texto-verde: #0b5e33;
+  --drey-peligro: #c0392b;
+  --drey-peligro-texto: #b03a2e;
+  --drey-rojo-fondo: #fbe4e1;
+  --drey-texto-rojo: #8a2a20;
+  --drey-azul: #2f6fb8;
+  --drey-azul-fondo: #e3eefb;
+  --drey-azul-texto: #24589a;
+  --drey-amarillo-fondo: #fbf1c7;
+  --drey-amarillo-texto: #7a5d00;
+  width: 760px;
+  padding: 0 0 8px;
+  background: #ffffff;
+  color: var(--drey-text);
+  gap: 12px;
+}
+
+.evaluacion-pdf .evaluacion-cabecera {
+  background: #0d0d0d;
+  border-radius: 14px;
+  padding: 18px 22px;
+  gap: 22px;
+}
+
+.evaluacion-pdf .evaluacion-logo {
+  width: 120px;
+  height: auto;
+}
+
+.evaluacion-pdf .evaluacion-sobretitulo {
+  color: #3ddc84;
+}
+
+.evaluacion-pdf .evaluacion-alumno {
+  color: #ffffff;
+  font-size: 2rem;
+}
+
+.evaluacion-pdf .evaluacion-periodo {
+  color: #cfcfcf;
+}
+
+.evaluacion-pdf .evaluacion-cifras {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.evaluacion-pdf .evaluacion-cifra {
+  border: 1px solid #e1e4df;
+}
+
+.evaluacion-pdf .evaluacion-svg {
+  max-width: 440px;
+}
+
+.evaluacion-pdf .evaluacion-referencia span {
+  color: #d9822b;
+}
+
+.evaluacion-pdf .evaluacion-mini {
+  width: 120px;
+}
+
+/* El PDF se arma fuera de la pantalla (services/pdfEvaluacion.js). */
+.evaluacion-pdf-escenario {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  pointer-events: none;
+}
+
+/* --- Evaluaciones en el panel del profe (EditorEvaluacion) --- */
+.evaluaciones-lista {
+  margin-bottom: 1.25rem;
+}
+
+.evaluacion-desplegar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--drey-text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.evaluacion-desplegar .resumen-estado {
+  margin: 0;
+}
+
+.evaluacion-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.9rem;
+}
+
+.evaluacion-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: 1px dashed var(--drey-borde-fuerte);
+}
+
+.evaluacion-formulario .profe-seccion-label {
+  margin: 0;
+}
+
+.evaluacion-formulario .tarjeta-rutina:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ajustes-campo-titulo {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.evaluacion-ayuda {
+  font-size: 0.7rem;
+  color: var(--drey-texto-tenue);
+}
+
+.evaluacion-notas-ejercicios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.evaluacion-nota-ejercicio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--drey-texto-claro);
+}
+
+.evaluacion-casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--drey-texto-claro);
+  cursor: pointer;
+}
+
+.evaluacion-casilla input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--drey-accent);
+}
+
+.evaluacion-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.evaluacion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.evaluacion-acciones .profe-cerrar-selector {
+  margin-top: 0;
+}
+
+.evaluacion-sin-drive,
+.evaluacion-drive-estado {
+  font-size: 0.75rem;
+  color: var(--drey-texto-tenue);
+}
+
+.evaluacion-drive-estado {
+  margin: 0;
+  color: var(--drey-accent-texto);
+}
+
+.evaluacion-drive-estado a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.avance-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* En la compu: la evaluación a la izquierda y lo que completa el profe a
+   la derecha, siempre a la vista. */
+@media (min-width: 1024px) {
+  .pantalla-panel .evaluacion-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    align-items: start;
+    gap: 1.25rem;
+  }
+
+  .pantalla-panel .evaluacion-editor > * {
+    grid-column: 1;
+  }
+
+  .pantalla-panel .evaluacion-editor > .evaluacion-formulario {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .pantalla-panel .evaluacion-cifras {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Ajustes → Drive */
+.ajustes-clave {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ajustes-clave .auth-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ajustes-prueba-ok {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}
+
+/* Pestañas con muchas opciones (Ajustes del Admin) */
+@media (max-width: 480px) {
+  .pestanas-muchas .pestana {
+    font-size: 0.74rem;
+    letter-spacing: -0.01em;
+  }
+}

@@ -279,8 +279,8 @@ export function armarTareas({
       id: `resumen-${resumen.id || cliente.id}`,
       nivel: 'aviso',
       icono: 'grafico',
-      titulo: 'Resumen de 4 semanas listo',
-      detalle: `${nombreCompleto(cliente)} · falta que lo apruebes`,
+      titulo: 'Evaluación del mes lista',
+      detalle: `${nombreCompleto(cliente)} · falta que la completes y la publiques`,
       accion: { texto: 'Revisar', to: `/profe/clientes/${cliente.id}/progreso` },
     })
   }
