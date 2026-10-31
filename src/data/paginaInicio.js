@@ -70,8 +70,9 @@ export const TEXTOS_POR_DEFECTO = Object.freeze({
     'Mirá su especialidad y cómo entrenan. Al registrarte elegís con quién querés entrenar.',
 
   'planes.antetitulo': 'Planes',
-  'planes.titulo': 'Elegí cómo querés entrenar',
-  'planes.texto': '',
+  'planes.titulo': 'Para profes y gimnasios',
+  'planes.texto':
+    'Pagás según cuántos alumnos tenés a la vez. Tus alumnos te pagan a vos, como siempre.',
 
   'sumate.antetitulo': 'Para profes y gimnasios',
   'sumate.titulo': '¿Sos profe o tenés un gimnasio?',
@@ -79,7 +80,7 @@ export const TEXTOS_POR_DEFECTO = Object.freeze({
     'Sumate a DREY y manejá a tus alumnos, sus rutinas y sus cobros desde un solo panel, con tu marca.',
   'sumate.punto1': 'Armás rutinas por semanas, con plantillas y biblioteca de ejercicios con GIF.',
   'sumate.punto2': 'Ves quién entrenó, quién no y qué te toca atender hoy.',
-  'sumate.punto3': 'Cobrás con Mercado Pago o transferencia, y el acceso se habilita solo.',
+  'sumate.punto3': 'Tu código para que tus alumnos se registren con vos, y tu equipo de profes.',
   'sumate.punto4': 'Panel pensado para la compu; tus alumnos lo usan en el celular.',
 
   'preguntas.antetitulo': 'Preguntas frecuentes',
@@ -200,7 +201,8 @@ export const SECCIONES_PORTADA = Object.freeze([
   {
     id: 'planes',
     titulo: 'Planes',
-    detalle: 'Los planes y precios salen solos de Ajustes → Planes (solo los visibles).',
+    detalle:
+      'Los planes DREY para profes y gimnasios salen solos de Ajustes → DREY (solo los visibles), con el botón "Soy alumno" abajo.',
     ocultable: true,
     campos: [
       { clave: 'planes.antetitulo', etiqueta: 'Antetítulo (en verde)' },
@@ -211,7 +213,8 @@ export const SECCIONES_PORTADA = Object.freeze([
   {
     id: 'sumate',
     titulo: 'Para profes y gimnasios',
-    detalle: 'El botón "Quiero sumarme" abre el WhatsApp de Contacto.',
+    detalle:
+      'Con los botones "Soy profe" y "Tengo un gimnasio" (registro directo); "Hablar por WhatsApp" usa el WhatsApp de Contacto.',
     ocultable: true,
     campos: [
       { clave: 'sumate.antetitulo', etiqueta: 'Antetítulo (en verde)' },

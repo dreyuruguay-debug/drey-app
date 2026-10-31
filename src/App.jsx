@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Portada from './pages/Portada.jsx'
 import Registro from './pages/Registro.jsx'
+import RegistroElegir from './pages/RegistroElegir.jsx'
 import Home from './pages/Home.jsx'
 import Rutinas from './pages/Rutinas.jsx'
 import RutinaDetalle from './pages/RutinaDetalle.jsx'
@@ -43,8 +44,10 @@ import {
   ProfeRutinaNueva,
   ProfeRutinas,
   ProfeSolicitudes,
+  ProfeMisEspacios,
   ProfeSuscripcionDrey,
   Profes,
+  RegistroProfe,
 } from './pantallasDiferidas.js'
 import { useEspacioActivoId } from './services/espacio.js'
 import Esqueleto from './components/Esqueleto.jsx'
@@ -78,7 +81,11 @@ export default function App() {
                 iniciar sesión ya abierto. */}
             <Route path={RUTA_PORTADA} element={<Portada />} />
             <Route path={RUTA_INGRESAR} element={<Portada ingresar />} />
-            <Route path="/registro" element={<Registro />} />
+            {/* Registro: primero se elige el tipo de cuenta (SQL 033). */}
+            <Route path="/registro" element={<RegistroElegir />} />
+            <Route path="/registro/alumno" element={<Registro />} />
+            <Route path="/registro/profe" element={<RegistroProfe tipo="profe" />} />
+            <Route path="/registro/gimnasio" element={<RegistroProfe tipo="gimnasio" />} />
             <Route path="/nueva-contrasena" element={<NuevaContrasena />} />
             {/* Pantallas del alumno: si entra un profe o el Admin, va a su
                 panel (components/SoloAlumnos.jsx). */}
@@ -111,6 +118,7 @@ export default function App() {
             <Route path="/profe/mi-cuenta" element={<ProfeMiCuenta />} />
             <Route path="/profe/mi-perfil" element={<ProfeMiPerfil />} />
             <Route path="/profe/suscripcion" element={<ProfeSuscripcionDrey />} />
+            <Route path="/profe/espacios" element={<ProfeMisEspacios />} />
             <Route path="/profe/solicitudes" element={<ProfeSolicitudes />} />
             <Route path="/profe/ejercicios" element={<ProfeEjercicios />} />
             <Route path="/profe/clientes" element={<ProfeClientes />} />

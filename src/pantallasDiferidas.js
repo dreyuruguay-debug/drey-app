@@ -91,6 +91,13 @@ export const ProfeMiPerfil = pantallaDiferida(() => import('./pages/ProfeMiPerfi
 export const ProfeSolicitudes = pantallaDiferida(() => import('./pages/ProfeSolicitudes.jsx'))
 // "Mi cuenta" del profe (perfil, solicitudes, notificaciones).
 export const ProfeMiCuenta = pantallaDiferida(() => import('./pages/ProfeMiCuenta.jsx'))
+// Registro de profes y gimnasios (supabase/sql/033): lo usan pocos.
+export const RegistroProfe = pantallaDiferida(
+  () => import('./pages/RegistroProfe.jsx'),
+  PANTALLAS_CLIENTE,
+)
+// Mis espacios del profe: sus gimnasios, invitaciones y código (SQL 033).
+export const ProfeMisEspacios = pantallaDiferida(() => import('./pages/ProfeMisEspacios.jsx'))
 // Suscripción DREY del espacio (cobro por cupos, supabase/sql/032).
 export const ProfeSuscripcionDrey = pantallaDiferida(
   () => import('./pages/ProfeSuscripcionDrey.jsx'),

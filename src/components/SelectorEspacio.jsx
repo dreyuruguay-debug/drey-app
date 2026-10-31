@@ -89,6 +89,18 @@ export default function SelectorEspacio() {
               </li>
             )
           })}
+          <li>
+            <button
+              type="button"
+              className="selector-espacio-opcion selector-espacio-mas"
+              onClick={() => {
+                setAbierto(false)
+                navigate('/profe/espacios')
+              }}
+            >
+              + Sumarme a un gimnasio
+            </button>
+          </li>
         </ul>
       )}
     </div>

@@ -88,6 +88,59 @@ D1 a D9) está en "DREY - Plan cobro por cupos y registro por tipo.txt".
   completo del dueño del gimnasio y la pausa de alumnos cuando el espacio
   no paga.
 
+## Registro por tipo de cuenta y equipo del gimnasio (SQL 033, Entrega B)
+
+- **"/registro" pregunta qué cuenta crear** (`pages/RegistroElegir.jsx`):
+  "Soy alumno" (`/registro/alumno`, `pages/Registro.jsx`), "Soy profe"
+  (`/registro/profe`) y "Tengo un gimnasio" (`/registro/gimnasio`), los dos
+  últimos en `pages/RegistroProfe.jsx`. "Tus datos" es el mismo componente
+  para los tres (`components/registro/DatosDeCuenta.jsx`). Los links viejos
+  `/registro?plan=…` y los nuevos `/registro?espacio=CODIGO` van directo al
+  del alumno. Todo viaja en los metadatos (`tipo_cuenta`, `espacio_codigo`,
+  `codigo`, `codigo_gimnasio`, `gimnasio_nombre`, `gimnasio_codigo`,
+  `da_clases`, `plan_drey`) y lo arma la base (triggers
+  `perfiles_registro_tipo` y `perfiles_registro_tipo_despues`).
+- **Alumno**: el paso "Tu profe" muestra los profes y gimnasios que toman
+  alumnos (`espacios_para_alumnos()`) y acepta el código que le pasaron
+  (`buscar_espacio_por_codigo()`); queda en ese espacio. Sin el SQL 033 se
+  usa la lista de antes.
+- **Profe y gimnasio**: entran solos (D8) con su espacio en prueba gratis;
+  eligen su código (la app revisa que esté libre con
+  `codigo_disponible()`); el profe puede escribir el código de un gimnasio
+  (le llega la solicitud al dueño); el gimnasio pone nombre, código y si el
+  dueño también da clases. Si vinieron de un plan de la portada, queda
+  elegido. Al Admin le llega "Profe nuevo" / "Gimnasio nuevo".
+- **Mis espacios** (`/profe/espacios`, `pages/ProfeMisEspacios.jsx`, desde
+  Mi cuenta y el selector): sus espacios con el código y el link para
+  alumnos, cambiar el código del suyo, invitaciones, sumarse a un gimnasio
+  con su código, sus solicitudes y salir de un gimnasio.
+- **Equipo del gimnasio** (`components/EquipoGimnasio.jsx`, arriba de
+  Equipo cuando el dueño tiene su gimnasio elegido; en el celular "Equipo"
+  reemplaza a "Biblioteca" en el menú): código para compartir, interruptor
+  "Los profes pueden habilitar alumnos" (D5), solicitudes, invitar por
+  email, el equipo con sus alumnos, quitar un profe (sus alumnos quedan en
+  el gimnasio con quien elija el dueño) y quién habilitó a quién. Servicios
+  en `services/equipo.js`.
+- **Portada (D6)**: la sección Planes muestra los planes DREY para profes y
+  gimnasios ("Probar gratis" → registro con ese plan) y "Soy alumno"; "Para
+  profes y gimnasios" tiene "Soy profe" y "Tengo un gimnasio".
+- **Cuidados con el registro abierto** (revisados con una prueba de
+  ataques): un profe no cambia su propio gimnasio desde la app; sumarse a
+  un gimnasio no toca su `gimnasio_id` (solo la membresía), así el dueño
+  del gimnasio no ve los alumnos particulares del profe; los alumnos
+  sueltos (sin profe, gimnasio ni espacio) solo los ven el Admin y los
+  profes de confianza (`profe_de_confianza()`: dueño de un espacio que el
+  Admin dejó sin costo); lo compartido (ejercicios con `creado_por`, fotos
+  de ejercicios, plantillas sin profe) lo cambia quien lo creó, un profe de
+  confianza o el Admin; los códigos de descuento y `ajustes_drive`, solo el
+  Admin y los profes de confianza; las invitaciones se toman solo con el
+  email confirmado (`mi_email()`); todas las funciones del dueño revisan el
+  rol con `coalesce` (un NULL no deja pasar). Las notificaciones de un
+  alumno sin profe le llegan al dueño de su espacio (y "Escribirle a mi
+  profe" también).
+- Términos: sección 7 "Profes y gimnasios" (`data/legal.js`; no cambia la
+  versión, para no pedirle a todos que acepten de nuevo).
+
 ## Página de inicio (SQL 027)
 
 - **"/"** es la página de inicio (`pages/Portada.jsx`): video de fondo a

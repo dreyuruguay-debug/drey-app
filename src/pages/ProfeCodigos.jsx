@@ -96,7 +96,13 @@ export default function ProfeCodigos() {
     })
     setGuardando(false)
     if (error) {
-      setMensaje(error.message || 'No pudimos guardar el código.')
+      // Desde el SQL 033, los códigos (valen para todos los alumnos) los
+      // crean el Admin y los profes de confianza.
+      setMensaje(
+        /row-level security/i.test(error.message || '')
+          ? 'Por ahora los códigos de descuento los crea DREY. Escribinos si querés uno.'
+          : error.message || 'No pudimos guardar el código.',
+      )
       return
     }
     mostrarAviso('Código creado')
@@ -135,18 +141,27 @@ export default function ProfeCodigos() {
       {cargando ? (
         <Esqueleto />
       ) : lista.length === 0 ? (
-        <p className="profe-vacio">Todavía no creaste códigos {tipo === 'plan' ? 'del plan' : 'de ropa'}.</p>
+        <p className="profe-vacio">
+          Todavía no creaste códigos {tipo === 'plan' ? 'del plan' : 'de ropa'}.
+        </p>
       ) : (
         <div className="lista-tarjetas">
           {lista.map((item) => (
-            <div key={item.id} className={item.activo ? 'codigo-item' : 'codigo-item codigo-pausado'}>
+            <div
+              key={item.id}
+              className={item.activo ? 'codigo-item' : 'codigo-item codigo-pausado'}
+            >
               <div className="codigo-item-textos">
                 <strong>{item.codigo}</strong>
                 <small>{describirCodigo(item)}</small>
               </div>
               {borrandoId === item.id ? (
                 <div className="codigo-item-acciones">
-                  <button type="button" className="boton-peligro boton-chico" onClick={() => borrar(item.id)}>
+                  <button
+                    type="button"
+                    className="boton-peligro boton-chico"
+                    onClick={() => borrar(item.id)}
+                  >
                     Borrar
                   </button>
                   <button
@@ -188,7 +203,9 @@ export default function ProfeCodigos() {
           type="text"
           placeholder="Código (ej. DREY20)"
           value={formulario.codigo}
-          onChange={(event) => cambiar('codigo', event.target.value.toUpperCase().replace(/\s/g, ''))}
+          onChange={(event) =>
+            cambiar('codigo', event.target.value.toUpperCase().replace(/\s/g, ''))
+          }
         />
 
         {tipo === 'plan' ? (
@@ -293,9 +310,15 @@ function describirCodigo(item) {
     if (item.monto_fijo) partes.push(`${formatearPrecio(item.monto_fijo)} de descuento`)
     partes.push(item.solo_primer_mes ? 'solo el primer mes' : 'en cada pago')
     if (item.planes?.length) {
-      partes.push(item.planes.map((id) => listaDePlanes().find((plan) => plan.id === id)?.nombre || id).join(', '))
+      partes.push(
+        item.planes
+          .map((id) => listaDePlanes().find((plan) => plan.id === id)?.nombre || id)
+          .join(', '),
+      )
     }
-    partes.push(item.usos_maximos ? `${item.usos} de ${item.usos_maximos} usos` : `${item.usos} usos`)
+    partes.push(
+      item.usos_maximos ? `${item.usos} de ${item.usos_maximos} usos` : `${item.usos} usos`,
+    )
     if (item.descripcion) partes.push(item.descripcion)
   }
   if (item.vence) partes.push(`vence ${textoFechaCorta(item.vence)}`)

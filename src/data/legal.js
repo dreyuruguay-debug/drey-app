@@ -144,7 +144,19 @@ export const TERMINOS_Y_CONDICIONES = {
       ],
     },
     {
-      titulo: '7. Cambios y ley aplicable',
+      // Para las cuentas de profe y de gimnasio (cobro por cupos, SQL 032 y 033).
+      titulo: '7. Profes y gimnasios',
+      get parrafos() {
+        return [
+          'Si te registrás como profe o con un gimnasio, le pagás a DREY un plan por mes según cuántos alumnos podés tener habilitados a la vez (cupos). Los planes y precios vigentes se ven en la app. Tus alumnos te pagan a vos, según los planes y precios que vos definas.',
+          'Las cuentas nuevas empiezan con una prueba gratis, con los días y alumnos que se indiquen en la app. Si al terminar la prueba o al vencer tu plan no pagás, no vas a poder habilitar alumnos nuevos y, pasado el plazo que indica la app, tus alumnos dejan de ver sus rutinas hasta que se regularice.',
+          'Vas a ver datos personales y de salud de tus alumnos: los usás solo para entrenarlos, no los compartís con nadie y los cuidás como indica la Ley 18.331. La biblioteca de ejercicios es compartida: usala con cuidado.',
+          'DREY puede pausar o dar de baja una cuenta de profe o gimnasio que no cumpla estos términos.',
+        ]
+      },
+    },
+    {
+      titulo: '8. Cambios y ley aplicable',
       parrafos: [
         'Si cambiamos estos términos te vamos a avisar en la app. Se rigen por las leyes de la República Oriental del Uruguay.',
       ],

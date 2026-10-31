@@ -83,6 +83,16 @@ const SECCIONES_PROFE = [
     label: 'Biblioteca',
     rutas: ['/profe/ejercicios', '/profe/plantillas'],
     Icono: IconoBiblioteca,
+    // En su gimnasio, el dueño ve "Equipo" en su lugar en el celular (la
+    // Biblioteca sigue en el Inicio y en la compu).
+    enGimnasioSoloCompu: true,
+  },
+  {
+    to: '/profe/equipo',
+    label: 'Equipo',
+    rutas: ['/profe/equipo'],
+    Icono: IconoEquipo,
+    soloDuenoGimnasio: true,
   },
   {
     to: '/profe/cuentas',
@@ -95,7 +105,13 @@ const SECCIONES_PROFE = [
   {
     to: '/profe/mi-cuenta',
     label: 'Mi cuenta',
-    rutas: ['/profe/mi-cuenta', '/profe/mi-perfil', '/profe/solicitudes', '/profe/suscripcion'],
+    rutas: [
+      '/profe/mi-cuenta',
+      '/profe/mi-perfil',
+      '/profe/solicitudes',
+      '/profe/suscripcion',
+      '/profe/espacios',
+    ],
     Icono: IconoCuenta,
     avisos: 'solicitudes',
     donde: 'celular',
@@ -123,6 +139,13 @@ const SECCIONES_PROFE = [
     Icono: IconoSuscripcion,
     donde: 'compu',
     soloDueno: true,
+  },
+  {
+    to: '/profe/espacios',
+    label: 'Mis espacios',
+    rutas: ['/profe/espacios'],
+    Icono: IconoEquipo,
+    donde: 'compu',
   },
 ]
 
@@ -236,12 +259,23 @@ export default function ProfeLayout({
   // Sin espacios conocidos (base sin el SQL 032) se ve todo como siempre.
   const esDueno = !espacio || esDuenoDe(espacio)
   const habilita = esDueno || Boolean(espacio?.profesHabilitan)
+  const duenoDeGimnasio = espacio?.tipo === 'gimnasio' && esDueno
   const secciones = esAdmin
     ? SECCIONES_ADMIN
     : SECCIONES_PROFE.filter(
         (seccion) =>
-          !(seccion.soloDueno && (!espacio || !esDueno)) && !(seccion.soloSiHabilita && !habilita),
-      )
+          !(seccion.soloDueno && (!espacio || !esDueno)) &&
+          !(seccion.soloSiHabilita && !habilita) &&
+          !(seccion.soloDuenoGimnasio && !duenoDeGimnasio),
+      ).map((seccion) => {
+        if (!duenoDeGimnasio) return seccion
+        if (seccion.enGimnasioSoloCompu) return { ...seccion, donde: 'compu' }
+        // Con "Equipo" en el menú, el Inicio no se marca en esa pantalla.
+        if (seccion.to === '/profe') {
+          return { ...seccion, rutas: seccion.rutas.filter((ruta) => ruta !== '/profe/equipo') }
+        }
+        return seccion
+      })
 
   return (
     <div className={sinMenu ? 'screen pantalla-panel' : 'screen has-bottom-nav pantalla-panel'}>

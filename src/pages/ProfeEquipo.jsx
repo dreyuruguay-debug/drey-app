@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import AdminEspacios from '../components/AdminEspacios.jsx'
+import EquipoGimnasio from '../components/EquipoGimnasio.jsx'
+import { esDuenoDe, useEspacios } from '../services/espacio.js'
 import { supabase } from '../services/supabaseClient.js'
 import { mostrarAviso } from '../services/avisos.js'
 import { estadoDelPlan } from '../data/vencimiento.js'
@@ -18,7 +20,11 @@ import { problemaDeCupo } from '../utils/cupos.js'
 //     o corrige el perfil público de cada profe ("Perfil"), crea
 //     gimnasios, les pone dueño, asigna cada profe a un gimnasio y pasa
 //     cualquier cliente de un profe a otro.
-//   · DUEÑO DE GIMNASIO: ve a los profes de su gimnasio con sus números
+//   · DUEÑO DE GIMNASIO: con su gimnasio elegido arriba del panel, primero
+//     el equipo (components/EquipoGimnasio.jsx, supabase/sql/033: código,
+//     solicitudes, invitaciones, quitar profes, "los profes pueden
+//     habilitar" y quién habilitó a quién). Debajo, como siempre,
+//     ve a los profes de su gimnasio con sus números
 //     (clientes activos, quiénes entrenaron esta semana) y puede pasar un
 //     cliente de un profe a otro.
 //
@@ -62,6 +68,8 @@ export default function ProfeEquipo() {
   const [filtroClientes, setFiltroClientes] = useState('')
   const [quitando, setQuitando] = useState(null)
   const [parametros, setParametros] = useSearchParams()
+  const { activo: espacio } = useEspacios()
+  const duenoDeGimnasio = espacio?.tipo === 'gimnasio' && esDuenoDe(espacio)
   const hoy = obtenerFechaHoyISO()
 
   useEffect(() => {
@@ -142,7 +150,7 @@ export default function ProfeEquipo() {
 
   const clientesFiltrados = filtrarPorNombre(clientes, filtroClientes)
 
-  if (!rol.es_admin && misGimnasios.length === 0) {
+  if (!rol.es_admin && misGimnasios.length === 0 && !duenoDeGimnasio) {
     return (
       <ProfeLayout titulo="Equipo y gimnasios" volverA="/profe">
         <p className="profe-vacio">
@@ -388,6 +396,8 @@ export default function ProfeEquipo() {
         </>
       )}
 
+      {!rol.es_admin && duenoDeGimnasio && <EquipoGimnasio espacio={espacio} />}
+
       {misGimnasios.map((gimnasio) => {
         const suyos = profes.filter((profe) => profe.gimnasio_id === gimnasio.id)
         const idsSuyos = new Set(suyos.map((profe) => profe.id))
@@ -397,36 +407,40 @@ export default function ProfeEquipo() {
         return (
           <section key={gimnasio.id} className="bloque-pagina">
             <p className="profe-seccion-label">Tu gimnasio: {gimnasio.nombre}</p>
-            <div className="profe-tabla-wrap">
-              <table className="profe-tabla">
-                <thead>
-                  <tr>
-                    <th>Profe</th>
-                    <th>Activos</th>
-                    <th>Entrenaron esta semana</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {suyos.map((profe) => {
-                    const activos = clientesDelGimnasio.filter(
-                      (cliente) =>
-                        cliente.profe_id === profe.id &&
-                        cliente.estado === 'activo' &&
-                        estadoDelPlan(cliente, hoy).tipo !== 'vencido',
-                    )
-                    return (
-                      <tr key={profe.id}>
-                        <td>
-                          {profe.nombre} {profe.apellido}
-                        </td>
-                        <td>{activos.length}</td>
-                        <td>{activos.filter((cliente) => entrenaron.has(cliente.id)).length}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {/* Con el equipo nuevo arriba (EquipoGimnasio), la tabla de
+                profes ya está ahí. */}
+            {!duenoDeGimnasio && (
+              <div className="profe-tabla-wrap">
+                <table className="profe-tabla">
+                  <thead>
+                    <tr>
+                      <th>Profe</th>
+                      <th>Activos</th>
+                      <th>Entrenaron esta semana</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {suyos.map((profe) => {
+                      const activos = clientesDelGimnasio.filter(
+                        (cliente) =>
+                          cliente.profe_id === profe.id &&
+                          cliente.estado === 'activo' &&
+                          estadoDelPlan(cliente, hoy).tipo !== 'vencido',
+                      )
+                      return (
+                        <tr key={profe.id}>
+                          <td>
+                            {profe.nombre} {profe.apellido}
+                          </td>
+                          <td>{activos.length}</td>
+                          <td>{activos.filter((cliente) => entrenaron.has(cliente.id)).length}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
             <Link
               to="/profe/estadisticas"
               className="boton-secundario boton-chico equipo-estadisticas"

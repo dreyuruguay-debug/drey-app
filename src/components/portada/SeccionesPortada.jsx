@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import Aparece from './Aparece.jsx'
 import TarjetaProfe from '../TarjetaProfe.jsx'
 import { cargarProfesDisponibles } from '../../services/profes.js'
+import { cargarPlanesDrey } from '../../services/suscripcionDrey.js'
+import { useConfiguracion } from '../../services/configuracion.js'
 import { formatearPrecio, listaDePlanes } from '../../data/planes.js'
 import { conPlazos, preguntasDe, textoDe } from '../../data/paginaInicio.js'
 import { linkWhatsApp } from '../../utils/whatsapp.js'
@@ -129,8 +131,99 @@ export function SeccionProfes({ pagina }) {
   )
 }
 
-// Planes visibles de Ajustes → Planes, con sus precios.
+// Planes (decisión D6: DREY se presenta como plataforma): los planes
+// DREY visibles de Ajustes → DREY, para profes y para gimnasios, con la
+// prueba gratis y el botón para registrarse con ese plan elegido
+// (/registro/profe?plan=… o /registro/gimnasio?plan=…). Abajo, "Soy
+// alumno" para quien busca a su profe o gimnasio. Si la base todavía no
+// tiene los planes DREY (SQL 032), se muestran los planes de alumnos de
+// siempre.
 export function SeccionPlanes({ pagina }) {
+  const config = useConfiguracion()
+  const [planesDrey, setPlanesDrey] = useState(null)
+
+  useEffect(() => {
+    let activo = true
+    cargarPlanesDrey().then(({ planes, error }) => {
+      if (activo) setPlanesDrey(error ? [] : planes.filter((plan) => plan.activo))
+    })
+    return () => {
+      activo = false
+    }
+  }, [])
+
+  if (planesDrey === null) return null
+  if (!planesDrey.length) return <PlanesDeAlumnos pagina={pagina} />
+
+  const prueba = config.prueba || { activa: true, dias: 14, cupos: 3 }
+  const grupos = [
+    { tipo: 'profe', titulo: 'Para profes', ruta: '/registro/profe' },
+    { tipo: 'gimnasio', titulo: 'Para gimnasios', ruta: '/registro/gimnasio' },
+  ]
+    .map((grupo) => ({ ...grupo, planes: planesDrey.filter((plan) => plan.tipo === grupo.tipo) }))
+    .filter((grupo) => grupo.planes.length)
+
+  return (
+    <Seccion id="portada-planes">
+      <Encabezado pagina={pagina} seccion="planes" />
+      {prueba.activa && (
+        <p className="portada-texto portada-prueba">
+          Probalo gratis {prueba.dias} días con hasta {prueba.cupos} alumnos, sin tarjeta.
+        </p>
+      )}
+      {grupos.map((grupo) => (
+        <div key={grupo.tipo} className="portada-planes-grupo">
+          <h3 className="portada-planes-subtitulo">{grupo.titulo}</h3>
+          <div className="portada-planes">
+            {grupo.planes.map((plan, posicion) => (
+              <article
+                key={plan.id}
+                className={posicion === 1 ? 'portada-plan portada-plan-destacado' : 'portada-plan'}
+              >
+                <h3>{plan.nombre}</h3>
+                <p className="portada-plan-descripcion">
+                  {plan.descripcion || `Hasta ${plan.cupos} alumnos a la vez`}
+                </p>
+                <p className="portada-plan-precio">
+                  {formatearPrecio(plan.precioMensual)}
+                  <small>por mes</small>
+                </p>
+                {plan.precioPrimerMes != null && plan.precioPrimerMes !== plan.precioMensual && (
+                  <p className="portada-plan-siguiente">
+                    Primer mes {formatearPrecio(plan.precioPrimerMes)}
+                  </p>
+                )}
+                <Link
+                  to={`${grupo.ruta}?plan=${encodeURIComponent(plan.id)}`}
+                  className={
+                    posicion === 1
+                      ? 'portada-boton portada-boton-lleno'
+                      : 'portada-boton portada-boton-borde'
+                  }
+                >
+                  {prueba.activa ? 'Probar gratis' : 'Empezar'}
+                </Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div className="portada-soy-alumno">
+        <p className="portada-texto">
+          ¿Sos alumno? Registrate y elegí a tu profe o gimnasio (o escribí el código que te
+          pasaron).
+        </p>
+        <Link to="/registro/alumno" className="portada-boton portada-boton-borde">
+          Soy alumno
+        </Link>
+      </div>
+    </Seccion>
+  )
+}
+
+// Los planes de alumnos de siempre (Ajustes → Planes), mientras la base
+// no tenga los planes DREY.
+function PlanesDeAlumnos({ pagina }) {
   const planes = listaDePlanes({ soloVisibles: true })
   if (!planes.length) return null
   return (
@@ -186,16 +279,25 @@ export function SeccionSumate({ pagina }) {
       <div className="portada-sumate">
         <div>
           <Encabezado pagina={pagina} seccion="sumate" />
-          {whatsapp && (
-            <a
-              className="portada-boton portada-boton-borde portada-sumate-boton"
-              href={whatsapp}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Quiero sumarme
-            </a>
-          )}
+          {/* Registro directo de profes y gimnasios (SQL 033, D8). */}
+          <div className="portada-sumate-botones">
+            <Link to="/registro/profe" className="portada-boton portada-boton-lleno">
+              Soy profe
+            </Link>
+            <Link to="/registro/gimnasio" className="portada-boton portada-boton-borde">
+              Tengo un gimnasio
+            </Link>
+            {whatsapp && (
+              <a
+                className="portada-boton portada-boton-borde portada-sumate-boton"
+                href={whatsapp}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Hablar por WhatsApp
+              </a>
+            )}
+          </div>
         </div>
         {puntos.length > 0 && (
           <ul className="portada-lista-tilde">

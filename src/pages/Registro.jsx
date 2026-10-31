@@ -2,8 +2,17 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient.js'
 import { cargarProfesDisponibles, obtenerOpcionesDeProfe } from '../services/profes.js'
+import {
+  buscarEspacioPorCodigo,
+  cargarEspaciosParaAlumnos,
+  normalizarCodigo,
+} from '../services/equipo.js'
 import { textoExperiencia, textoModalidades } from '../data/especialidades.js'
-import EyeIcon from '../components/EyeIcon.jsx'
+import DatosDeCuenta, {
+  DATOS_VACIOS,
+  revisarDatosDeCuenta,
+  textoErrorRegistro,
+} from '../components/registro/DatosDeCuenta.jsx'
 import DatosDePago from '../components/DatosDePago.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
 import CasillasConsentimiento from '../components/CasillasConsentimiento.jsx'
@@ -17,13 +26,17 @@ import Esqueleto from '../components/Esqueleto.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 import LogoDrey from '../components/LogoDrey.jsx'
 
-// Registro en 4 pasos, en este orden:
-//   1. Tus datos      (datos personales, objetivo, lesiones y las dos
-//                      casillas de consentimiento: términos/privacidad y
+// Registro del ALUMNO ("/registro/alumno"; "/registro" es el elegidor
+// de tipo de cuenta, pages/RegistroElegir.jsx). 4 pasos, en este orden:
+//   1. Tus datos      (los de components/registro/DatosDeCuenta.jsx, más
+//                      fecha de nacimiento, peso, objetivo, lesiones y las
+//                      dos casillas de consentimiento: términos/privacidad y
 //                      datos de salud, Ley 18.331)
-//   2. Tu plan        (uno de los planes + código de descuento, que se
+//   2. Tu profe       (el profe o gimnasio con el que entrena: de la lista
+//                      o con el código que le pasaron, supabase/sql/033;
+//                      "/registro/alumno?espacio=FITCENTER" ya lo deja elegido)
+//   3. Tu plan        (uno de los planes + código de descuento, que se
 //                      revisa en la base antes de seguir)
-//   3. Tu profe       (profe o gimnasio al que se asocia)
 //   4. Pago           (cómo pagar y botón "Ya pagué")
 //
 // Recién en el paso 4 se crea la cuenta. Queda "pendiente" hasta que
@@ -35,25 +48,21 @@ import LogoDrey from '../components/LogoDrey.jsx'
 // los visibles), los mismos que cobra Mercado Pago.
 //
 // Todos los datos viajan en los metadatos del usuario de Supabase y la
-// base los copia sola a la tabla "perfiles" (triggers handle_new_user y
-// asignar_profe_al_registrarse, ver supabase/sql/007).
-const PASOS = ['Tus datos', 'Tu plan', 'Tu profe', 'Pago']
+// base los copia sola a la tabla "perfiles" (triggers handle_new_user,
+// asignar_profe_al_registrarse y registro_por_tipo, ver supabase/sql/007
+// y 033). El espacio elegido viaja como "espacio_codigo".
+const PASOS = ['Tus datos', 'Tu profe', 'Tu plan', 'Pago']
+const PASO_PROFE = 1
+const PASO_PLAN = 2
 
 export default function Registro() {
   const [paso, setPaso] = useState(0)
   const [parametros] = useSearchParams()
 
   // Paso 1
-  const [nombre, setNombre] = useState('')
-  const [apellido, setApellido] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmarPassword, setConfirmarPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmarPassword, setShowConfirmarPassword] = useState(false)
+  const [datos, setDatos] = useState(DATOS_VACIOS)
   const [fechaNacimiento, setFechaNacimiento] = useState('')
   const [peso, setPeso] = useState('')
-  const [celular, setCelular] = useState('')
   const [objetivo, setObjetivo] = useState('')
   const [lesiones, setLesiones] = useState('')
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
@@ -67,10 +76,17 @@ export default function Registro() {
   const [codigoValidado, setCodigoValidado] = useState(null) // respuesta de validarCodigo
   const [revisando, setRevisando] = useState(false)
 
-  // Paso 3
+  // Paso "Tu profe": la lista de profes y gimnasios (espacios, SQL 033).
+  // Sin ese SQL se usa la lista de antes (opciones_de_profe) y "eleccion"
+  // lleva { tipo, id } en vez de { codigo }.
   const [opcionesProfe, setOpcionesProfe] = useState([])
+  const [conEspacios, setConEspacios] = useState(true)
   const [cargandoOpciones, setCargandoOpciones] = useState(true)
-  const [eleccion, setEleccion] = useState(null) // { tipo: 'profe' | 'gimnasio', id }
+  // { codigo, tipo, nombre } (o { tipo, id } con la lista de antes)
+  const [eleccion, setEleccion] = useState(null)
+  const [codigoEspacio, setCodigoEspacio] = useState(() => parametros.get('espacio') || '')
+  const [buscandoCodigo, setBuscandoCodigo] = useState(false)
+  const [mensajeCodigo, setMensajeCodigo] = useState('')
   // Perfil público de cada profe (especialidades, modalidad), por id.
   const [perfilesProfe, setPerfilesProfe] = useState({})
 
@@ -93,37 +109,66 @@ export default function Registro() {
 
   async function cargarOpcionesDeProfe() {
     setCargandoOpciones(true)
-    const [{ opciones }, { profes }] = await Promise.all([
-      obtenerOpcionesDeProfe(),
+    const [{ datos: espacios, error }, { profes }] = await Promise.all([
+      cargarEspaciosParaAlumnos(),
       cargarProfesDisponibles(),
     ])
-    setOpcionesProfe(opciones)
     setPerfilesProfe(Object.fromEntries(profes.map((profe) => [profe.id, profe])))
-    // Si hay una sola opción, se deja elegida para ahorrar un toque.
-    if (opciones.length === 1) {
-      setEleccion({ tipo: opciones[0].tipo, id: opciones[0].id })
+    if (error) {
+      // La base todavía no tiene el SQL 033: la lista de antes.
+      const { opciones } = await obtenerOpcionesDeProfe()
+      setConEspacios(false)
+      setOpcionesProfe(opciones)
+      if (opciones.length === 1) setEleccion({ tipo: opciones[0].tipo, id: opciones[0].id })
+      setCargandoOpciones(false)
+      return
+    }
+    const lista = espacios || []
+    setOpcionesProfe(lista)
+    // Vino con un código (link de su profe o gimnasio) o hay una sola
+    // opción: queda elegida.
+    const codigoInicial = normalizarCodigo(parametros.get('espacio'))
+    const inicial =
+      lista.find((opcion) => opcion.codigo === codigoInicial) ||
+      (lista.length === 1 ? lista[0] : null)
+    if (inicial) {
+      setEleccion({ codigo: inicial.codigo, tipo: inicial.tipo, nombre: inicial.nombre })
+    } else if (codigoInicial) {
+      buscarCodigo(codigoInicial)
     }
     setCargandoOpciones(false)
+  }
+
+  // "¿Te pasaron un código?": busca el profe o gimnasio y lo deja elegido.
+  async function buscarCodigo(texto = codigoEspacio) {
+    const codigo = normalizarCodigo(texto)
+    setMensajeCodigo('')
+    if (codigo.length < 4) {
+      setMensajeCodigo('El código tiene al menos 4 letras o números.')
+      return
+    }
+    setBuscandoCodigo(true)
+    const { datos: encontrado } = await buscarEspacioPorCodigo(codigo)
+    setBuscandoCodigo(false)
+    if (!encontrado) {
+      setMensajeCodigo('No encontramos ese código. Revisalo con tu profe.')
+      return
+    }
+    if (!encontrado.toma_alumnos) {
+      setMensajeCodigo(`${encontrado.nombre} no está tomando alumnos por ahora.`)
+      return
+    }
+    setEleccion({ codigo: encontrado.codigo, tipo: encontrado.tipo, nombre: encontrado.nombre })
+    setMensajeCodigo(`✓ ${encontrado.nombre}`)
   }
 
   // Revisa que el paso actual esté completo. Devuelve el mensaje de
   // error a mostrar, o '' si se puede avanzar.
   function validarPaso(numeroPaso) {
     if (numeroPaso === 0) {
-      if (
-        !nombre ||
-        !apellido ||
-        !email ||
-        !password ||
-        !fechaNacimiento ||
-        !celular ||
-        !objetivo
-      ) {
-        return 'Completá todos los campos obligatorios.'
-      }
-      if (!/^\S+@\S+\.\S+$/.test(email)) return 'Revisá el email: parece que tiene un error.'
-      if (password.length < 6) return 'La contraseña tiene que tener al menos 6 caracteres.'
-      if (password !== confirmarPassword) return 'Las contraseñas no coinciden.'
+      if (!fechaNacimiento || !objetivo) return 'Completá todos los campos obligatorios.'
+      const problema = revisarDatosDeCuenta(datos)
+      if (problema) return problema
       if (!aceptaTerminos) {
         return 'Tenés que aceptar los términos y la política de privacidad para continuar.'
       }
@@ -131,9 +176,9 @@ export default function Registro() {
         return 'Necesitamos tu autorización para usar tus datos de salud: sin ellos tu profe no puede armarte la rutina.'
       }
     }
-    if (numeroPaso === 1 && !plan) return 'Elegí un plan para continuar.'
-    if (numeroPaso === 2 && opcionesProfe.length > 0 && !eleccion) {
-      return 'Elegí tu profe o gimnasio para continuar.'
+    if (numeroPaso === PASO_PLAN && !plan) return 'Elegí un plan para continuar.'
+    if (numeroPaso === PASO_PROFE && opcionesProfe.length > 0 && !eleccion) {
+      return 'Elegí tu profe o gimnasio (o escribí su código) para continuar.'
     }
     return ''
   }
@@ -145,7 +190,7 @@ export default function Registro() {
     let error = validarPaso(pasoActual)
 
     // El código de descuento se revisa en la base antes de pasar al pago.
-    if (!error && pasoActual === 1 && codigoDescuento.trim()) {
+    if (!error && pasoActual === PASO_PLAN && codigoDescuento.trim()) {
       setRevisando(true)
       const validado = await validarCodigo(codigoDescuento, planId)
       setRevisando(false)
@@ -173,24 +218,26 @@ export default function Registro() {
     setMessage('')
     setLoading(true)
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: datos.email.trim(),
+      password: datos.password,
       options: {
         // El link del mail de confirmación vuelve a la app (y entra solo).
         emailRedirectTo: `${window.location.origin}/`,
         data: {
-          nombre,
-          apellido,
+          tipo_cuenta: 'alumno',
+          nombre: datos.nombre.trim(),
+          apellido: datos.apellido.trim(),
           fecha_nacimiento: fechaNacimiento,
           peso: peso ? Number(peso) : null,
-          celular,
+          celular: datos.celular.trim(),
           objetivo,
           lesiones: lesiones || null,
           plan: planId,
           codigo_descuento: codigoValidado?.valido ? codigoValidado.codigo : null,
           estado: 'pendiente',
-          profe_id: eleccion?.tipo === 'profe' ? eleccion.id : null,
-          gimnasio_id: eleccion?.tipo === 'gimnasio' ? eleccion.id : null,
+          espacio_codigo: eleccion?.codigo || null,
+          profe_id: !eleccion?.codigo && eleccion?.tipo === 'profe' ? eleccion.id : null,
+          gimnasio_id: !eleccion?.codigo && eleccion?.tipo === 'gimnasio' ? eleccion.id : null,
           aviso_pago: avisoPago,
           terminos_version: VERSION_TERMINOS,
           consentimiento_salud: consienteSalud,
@@ -200,11 +247,7 @@ export default function Registro() {
     setLoading(false)
 
     if (error) {
-      setMessage(
-        error.message.includes('already registered')
-          ? 'Ese email ya tiene una cuenta creada.'
-          : 'No pudimos crear la cuenta. Probá de nuevo.',
-      )
+      setMessage(textoErrorRegistro(error))
       return
     }
 
@@ -247,22 +290,11 @@ export default function Registro() {
           <>
             <p className="form-section-label">Tus datos</p>
 
-            <div className="form-row">
-              <input
-                className="auth-input"
-                type="text"
-                placeholder="Nombre"
-                value={nombre}
-                onChange={(event) => setNombre(event.target.value)}
-              />
-              <input
-                className="auth-input"
-                type="text"
-                placeholder="Apellido"
-                value={apellido}
-                onChange={(event) => setApellido(event.target.value)}
-              />
-            </div>
+            <DatosDeCuenta
+              datos={datos}
+              onCambiar={(campo, valor) => setDatos((actual) => ({ ...actual, [campo]: valor }))}
+              sinCelular
+            />
 
             <div>
               <input
@@ -288,53 +320,11 @@ export default function Registro() {
                 className="auth-input"
                 type="tel"
                 placeholder="Celular"
-                value={celular}
-                onChange={(event) => setCelular(event.target.value)}
+                value={datos.celular}
+                onChange={(event) =>
+                  setDatos((actual) => ({ ...actual, celular: event.target.value }))
+                }
               />
-            </div>
-
-            <input
-              className="auth-input"
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-
-            <div className="auth-input-wrap">
-              <input
-                className="auth-input"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Contraseña"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-              <button
-                type="button"
-                className="auth-eye-btn"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              >
-                <EyeIcon crossed={showPassword} />
-              </button>
-            </div>
-
-            <div className="auth-input-wrap">
-              <input
-                className="auth-input"
-                type={showConfirmarPassword ? 'text' : 'password'}
-                placeholder="Repetir contraseña"
-                value={confirmarPassword}
-                onChange={(event) => setConfirmarPassword(event.target.value)}
-              />
-              <button
-                type="button"
-                className="auth-eye-btn"
-                onClick={() => setShowConfirmarPassword((value) => !value)}
-                aria-label={showConfirmarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              >
-                <EyeIcon crossed={showConfirmarPassword} />
-              </button>
             </div>
 
             <p className="form-section-label">Tu entrenamiento</p>
@@ -363,7 +353,98 @@ export default function Registro() {
           </>
         )}
 
-        {paso === 1 && (
+        {paso === PASO_PROFE && (
+          <>
+            <p className="form-section-label">Elegí tu profe o gimnasio</p>
+
+            <div className="registro-codigo-espacio">
+              <input
+                className="auth-input"
+                type="text"
+                placeholder="¿Te pasaron un código? (ej. FITCENTER)"
+                value={codigoEspacio}
+                onChange={(event) => {
+                  setCodigoEspacio(event.target.value.toUpperCase())
+                  setMensajeCodigo('')
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    buscarCodigo()
+                  }
+                }}
+              />
+              {conEspacios && (
+                <button
+                  type="button"
+                  className="boton-secundario boton-chico"
+                  disabled={buscandoCodigo || !codigoEspacio.trim()}
+                  onClick={() => buscarCodigo()}
+                >
+                  {buscandoCodigo ? 'Buscando…' : 'Buscar'}
+                </button>
+              )}
+            </div>
+            {mensajeCodigo && (
+              <p
+                className={
+                  mensajeCodigo.startsWith('✓')
+                    ? 'registro-edad registro-codigo-ok'
+                    : 'registro-edad'
+                }
+              >
+                {mensajeCodigo}
+              </p>
+            )}
+
+            {cargandoOpciones ? (
+              <Esqueleto tipo="linea" />
+            ) : opcionesProfe.length === 0 ? (
+              <p className="registro-edad">
+                Todavía no hay profes para elegir. Podés seguir: el profe te asigna después.
+              </p>
+            ) : (
+              <div className="plan-opciones">
+                {opcionesProfe.map((opcion) => {
+                  const activa = conEspacios
+                    ? eleccion?.codigo === opcion.codigo
+                    : eleccion?.tipo === opcion.tipo && eleccion?.id === opcion.id
+                  const idProfe = conEspacios ? opcion.profe_id : opcion.id
+                  return (
+                    <button
+                      key={conEspacios ? opcion.codigo : `${opcion.tipo}-${opcion.id}`}
+                      type="button"
+                      className={activa ? 'plan-card plan-card-activo' : 'plan-card'}
+                      onClick={() => {
+                        setMensajeCodigo('')
+                        setEleccion(
+                          conEspacios
+                            ? { codigo: opcion.codigo, tipo: opcion.tipo, nombre: opcion.nombre }
+                            : { tipo: opcion.tipo, id: opcion.id },
+                        )
+                      }}
+                    >
+                      <span className="plan-card-descripcion">
+                        {opcion.tipo === 'profe' ? 'Profe' : 'Gimnasio'}
+                      </span>
+                      <span className="plan-card-nombre">{opcion.nombre}</span>
+                      {opcion.detalle && (
+                        <span className="plan-card-precio-siguiente">{opcion.detalle}</span>
+                      )}
+                      {opcion.tipo === 'profe' && textoPerfil(perfilesProfe[idProfe]) && (
+                        <span className="plan-card-precio-siguiente">
+                          {textoPerfil(perfilesProfe[idProfe])}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {paso === PASO_PLAN && (
           <>
             <p className="form-section-label">Elegí tu plan</p>
 
@@ -401,47 +482,6 @@ export default function Registro() {
               <p className="registro-edad registro-codigo-ok">
                 ✓ Código {codigoValidado.codigo}: {textoDescuento(codigoValidado)}
               </p>
-            )}
-          </>
-        )}
-
-        {paso === 2 && (
-          <>
-            <p className="form-section-label">Elegí tu profe o gimnasio</p>
-
-            {cargandoOpciones ? (
-              <Esqueleto tipo="linea" />
-            ) : opcionesProfe.length === 0 ? (
-              <p className="registro-edad">
-                Todavía no hay profes para elegir. Podés seguir: el profe te asigna después.
-              </p>
-            ) : (
-              <div className="plan-opciones">
-                {opcionesProfe.map((opcion) => {
-                  const activa = eleccion?.tipo === opcion.tipo && eleccion?.id === opcion.id
-                  return (
-                    <button
-                      key={`${opcion.tipo}-${opcion.id}`}
-                      type="button"
-                      className={activa ? 'plan-card plan-card-activo' : 'plan-card'}
-                      onClick={() => setEleccion({ tipo: opcion.tipo, id: opcion.id })}
-                    >
-                      <span className="plan-card-descripcion">
-                        {opcion.tipo === 'profe' ? 'Profe' : 'Gimnasio'}
-                      </span>
-                      <span className="plan-card-nombre">{opcion.nombre}</span>
-                      {opcion.detalle && (
-                        <span className="plan-card-precio-siguiente">{opcion.detalle}</span>
-                      )}
-                      {opcion.tipo === 'profe' && textoPerfil(perfilesProfe[opcion.id]) && (
-                        <span className="plan-card-precio-siguiente">
-                          {textoPerfil(perfilesProfe[opcion.id])}
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
             )}
           </>
         )}

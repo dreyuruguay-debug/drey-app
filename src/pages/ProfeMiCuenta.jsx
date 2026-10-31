@@ -80,6 +80,11 @@ export default function ProfeMiCuenta() {
     },
     ...(esDuenoDe(espacio) ? [opcionSuscripcion(espacio)] : []),
     {
+      to: '/profe/espacios',
+      titulo: 'Mis espacios',
+      detalle: 'Tu código, los gimnasios donde trabajás y sumarte a uno',
+    },
+    {
       to: '/profe/estadisticas',
       titulo: 'Estadísticas',
       detalle: 'Clientes activos, bajas e ingresos del mes',

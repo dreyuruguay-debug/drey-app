@@ -10361,3 +10361,77 @@ div.tarjeta-rutina {
     max-width: 460px;
   }
 }
+
+/* ---------- Registro por tipo y equipo del gimnasio (SQL 033) ---------- */
+.registro-elegir-titulo {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.registro-screen a.plan-card {
+  color: inherit;
+  text-decoration: none;
+}
+
+.registro-codigo-espacio {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.registro-codigo-espacio .auth-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.selector-espacio-mas {
+  color: var(--drey-texto-verde);
+  font-weight: 700;
+}
+
+.equipo-codigo {
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  align-self: center;
+}
+
+.equipo-interruptor {
+  margin-top: 0.75rem;
+}
+
+.portada-prueba {
+  font-weight: 700;
+}
+
+.portada-planes-grupo + .portada-planes-grupo {
+  margin-top: 2.5rem;
+}
+
+.portada-planes-subtitulo {
+  margin: 1.75rem 0 0;
+  font-size: 1.1rem;
+}
+
+.portada-planes-grupo .portada-planes {
+  margin-top: 1rem;
+}
+
+.portada-soy-alumno {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.portada-sumate-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.portada-sumate-botones .portada-sumate-boton {
+  margin-top: 0;
+}
