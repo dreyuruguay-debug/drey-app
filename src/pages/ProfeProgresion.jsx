@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { clientesDelEspacio } from '../services/espacio.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
-import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Progresión: las evaluaciones mensuales que esperan revisión del profe
 // y el acceso a las gráficas de cada cliente. Al abrir esta pantalla se
@@ -27,12 +27,7 @@ export default function ProfeProgresion() {
         .select('id, cliente_id, ciclo, desde, hasta, datos')
         .eq('estado', 'borrador')
         .order('hasta'),
-      supabase
-        .from('perfiles')
-        .select('id, nombre, apellido')
-        .eq('estado', 'activo')
-        .match(SOLO_CLIENTES)
-        .order('nombre'),
+      clientesDelEspacio('id, nombre, apellido').eq('estado', 'activo').order('nombre'),
     ])
     setBorradores(listaBorradores || [])
     setClientes(listaClientes || [])

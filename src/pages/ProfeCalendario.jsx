@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { clientesDelEspacio } from '../services/espacio.js'
 import { DIAS_SEMANA } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
-import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Vista semanal de todos los clientes juntos: una sola tabla con qué
 // rutina le toca a cada uno cada día, para no tener que entrar
@@ -23,11 +23,8 @@ export default function ProfeCalendario() {
 
   async function cargarTodo() {
     setCargando(true)
-    const { data: listaClientes } = await supabase
-      .from('perfiles')
-      .select('id, nombre, apellido')
+    const { data: listaClientes } = await clientesDelEspacio('id, nombre, apellido')
       .eq('estado', 'activo')
-      .match(SOLO_CLIENTES)
       .order('nombre')
 
     const clientesData = listaClientes || []

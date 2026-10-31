@@ -5,6 +5,7 @@ import Pestanas from '../components/Pestanas.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import AjustesPortada from '../components/AjustesPortada.jsx'
 import AjustesDrive from '../components/AjustesDrive.jsx'
+import AjustesDrey from '../components/AjustesDrey.jsx'
 import { mostrarAviso } from '../services/avisos.js'
 import {
   cargarConfiguracion,
@@ -29,6 +30,9 @@ import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 //     de inicio (components/AjustesPortada.jsx, supabase/sql/027).
 //   · Drive: conexión con la carpeta de Google Drive donde se guardan las
 //     evaluaciones de cada alumno (components/AjustesDrive.jsx, SQL 031).
+//   · DREY: lo que cobra DREY a los profes y gimnasios: planes por cupos,
+//     prueba gratis y datos de cobro de DREY (components/AjustesDrey.jsx,
+//     SQL 032).
 //
 // Arriba, el acceso al administrador de notificaciones (pantalla propia:
 // pages/AdminNotificaciones.jsx, supabase/sql/030).
@@ -37,6 +41,7 @@ const PESTANAS = [
   { id: 'cobro', label: 'Cobro' },
   { id: 'whatsapp', label: 'WhatsApp' },
   { id: 'plazos', label: 'Plazos' },
+  { id: 'drey', label: 'DREY' },
   { id: 'portada', label: 'Portada' },
   { id: 'drive', label: 'Drive' },
 ]
@@ -84,6 +89,8 @@ export default function AdminAjustes() {
         <AjustesPortada />
       ) : pestana === 'drive' ? (
         <AjustesDrive />
+      ) : pestana === 'drey' ? (
+        <AjustesDrey config={config} />
       ) : (
         <SeccionPlazos config={config} />
       )}
@@ -487,10 +494,15 @@ function SeccionWhatsapp({ config }) {
 function SeccionPlazos({ config }) {
   const [diasAviso, setDiasAviso] = useState(String(config.diasAviso))
   const [diasDeGracia, setDiasDeGracia] = useState(String(config.diasDeGracia))
+  const [diasAlumnosEspacio, setDiasAlumnosEspacio] = useState(
+    String(config.diasAvisoAlumnosEspacio ?? 14),
+  )
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const cambiado =
-    diasAviso !== String(config.diasAviso) || diasDeGracia !== String(config.diasDeGracia)
+    diasAviso !== String(config.diasAviso) ||
+    diasDeGracia !== String(config.diasDeGracia) ||
+    diasAlumnosEspacio !== String(config.diasAvisoAlumnosEspacio ?? 14)
 
   async function guardar(event) {
     event.preventDefault()
@@ -508,9 +520,24 @@ function SeccionPlazos({ config }) {
       setMensaje('Poné un número de días entre 0 y 30.')
       return
     }
+    const diasEspacio = Number(diasAlumnosEspacio)
+    if (
+      diasAlumnosEspacio === '' ||
+      !Number.isInteger(diasEspacio) ||
+      diasEspacio < 0 ||
+      diasEspacio > 60
+    ) {
+      setMensaje('Los días de los alumnos cuando el espacio no paga van de 0 a 60.')
+      return
+    }
     setMensaje('')
     setGuardando(true)
-    const error = await guardarAjustes({ diasAviso: valores[0], diasDeGracia: valores[1] })
+    const error = await guardarAjustes({
+      diasAviso: valores[0],
+      diasDeGracia: valores[1],
+      // Sin el SQL 032 la base no tiene este dato: no se manda.
+      ...(config.tieneCupos ? { diasAvisoAlumnosEspacio: diasEspacio } : {}),
+    })
     setGuardando(false)
     avisarResultado(error, 'Plazos guardados')
   }
@@ -544,6 +571,21 @@ function SeccionPlazos({ config }) {
         <p className="profe-nota">
           Pasados los días de gracia sin pagar, el cliente deja de ver sus rutinas hasta que pague
           (su historial no se borra). El texto de los términos se actualiza solo.
+        </p>
+        <Campo etiqueta="Si un profe o gimnasio no le paga a DREY, días que sus alumnos siguen entrenando">
+          <input
+            className="auth-input"
+            type="number"
+            min="0"
+            max="60"
+            inputMode="numeric"
+            value={diasAlumnosEspacio}
+            onChange={(event) => setDiasAlumnosEspacio(event.target.value)}
+          />
+        </Campo>
+        <p className="profe-nota">
+          Durante esos días ven un cartel suave ("acercate a tu profe"), sin hablar de plata ni de
+          DREY. Se aplica cuando se instale la última parte del cobro por cupos (Entrega D).
         </p>
         {mensaje && <p className="auth-message">{mensaje}</p>}
         <button

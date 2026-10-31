@@ -18,6 +18,11 @@ export const CONFIGURACION_POR_DEFECTO = Object.freeze({
   whatsappGrupoUrl: '',
   diasAviso: 5,
   diasDeGracia: 3,
+  // Cobro por cupos (supabase/sql/032).
+  dreyCobro: { banco: '', titular: '', cuenta: '', moneda: '', linkMercadoPago: '' },
+  prueba: { activa: true, dias: 14, cupos: 3 },
+  diasAvisoAlumnosEspacio: 14,
+  tieneCupos: false, // la base ya tiene el SQL 032
 })
 
 let actual = { ...CONFIGURACION_POR_DEFECTO, ...leerJSON(CLAVE_CELULAR, {}) }

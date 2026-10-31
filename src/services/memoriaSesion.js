@@ -34,6 +34,16 @@ export function olvidar(clave) {
   memoria.delete(clave)
 }
 
+// Borra todo lo guardado menos las claves de "menos" (por ejemplo, al
+// cambiar de espacio en el panel: lo de un espacio no se muestra en el
+// otro, pero el tipo de cuenta sigue sabido).
+export function olvidarTodo({ menos = [] } = {}) {
+  for (const clave of [...memoria.keys()]) {
+    if (!menos.includes(clave)) memoria.delete(clave)
+  }
+  tareas.clear()
+}
+
 // Ejecuta "tarea" una sola vez aunque la pidan varias pantallas a la vez
 // (todas esperan el mismo resultado) y no la repite hasta que pasen
 // "cadaMs" milisegundos: mientras tanto devuelve null (= "ya estaba

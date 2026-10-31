@@ -48,3 +48,51 @@ export function textoVence(dias) {
   if (dias === 1) return 'vence mañana'
   return `vence en ${dias} días`
 }
+
+// Estado de la suscripción DREY de un espacio (supabase/sql/032), con la
+// misma regla de aviso y gracia que la del alumno:
+//   espacio: { estadoReal, sinCosto, pruebaHasta, vencimiento, avisoPago }
+// Devuelve { tipo, texto, tono: 'ok' | 'alerta' | 'neutro', dias }.
+//   tipo: 'sin-costo' | 'prueba' | 'prueba-terminada' | 'pendiente' |
+//         'al-dia' | 'por-vencer' | 'gracia' | 'vencido' | 'pausado'
+export function estadoDeEspacio(espacio, hoyISO) {
+  if (!espacio) return { tipo: 'pendiente', texto: '', tono: 'neutro', dias: null }
+  const real = espacio.estadoReal
+  if (real === 'pausado') return { tipo: 'pausado', texto: 'Pausado', tono: 'alerta', dias: null }
+  if (real === 'sin_costo' || espacio.sinCosto) {
+    return { tipo: 'sin-costo', texto: 'Sin costo', tono: 'ok', dias: null }
+  }
+  if (real === 'prueba') {
+    const dias = espacio.pruebaHasta ? diasEntre(hoyISO, espacio.pruebaHasta) : null
+    return {
+      tipo: 'prueba',
+      texto:
+        dias == null
+          ? 'Prueba gratis'
+          : dias === 0
+            ? 'Prueba gratis · termina hoy'
+            : `Prueba gratis · ${dias === 1 ? 'queda 1 día' : `quedan ${dias} días`}`,
+      tono: dias != null && dias <= diasAviso() ? 'alerta' : 'neutro',
+      dias,
+    }
+  }
+  if (real === 'prueba_terminada') {
+    return { tipo: 'prueba-terminada', texto: 'Terminó la prueba', tono: 'alerta', dias: null }
+  }
+  if (real === 'pendiente') {
+    return { tipo: 'pendiente', texto: 'Sin plan', tono: 'alerta', dias: null }
+  }
+  const plan = estadoDelPlan({ estado: 'activo', vencimiento: espacio.vencimiento }, hoyISO)
+  const textos = {
+    'al-dia': 'Al día',
+    'por-vencer': plan.dias != null ? `Al día · ${textoVence(plan.dias)}` : 'Al día',
+    gracia: 'Vencido · en gracia',
+    vencido: 'Vencido',
+  }
+  return {
+    tipo: plan.tipo,
+    texto: textos[plan.tipo] || 'Al día',
+    tono: plan.tipo === 'al-dia' ? 'ok' : plan.tipo === 'por-vencer' ? 'neutro' : 'alerta',
+    dias: plan.dias,
+  }
+}

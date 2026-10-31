@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js'
+import { problemaDeCupo } from '../utils/cupos.js'
 import { obtenerUsuarioActual } from './sesion.js'
 import { comprimirImagen } from '../utils/imagenes.js'
 
@@ -27,6 +28,9 @@ export function textoDeErrorProfes(
   general = 'No pudimos guardar el cambio. Probá de nuevo.',
 ) {
   if (!error) return ''
+  // Pasar un alumno al día a otro espacio ocupa un cupo ahí (SQL 032).
+  const deCupo = problemaDeCupo(error)
+  if (deCupo) return deCupo.texto.replace('ya tenés', 'ese espacio ya tiene')
   return MENSAJES_DE_LA_BASE.find((texto) => error.message?.includes(texto)) || general
 }
 

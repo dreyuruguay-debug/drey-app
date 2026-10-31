@@ -91,6 +91,10 @@ export const ProfeMiPerfil = pantallaDiferida(() => import('./pages/ProfeMiPerfi
 export const ProfeSolicitudes = pantallaDiferida(() => import('./pages/ProfeSolicitudes.jsx'))
 // "Mi cuenta" del profe (perfil, solicitudes, notificaciones).
 export const ProfeMiCuenta = pantallaDiferida(() => import('./pages/ProfeMiCuenta.jsx'))
+// Suscripción DREY del espacio (cobro por cupos, supabase/sql/032).
+export const ProfeSuscripcionDrey = pantallaDiferida(
+  () => import('./pages/ProfeSuscripcionDrey.jsx'),
+)
 
 // Descarga por adelantado el código de las pantallas diferidas, sin
 // mostrarlas: así la primera vez que se abren no hay que esperarlo.

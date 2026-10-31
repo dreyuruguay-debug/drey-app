@@ -9,6 +9,7 @@ export const DESTINOS = {
   profe: 'Solo al profe',
   admin: 'Solo al Admin',
   'profe-y-admin': 'Al profe y al Admin',
+  dueno: 'Al dueño del espacio (el profe o el dueño del gimnasio)',
 }
 
 // Cómo se agrupan en la lista.

@@ -43,8 +43,10 @@ import {
   ProfeRutinaNueva,
   ProfeRutinas,
   ProfeSolicitudes,
+  ProfeSuscripcionDrey,
   Profes,
 } from './pantallasDiferidas.js'
+import { useEspacioActivoId } from './services/espacio.js'
 import Esqueleto from './components/Esqueleto.jsx'
 import { RUTA_INGRESAR, RUTA_PORTADA } from './data/rutas.js'
 
@@ -59,13 +61,18 @@ function CargandoPantalla() {
 // Cada pantalla tiene su propio archivo en src/pages.
 // PantallaError: si una pantalla se rompe, muestra un mensaje amable en
 // vez de quedar en blanco (y avisa por mail, ver services/errores.js).
+//
+// Las rutas se vuelven a armar cuando el profe cambia de espacio en el
+// panel (services/espacio.js): cada pantalla carga de nuevo lo de ese
+// espacio. Para el alumno y el Admin no cambia nunca.
 export default function App() {
+  const espacioActivo = useEspacioActivoId()
   return (
     <BrowserRouter>
       <EstadoConexion />
       <PantallaError>
         <Suspense fallback={<CargandoPantalla />}>
-          <Routes>
+          <Routes key={espacioActivo || 'sin-espacio'}>
             {/* "/" es la página de inicio (quien ya inició sesión va directo a
                 su pantalla) y "/ingresar" la misma con el formulario para
                 iniciar sesión ya abierto. */}
@@ -103,6 +110,7 @@ export default function App() {
             <Route path="/profe/equipo" element={<ProfeEquipo />} />
             <Route path="/profe/mi-cuenta" element={<ProfeMiCuenta />} />
             <Route path="/profe/mi-perfil" element={<ProfeMiPerfil />} />
+            <Route path="/profe/suscripcion" element={<ProfeSuscripcionDrey />} />
             <Route path="/profe/solicitudes" element={<ProfeSolicitudes />} />
             <Route path="/profe/ejercicios" element={<ProfeEjercicios />} />
             <Route path="/profe/clientes" element={<ProfeClientes />} />

@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js'
 import { estadoDelPlan } from '../data/vencimiento.js'
+import { espacioActivoId } from './espacio.js'
 
 // Habilitar cuentas y confirmar pagos. Lo usan "Pagos" y la pestaña
 // Pagos de la ficha de cada cliente, así funcionan igual en los dos lados.
@@ -10,8 +11,18 @@ import { estadoDelPlan } from '../data/vencimiento.js'
 // "pagos" (con el precio del plan y su código de descuento, para las
 // estadísticas) y suman un mes de acceso (desde hoy, o desde el
 // vencimiento si todavía no venció).
+//
+// Cobro por cupos (supabase/sql/032): la base revisa que quede un cupo
+// libre en el espacio del alumno y que quien habilita tenga permiso. Si
+// el alumno todavía no tiene espacio, queda en el espacio elegido en el
+// panel (p_espacio). Los errores se explican con problemaDeCupo()
+// (utils/cupos.js) y components/AvisoCupo.jsx.
 async function registrarPagoManual(id) {
-  const { error } = await supabase.rpc('registrar_pago_manual', { p_cliente: id })
+  const espacio = espacioActivoId()
+  const { error } = await supabase.rpc(
+    'registrar_pago_manual',
+    espacio ? { p_cliente: id, p_espacio: espacio } : { p_cliente: id },
+  )
   return error || null
 }
 

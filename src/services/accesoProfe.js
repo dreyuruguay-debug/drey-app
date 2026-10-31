@@ -2,7 +2,8 @@ import { supabase } from './supabaseClient.js'
 import { esErrorDeRed, obtenerUsuarioActual, usuarioGuardado } from './sesion.js'
 import { recordado, recordar } from './memoriaSesion.js'
 import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
-import { SOLO_CLIENTES, entraAlPanel } from '../utils/roles.js'
+import { entraAlPanel } from '../utils/roles.js'
+import { clientesDelEspacio } from './espacio.js'
 
 // ¿Quién usa la app entra al panel? (profe o Admin, ver utils/roles.js).
 // Lo usa el menú del panel (components/ProfeLayout.jsx) para decidir si
@@ -126,15 +127,24 @@ export function ultimosPagosPendientes() {
   return recordado(CLAVE_PAGOS) || 0
 }
 
+// Los del espacio activo (services/espacio.js). Al Admin se le suman los
+// espacios que avisaron que pagaron DREY (supabase/sql/032).
 export async function contarPagosPendientes() {
-  const { count, error } = await supabase
-    .from('perfiles')
-    .select('id', { count: 'exact', head: true })
-    .match(SOLO_CLIENTES)
-    .or('estado.eq.pendiente,aviso_pago.is.true')
+  const [{ count, error }, espacios] = await Promise.all([
+    clientesDelEspacio('id', { count: 'exact', head: true }).or(
+      'estado.eq.pendiente,aviso_pago.is.true',
+    ),
+    esAdminConocido()
+      ? supabase
+          .from('espacios')
+          .select('id', { count: 'exact', head: true })
+          .eq('aviso_pago', true)
+      : Promise.resolve({ count: 0 }),
+  ])
   if (error) return ultimosPagosPendientes()
-  recordar(CLAVE_PAGOS, count || 0)
-  return count || 0
+  const total = (count || 0) + (espacios.error ? 0 : espacios.count || 0)
+  recordar(CLAVE_PAGOS, total)
+  return total
 }
 
 // Número sobre "Clientes": solicitudes de alumnos esperando respuesta

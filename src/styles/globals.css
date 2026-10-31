@@ -10153,3 +10153,211 @@ div.tarjeta-rutina {
     letter-spacing: -0.01em;
   }
 }
+
+/* ---------- Cobro por cupos: espacios (supabase/sql/032) ---------- */
+
+/* Selector de espacio, arriba del panel (components/SelectorEspacio.jsx) */
+.selector-espacio {
+  position: relative;
+  margin-bottom: 0.9rem;
+}
+
+.selector-espacio-boton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selector-espacio-boton:hover {
+  border-color: var(--drey-borde-fuerte);
+}
+
+.selector-espacio-textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.selector-espacio-textos small {
+  color: var(--drey-texto-suave);
+  font-size: 0.72rem;
+}
+
+.selector-espacio-textos strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selector-espacio-flecha {
+  color: var(--drey-texto-suave);
+}
+
+.selector-espacio-lista {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie-alta);
+  box-shadow: var(--drey-sombra);
+}
+
+.selector-espacio-opcion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selector-espacio-opcion:hover,
+.selector-espacio-elegido {
+  background: var(--drey-hover);
+}
+
+.selector-espacio-check {
+  color: var(--drey-accent);
+  font-weight: 800;
+}
+
+/* Barra de cupos (components/BarraCupos.jsx) */
+.barra-cupos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0.6rem 0 0.2rem;
+}
+
+.barra-cupos-textos {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--drey-texto-suave);
+}
+
+.barra-cupos-textos strong {
+  color: var(--drey-text);
+}
+
+.barra-cupos-llena .barra-avance-relleno {
+  background: var(--drey-naranja);
+}
+
+/* Planes DREY para elegir (pages/ProfeSuscripcionDrey.jsx) */
+.plan-drey-opcion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.plan-drey-elegido {
+  border-color: var(--drey-accent);
+}
+
+.plan-drey-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.plan-drey-textos small {
+  color: var(--drey-texto-suave);
+}
+
+.plan-drey-textos .plan-drey-aviso {
+  color: var(--drey-naranja-texto);
+}
+
+/* Espacios y suscripciones DREY del Admin */
+.espacio-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.espacio-admin-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.espacio-admin-cabecera .codigo-item-textos {
+  min-width: 0;
+}
+
+.espacio-admin-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.espacio-admin-buscar {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.drey-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Pestañas que no entran (más de seis): se deslizan de costado. */
+.pestanas-desliza {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pestanas-desliza::-webkit-scrollbar {
+  display: none;
+}
+
+.pestanas-desliza .pestana {
+  flex: 1 0 auto;
+  padding: 0 0.8rem;
+}
+
+@media (min-width: 900px) {
+  .selector-espacio {
+    max-width: 460px;
+  }
+}

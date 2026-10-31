@@ -42,6 +42,9 @@ export function armarTareas({
   solicitudes = [],
   // ¿Le falta completar su perfil de profe? (null = no se sabe)
   perfilIncompleto = null,
+  // ¿Habilita cuentas y confirma pagos en este espacio? En un gimnasio
+  // donde habilita el dueño, el profe no ve esas tareas (SQL 032).
+  cobra = true,
   hoy,
 }) {
   const tareas = []
@@ -86,7 +89,7 @@ export function armarTareas({
     })
   }
 
-  if (pendientes.length) {
+  if (cobra && pendientes.length) {
     tareas.push({
       id: 'cuentas-nuevas',
       nivel: 'urgente',
@@ -96,7 +99,7 @@ export function armarTareas({
       accion: { texto: 'Revisar', to: '/profe/cuentas' },
     })
   }
-  if (avisaronPago.length) {
+  if (cobra && avisaronPago.length) {
     tareas.push({
       id: 'pagos',
       nivel: 'urgente',

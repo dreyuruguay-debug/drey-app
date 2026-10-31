@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { clientesDelEspacio } from '../services/espacio.js'
 import { cargarActividadClientes } from '../services/actividad.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
 import {
@@ -13,7 +14,6 @@ import {
 import { obtenerPlan } from '../data/planes.js'
 import { fechaLocalDeMomento } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
-import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // A partir de esta cantidad de días sin entrenar, el cliente aparece
 // marcado como "inactivo" en la lista, para que el profe lo note sin
@@ -67,12 +67,7 @@ export default function ProfeClientes() {
   async function cargarClientes() {
     // Los clientes y cuándo entrenó cada uno, en un solo viaje.
     const [{ data: listaClientes }, actividad] = await Promise.all([
-      supabase
-        .from('perfiles')
-        .select('*')
-        .eq('estado', 'activo')
-        .match(SOLO_CLIENTES)
-        .order('nombre'),
+      clientesDelEspacio('*').eq('estado', 'activo').order('nombre'),
       cargarActividadClientes(),
     ])
 

@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
-import { supabase } from '../services/supabaseClient.js'
+import { clientesDelEspacio } from '../services/espacio.js'
 import { obtenerPlan } from '../data/planes.js'
 import Esqueleto from '../components/Esqueleto.jsx'
-import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // "+ Nueva rutina" (desde Inicio o Clientes): primero se elige para qué
 // cliente es y enseguida arranca el asistente paso a paso. Las rutinas
@@ -24,11 +23,8 @@ export default function ProfeRutinas() {
 
   async function cargarClientes() {
     setCargando(true)
-    const { data } = await supabase
-      .from('perfiles')
-      .select('id, nombre, apellido, plan')
+    const { data } = await clientesDelEspacio('id, nombre, apellido, plan')
       .eq('estado', 'activo')
-      .match(SOLO_CLIENTES)
       .order('nombre')
     setClientes(data || [])
     setCargando(false)

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../services/supabaseClient.js'
+import { clientesDelEspacio } from '../services/espacio.js'
 import Esqueleto from './Esqueleto.jsx'
-import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // Ventana para copiar una rutina de otro cliente: se busca, se elige y
 // se crea una copia en borrador para este cliente (ver duplicarRutina).
@@ -18,7 +18,7 @@ export default function CopiarRutina({ clienteId, onElegir, onCerrar }) {
   async function cargar() {
     const [{ data: lista }, { data: clientes }] = await Promise.all([
       supabase.from('rutinas').select('*').neq('cliente_id', clienteId).eq('publicada', true),
-      supabase.from('perfiles').select('id, nombre, apellido').match(SOLO_CLIENTES),
+      clientesDelEspacio('id, nombre, apellido'),
     ])
     const nombres = Object.fromEntries(
       (clientes || []).map((cliente) => [cliente.id, `${cliente.nombre} ${cliente.apellido}`]),

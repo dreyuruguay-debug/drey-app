@@ -26,6 +26,8 @@ import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import AvisoCupo from '../components/AvisoCupo.jsx'
+import { problemaDeCupo } from '../utils/cupos.js'
 
 const PESTANAS = [
   { id: 'rutinas', label: 'Rutinas' },
@@ -59,6 +61,8 @@ export default function ProfeClienteDetalle() {
   const [profes, setProfes] = useState([])
   // El entrenamiento que se está corrigiendo (su id), o null.
   const [corrigiendoId, setCorrigiendoId] = useState(null)
+  // Cupo lleno, suscripción DREY sin pagar o sin permiso (SQL 032).
+  const [problemaPago, setProblemaPago] = useState(null)
 
   useEffect(() => {
     cargarTodo()
@@ -150,9 +154,12 @@ export default function ProfeClienteDetalle() {
   }
 
   async function accionDePago(accion) {
+    setProblemaPago(null)
     const error = await accion()
     if (error) {
-      mostrarAviso('No pudimos guardar el cambio', 'error')
+      const deCupo = problemaDeCupo(error)
+      if (deCupo) setProblemaPago(deCupo)
+      else mostrarAviso('No pudimos guardar el cambio', 'error')
       return
     }
     mostrarAviso('Pago registrado')
@@ -353,6 +360,7 @@ export default function ProfeClienteDetalle() {
                 <dd>{cliente.celular || '—'}</dd>
               </div>
             </dl>
+            <AvisoCupo problema={problemaPago} onCerrar={() => setProblemaPago(null)} />
             <div className="acciones-columna">
               {cliente.estado === 'pendiente' ? (
                 <button

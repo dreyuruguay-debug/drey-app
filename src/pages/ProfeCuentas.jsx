@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import Pestanas from '../components/Pestanas.jsx'
+import SuscripcionesDrey from '../components/SuscripcionesDrey.jsx'
+import AvisoCupo from '../components/AvisoCupo.jsx'
+import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
+import { delEspacioActivo } from '../services/espacio.js'
 import { supabase } from '../services/supabaseClient.js'
 import { formatearPrecio, obtenerPlan } from '../data/planes.js'
 import {
@@ -14,6 +19,7 @@ import { TEXTO_ESTADO_PAGO, TEXTO_METODO_PAGO } from '../services/pagos.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { esCliente, esProfe } from '../utils/roles.js'
+import { problemaDeCupo } from '../utils/cupos.js'
 
 // Pagos: habilitar cuentas nuevas y confirmar los avisos de pago por
 // transferencia, usando la tabla "perfiles" de Supabase. En cada cuenta
@@ -22,22 +28,39 @@ import { esCliente, esProfe } from '../utils/roles.js'
 // acceso a los códigos de descuento.
 //
 // Cada profe ve solo a sus clientes (lo controla la base, ver
-// supabase/sql/013).
+// supabase/sql/013), y de ellos los del espacio elegido arriba del panel
+// (services/espacio.js, supabase/sql/032). Si no queda cupo para
+// habilitar, lo explica components/AvisoCupo.jsx.
+//
+// El Admin tiene además la pestaña "Suscripciones DREY" (?tab=drey): los
+// pagos de los profes y gimnasios a DREY (components/SuscripcionesDrey.jsx).
+const PESTANAS_ADMIN = [
+  { id: 'alumnos', label: 'Alumnos' },
+  { id: 'drey', label: 'Suscripciones DREY' },
+]
 export default function ProfeCuentas() {
   const [clientes, setClientes] = useState([])
   const [pagosMp, setPagosMp] = useState([])
   const [nombresProfeYGimnasio, setNombresProfeYGimnasio] = useState({})
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState('')
+  // Cupo lleno, suscripción DREY sin pagar o sin permiso (SQL 032).
+  const [problema, setProblema] = useState(null)
+  const [esAdmin, setEsAdmin] = useState(esAdminConocido)
+  const [parametros, setParametros] = useSearchParams()
+  const pestana = esAdmin && parametros.get('tab') === 'drey' ? 'drey' : 'alumnos'
 
   useEffect(() => {
     cargarClientes()
+    verificarProfe().then(({ esAdmin: admin }) => setEsAdmin(Boolean(admin)))
   }, [])
 
   async function cargarClientes() {
     setCargando(true)
     const [{ data, error }, { data: gimnasios }, { data: pagos }] = await Promise.all([
-      supabase.from('perfiles').select('*').order('creado_en', { ascending: false }),
+      delEspacioActivo(supabase.from('perfiles').select('*')).order('creado_en', {
+        ascending: false,
+      }),
       supabase.from('gimnasios').select('id, nombre'),
       supabase
         .from('pagos')
@@ -65,8 +88,12 @@ export default function ProfeCuentas() {
 
   async function habilitar(id) {
     setMensaje('')
-    if (await habilitarCliente(id)) {
-      setMensaje('No pudimos habilitar esa cuenta. Probá de nuevo.')
+    setProblema(null)
+    const error = await habilitarCliente(id)
+    if (error) {
+      const deCupo = problemaDeCupo(error)
+      if (deCupo) setProblema(deCupo)
+      else setMensaje('No pudimos habilitar esa cuenta. Probá de nuevo.')
       return
     }
     mostrarAviso('Cuenta habilitada')
@@ -75,8 +102,12 @@ export default function ProfeCuentas() {
 
   async function confirmar(id) {
     setMensaje('')
-    if (await confirmarPago(id)) {
-      setMensaje('No pudimos confirmar ese pago. Probá de nuevo.')
+    setProblema(null)
+    const error = await confirmarPago(id)
+    if (error) {
+      const deCupo = problemaDeCupo(error)
+      if (deCupo) setProblema(deCupo)
+      else setMensaje('No pudimos confirmar ese pago. Probá de nuevo.')
       return
     }
     mostrarAviso('Pago confirmado')
@@ -100,9 +131,29 @@ export default function ProfeCuentas() {
   }
   const hoy = obtenerFechaHoyISO()
 
+  const pestanas = esAdmin && (
+    <Pestanas
+      etiqueta="Qué pagos ver"
+      opciones={PESTANAS_ADMIN}
+      activa={pestana}
+      onCambiar={(id) => setParametros(id === 'drey' ? { tab: 'drey' } : {}, { replace: true })}
+    />
+  )
+
+  if (pestana === 'drey') {
+    return (
+      <ProfeLayout titulo="Pagos">
+        {pestanas}
+        <SuscripcionesDrey />
+      </ProfeLayout>
+    )
+  }
+
   return (
     <ProfeLayout titulo="Pagos">
+      {pestanas}
       {mensaje && <p className="auth-message">{mensaje}</p>}
+      <AvisoCupo problema={problema} onCerrar={() => setProblema(null)} />
 
       <Link to="/profe/codigos" className="boton-secundario pagos-codigos">
         Códigos de descuento

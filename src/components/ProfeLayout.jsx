@@ -11,8 +11,10 @@ import {
   verificarProfe,
 } from '../services/accesoProfe.js'
 import { precargarPantallas } from '../pantallasDiferidas.js'
+import { esDuenoDe, refrescarMisEspacios, useEspacios } from '../services/espacio.js'
 import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
+import SelectorEspacio from './SelectorEspacio.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Layout que comparten todas las pantallas del panel: revisa que quien
@@ -33,6 +35,13 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 // "rutas": las direcciones que marcan esa sección como activa.
 // "avisos": qué número se muestra encima ('pagos': cuentas nuevas y
 // avisos de pago; 'solicitudes': alumnos que piden entrenar).
+//
+// Espacios (supabase/sql/032): si el profe trabaja en más de un espacio
+// (sus alumnos y uno o más gimnasios), arriba aparece el selector
+// (components/SelectorEspacio.jsx) y el panel muestra lo del elegido. En
+// un gimnasio donde es profe (no dueño) no ve "Pagos" salvo que el dueño
+// deje que los profes habiliten alumnos ("soloSiHabilita"), y
+// "Suscripción DREY" solo la ve el dueño del espacio ("soloDueno").
 //
 // En la computadora (pantallas anchas) el mismo menú pasa a ser una barra
 // fija a la izquierda y el contenido usa más ancho (ver "Panel en la
@@ -81,11 +90,12 @@ const SECCIONES_PROFE = [
     rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
     avisos: 'pagos',
+    soloSiHabilita: true,
   },
   {
     to: '/profe/mi-cuenta',
     label: 'Mi cuenta',
-    rutas: ['/profe/mi-cuenta', '/profe/mi-perfil', '/profe/solicitudes'],
+    rutas: ['/profe/mi-cuenta', '/profe/mi-perfil', '/profe/solicitudes', '/profe/suscripcion'],
     Icono: IconoCuenta,
     avisos: 'solicitudes',
     donde: 'celular',
@@ -105,6 +115,14 @@ const SECCIONES_PROFE = [
     Icono: IconoSolicitudes,
     avisos: 'solicitudes',
     donde: 'compu',
+  },
+  {
+    to: '/profe/suscripcion',
+    label: 'Suscripción DREY',
+    rutas: ['/profe/suscripcion'],
+    Icono: IconoSuscripcion,
+    donde: 'compu',
+    soloDueno: true,
   },
 ]
 
@@ -158,6 +176,7 @@ export default function ProfeLayout({
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [pagosPendientes, setPagosPendientes] = useState(ultimosPagosPendientes)
   const [solicitudesPendientes, setSolicitudesPendientes] = useState(ultimasSolicitudesPendientes)
+  const { activo: espacio } = useEspacios()
 
   // El número de "Clientes" se actualiza cuando se responde una solicitud.
   useEffect(() => {
@@ -177,6 +196,8 @@ export default function ProfeLayout({
       setEsProfe(profe)
       setEsAdmin(Boolean(admin))
       if (!profe) return
+      // Los espacios del profe (el Admin no tiene): una vez cada tanto.
+      if (!admin) refrescarMisEspacios().catch(() => {})
       contarPagosPendientes().then((cantidad) => activo && setPagosPendientes(cantidad))
       contarSolicitudesPendientes().then((cantidad) => activo && setSolicitudesPendientes(cantidad))
       // Deja descargadas las demás pantallas del panel, así la primera
@@ -212,6 +233,15 @@ export default function ProfeLayout({
   }
 
   const numeros = { pagos: pagosPendientes, solicitudes: solicitudesPendientes }
+  // Sin espacios conocidos (base sin el SQL 032) se ve todo como siempre.
+  const esDueno = !espacio || esDuenoDe(espacio)
+  const habilita = esDueno || Boolean(espacio?.profesHabilitan)
+  const secciones = esAdmin
+    ? SECCIONES_ADMIN
+    : SECCIONES_PROFE.filter(
+        (seccion) =>
+          !(seccion.soloDueno && (!espacio || !esDueno)) && !(seccion.soloSiHabilita && !habilita),
+      )
 
   return (
     <div className={sinMenu ? 'screen pantalla-panel' : 'screen has-bottom-nav pantalla-panel'}>
@@ -226,6 +256,7 @@ export default function ProfeLayout({
       )}
 
       <div className="profe-contenido">
+        {!esAdmin && <SelectorEspacio />}
         {titulo && <h1 className="profe-titulo">{titulo}</h1>}
         {children}
       </div>
@@ -240,44 +271,37 @@ export default function ProfeLayout({
             <img src="/drey-logo.png" alt="" />
             <span>{esAdmin ? 'Admin' : 'Profe'}</span>
           </div>
-          {(esAdmin ? SECCIONES_ADMIN : SECCIONES_PROFE).map(
-            ({ to, label, rutas, exacta, Icono, avisos, donde, grupo }) => {
-              if (grupo) {
-                return (
-                  <p key={`grupo-${grupo}`} className="panel-menu-grupo panel-solo-compu">
-                    {grupo}
-                  </p>
-                )
-              }
-              const activo = rutas.some((ruta) =>
-                exacta ? pathname === ruta : pathname === ruta || pathname.startsWith(`${ruta}/`),
-              )
-              const numero = avisos ? numeros[avisos] : 0
-              const clases = [
-                'bottom-nav-item',
-                activo ? 'bottom-nav-item-activo' : '',
-                donde ? `panel-solo-${donde}` : '',
-              ]
-                .filter(Boolean)
-                .join(' ')
+          {secciones.map(({ to, label, rutas, exacta, Icono, avisos, donde, grupo }) => {
+            if (grupo) {
               return (
-                <Link
-                  key={to}
-                  to={to}
-                  className={clases}
-                  aria-current={activo ? 'page' : undefined}
-                >
-                  {numero > 0 && (
-                    <span className="bottom-nav-numero" aria-label={`${numero} pendientes`}>
-                      {numero}
-                    </span>
-                  )}
-                  <Icono />
-                  <span>{label}</span>
-                </Link>
+                <p key={`grupo-${grupo}`} className="panel-menu-grupo panel-solo-compu">
+                  {grupo}
+                </p>
               )
-            },
-          )}
+            }
+            const activo = rutas.some((ruta) =>
+              exacta ? pathname === ruta : pathname === ruta || pathname.startsWith(`${ruta}/`),
+            )
+            const numero = avisos ? numeros[avisos] : 0
+            const clases = [
+              'bottom-nav-item',
+              activo ? 'bottom-nav-item-activo' : '',
+              donde ? `panel-solo-${donde}` : '',
+            ]
+              .filter(Boolean)
+              .join(' ')
+            return (
+              <Link key={to} to={to} className={clases} aria-current={activo ? 'page' : undefined}>
+                {numero > 0 && (
+                  <span className="bottom-nav-numero" aria-label={`${numero} pendientes`}>
+                    {numero}
+                  </span>
+                )}
+                <Icono />
+                <span>{label}</span>
+              </Link>
+            )
+          })}
         </nav>
       )}
     </div>
@@ -350,6 +374,15 @@ function IconoSolicitudes() {
     <Svg>
       <circle cx="9" cy="8" r="3.5" />
       <path d="M2 20c1-3.5 3.5-5 7-5s6 1.5 7 5M19 8v6M16 11h6" />
+    </Svg>
+  )
+}
+
+function IconoSuscripcion() {
+  return (
+    <Svg>
+      <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" />
+      <path d="M9 12l2 2 4-4" />
     </Svg>
   )
 }

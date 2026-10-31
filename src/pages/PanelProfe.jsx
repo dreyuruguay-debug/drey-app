@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { clientesDelEspacio, esDuenoDe, espacioActivo } from '../services/espacio.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
@@ -13,7 +14,6 @@ import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
-import { SOLO_CLIENTES } from '../utils/roles.js'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Lo último que se mostró queda en memoria (services/memoriaSesion.js):
@@ -72,9 +72,7 @@ export default function PanelProfe() {
       { data: perfilProfe, error: errorPerfil },
     ] = await Promise.all([
       supabase.from('perfiles').select('nombre').eq('id', usuario?.id).single(),
-      traerTodasLasFilas(() =>
-        supabase.from('perfiles').select('*').match(SOLO_CLIENTES).order('id'),
-      ),
+      traerTodasLasFilas(() => clientesDelEspacio('*').order('id')),
       traerTodasLasFilas(() => supabase.from('rutinas').select('*').order('id')),
       traerTodasLasFilas(() =>
         supabase.from('calendario_cliente').select('id, cliente_id, rutina_id').order('id'),
@@ -132,6 +130,7 @@ export default function PanelProfe() {
           ? []
           : solicitudes.filter((solicitud) => solicitud.estado === 'pendiente'),
         perfilIncompleto: errorPerfil ? null : !perfilCompleto(perfilProfe),
+        cobra: puedeCobrar(espacioActivo()),
         hoy,
       }),
       pasos: primerosPasos({
@@ -318,4 +317,10 @@ function saludo() {
   if (hora < 12) return 'Buen día'
   if (hora < 20) return 'Buenas tardes'
   return 'Buenas noches'
+}
+
+// En un gimnasio donde habilita el dueño, el profe no habilita cuentas ni
+// confirma pagos (supabase/sql/032). Sin espacio conocido, como siempre.
+function puedeCobrar(espacio) {
+  return !espacio || esDuenoDe(espacio) || espacio.profesHabilitan
 }

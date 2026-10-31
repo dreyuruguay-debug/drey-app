@@ -13,6 +13,10 @@ import {
   verificarProfe,
 } from '../services/accesoProfe.js'
 import { cargarPerfilDeProfe, perfilCompleto } from '../services/profes.js'
+import { esDuenoDe, nombreDeEspacio, useEspacios } from '../services/espacio.js'
+import { estadoDeEspacio } from '../data/vencimiento.js'
+import { textoCupos } from '../utils/cupos.js'
+import { obtenerFechaHoyISO } from '../utils/dias.js'
 import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 
 // "Mi cuenta" del profe ("/profe/mi-cuenta"): todo lo de su cuenta en un
@@ -21,6 +25,8 @@ import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 //
 //   · Mi perfil de profe (lo que ven los alumnos al elegir profe).
 //   · Solicitudes de alumnos (con las que esperan respuesta).
+//   · Suscripción DREY del espacio elegido arriba, si es su dueño
+//     (pages/ProfeSuscripcionDrey.jsx, supabase/sql/032).
 //   · Estadísticas, "Mostrar DREY a alguien" (la página de inicio sin
 //     cerrar sesión), notificaciones, apariencia (modo claro / oscuro /
 //     automático) y cerrar sesión.
@@ -31,6 +37,7 @@ export default function ProfeMiCuenta() {
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [pendientes, setPendientes] = useState(ultimasSolicitudesPendientes)
   const [perfilListo, setPerfilListo] = useState(null) // null = todavía no se sabe
+  const { activo: espacio } = useEspacios()
 
   useEffect(() => {
     let activo = true
@@ -71,6 +78,7 @@ export default function ProfeMiCuenta() {
           : 'No hay solicitudes esperando respuesta',
       destacar: pendientes > 0,
     },
+    ...(esDuenoDe(espacio) ? [opcionSuscripcion(espacio)] : []),
     {
       to: '/profe/estadisticas',
       titulo: 'Estadísticas',
@@ -112,4 +120,17 @@ export default function ProfeMiCuenta() {
       </button>
     </ProfeLayout>
   )
+}
+
+// "Suscripción DREY": plan y cupos de un vistazo; se destaca si hay algo
+// que hacer (prueba por terminar, sin plan, vencido).
+function opcionSuscripcion(espacio) {
+  const estado = estadoDeEspacio(espacio, obtenerFechaHoyISO())
+  const cupos = textoCupos({ total: espacio.cuposTotal, usados: espacio.cuposUsados })
+  return {
+    to: '/profe/suscripcion',
+    titulo: `Suscripción DREY${espacio.tipo === 'gimnasio' ? ` · ${nombreDeEspacio(espacio)}` : ''}`,
+    detalle: `${estado.texto} · ${cupos}`,
+    destacar: estado.tono === 'alerta',
+  }
 }

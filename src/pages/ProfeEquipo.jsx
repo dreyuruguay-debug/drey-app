@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import Pestanas from '../components/Pestanas.jsx'
+import AdminEspacios from '../components/AdminEspacios.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { mostrarAviso } from '../services/avisos.js'
 import { estadoDelPlan } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, obtenerLunesDeSemana } from '../utils/dias.js'
 import { esCliente, esProfe } from '../utils/roles.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { problemaDeCupo } from '../utils/cupos.js'
 
 // Equipo y gimnasios (supabase/sql/018 y 020).
 //
@@ -19,7 +22,15 @@ import Esqueleto from '../components/Esqueleto.jsx'
 //     (clientes activos, quiénes entrenaron esta semana) y puede pasar un
 //     cliente de un profe a otro.
 //
+// El Admin tiene además la pestaña "Espacios" (?tab=espacios): cada profe
+// y gimnasio con su suscripción DREY y sus cupos
+// (components/AdminEspacios.jsx, supabase/sql/032).
+//
 // Lo que cada uno puede ver y cambiar lo controla la base de datos.
+const PESTANAS_ADMIN = [
+  { id: 'equipo', label: 'Equipo' },
+  { id: 'espacios', label: 'Espacios' },
+]
 
 // Mensajes que manda la base cuando un cambio no se puede hacer (020).
 const MENSAJES_DE_LA_BASE = [
@@ -28,6 +39,10 @@ const MENSAJES_DE_LA_BASE = [
 ]
 
 function textoDeError(error) {
+  // Al pasar un alumno activo al espacio de otro profe se ocupa un cupo
+  // de ese espacio (SQL 032).
+  const deCupo = problemaDeCupo(error)
+  if (deCupo) return deCupo.texto.replace('ya tenés', 'ese espacio ya tiene')
   return (
     MENSAJES_DE_LA_BASE.find((texto) => error?.message?.includes(texto)) ||
     'No pudimos guardar el cambio'
@@ -46,6 +61,7 @@ export default function ProfeEquipo() {
   const [mensaje, setMensaje] = useState('')
   const [filtroClientes, setFiltroClientes] = useState('')
   const [quitando, setQuitando] = useState(null)
+  const [parametros, setParametros] = useSearchParams()
   const hoy = obtenerFechaHoyISO()
 
   useEffect(() => {
@@ -136,8 +152,30 @@ export default function ProfeEquipo() {
     )
   }
 
+  const pestana = rol.es_admin && parametros.get('tab') === 'espacios' ? 'espacios' : 'equipo'
+  const pestanas = rol.es_admin && (
+    <Pestanas
+      etiqueta="Qué ver"
+      opciones={PESTANAS_ADMIN}
+      activa={pestana}
+      onCambiar={(id) =>
+        setParametros(id === 'espacios' ? { tab: 'espacios' } : {}, { replace: true })
+      }
+    />
+  )
+
+  if (pestana === 'espacios') {
+    return (
+      <ProfeLayout titulo="Equipo y gimnasios" volverA="/profe">
+        {pestanas}
+        <AdminEspacios />
+      </ProfeLayout>
+    )
+  }
+
   return (
     <ProfeLayout titulo="Equipo y gimnasios" volverA="/profe">
+      {pestanas}
       {mensaje && <p className="auth-message">{mensaje}</p>}
 
       {rol.es_admin && (

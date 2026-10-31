@@ -30,6 +30,64 @@ las siga en el gimnasio y registre lo que levantó.
   se está renovando), `src/services/accesoProfe.js` pregunta una vez más
   y nunca anota a un profe como alumno por un error.
 
+## Cobro por cupos: espacios (SQL 032, Entrega A)
+
+El modelo: **el alumno le paga a su profe o gimnasio; el profe o el
+gimnasio le paga a DREY por cupos de alumnos**. La base no deja habilitar
+más alumnos que los cupos pagados. El plan completo (4 entregas, decisiones
+D1 a D9) está en "DREY - Plan cobro por cupos y registro por tipo.txt".
+
+- **Espacio** = quien le paga a DREY y tiene alumnos: el espacio personal
+  de cada profe (se crea solo cuando una cuenta pasa a ser profe) o el de
+  cada gimnasio (uno por fila de `gimnasios`). **Membresía** = un profe en
+  un espacio, como `dueno` (en su espacio personal, siempre; en un
+  gimnasio, el dueño) o `profe`. Cada **alumno** pertenece a un solo
+  espacio (`perfiles.espacio_id`) y ocupa un **cupo** mientras está activo
+  y hasta el fin del período del espacio (`perfiles.cupo_hasta`).
+- **La regla vive en la base**: el trigger `controlar_cupo` corre cada vez
+  que un alumno queda activo en un espacio (por `registrar_pago_manual` o
+  por cualquier otro camino) y no deja si no hay cupo ("Cupo lleno"), si el
+  espacio no está en prueba / al día / sin costo, o si quien habilita no
+  tiene permiso (`puede_habilitar`: Admin, dueño, o profe de gimnasio con
+  `profes_habilitan`). El espacio de cada alumno sale de su profe y su
+  gimnasio (`espacio_que_corresponde`, trigger `ubicar_alumno_en_espacio`);
+  desde la app solo el Admin lo cambia a mano.
+- **Selector de espacio** (`components/SelectorEspacio.jsx`): arriba del
+  panel, solo si el profe trabaja en más de un espacio. El espacio activo
+  está en `services/espacio.js` (lista de `mis_espacios()`, recordada en el
+  celular y en la base con `elegir_espacio`). Al cambiar, `App.jsx` vuelve a
+  armar las rutas (`key`) y cada pantalla carga lo de ese espacio. Las
+  listas de clientes del panel usan `clientesDelEspacio()` /
+  `delEspacioActivo()` (los del espacio y los que todavía no tienen
+  espacio). En un gimnasio donde es profe (no dueño) no ve "Pagos" ni las
+  tareas de habilitar, salvo que el dueño deje habilitar.
+- **Suscripción DREY** (`/profe/suscripcion`,
+  `pages/ProfeSuscripcionDrey.jsx`): solo el dueño del espacio. Plan,
+  estado (`estadoDeEspacio` en `data/vencimiento.js`), barra de cupos
+  (`components/BarraCupos.jsx`, textos en `utils/cupos.js`), elegir plan
+  (`elegir_plan_drey`, se aplica al confirmar el pago), datos de cobro de
+  DREY y "Ya pagué" con comprobante (`avisar_pago_drey`). En el celular se
+  abre desde Mi cuenta; en la compu, desde la barra lateral.
+- **"Cupo lleno"**: `components/AvisoCupo.jsx` explica el error
+  (`problemaDeCupo` en `utils/cupos.js`) en Pagos y en la ficha del
+  cliente, y lleva a Suscripción DREY al dueño.
+- **Admin**: Ajustes → **DREY** (`components/AjustesDrey.jsx`: planes DREY,
+  prueba gratis, datos de cobro de DREY); Ajustes → Plazos suma los días que
+  los alumnos siguen entrenando si el espacio no paga (se usa en la Entrega
+  D); Pagos → **Suscripciones DREY** (`components/SuscripcionesDrey.jsx`,
+  confirmar con `registrar_pago_drey`); Equipo → **Espacios**
+  (`components/AdminEspacios.jsx`: plan, cupos extra, sin costo, que los
+  profes habiliten, estado, fechas, nombre, código, borrar); Inicio con los
+  números de DREY. Todo con `resumen_espacios()` y servicios en
+  `services/suscripcionDrey.js`.
+- **Migración**: cada profe con su espacio, cada gimnasio con el suyo, cada
+  alumno en el que le corresponde. Los espacios que ya tenían alumnos
+  quedaron **sin costo** y sin tope (Facu); los demás, en prueba gratis.
+- Todavía no cambia (Entregas B, C y D): el registro por tipo de cuenta,
+  los planes y datos de cobro de cada espacio para sus alumnos, el panel
+  completo del dueño del gimnasio y la pausa de alumnos cuando el espacio
+  no paga.
+
 ## Página de inicio (SQL 027)
 
 - **"/"** es la página de inicio (`pages/Portada.jsx`): video de fondo a

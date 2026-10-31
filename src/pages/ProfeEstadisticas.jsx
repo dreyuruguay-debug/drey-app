@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { delEspacioActivo } from '../services/espacio.js'
 import { traerTodasLasFilas } from '../services/paginado.js'
 import { cargarPlanesConPrecios } from '../services/planes.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
@@ -34,7 +35,7 @@ export default function ProfeEstadisticas() {
   async function cargar() {
     setCargando(true)
     const [{ data: perfiles }, { data: pagos }, { data: sesiones }, planes] = await Promise.all([
-      traerTodasLasFilas(() => supabase.from('perfiles').select('*').order('id')),
+      traerTodasLasFilas(() => delEspacioActivo(supabase.from('perfiles').select('*')).order('id')),
       traerTodasLasFilas(() =>
         supabase
           .from('pagos')

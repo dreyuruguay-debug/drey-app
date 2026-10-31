@@ -43,6 +43,25 @@ function ajustesDesdeFila(fila) {
     whatsappGrupoUrl: fila.whatsapp_grupo_url || '',
     diasAviso: fila.dias_aviso,
     diasDeGracia: fila.dias_de_gracia,
+    // Cobro por cupos (SQL 032). Sin ese SQL, quedan los de por defecto.
+    ...('prueba_activa' in fila
+      ? {
+          dreyCobro: {
+            banco: fila.drey_banco || '',
+            titular: fila.drey_titular || '',
+            cuenta: fila.drey_cuenta || '',
+            moneda: fila.drey_moneda || '',
+            linkMercadoPago: fila.drey_link_mp || '',
+          },
+          prueba: {
+            activa: Boolean(fila.prueba_activa),
+            dias: fila.prueba_dias,
+            cupos: fila.prueba_cupos,
+          },
+          diasAvisoAlumnosEspacio: fila.dias_aviso_alumnos_espacio,
+          tieneCupos: true,
+        }
+      : { tieneCupos: false }),
   }
 }
 
@@ -96,6 +115,9 @@ export async function guardarAjustes({
   whatsappGrupoUrl,
   diasAviso,
   diasDeGracia,
+  dreyCobro,
+  prueba,
+  diasAvisoAlumnosEspacio,
 }) {
   const cambios = {}
   if (transferencia) {
@@ -108,6 +130,21 @@ export async function guardarAjustes({
   if (whatsappGrupoUrl !== undefined) cambios.whatsapp_grupo_url = limpio(whatsappGrupoUrl)
   if (diasAviso !== undefined) cambios.dias_aviso = Number(diasAviso)
   if (diasDeGracia !== undefined) cambios.dias_de_gracia = Number(diasDeGracia)
+  if (dreyCobro) {
+    cambios.drey_banco = limpio(dreyCobro.banco)
+    cambios.drey_titular = limpio(dreyCobro.titular)
+    cambios.drey_cuenta = limpio(dreyCobro.cuenta)
+    cambios.drey_moneda = limpio(dreyCobro.moneda)
+    cambios.drey_link_mp = limpio(dreyCobro.linkMercadoPago)
+  }
+  if (prueba) {
+    cambios.prueba_activa = Boolean(prueba.activa)
+    cambios.prueba_dias = Number(prueba.dias)
+    cambios.prueba_cupos = Number(prueba.cupos)
+  }
+  if (diasAvisoAlumnosEspacio !== undefined) {
+    cambios.dias_aviso_alumnos_espacio = Number(diasAvisoAlumnosEspacio)
+  }
 
   const { data, error } = await supabase.from('ajustes').update(cambios).eq('id', 1).select('id')
   if (error) return error
