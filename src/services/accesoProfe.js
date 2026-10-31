@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js'
-import { obtenerUsuarioActual, usuarioGuardado } from './sesion.js'
+import { esErrorDeRed, obtenerUsuarioActual, usuarioGuardado } from './sesion.js'
 import { recordado, recordar } from './memoriaSesion.js'
 import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
 import { SOLO_CLIENTES, entraAlPanel } from '../utils/roles.js'
@@ -27,10 +27,19 @@ const CLAVE_PAGOS = 'pagos-pendientes'
 export function esProfeConocido() {
   const usuario = usuarioGuardado()
   if (!usuario) return null
+  const conocido = conocidoDe(usuario.id)
+  return conocido ? conocido.esProfe : null
+}
+
+// Lo último que se supo de ESA cuenta (en memoria o anotado en el
+// celular), o null si nunca se supo.
+function conocidoDe(usuarioId) {
   const enMemoria = recordado(CLAVE_MEMORIA)
-  if (enMemoria?.usuarioId === usuario.id) return enMemoria.esProfe
+  if (enMemoria?.usuarioId === usuarioId) return enMemoria
   const enCelular = leerJSON(CLAVE_CELULAR)
-  if (enCelular?.usuarioId === usuario.id) return Boolean(enCelular.esProfe)
+  if (enCelular?.usuarioId === usuarioId) {
+    return { ...enCelular, esProfe: Boolean(enCelular.esProfe) }
+  }
   return null
 }
 
@@ -70,27 +79,43 @@ async function preguntarAlServidor() {
   const enMemoria = recordado(CLAVE_MEMORIA)
   if (enMemoria?.usuarioId === usuario.id && 'esAdmin' in enMemoria) return enMemoria
 
-  const { data, error } = await supabase
-    .from('perfiles')
-    .select('es_profe, es_admin')
-    .eq('id', usuario.id)
-    .single()
-  if (error) {
-    // Sin señal o error del servidor: se usa lo último que se supo.
+  let respuesta = await consultarTipoDeCuenta(usuario.id)
+  if (respuesta.error && !esErrorDeRed(respuesta.error)) {
+    // Al abrir la app al otro día la sesión vencida se renueva justo en
+    // ese momento y la primera pregunta puede fallar. Se espera un
+    // instante y se pregunta una vez más antes de decidir.
+    await esperar(REINTENTO_MS)
+    respuesta = await consultarTipoDeCuenta(usuario.id)
+  }
+  if (respuesta.error) {
+    // Sin señal o error del servidor: se usa lo último que se supo de
+    // esta cuenta. No se anota nada, así un error nunca convierte a un
+    // profe en alumno.
+    const conocido = conocidoDe(usuario.id)
     return {
       usuarioId: usuario.id,
-      esProfe: Boolean(esProfeConocido()),
-      esAdmin: Boolean(esAdminConocido()),
+      esProfe: Boolean(conocido?.esProfe),
+      esAdmin: Boolean(conocido?.esAdmin),
     }
   }
   const resultado = {
     usuarioId: usuario.id,
-    esProfe: entraAlPanel(data),
-    esAdmin: Boolean(data?.es_admin),
+    esProfe: entraAlPanel(respuesta.data),
+    esAdmin: Boolean(respuesta.data?.es_admin),
   }
   recordar(CLAVE_MEMORIA, resultado)
   guardarJSON(CLAVE_CELULAR, resultado)
   return resultado
+}
+
+const REINTENTO_MS = 1500
+
+function consultarTipoDeCuenta(usuarioId) {
+  return supabase.from('perfiles').select('es_profe, es_admin').eq('id', usuarioId).single()
+}
+
+function esperar(milisegundos) {
+  return new Promise((resolver) => setTimeout(resolver, milisegundos))
 }
 
 // Número rojo sobre "Pagos" (cuentas nuevas + avisos de pago).

@@ -20,6 +20,15 @@ las siga en el gimnasio y registre lo que levantó.
   precios), pero no es profe: no tiene clientes ni aparece en "Elegí tu
   profe". Una cuenta nunca es las dos cosas (SQL 020). La regla vive en
   `src/utils/roles.js` (`esCliente`, `entraAlPanel`, `SOLO_CLIENTES`).
+- Las pantallas del alumno (Inicio, Rutinas, Perfil…) son solo para
+  alumnos: si entra un profe o el Admin, va directo al panel
+  (`src/components/SoloAlumnos.jsx`, envuelve esas rutas en `App.jsx`).
+  Así el profe que cerró la app sin cerrar sesión, y al otro día la abre
+  en una pantalla del alumno (por ejemplo, una app instalada en el iPhone
+  antes de que abriera en "/"), no tiene que cerrar sesión y volver a
+  entrar. Si al preguntar el tipo de cuenta el servidor falla (la sesión
+  se está renovando), `src/services/accesoProfe.js` pregunta una vez más
+  y nunca anota a un profe como alumno por un error.
 
 ## Página de inicio (SQL 027)
 

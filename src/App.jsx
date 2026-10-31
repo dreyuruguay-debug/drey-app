@@ -13,6 +13,7 @@ import Progreso from './pages/Progreso.jsx'
 import AvisoGlobal from './components/AvisoGlobal.jsx'
 import EstadoConexion from './components/EstadoConexion.jsx'
 import PantallaError from './components/PantallaError.jsx'
+import SoloAlumnos from './components/SoloAlumnos.jsx'
 import {
   AdminAjustes,
   AdminHistorial,
@@ -72,17 +73,21 @@ export default function App() {
             <Route path={RUTA_INGRESAR} element={<Portada ingresar />} />
             <Route path="/registro" element={<Registro />} />
             <Route path="/nueva-contrasena" element={<NuevaContrasena />} />
-            <Route path="/inicio" element={<Home />} />
-            <Route path="/rutinas" element={<Rutinas />} />
-            <Route path="/rutinas/:id" element={<RutinaDetalle />} />
-            <Route path="/suscripcion" element={<Suscripcion />} />
-            <Route path="/comunidad" element={<Comunidad />} />
-            <Route path="/mis-datos" element={<MisDatos />} />
-            <Route path="/progreso" element={<Progreso />} />
-            <Route path="/medidas" element={<Medidas />} />
-            <Route path="/perfil" element={<Perfil />} />
-            <Route path="/profes" element={<Profes />} />
-            <Route path="/mi-privacidad" element={<PrivacidadYDatos />} />
+            {/* Pantallas del alumno: si entra un profe o el Admin, va a su
+                panel (components/SoloAlumnos.jsx). */}
+            <Route element={<SoloAlumnos />}>
+              <Route path="/inicio" element={<Home />} />
+              <Route path="/rutinas" element={<Rutinas />} />
+              <Route path="/rutinas/:id" element={<RutinaDetalle />} />
+              <Route path="/suscripcion" element={<Suscripcion />} />
+              <Route path="/comunidad" element={<Comunidad />} />
+              <Route path="/mis-datos" element={<MisDatos />} />
+              <Route path="/progreso" element={<Progreso />} />
+              <Route path="/medidas" element={<Medidas />} />
+              <Route path="/perfil" element={<Perfil />} />
+              <Route path="/profes" element={<Profes />} />
+              <Route path="/mi-privacidad" element={<PrivacidadYDatos />} />
+            </Route>
             <Route path="/terminos" element={<Legal tipo="terminos" />} />
             <Route path="/privacidad" element={<Legal tipo="privacidad" />} />
             {/* "Más" pasó a llamarse "Perfil". */}
