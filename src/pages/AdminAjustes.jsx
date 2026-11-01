@@ -415,7 +415,7 @@ function SeccionPlazos({ config }) {
         </Campo>
         <p className="profe-nota">
           Durante esos días ven un cartel suave ("acercate a tu profe"), sin hablar de plata ni de
-          DREY. Se aplica cuando se instale la última parte del cobro por cupos (Entrega D).
+          DREY. Pasados, no ven sus rutinas hasta que su profe o gimnasio pague.
         </p>
         {mensaje && <p className="auth-message">{mensaje}</p>}
         <button

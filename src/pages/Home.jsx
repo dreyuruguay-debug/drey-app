@@ -163,6 +163,16 @@ export default function Home() {
   // respondió (sin señal), se usa la misma regla calculada acá.
   const planBloqueado =
     !cuentaPendiente && (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
+  // Su profe o gimnasio no está al día (supabase/sql/035): primero un
+  // cartel suave y, pasados los días, sin acceso. Nunca se habla de plata
+  // ni de DREY: solo "acercate a tu profe".
+  const conQuien = datos?.acceso?.espacio_tipo === 'gimnasio' ? 'tu gimnasio' : 'tu profe'
+  const textoEspacio =
+    conQuien === 'tu gimnasio'
+      ? 'Hay un tema pendiente con tu gimnasio. Acercate a tu profe para resolverlo.'
+      : 'Hay un tema pendiente con tu profe. Consultale para resolverlo.'
+  const bloqueoDelEspacio = planBloqueado && Boolean(datos?.acceso?.espacio_bloqueado)
+  const cartelDelEspacio = !planBloqueado && Boolean(datos?.acceso?.espacio_cartel)
   // El entrenamiento a medias de hoy (el último que tocó), si hay.
   const enCurso = entrenamientosEnCursoDeHoy(hoy)[0] || null
   // "15 min" si todas las actividades del calentamiento tienen tiempo.
@@ -201,6 +211,12 @@ export default function Home() {
             ? 'Avisaste tu pago. Tu profe lo está revisando.'
             : 'Tu cuenta está pendiente. Tocá acá para ver cómo pagar y activarla.'}
         </Link>
+      )}
+
+      {cartelDelEspacio && (
+        <p className="home-aviso-pendiente home-aviso-espacio" role="status">
+          {textoEspacio}
+        </p>
       )}
 
       {!cuentaPendiente && !planBloqueado && plan.tipo === 'por-vencer' && (
@@ -247,6 +263,11 @@ export default function Home() {
             titulo="Cuenta pendiente"
             texto="En cuanto se confirme tu pago vas a ver acá tu entrenamiento del día."
             accion={{ texto: 'Ver cómo pagar', to: '/suscripcion' }}
+          />
+        ) : bloqueoDelEspacio ? (
+          <TarjetaMensaje
+            titulo="Tu cuenta está en pausa"
+            texto={`${textoEspacio} Tu historial y tus récords siguen guardados.`}
           />
         ) : planBloqueado ? (
           <TarjetaMensaje

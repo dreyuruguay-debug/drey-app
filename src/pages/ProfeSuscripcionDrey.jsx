@@ -22,7 +22,7 @@ import {
 } from '../services/suscripcionDrey.js'
 import { estadoDeEspacio } from '../data/vencimiento.js'
 import { formatearPrecio } from '../data/planes.js'
-import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import { obtenerFechaHoyISO, sumarDias, textoFechaCorta } from '../utils/dias.js'
 
 // "Suscripción DREY" (/profe/suscripcion): lo que el profe o el gimnasio
 // le paga a DREY por sus cupos de alumnos (supabase/sql/032). Solo la ve
@@ -170,6 +170,13 @@ export default function ProfeSuscripcionDrey() {
         <p className="suscripcion-plan-descripcion">{nombreDeEspacio(espacio)}</p>
         <span className={`estado-chip estado-${estado.tono}`}>{estado.texto}</span>
         <BarraCupos total={espacio.cuposTotal} usados={espacio.cuposUsados} />
+        {espacio.alumnosHasta && (
+          <p className="suscripcion-vencimiento suscripcion-vencida">
+            {espacio.alumnosHasta > hoy
+              ? `Tus alumnos siguen entrenando hasta el ${textoFechaCorta(sumarDias(espacio.alumnosHasta, -1))}. Después no ven sus rutinas hasta que se confirme el pago.`
+              : 'Tus alumnos no ven sus rutinas hasta que se confirme el pago.'}
+          </p>
+        )}
         <p
           className={
             estado.tono === 'alerta'
@@ -308,9 +315,12 @@ export default function ProfeSuscripcionDrey() {
         </div>
       )}
 
-      <Link to="/profe/cuentas" className="boton-texto">
-        Ir a Pagos (tus alumnos)
-      </Link>
+      {/* En pausa, el panel solo muestra esta pantalla (ProfeLayout). */}
+      {!espacio.alumnosHasta && (
+        <Link to="/profe/cuentas" className="boton-texto">
+          Ir a Cobros (tus alumnos)
+        </Link>
+      )}
     </ProfeLayout>
   )
 }
@@ -329,7 +339,7 @@ function textoEstado(estado, espacio, prueba) {
     case 'pendiente':
       return 'Elegí un plan y pagalo para empezar a habilitar alumnos.'
     case 'pausado':
-      return 'Tu espacio está pausado. Escribile a DREY.'
+      return 'Tu espacio está en pausa. Pagá tu plan y avisá con "Ya pagué": vuelve a la normalidad cuando DREY confirme el pago.'
     case 'por-vencer':
       return `Vence el ${vence}. Pagá para no cortar.`
     case 'gracia':

@@ -139,6 +139,33 @@ export async function cargarPagosDrey(espacioId, limite = 24) {
   return { pagos: data || [], error }
 }
 
+// Números del espacio para el Inicio del dueño (resumen_espacio, SQL
+// 035): cupos, alumnos activos, pendientes, avisos de pago, en gracia,
+// vencidos, sin profe y sin entrenar hace X días. Devuelve
+// { resumen, error } (resumen null si la base no tiene ese SQL).
+export async function cargarResumenEspacio(espacioId, diasSinEntrenar = 7) {
+  const { data, error } = await supabase.rpc('resumen_espacio', {
+    p_espacio: espacioId,
+    p_dias_sin_entrenar: diasSinEntrenar,
+  })
+  if (error || !data) return { resumen: null, error }
+  return {
+    resumen: {
+      cuposTotal: data.cupos_total,
+      cuposUsados: data.cupos_usados ?? 0,
+      activos: data.activos ?? 0,
+      pendientes: data.pendientes ?? 0,
+      avisaronPago: data.avisaron_pago ?? 0,
+      enGracia: data.en_gracia ?? 0,
+      vencidos: data.vencidos ?? 0,
+      sinProfe: data.sin_profe ?? 0,
+      sinEntrenar: data.sin_entrenar ?? 0,
+      diasSinEntrenar: data.dias_sin_entrenar ?? diasSinEntrenar,
+    },
+    error: null,
+  }
+}
+
 // --- Admin ---------------------------------------------------------------------
 
 function espacioDeResumen(fila) {

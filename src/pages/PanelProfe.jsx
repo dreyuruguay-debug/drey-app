@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { clientesDelEspacio, esDuenoDe, espacioActivo } from '../services/espacio.js'
+import { clientesDelEspacio, esDuenoDe, espacioActivo, useEspacios } from '../services/espacio.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
@@ -13,6 +13,7 @@ import { armarTareas, primerosPasos } from '../utils/tareasProfe.js'
 import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
+import ResumenEspacio from '../components/ResumenEspacio.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
@@ -28,6 +29,10 @@ const MEMORIA_PANEL = 'panel-profe'
 // utils/tareasProfe.js. Al volver a Inicio se muestra al instante lo
 // último cargado (MEMORIA_PANEL) y se actualiza por detrás.
 //
+// El dueño del espacio elegido (en su espacio personal, el profe) ve
+// arriba sus números de un vistazo: suscripción DREY, cupos y alumnos
+// (components/ResumenEspacio.jsx, supabase/sql/035).
+//
 // La cuenta Admin tiene su propio Inicio (AdminInicio.jsx); la elige
 // InicioPanel.jsx.
 export default function PanelProfe() {
@@ -38,6 +43,7 @@ export default function PanelProfe() {
   const [tareas, setTareas] = useState(guardado?.tareas || [])
   const [pasos, setPasos] = useState(guardado?.pasos || null)
   const [armaEquipo, setArmaEquipo] = useState(guardado?.armaEquipo || false)
+  const { activo: espacio } = useEspacios()
 
   useEffect(() => {
     let activo = true
@@ -190,6 +196,8 @@ export default function PanelProfe() {
               ))}
             </section>
           )}
+
+          {espacio && esDuenoDe(espacio) && <ResumenEspacio espacio={espacio} />}
 
           <section className="tareas">
             <p className="seccion-etiqueta">Para hacer hoy</p>

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { clientesDelEspacio } from '../services/espacio.js'
+import { clientesDelEspacio, esDuenoDe, useEspacios } from '../services/espacio.js'
+import { cargarEquipo } from '../services/equipo.js'
+import { estadoDelPlan } from '../data/vencimiento.js'
 import { cargarActividadClientes } from '../services/actividad.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
 import {
@@ -12,7 +14,7 @@ import {
   verificarProfe,
 } from '../services/accesoProfe.js'
 import { obtenerPlan } from '../data/planes.js'
-import { fechaLocalDeMomento } from '../utils/dias.js'
+import { fechaLocalDeMomento, obtenerFechaHoyISO } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 
 // A partir de esta cantidad de días sin entrenar, el cliente aparece
@@ -31,6 +33,12 @@ const MEMORIA_CLIENTES = 'profe-clientes'
 //
 // El Admin ve a todos los clientes y puede filtrarlos por profe (o "sin
 // profe") y por gimnasio; en cada cliente ve quién es su profe.
+//
+// El dueño de un gimnasio (con el gimnasio elegido arriba) también filtra
+// por profe del gimnasio. El Admin y el dueño filtran además por la cuota:
+// "Al día" o "Cuota vencida" (en días de gracia o sin acceso). El Inicio
+// del dueño entra con /profe/clientes?pago=vencidos.
+const FILTROS_PAGO = { 'al-dia': ['al-dia', 'por-vencer'], vencidos: ['gracia', 'vencido'] }
 export default function ProfeClientes() {
   // Lo último cargado se ve al instante; se actualiza por detrás.
   const [clientes, setClientes] = useState(() => recordado(MEMORIA_CLIENTES) || [])
@@ -40,6 +48,13 @@ export default function ProfeClientes() {
   const [equipo, setEquipo] = useState({ profes: [], gimnasios: [] })
   const [filtroProfe, setFiltroProfe] = useState('')
   const [filtroGimnasio, setFiltroGimnasio] = useState('')
+  const [parametros] = useSearchParams()
+  const [filtroPago, setFiltroPago] = useState(() =>
+    FILTROS_PAGO[parametros.get('pago')] ? parametros.get('pago') : '',
+  )
+  const { activo: espacio } = useEspacios()
+  const duenoDeGimnasio = !esAdmin && espacio?.tipo === 'gimnasio' && esDuenoDe(espacio)
+  const filtraPagos = esAdmin || esDuenoDe(espacio)
   // Alumnos que pidieron entrenar y esperan respuesta (supabase/sql/026).
   const [solicitudes, setSolicitudes] = useState(ultimasSolicitudesPendientes)
 
@@ -63,6 +78,21 @@ export default function ProfeClientes() {
       setEquipo({ profes: profes || [], gimnasios: gimnasios || [] }),
     )
   }, [esAdmin])
+
+  // Dueño de gimnasio: los profes del gimnasio para el filtro.
+  useEffect(() => {
+    if (!duenoDeGimnasio) return
+    cargarEquipo(espacio.id).then(({ datos }) =>
+      setEquipo({
+        profes: (datos || []).map((fila) => ({
+          id: fila.perfil_id,
+          nombre: fila.nombre,
+          apellido: '',
+        })),
+        gimnasios: [],
+      }),
+    )
+  }, [duenoDeGimnasio, espacio?.id])
 
   async function cargarClientes() {
     // Los clientes y cuándo entrenó cada uno, en un solo viaje.
@@ -100,7 +130,11 @@ export default function ProfeClientes() {
 
   const clientesFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
+    const hoy = obtenerFechaHoyISO()
     return clientes.filter((cliente) => {
+      if (filtroPago && !FILTROS_PAGO[filtroPago].includes(estadoDelPlan(cliente, hoy).tipo)) {
+        return false
+      }
       if (texto && !`${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(texto)) {
         return false
       }
@@ -114,7 +148,7 @@ export default function ProfeClientes() {
       }
       return true
     })
-  }, [clientes, busqueda, filtroProfe, filtroGimnasio, profePorId])
+  }, [clientes, busqueda, filtroProfe, filtroGimnasio, filtroPago, profePorId])
 
   function nombreDelProfe(id) {
     const profe = profePorId.get(id)
@@ -177,23 +211,37 @@ export default function ProfeClientes() {
         onChange={(event) => setBusqueda(event.target.value)}
       />
 
-      {esAdmin && (
+      {(esAdmin || duenoDeGimnasio || filtraPagos) && (
         <div className="codigo-fila clientes-filtros">
-          <select
-            className="profe-calendario-select"
-            value={filtroProfe}
-            onChange={(event) => setFiltroProfe(event.target.value)}
-            aria-label="Filtrar por profe"
-          >
-            <option value="">Todos los profes</option>
-            <option value="sin">Sin profe</option>
-            {equipo.profes.map((profe) => (
-              <option key={profe.id} value={profe.id}>
-                {profe.nombre} {profe.apellido}
-              </option>
-            ))}
-          </select>
-          {equipo.gimnasios.length > 0 && (
+          {filtraPagos && (
+            <select
+              className="profe-calendario-select"
+              value={filtroPago}
+              onChange={(event) => setFiltroPago(event.target.value)}
+              aria-label="Filtrar por cuota"
+            >
+              <option value="">Todas las cuotas</option>
+              <option value="al-dia">Al día</option>
+              <option value="vencidos">Cuota vencida</option>
+            </select>
+          )}
+          {(esAdmin || duenoDeGimnasio) && (
+            <select
+              className="profe-calendario-select"
+              value={filtroProfe}
+              onChange={(event) => setFiltroProfe(event.target.value)}
+              aria-label="Filtrar por profe"
+            >
+              <option value="">Todos los profes</option>
+              <option value="sin">Sin profe</option>
+              {equipo.profes.map((profe) => (
+                <option key={profe.id} value={profe.id}>
+                  {profe.nombre} {profe.apellido}
+                </option>
+              ))}
+            </select>
+          )}
+          {esAdmin && equipo.gimnasios.length > 0 && (
             <select
               className="profe-calendario-select"
               value={filtroGimnasio}
@@ -210,7 +258,7 @@ export default function ProfeClientes() {
           )}
         </div>
       )}
-      {esAdmin && !cargando && (
+      {(esAdmin || filtroPago || filtroProfe) && !cargando && (
         <p className="profe-nota">
           {clientesFiltrados.length} de {clientes.length} clientes activos
         </p>
@@ -245,7 +293,11 @@ export default function ProfeClientes() {
                   </p>
                   <p className="profe-cliente-detalle">
                     {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
-                    {esAdmin && ` · ${nombreDelProfe(cliente.profe_id)}`}
+                    {(esAdmin || duenoDeGimnasio) && ` · ${nombreDelProfe(cliente.profe_id)}`}
+                    {filtraPagos &&
+                      FILTROS_PAGO.vencidos.includes(
+                        estadoDelPlan(cliente, obtenerFechaHoyISO()).tipo,
+                      ) && <span className="profe-cliente-inactivo-texto"> · cuota vencida</span>}
                     {cliente.diasSinEntrenar !== null && (
                       <>
                         {' · '}

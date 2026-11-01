@@ -172,6 +172,31 @@ D1 a D9) está en "DREY - Plan cobro por cupos y registro por tipo.txt".
 - **Plan de cada alumno**: siempre uno de su espacio (trigger
   `perfiles_ubicar_plan`). El dueño o el Admin se lo cambia desde la ficha
   del alumno → Pagos.
+
+## Vencimiento de los espacios y panel del dueño (SQL 035, Entrega D)
+
+- **Cuando un profe o gimnasio no le paga a DREY** (prueba terminada,
+  pasados los días de gracia, en pausa o pendiente): sus alumnos siguen
+  entrenando los días de Ajustes → Plazos (14) con un cartel suave en el
+  Inicio ("Hay un tema pendiente con tu gimnasio. Acercate a tu profe…",
+  sin hablar de plata ni de DREY). Cumplidos, no ven sus rutinas hasta que
+  el espacio pague: lo decide la base (`acceso_vigente()`), el Inicio lo
+  muestra con `mi_acceso()` (`espacio_cartel`, `espacio_bloqueado`). La
+  cuenta empieza, como pronto, el día que se instaló el SQL 035.
+- **Panel reducido** (`components/ProfeLayout.jsx`): en un espacio sin
+  servicio el dueño solo ve Suscripción DREY y Mi cuenta; los profes del
+  gimnasio ven "tiene un pago pendiente, hablá con el dueño". El selector
+  sigue andando. Suscripción DREY dice hasta cuándo entrenan sus alumnos.
+- **Tarea cada 5 minutos** (`tarea_de_espacios()`, pg_cron): prueba
+  terminada → pendiente; vencido pasada la gracia → pausa. Avisos al
+  dueño: suscripción por vencer, prueba por terminar, espacio en pausa y
+  cupos al 90 %; al Admin: espacio en pausa. Se manejan en Ajustes →
+  Notificaciones.
+- **Inicio del dueño**: "… de un vistazo" (`components/ResumenEspacio.jsx`,
+  `resumen_espacio()`): suscripción, cupos, activos, por habilitar, avisos
+  de pago, cuotas vencidas, sin entrenar y (gimnasio) sin profe.
+- **Clientes**: el dueño y el Admin filtran por cuota ("Al día" / "Cuota
+  vencida"); el dueño de un gimnasio, también por profe.
 ## Página de inicio (SQL 027)
 
 - **"/"** es la página de inicio (`pages/Portada.jsx`): video de fondo a

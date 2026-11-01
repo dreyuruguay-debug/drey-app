@@ -16,6 +16,7 @@ import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
 import SelectorEspacio from './SelectorEspacio.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
+import { obtenerFechaHoyISO, sumarDias, textoFechaCorta } from '../utils/dias.js'
 
 // Layout que comparten todas las pantallas del panel: revisa que quien
 // entra sea profe o Admin (una sola vez por sesión, ver
@@ -43,9 +44,20 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 // deje que los profes habiliten alumnos ("soloSiHabilita"), y
 // "Suscripción DREY" solo la ve el dueño del espacio ("soloDueno").
 //
+// Espacio SIN SERVICIO (supabase/sql/035: en pausa, vencido, prueba
+// terminada o pendiente de pago): el panel de ese espacio se reduce. El
+// dueño solo ve Suscripción DREY y Mi cuenta; los profes del gimnasio, un
+// aviso de que el gimnasio tiene un pago pendiente. El selector de arriba
+// sigue andando para pasar a otro espacio. Los alumnos siguen entrenando
+// unos días con un cartel (lo controla la base).
+//
 // En la computadora (pantallas anchas) el mismo menú pasa a ser una barra
 // fija a la izquierda y el contenido usa más ancho (ver "Panel en la
 // computadora" en styles/globals.css). En el celular no cambia nada.
+const ESTADOS_SIN_SERVICIO = ['pausado', 'vencido', 'prueba_terminada', 'pendiente']
+const RUTAS_EN_PAUSA = ['/profe/mi-cuenta', '/profe/mi-perfil', '/profe/espacios']
+const RUTAS_EN_PAUSA_DUENO = [...RUTAS_EN_PAUSA, '/profe/suscripcion']
+
 const RUTAS_CLIENTES = [
   '/profe/clientes',
   '/profe/rutinas',
@@ -262,23 +274,28 @@ export default function ProfeLayout({
   const esDueno = !espacio || esDuenoDe(espacio)
   const habilita = esDueno || Boolean(espacio?.profesHabilitan)
   const duenoDeGimnasio = espacio?.tipo === 'gimnasio' && esDueno
+  const enPausa = !esAdmin && ESTADOS_SIN_SERVICIO.includes(espacio?.estadoReal)
+  const rutasEnPausa = esDueno ? RUTAS_EN_PAUSA_DUENO : RUTAS_EN_PAUSA
+  const pantallaPermitida = !enPausa || rutasEnPausa.includes(pathname)
   const secciones = esAdmin
     ? SECCIONES_ADMIN
-    : SECCIONES_PROFE.filter(
-        (seccion) =>
-          !(seccion.soloDueno && (!espacio || !esDueno)) &&
-          !(seccion.soloSiHabilita && !habilita) &&
-          !(seccion.soloDuenoGimnasio && !duenoDeGimnasio),
-      ).map((seccion) => {
-        if (seccion.to === '/profe/cuentas' && !esDueno) return { ...seccion, label: 'Pagos' }
-        if (!duenoDeGimnasio) return seccion
-        if (seccion.enGimnasioSoloCompu) return { ...seccion, donde: 'compu' }
-        // Con "Equipo" en el menú, el Inicio no se marca en esa pantalla.
-        if (seccion.to === '/profe') {
-          return { ...seccion, rutas: seccion.rutas.filter((ruta) => ruta !== '/profe/equipo') }
-        }
-        return seccion
-      })
+    : enPausa
+      ? SECCIONES_PROFE.filter((seccion) => seccion.grupo || rutasEnPausa.includes(seccion.to))
+      : SECCIONES_PROFE.filter(
+          (seccion) =>
+            !(seccion.soloDueno && (!espacio || !esDueno)) &&
+            !(seccion.soloSiHabilita && !habilita) &&
+            !(seccion.soloDuenoGimnasio && !duenoDeGimnasio),
+        ).map((seccion) => {
+          if (seccion.to === '/profe/cuentas' && !esDueno) return { ...seccion, label: 'Pagos' }
+          if (!duenoDeGimnasio) return seccion
+          if (seccion.enGimnasioSoloCompu) return { ...seccion, donde: 'compu' }
+          // Con "Equipo" en el menú, el Inicio no se marca en esa pantalla.
+          if (seccion.to === '/profe') {
+            return { ...seccion, rutas: seccion.rutas.filter((ruta) => ruta !== '/profe/equipo') }
+          }
+          return seccion
+        })
 
   return (
     <div className={sinMenu ? 'screen pantalla-panel' : 'screen has-bottom-nav pantalla-panel'}>
@@ -294,8 +311,14 @@ export default function ProfeLayout({
 
       <div className="profe-contenido">
         {!esAdmin && <SelectorEspacio />}
-        {titulo && <h1 className="profe-titulo">{titulo}</h1>}
-        {children}
+        {pantallaPermitida ? (
+          <>
+            {titulo && <h1 className="profe-titulo">{titulo}</h1>}
+            {children}
+          </>
+        ) : (
+          <EspacioEnPausa espacio={espacio} esDueno={esDueno} />
+        )}
       </div>
 
       {!sinMenu && (
@@ -441,5 +464,43 @@ function IconoAjustes() {
       <circle cx="10" cy="12" r="2" />
       <circle cx="18" cy="18" r="2" />
     </Svg>
+  )
+}
+
+// Lo que se ve en un espacio sin servicio (en vez de la pantalla pedida).
+function EspacioEnPausa({ espacio, esDueno }) {
+  const hasta = espacio?.alumnosHasta
+  // alumnosHasta es el primer día sin acceso: el último es el anterior.
+  const ultimoDia = hasta ? textoFechaCorta(sumarDias(hasta, -1)) : ''
+  const alumnos = hasta
+    ? hasta > obtenerFechaHoyISO()
+      ? `Tus alumnos siguen entrenando hasta el ${ultimoDia}, con un aviso de que se acerquen a vos.`
+      : 'Tus alumnos ya no ven sus rutinas hasta que se resuelva.'
+    : ''
+  if (!esDueno) {
+    return (
+      <div className="aviso-baja espacio-en-pausa">
+        <strong>{espacio?.nombre || 'Este gimnasio'} tiene un pago pendiente</strong>
+        <span>
+          Mientras tanto no se pueden ver los alumnos de este gimnasio. Hablá con el dueño para
+          resolverlo. Si trabajás en otro espacio, elegilo arriba.
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="aviso-baja espacio-en-pausa">
+      <strong>
+        {espacio?.estadoReal === 'prueba_terminada' || espacio?.estadoReal === 'pendiente'
+          ? 'Elegí tu plan para seguir'
+          : 'Tu suscripción DREY está en pausa'}
+      </strong>
+      <span>
+        {alumnos} Pagá desde Suscripción DREY y todo vuelve a la normalidad al confirmarse el pago.
+      </span>
+      <Link to="/profe/suscripcion" className="boton-principal boton-chico">
+        Ir a Suscripción DREY
+      </Link>
+    </div>
   )
 }

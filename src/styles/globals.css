@@ -10435,3 +10435,68 @@ div.tarjeta-rutina {
 .portada-sumate-botones .portada-sumate-boton {
   margin-top: 0;
 }
+
+/* --- Entrega D: resumen del espacio y espacio en pausa (SQL 035) --------- */
+.resumen-espacio {
+  margin-bottom: 1.25rem;
+}
+
+.resumen-espacio .ajustes-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.resumen-espacio-estado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--drey-text);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.resumen-espacio-numeros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.resumen-espacio-numero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
+  text-decoration: none;
+}
+
+.resumen-espacio-numero strong {
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.resumen-espacio-numero small {
+  color: var(--drey-texto-2);
+  font-size: 0.75rem;
+}
+
+.resumen-espacio-numero.resumen-alerta {
+  background: var(--drey-naranja-fondo);
+}
+
+.resumen-espacio-numero.resumen-alerta strong {
+  color: var(--drey-naranja-texto);
+}
+
+.espacio-en-pausa {
+  margin-top: 1rem;
+}
+
+.espacio-en-pausa .boton-principal {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+}

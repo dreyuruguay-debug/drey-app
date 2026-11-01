@@ -142,6 +142,9 @@ function espacioDesdeFila(fila) {
     avisoPago: Boolean(fila.aviso_pago),
     comprobante: fila.comprobante,
     ultimo: Boolean(fila.ultimo),
+    // Hasta qué día entrenan sus alumnos si el espacio no está al día
+    // (SQL 035); null = está al día.
+    alumnosHasta: fila.alumnos_hasta ?? null,
   }
 }
 
