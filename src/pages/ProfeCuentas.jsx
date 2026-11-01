@@ -4,8 +4,9 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import SuscripcionesDrey from '../components/SuscripcionesDrey.jsx'
 import AvisoCupo from '../components/AvisoCupo.jsx'
+import { DatosDeCobroDelEspacio, PlanesDelEspacio } from '../components/CobroDeEspacio.jsx'
 import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
-import { delEspacioActivo } from '../services/espacio.js'
+import { delEspacioActivo, esDuenoDe, useEspacios } from '../services/espacio.js'
 import { supabase } from '../services/supabaseClient.js'
 import { formatearPrecio, obtenerPlan } from '../data/planes.js'
 import {
@@ -32,11 +33,21 @@ import { problemaDeCupo } from '../utils/cupos.js'
 // (services/espacio.js, supabase/sql/032). Si no queda cupo para
 // habilitar, lo explica components/AvisoCupo.jsx.
 //
+// El DUEÑO del espacio (en su espacio personal, el profe) ve "Cobros" con
+// tres pestañas (supabase/sql/034): Pagos (esto), Mis planes (?tab=planes)
+// y Datos de cobro (?tab=datos), en components/CobroDeEspacio.jsx. Cada
+// espacio cobra a sus alumnos con sus planes y sus datos.
+//
 // El Admin tiene además la pestaña "Suscripciones DREY" (?tab=drey): los
 // pagos de los profes y gimnasios a DREY (components/SuscripcionesDrey.jsx).
 const PESTANAS_ADMIN = [
   { id: 'alumnos', label: 'Alumnos' },
   { id: 'drey', label: 'Suscripciones DREY' },
+]
+const PESTANAS_DUENO = [
+  { id: 'alumnos', label: 'Pagos' },
+  { id: 'planes', label: 'Mis planes' },
+  { id: 'datos', label: 'Datos de cobro' },
 ]
 export default function ProfeCuentas() {
   const [clientes, setClientes] = useState([])
@@ -48,7 +59,14 @@ export default function ProfeCuentas() {
   const [problema, setProblema] = useState(null)
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [parametros, setParametros] = useSearchParams()
-  const pestana = esAdmin && parametros.get('tab') === 'drey' ? 'drey' : 'alumnos'
+  const { activo: espacio } = useEspacios()
+  // Dueño del espacio activo (el Admin no tiene espacios).
+  const dueno = !esAdmin && esDuenoDe(espacio)
+  const opciones = esAdmin ? PESTANAS_ADMIN : dueno ? PESTANAS_DUENO : []
+  const pestana = opciones.some((opcion) => opcion.id === parametros.get('tab'))
+    ? parametros.get('tab')
+    : 'alumnos'
+  const titulo = dueno ? 'Cobros' : 'Pagos'
 
   useEffect(() => {
     cargarClientes()
@@ -67,11 +85,13 @@ export default function ProfeCuentas() {
         .select('id, cliente_id, monto, estado, metodo, codigo, creado_en')
         .neq('estado', 'pendiente')
         .order('creado_en', { ascending: false })
-        .limit(10),
+        .limit(30),
     ])
-    setPagosMp(pagos || [])
     if (!error) {
       const lista = data || []
+      // Solo los pagos de los alumnos de este espacio.
+      const ids = new Set(lista.map((persona) => persona.id))
+      setPagosMp((pagos || []).filter((pago) => ids.has(pago.cliente_id)).slice(0, 10))
       // Nombres de profes y gimnasios, para mostrar qué eligió cada cliente.
       const nombres = {}
       for (const persona of lista.filter(esProfe)) {
@@ -131,33 +151,42 @@ export default function ProfeCuentas() {
   }
   const hoy = obtenerFechaHoyISO()
 
-  const pestanas = esAdmin && (
+  const pestanas = opciones.length > 0 && (
     <Pestanas
-      etiqueta="Qué pagos ver"
-      opciones={PESTANAS_ADMIN}
+      etiqueta="Qué ver"
+      opciones={opciones}
       activa={pestana}
-      onCambiar={(id) => setParametros(id === 'drey' ? { tab: 'drey' } : {}, { replace: true })}
+      onCambiar={(id) => setParametros(id === 'alumnos' ? {} : { tab: id }, { replace: true })}
     />
   )
 
-  if (pestana === 'drey') {
+  if (pestana !== 'alumnos') {
     return (
-      <ProfeLayout titulo="Pagos">
+      <ProfeLayout titulo={titulo}>
         {pestanas}
-        <SuscripcionesDrey />
+        {pestana === 'drey' ? (
+          <SuscripcionesDrey />
+        ) : pestana === 'planes' ? (
+          <PlanesDelEspacio key={espacio.id} espacioId={espacio.id} />
+        ) : (
+          <DatosDeCobroDelEspacio key={espacio.id} espacioId={espacio.id} />
+        )}
       </ProfeLayout>
     )
   }
 
   return (
-    <ProfeLayout titulo="Pagos">
+    <ProfeLayout titulo={titulo}>
       {pestanas}
       {mensaje && <p className="auth-message">{mensaje}</p>}
       <AvisoCupo problema={problema} onCerrar={() => setProblema(null)} />
 
-      <Link to="/profe/codigos" className="boton-secundario pagos-codigos">
-        Códigos de descuento
-      </Link>
+      {/* Los códigos de descuento de planes son del dueño del espacio. */}
+      {(esAdmin || dueno || !espacio) && (
+        <Link to="/profe/codigos" className="boton-secundario pagos-codigos">
+          Códigos de descuento
+        </Link>
+      )}
 
       {cargando ? (
         <Esqueleto />

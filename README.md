@@ -141,6 +141,37 @@ D1 a D9) está en "DREY - Plan cobro por cupos y registro por tipo.txt".
 - Términos: sección 7 "Profes y gimnasios" (`data/legal.js`; no cambia la
   versión, para no pedirle a todos que acepten de nuevo).
 
+
+## Cada espacio cobra a sus alumnos (SQL 034, Entrega C)
+
+- **Planes por espacio**: cada profe (su espacio) y cada gimnasio tiene sus
+  planes para alumnos (`planes.espacio_id`). Los 3 planes de siempre
+  pasaron al espacio de Facu (si otro espacio tenía alumnos con esos
+  planes, se le hizo una copia). Los crea y cambia el dueño con
+  `guardar_plan_espacio()`; no se borran, se ocultan.
+- **Datos de cobro por espacio** (tabla `datos_cobro`: banco, titular,
+  cuenta, moneda, alias y link general de Mercado Pago). Los datos de
+  transferencia de Ajustes pasaron al espacio de Facu; los de Ajustes
+  quedan para los alumnos sin profe ni gimnasio.
+- **Panel → Cobros** (antes "Pagos", `pages/ProfeCuentas.jsx`): el dueño
+  ve tres pestañas: Pagos, Mis planes y Datos de cobro
+  (`components/CobroDeEspacio.jsx`, servicio `services/cobroEspacio.js`).
+  El profe de un gimnasio que puede habilitar ve solo "Pagos".
+- **Admin → Ajustes → Cobro de alumnos**: elige un profe o gimnasio y ve o
+  corrige sus planes y datos de cobro. Se fueron las pestañas "Planes" y
+  "Cobro". El cobro automático con Mercado Pago para alumnos queda
+  apagado (cobraría en la cuenta de DREY).
+- **Registro del alumno**: el paso "Tu plan" muestra los planes del profe o
+  gimnasio elegido (`planes_de_espacio()`) y el paso "Pago" sus datos
+  (`datos_cobro_de_espacio()`). Si todavía no cargó planes, sigue sin plan.
+- **Suscripción del alumno**: los datos de cobro de su espacio
+  (`mi_cobro()`), "Le pagás a …".
+- **Códigos de descuento**: los de plan son de un espacio y valen solo para
+  sus planes (dos espacios pueden tener el mismo código). Los crea el
+  dueño; el Admin elige el espacio. Los de ropa siguen siendo de DREY.
+- **Plan de cada alumno**: siempre uno de su espacio (trigger
+  `perfiles_ubicar_plan`). El dueño o el Admin se lo cambia desde la ficha
+  del alumno → Pagos.
 ## Página de inicio (SQL 027)
 
 - **"/"** es la página de inicio (`pages/Portada.jsx`): video de fondo a

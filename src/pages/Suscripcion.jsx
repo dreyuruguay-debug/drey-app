@@ -5,6 +5,7 @@ import BottomNav from '../components/BottomNav.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
 import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
+import { cargarMiCobro } from '../services/cobroEspacio.js'
 import DatosDePago from '../components/DatosDePago.jsx'
 import PagoMercadoPago from '../components/PagoMercadoPago.jsx'
 import { obtenerPlan, formatearPrecio } from '../data/planes.js'
@@ -26,21 +27,26 @@ const REVISAR_PAGO_VECES = 10
 //   1. Mercado Pago automático (si el Admin lo activó en Ajustes): paga
 //      con tarjeta y la cuenta se activa sola al instante.
 //   2. Transferencia: ve los datos, sube el comprobante y toca "Ya pagué";
-//      el profe lo confirma desde "Pagos".
+//      el profe lo confirma desde "Cobros".
 //
 // Al volver de Mercado Pago la dirección trae ?pago=ok / pendiente /
 // error. Con "ok", la pantalla revisa unos segundos hasta ver la cuenta
 // actualizada (Mercado Pago avisa a la base casi al instante).
 //
+// Los datos para pagar son los del profe o gimnasio del alumno (mi_cobro,
+// supabase/sql/034): a ellos les paga. "Ya pagué" les avisa a ellos.
+//
 // El comprobante se sube al almacenamiento de Supabase (bucket
 // "comprobantes"), en una carpeta con el id del cliente para que cada
-// uno solo pueda ver los suyos; su profe los ve desde "Pagos".
+// uno solo pueda ver los suyos; su profe los ve desde "Cobros".
 export default function Suscripcion() {
   useConfiguracion() // planes, precios y datos de pago (Ajustes del Admin)
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   const [perfil, setPerfil] = useState(null)
   const [pagos, setPagos] = useState([])
+  // Datos de cobro de su profe o gimnasio (undefined = los de Ajustes).
+  const [cobro, setCobro] = useState(undefined)
   const [cargando, setCargando] = useState(true)
   const [comprobante, setComprobante] = useState(null)
   const [enviando, setEnviando] = useState(false)
@@ -76,12 +82,15 @@ export default function Suscripcion() {
       navigate(RUTA_INGRESAR)
       return
     }
-    const [{ data }, listaPagos] = await Promise.all([
+    const [{ data }, listaPagos, miCobro] = await Promise.all([
       supabase.from('perfiles').select('*').eq('id', usuario.id).single(),
       cargarPagos(usuario.id),
+      cargarMiCobro(),
     ])
     setPerfil(data)
     setPagos(listaPagos)
+    // Sin el SQL 034 (error) quedan los datos de Ajustes, como antes.
+    setCobro(miCobro.error ? undefined : miCobro.cobro || undefined)
     setCargando(false)
   }
 
@@ -170,7 +179,7 @@ export default function Suscripcion() {
           <p className="seccion-etiqueta suscripcion-otra-forma">O por transferencia</p>
         )}
 
-        <DatosDePago planId={perfil?.plan} />
+        <DatosDePago planId={perfil?.plan} cobro={cobro} />
 
         <div className="suscripcion-bloque">
           <p className="suscripcion-bloque-titulo">¿Ya pagaste por transferencia?</p>
@@ -178,7 +187,7 @@ export default function Suscripcion() {
             <p className="suscripcion-bloque-texto">
               {perfil?.estado === 'pendiente'
                 ? 'Avisaste tu pago. Esperando autorización del profesor.'
-                : '¡Listo! Le avisamos al profe. En cuanto confirme tu pago vas a ver la fecha de vencimiento actualizada acá.'}
+                : '¡Listo! Le avisamos a tu profe. En cuanto confirme tu pago vas a ver la fecha de vencimiento actualizada acá.'}
             </p>
           ) : (
             <form className="suscripcion-form-pago" onSubmit={handleYaPague}>

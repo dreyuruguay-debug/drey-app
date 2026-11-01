@@ -8,6 +8,9 @@ import {
   crearCodigo,
 } from '../services/codigos.js'
 import { mostrarAviso } from '../services/avisos.js'
+import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
+import { useEspacios } from '../services/espacio.js'
+import { cargarEspaciosAdmin } from '../services/suscripcionDrey.js'
 import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 import { textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -28,12 +31,15 @@ const VACIO = {
   vence: '',
 }
 
-// Códigos de descuento (se entra desde Pagos).
-//   · "Del plan": el cliente lo escribe al registrarse o al pagar y
-//     Mercado Pago le cobra con el descuento. Se puede limitar a un plan,
-//     al primer mes, a una cantidad de usos y a una fecha.
+// Códigos de descuento (se entra desde Cobros).
+//   · "Del plan": el alumno lo escribe al registrarse o al pagar y paga
+//     con el descuento. Se puede limitar a un plan, al primer mes, a una
+//     cantidad de usos y a una fecha. Cada código es de UN espacio y vale
+//     solo para sus planes (supabase/sql/034): el dueño ve y crea los de
+//     su espacio activo; el Admin ve todos y elige el espacio al crear.
 //   · "De ropa": beneficios de la marca de ropa DREY. Los ven los
-//     clientes con el plan al día en "Comunidad y beneficios".
+//     clientes con el plan al día en "Comunidad y beneficios". Los crean
+//     el Admin y los profes de confianza.
 export default function ProfeCodigos() {
   const [tipo, setTipo] = useState('plan')
   const [codigos, setCodigos] = useState([])
@@ -42,9 +48,24 @@ export default function ProfeCodigos() {
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [borrandoId, setBorrandoId] = useState(null)
+  const { activo: espacio } = useEspacios()
+  const [esAdmin, setEsAdmin] = useState(esAdminConocido)
+  // Solo el Admin: los espacios para elegir de quién es el código.
+  const [espacios, setEspacios] = useState([])
+  const [espacioCodigo, setEspacioCodigo] = useState('')
+  // El espacio de los códigos de plan: el activo o el que eligió el Admin.
+  const espacioId = esAdmin ? espacioCodigo : espacio?.id || ''
 
   useEffect(() => {
     cargar()
+    verificarProfe().then(({ esAdmin: admin }) => {
+      setEsAdmin(Boolean(admin))
+      if (!admin) return
+      cargarEspaciosAdmin().then(({ espacios: lista }) => {
+        setEspacios(lista)
+        setEspacioCodigo((actual) => actual || lista[0]?.id || '')
+      })
+    })
   }, [])
 
   async function cargar() {
@@ -67,6 +88,10 @@ export default function ProfeCodigos() {
       return
     }
     const valor = Number(formulario.valor)
+    if (tipo === 'plan' && !espacioId) {
+      setMensaje('Elegí de qué profe o gimnasio es el código.')
+      return
+    }
     if (tipo === 'plan') {
       if (!valor || valor <= 0) {
         setMensaje('Escribí cuánto descuenta.')
@@ -91,16 +116,20 @@ export default function ProfeCodigos() {
       monto_fijo: tipo === 'plan' && formulario.forma === 'monto' ? Math.round(valor) : null,
       solo_primer_mes: tipo === 'plan' ? formulario.soloPrimerMes : false,
       planes: tipo === 'plan' && formulario.plan ? [formulario.plan] : [],
+      // Los de plan son del espacio (SQL 034); los de ropa, de DREY.
+      ...(tipo === 'plan' && espacioId ? { espacio_id: espacioId } : {}),
       usos_maximos: formulario.usosMaximos ? Number(formulario.usosMaximos) : null,
       vence: formulario.vence || null,
     })
     setGuardando(false)
     if (error) {
-      // Desde el SQL 033, los códigos (valen para todos los alumnos) los
-      // crean el Admin y los profes de confianza.
+      // Los de plan los crea el dueño del espacio; los de ropa, el Admin
+      // y los profes de confianza (SQL 033 y 034).
       setMensaje(
         /row-level security/i.test(error.message || '')
-          ? 'Por ahora los códigos de descuento los crea DREY. Escribinos si querés uno.'
+          ? tipo === 'ropa'
+            ? 'Los beneficios de ropa los carga DREY. Escribinos si querés sumar uno.'
+            : 'Solo el dueño del espacio crea sus códigos de descuento.'
           : error.message || 'No pudimos guardar el código.',
       )
       return
@@ -126,7 +155,14 @@ export default function ProfeCodigos() {
     if (!error) cargar()
   }
 
-  const lista = codigos.filter((item) => item.tipo === tipo)
+  // Los de plan: los del espacio activo (el Admin ve todos).
+  const lista = codigos.filter(
+    (item) =>
+      item.tipo === tipo &&
+      (tipo !== 'plan' || esAdmin || !espacio || item.espacio_id === espacio.id),
+  )
+  const nombreEspacio = (id) => espacios.find((item) => item.id === id)?.nombre || ''
+  const planesDelEspacio = espacioId ? listaDePlanes({ espacioId }) : listaDePlanes()
 
   return (
     <ProfeLayout titulo="Códigos de descuento" volverA="/profe/cuentas">
@@ -134,7 +170,7 @@ export default function ProfeCodigos() {
 
       <p className="profe-nota">
         {tipo === 'plan'
-          ? 'El cliente lo escribe al registrarse o al pagar, y Mercado Pago le cobra con el descuento.'
+          ? 'Tu alumno lo escribe al registrarse o al pagar y paga con el descuento. Vale solo para tus planes.'
           : 'Los clientes con el plan al día los ven en "Comunidad y beneficios".'}
       </p>
 
@@ -153,7 +189,10 @@ export default function ProfeCodigos() {
             >
               <div className="codigo-item-textos">
                 <strong>{item.codigo}</strong>
-                <small>{describirCodigo(item)}</small>
+                <small>
+                  {describirCodigo(item)}
+                  {esAdmin && item.espacio_id ? ` · ${nombreEspacio(item.espacio_id)}` : ''}
+                </small>
               </div>
               {borrandoId === item.id ? (
                 <div className="codigo-item-acciones">
@@ -210,6 +249,23 @@ export default function ProfeCodigos() {
 
         {tipo === 'plan' ? (
           <>
+            {esAdmin && (
+              <select
+                className="profe-calendario-select"
+                value={espacioCodigo}
+                onChange={(event) => {
+                  setEspacioCodigo(event.target.value)
+                  cambiar('plan', '')
+                }}
+                aria-label="De qué profe o gimnasio"
+              >
+                {espacios.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    Para alumnos de {item.nombre}
+                  </option>
+                ))}
+              </select>
+            )}
             <div className="codigo-fila">
               <select
                 className="profe-calendario-select"
@@ -237,7 +293,7 @@ export default function ProfeCodigos() {
               aria-label="Para qué plan"
             >
               <option value="">Para todos los planes</option>
-              {listaDePlanes().map((plan) => (
+              {planesDelEspacio.map((plan) => (
                 <option key={plan.id} value={plan.id}>
                   Solo {plan.nombre}
                 </option>

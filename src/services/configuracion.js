@@ -6,7 +6,6 @@ import {
   escucharConfiguracion,
 } from '../data/configuracion.js'
 import { PLANES } from '../data/planes.js'
-import { normalizarTexto } from '../utils/texto.js'
 
 // Trae de la base la configuración del negocio (tablas "ajustes" y
 // "planes", supabase/sql/022) y la deja en data/configuracion.js, que es
@@ -28,6 +27,8 @@ function planDesdeFila(fila) {
     linkMercadoPago: fila.link_mp || '',
     activo: fila.activo !== false,
     orden: fila.orden ?? 0,
+    // De qué profe o gimnasio es (supabase/sql/034). Sin ese SQL, null.
+    espacioId: fila.espacio_id ?? null,
   }
 }
 
@@ -154,56 +155,28 @@ export async function guardarAjustes({
   return null
 }
 
-export async function guardarPlan(id, plan) {
-  const { data, error } = await supabase
-    .from('planes')
-    .update(filaDesdePlan(plan))
-    .eq('id', id)
-    .select('id')
-  if (error) return error
-  if (!data?.length) return { message: 'Sin permiso' }
-  await cargarConfiguracion()
-  return null
-}
-
-// Crea un plan nuevo. Su identificador sale del nombre ("Plan pareja" →
-// "plan-pareja"); si ya existe uno igual, se le agrega un número.
-export async function crearPlan(plan, idsExistentes = []) {
-  const base = identificadorDesde(plan.nombre) || 'plan'
-  let id = base
-  for (let numero = 2; idsExistentes.includes(id); numero++) id = `${base}-${numero}`
-
-  const orden = Math.max(0, ...listaOrdenes()) + 1
-  const { error } = await supabase.from('planes').insert({ id, orden, ...filaDesdePlan(plan) })
+// Crea (sin id) o cambia un plan para alumnos de un espacio. Lo puede
+// hacer el dueño del espacio o el Admin (guardar_plan_espacio, SQL 034):
+// la base arma el identificador del plan nuevo. Devuelve el error, o null.
+export async function guardarPlanDeEspacio(espacioId, id, plan) {
+  const { error } = await supabase.rpc('guardar_plan_espacio', {
+    p_espacio: espacioId,
+    p_id: id || null,
+    p_nombre: plan.nombre.trim(),
+    p_descripcion: limpio(plan.descripcion),
+    p_precio_primer_mes: Math.round(Number(plan.precioPrimerMes)),
+    p_precio_mensual: Math.round(Number(plan.precioDesdeSegundoMes)),
+    p_link_mp: limpio(plan.linkMercadoPago),
+    p_activo: plan.activo !== false,
+  })
   if (error) return error
   await cargarConfiguracion()
   return null
-}
-
-function listaOrdenes() {
-  return (configuracion().planes || []).map((plan) => plan.orden || 0)
-}
-
-function filaDesdePlan(plan) {
-  return {
-    nombre: plan.nombre.trim(),
-    descripcion: limpio(plan.descripcion),
-    precio_primer_mes: Math.round(Number(plan.precioPrimerMes)),
-    precio_mensual: Math.round(Number(plan.precioDesdeSegundoMes)),
-    link_mp: limpio(plan.linkMercadoPago),
-    activo: plan.activo !== false,
-  }
 }
 
 function limpio(texto) {
   const valor = (texto ?? '').toString().trim()
   return valor || null
-}
-
-function identificadorDesde(nombre) {
-  return normalizarTexto(nombre)
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 // Historial de cambios del Admin (solo lo puede leer el Admin).

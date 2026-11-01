@@ -38,6 +38,19 @@ export async function confirmarPago(id) {
 
 // Abre el comprobante que subió el cliente (link temporal de 1 minuto).
 // Devuelve true si lo pudo abrir.
+// Cambia el plan de un alumno por otro de su espacio. Solo el dueño del
+// espacio o el Admin (lo controla la base, supabase/sql/034). Devuelve el
+// error, o null.
+export async function cambiarPlanDeAlumno(id, planId) {
+  const { data, error } = await supabase
+    .from('perfiles')
+    .update({ plan: planId || null })
+    .eq('id', id)
+    .select('id')
+  if (error) return error
+  return data?.length ? null : { message: 'Sin permiso' }
+}
+
 export async function abrirComprobante(rutaArchivo) {
   if (!rutaArchivo) return false
   const { data, error } = await supabase.storage

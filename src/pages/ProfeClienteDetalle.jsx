@@ -13,6 +13,7 @@ import {
 } from '../services/rutinas.js'
 import {
   abrirComprobante,
+  cambiarPlanDeAlumno,
   confirmarPago,
   estadoDeCuenta,
   habilitarCliente,
@@ -21,7 +22,8 @@ import { mostrarAviso } from '../services/avisos.js'
 import { esAdminConocido, verificarProfe } from '../services/accesoProfe.js'
 import { asignarProfe, cargarListaDeProfes, textoDeErrorProfes } from '../services/profes.js'
 import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
-import { formatearPrecio, obtenerPlan } from '../data/planes.js'
+import { formatearPrecio, listaDePlanes, obtenerPlan } from '../data/planes.js'
+import { esDuenoDe, useEspacios } from '../services/espacio.js'
 import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
@@ -63,6 +65,7 @@ export default function ProfeClienteDetalle() {
   const [corrigiendoId, setCorrigiendoId] = useState(null)
   // Cupo lleno, suscripción DREY sin pagar o sin permiso (SQL 032).
   const [problemaPago, setProblemaPago] = useState(null)
+  const { activo: espacio } = useEspacios()
 
   useEffect(() => {
     cargarTodo()
@@ -153,6 +156,17 @@ export default function ProfeClienteDetalle() {
     )
   }
 
+  // El plan lo cambia el dueño del espacio del alumno o el Admin, y solo
+  // por uno de los planes de ese espacio (supabase/sql/034).
+  async function cambiarPlan(planId) {
+    const error = await cambiarPlanDeAlumno(id, planId)
+    mostrarAviso(
+      error ? textoErrorPlan(error) : `Plan: ${obtenerPlan(planId)?.nombre || 'sin plan'}`,
+      error ? 'error' : 'ok',
+    )
+    cargarTodo({ silencioso: true })
+  }
+
   async function accionDePago(accion) {
     setProblemaPago(null)
     const error = await accion()
@@ -181,6 +195,12 @@ export default function ProfeClienteDetalle() {
   const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`
   const estado = estadoDeCuenta(cliente, obtenerFechaHoyISO())
   const rutinasGuardadas = rutinas.filter((rutina) => rutina.publicada !== false)
+  // Los planes de su espacio (sin el SQL 034 los planes no tienen espacio:
+  // no se ofrece cambiarlo).
+  const planesDelAlumno = cliente.espacio_id ? listaDePlanes({ espacioId: cliente.espacio_id }) : []
+  const puedeCambiarPlan =
+    planesDelAlumno.length > 0 &&
+    (esAdmin || (esDuenoDe(espacio) && espacio?.id === cliente.espacio_id))
   const whatsapp = linkWhatsApp(cliente.celular, `Hola ${cliente.nombre}!`)
   const corrigiendo = corrigiendoId ? sesiones.find((sesion) => sesion.id === corrigiendoId) : null
 
@@ -343,7 +363,26 @@ export default function ProfeClienteDetalle() {
             <dl className="ficha-datos-lista">
               <div>
                 <dt>Plan</dt>
-                <dd>{obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}</dd>
+                <dd>
+                  {puedeCambiarPlan ? (
+                    <select
+                      className="profe-calendario-select"
+                      value={cliente.plan || ''}
+                      onChange={(event) => cambiarPlan(event.target.value)}
+                      aria-label="Plan del alumno"
+                    >
+                      <option value="">Sin plan</option>
+                      {planesDelAlumno.map((plan) => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.nombre} · {formatearPrecio(plan.precioDesdeSegundoMes)}/mes
+                          {plan.activo === false ? ' (oculto)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>Estado</dt>
@@ -435,4 +474,10 @@ export default function ProfeClienteDetalle() {
       )}
     </ProfeLayout>
   )
+}
+
+function textoErrorPlan(error) {
+  const texto = error?.message || ''
+  if (/Solo el dueño|no es de este espacio/.test(texto)) return texto
+  return 'No pudimos cambiar el plan. Probá de nuevo.'
 }

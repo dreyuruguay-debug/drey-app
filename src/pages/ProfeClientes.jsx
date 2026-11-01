@@ -221,7 +221,7 @@ export default function ProfeClientes() {
       ) : clientesFiltrados.length === 0 ? (
         <p className="profe-vacio">
           {clientes.length === 0
-            ? 'Todavía no tenés clientes activos. Habilitalos desde "Pagos".'
+            ? 'Todavía no tenés clientes activos. Habilitalos desde "Cobros".'
             : 'No hay ningún cliente que coincida con la búsqueda o los filtros.'}
         </p>
       ) : (

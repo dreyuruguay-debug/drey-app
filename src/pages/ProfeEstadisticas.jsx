@@ -144,7 +144,8 @@ export default function ProfeEstadisticas() {
         puntos={numeros.ingresosPorMes}
       />
       <p className="profe-nota">
-        Suma los pagos con Mercado Pago y los que confirmás en Pagos (desde el 25/09/2026).
+        Suma los pagos de tus alumnos de este espacio: Mercado Pago y los que confirmás en Cobros
+        (desde el 25/09/2026).
       </p>
 
       <GraficoProgreso

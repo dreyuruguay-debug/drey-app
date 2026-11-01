@@ -1,9 +1,10 @@
 import { configuracion } from './configuracion.js'
 
-// Planes de DREY. Los vigentes (nombre, descripción, precios, link de
-// Mercado Pago, visible o no) los maneja el Admin desde Ajustes y viven
-// en la tabla "planes" (supabase/sql/014 y 022). Esta lista es solo el
-// respaldo mientras la app todavía no los trajo de la base.
+// Planes para alumnos. Cada profe o gimnasio (espacio) tiene los suyos
+// (nombre, descripción, precios, link de Mercado Pago, visible o no): los
+// maneja su dueño desde Cobros y viven en la tabla "planes" (supabase/sql/
+// 014, 022 y 034). Esta lista es solo el respaldo mientras la app todavía
+// no los trajo de la base.
 export const PLANES = [
   {
     id: 'seguimiento',
@@ -33,10 +34,14 @@ export function formatearPrecio(valor) {
 }
 
 // Todos los planes (también los ocultos: hay clientes que los tienen).
-// Con soloVisibles, solo los que se ofrecen al registrarse.
-export function listaDePlanes({ soloVisibles = false } = {}) {
+// Con soloVisibles, solo los que se ofrecen al registrarse. Con espacioId,
+// solo los de ese profe o gimnasio.
+export function listaDePlanes({ soloVisibles = false, espacioId = null } = {}) {
   const lista = configuracion().planes || PLANES
-  return soloVisibles ? lista.filter((plan) => plan.activo !== false) : lista
+  return lista.filter(
+    (plan) =>
+      (!soloVisibles || plan.activo !== false) && (!espacioId || plan.espacioId === espacioId),
+  )
 }
 
 export function obtenerPlan(id) {

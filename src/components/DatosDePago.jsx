@@ -1,22 +1,36 @@
 import { cobroAutomatico, datosTransferencia, obtenerLinkMercadoPago } from '../data/pagos.js'
 import { useConfiguracion } from '../services/configuracion.js'
+import { datosParaMostrar } from '../services/cobroEspacio.js'
 
 // Cómo pagar un plan "a mano": datos para transferencia y, mientras el
-// cobro automático no esté activado, el link de Mercado Pago de cada
-// plan. Lo usan el Registro (paso "Pago") y la pantalla de Suscripción,
-// así los dos muestran exactamente lo mismo.
+// cobro automático no esté activado, el link de Mercado Pago. Lo usan el
+// Registro (paso "Pago") y la pantalla de Suscripción, así los dos
+// muestran exactamente lo mismo.
+//
+// "cobro" son los datos de cobro del profe o gimnasio del alumno
+// (services/cobroEspacio.js, supabase/sql/034). Sin "cobro" (la base
+// todavía no tiene ese SQL) se usan los de Ajustes, como antes.
+// El link de Mercado Pago: el del plan; si no tiene, el general del
+// espacio.
 //
 // Con el cobro automático activado (Ajustes del Admin) el botón de
 // Mercado Pago lo muestra Suscripción (PagoMercadoPago.jsx) y acá queda
 // solo la transferencia.
-export default function DatosDePago({ planId }) {
-  useConfiguracion() // se vuelve a dibujar si el Admin cambia los datos
+export default function DatosDePago({ planId, cobro }) {
+  useConfiguracion() // se vuelve a dibujar si cambian los planes
   const automatico = cobroAutomatico()
-  const transferencia = datosTransferencia()
-  const linkMercadoPago = automatico ? '' : obtenerLinkMercadoPago(planId)
+  const transferencia = cobro === undefined ? datosTransferencia() : datosParaMostrar(cobro)
+  const linkMercadoPago = automatico
+    ? ''
+    : obtenerLinkMercadoPago(planId) || cobro?.linkMercadoPago || ''
 
   return (
     <>
+      {cobro?.espacio && (
+        <p className="suscripcion-bloque-texto pago-a-quien">
+          Le pagás a <strong>{cobro.espacio}</strong>
+        </p>
+      )}
       <div className="suscripcion-bloque">
         <p className="suscripcion-bloque-titulo">Datos para transferencia</p>
         {transferencia ? (
@@ -29,12 +43,15 @@ export default function DatosDePago({ planId }) {
           </div>
         ) : (
           <p className="suscripcion-bloque-texto suscripcion-pendiente">
-            Pendiente: todavía no se cargaron los datos bancarios.
+            {cobro
+              ? 'Tu profe todavía no cargó sus datos de cobro: preguntale cómo pagarle.'
+              : 'Pendiente: todavía no se cargaron los datos bancarios.'}
           </p>
         )}
       </div>
 
-      {!automatico && (
+      {/* Con los datos del espacio, si no tiene link no se muestra nada. */}
+      {!automatico && (linkMercadoPago || cobro === undefined) && (
         <div className="suscripcion-bloque">
           <p className="suscripcion-bloque-titulo">Mercado Pago</p>
           {linkMercadoPago ? (

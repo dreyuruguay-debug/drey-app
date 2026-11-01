@@ -24,7 +24,7 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 // Cada pantalla pone su contenido adentro de <ProfeLayout>, así la
 // revisión de acceso y la navegación no se repiten.
 //
-// El profe ve 5 secciones (Inicio, Clientes, Biblioteca, Pagos y Mi
+// El profe ve 5 secciones (Inicio, Clientes, Biblioteca, Cobros y Mi
 // cuenta: su perfil y las solicitudes de alumnos). El Admin
 // tiene su propio menú de 5 (Inicio, Clientes, Equipo, Pagos, Ajustes);
 // la Biblioteca la abre desde su Inicio.
@@ -96,7 +96,9 @@ const SECCIONES_PROFE = [
   },
   {
     to: '/profe/cuentas',
-    label: 'Pagos',
+    // "Cobros" para el dueño (sus planes, datos de cobro y pagos); el profe
+    // de un gimnasio que puede habilitar alumnos ve "Pagos".
+    label: 'Cobros',
     rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
     avisos: 'pagos',
@@ -268,6 +270,7 @@ export default function ProfeLayout({
           !(seccion.soloSiHabilita && !habilita) &&
           !(seccion.soloDuenoGimnasio && !duenoDeGimnasio),
       ).map((seccion) => {
+        if (seccion.to === '/profe/cuentas' && !esDueno) return { ...seccion, label: 'Pagos' }
         if (!duenoDeGimnasio) return seccion
         if (seccion.enGimnasioSoloCompu) return { ...seccion, donde: 'compu' }
         // Con "Equipo" en el menú, el Inicio no se marca en esa pantalla.

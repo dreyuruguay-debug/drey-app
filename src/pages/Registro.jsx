@@ -21,6 +21,7 @@ import { cobroAutomatico } from '../data/pagos.js'
 import { VERSION_TERMINOS } from '../data/versionLegal.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { validarCodigo } from '../services/pagos.js'
+import { cargarCobroDeEspacio, cargarPlanesDeEspacio } from '../services/cobroEspacio.js'
 import { calcularEdad } from '../utils/fechas.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
@@ -35,17 +36,20 @@ import LogoDrey from '../components/LogoDrey.jsx'
 //   2. Tu profe       (el profe o gimnasio con el que entrena: de la lista
 //                      o con el código que le pasaron, supabase/sql/033;
 //                      "/registro/alumno?espacio=FITCENTER" ya lo deja elegido)
-//   3. Tu plan        (uno de los planes + código de descuento, que se
-//                      revisa en la base antes de seguir)
-//   4. Pago           (cómo pagar y botón "Ya pagué")
+//   3. Tu plan        (uno de los planes DE ESE PROFE O GIMNASIO + código
+//                      de descuento, que se revisa en la base antes de
+//                      seguir; supabase/sql/034)
+//   4. Pago           (los datos de cobro de ese profe o gimnasio y botón
+//                      "Ya pagué")
 //
 // Recién en el paso 4 se crea la cuenta. Queda "pendiente" hasta que
 // se paga: con el cobro automático de Mercado Pago (Ajustes del Admin) se
 // activa sola al pagar desde Suscripción; por transferencia, la habilita
 // el profe.
 //
-// Los planes y precios salen de la base de datos (tabla "planes", solo
-// los visibles), los mismos que cobra Mercado Pago.
+// Los planes y precios salen de la base de datos (planes_de_espacio, solo
+// los visibles del espacio elegido). Sin el SQL 034, o si no eligió
+// espacio, se muestran los de siempre (tabla "planes").
 //
 // Todos los datos viajan en los metadatos del usuario de Supabase y la
 // base los copia sola a la tabla "perfiles" (triggers handle_new_user,
@@ -94,9 +98,15 @@ export default function Registro() {
   const [loading, setLoading] = useState(false)
   const [resultado, setResultado] = useState(null) // { avisoPago: boolean }
 
-  // Planes, precios y forma de cobro: los maneja el Admin en Ajustes.
+  // Planes y datos de cobro del espacio elegido (SQL 034). null /
+  // undefined = la base no los tiene: se usan los de siempre.
+  const [planesEspacio, setPlanesEspacio] = useState(null)
+  const [cobroEspacio, setCobroEspacio] = useState(undefined)
+  const [cargandoPlanes, setCargandoPlanes] = useState(false)
+
+  // Forma de cobro (Ajustes del Admin) y planes de respaldo.
   useConfiguracion()
-  const planes = listaDePlanes({ soloVisibles: true })
+  const planes = planesEspacio ?? listaDePlanes({ soloVisibles: true })
   const automatico = cobroAutomatico()
 
   const edad = calcularEdad(fechaNacimiento)
@@ -106,6 +116,34 @@ export default function Registro() {
     cargarOpcionesDeProfe()
     cargarConfiguracion()
   }, [])
+
+  // Cada vez que elige otro profe o gimnasio: sus planes y sus datos de
+  // cobro. Si el plan elegido no es de ese espacio, se borra.
+  const codigoElegido = eleccion?.codigo || ''
+  useEffect(() => {
+    if (!codigoElegido) {
+      setPlanesEspacio(null)
+      setCobroEspacio(undefined)
+      return undefined
+    }
+    let vigente = true
+    setCargandoPlanes(true)
+    Promise.all([cargarPlanesDeEspacio(codigoElegido), cargarCobroDeEspacio(codigoElegido)]).then(
+      ([{ planes: lista, error }, { cobro, error: errorCobro }]) => {
+        if (!vigente) return
+        setCargandoPlanes(false)
+        setPlanesEspacio(error ? null : lista)
+        setCobroEspacio(errorCobro ? undefined : cobro || undefined)
+        if (!error) {
+          setPlanId((actual) => (lista.some((opcion) => opcion.id === actual) ? actual : ''))
+          setCodigoValidado(null)
+        }
+      },
+    )
+    return () => {
+      vigente = false
+    }
+  }, [codigoElegido])
 
   async function cargarOpcionesDeProfe() {
     setCargandoOpciones(true)
@@ -176,7 +214,11 @@ export default function Registro() {
         return 'Necesitamos tu autorización para usar tus datos de salud: sin ellos tu profe no puede armarte la rutina.'
       }
     }
-    if (numeroPaso === PASO_PLAN && !plan) return 'Elegí un plan para continuar.'
+    if (numeroPaso === PASO_PLAN && cargandoPlanes) return 'Esperá un segundo: cargando los planes.'
+    // Si su profe todavía no cargó planes, sigue sin plan (se lo pone el profe).
+    if (numeroPaso === PASO_PLAN && !plan && planes.length > 0) {
+      return 'Elegí un plan para continuar.'
+    }
     if (numeroPaso === PASO_PROFE && opcionesProfe.length > 0 && !eleccion) {
       return 'Elegí tu profe o gimnasio (o escribí su código) para continuar.'
     }
@@ -190,7 +232,7 @@ export default function Registro() {
     let error = validarPaso(pasoActual)
 
     // El código de descuento se revisa en la base antes de pasar al pago.
-    if (!error && pasoActual === PASO_PLAN && codigoDescuento.trim()) {
+    if (!error && pasoActual === PASO_PLAN && plan && codigoDescuento.trim()) {
       setRevisando(true)
       const validado = await validarCodigo(codigoDescuento, planId)
       setRevisando(false)
@@ -232,8 +274,8 @@ export default function Registro() {
           celular: datos.celular.trim(),
           objetivo,
           lesiones: lesiones || null,
-          plan: planId,
-          codigo_descuento: codigoValidado?.valido ? codigoValidado.codigo : null,
+          plan: plan ? planId : null,
+          codigo_descuento: plan && codigoValidado?.valido ? codigoValidado.codigo : null,
           estado: 'pendiente',
           espacio_codigo: eleccion?.codigo || null,
           profe_id: !eleccion?.codigo && eleccion?.tipo === 'profe' ? eleccion.id : null,
@@ -446,7 +488,18 @@ export default function Registro() {
 
         {paso === PASO_PLAN && (
           <>
-            <p className="form-section-label">Elegí tu plan</p>
+            <p className="form-section-label">
+              Elegí tu plan{eleccion?.nombre ? ` con ${eleccion.nombre}` : ''}
+            </p>
+
+            {cargandoPlanes ? (
+              <Esqueleto tipo="linea" />
+            ) : planes.length === 0 ? (
+              <p className="registro-edad">
+                {eleccion?.nombre || 'Tu profe'} todavía no cargó sus planes. Podés seguir: te
+                asigna el plan cuando habilite tu cuenta.
+              </p>
+            ) : null}
 
             <div className="plan-opciones">
               {planes.map((opcion) => (
@@ -468,16 +521,18 @@ export default function Registro() {
               ))}
             </div>
 
-            <input
-              className="auth-input"
-              type="text"
-              placeholder="Código de descuento (opcional)"
-              value={codigoDescuento}
-              onChange={(event) => {
-                setCodigoDescuento(event.target.value.toUpperCase())
-                setCodigoValidado(null)
-              }}
-            />
+            {planes.length > 0 && (
+              <input
+                className="auth-input"
+                type="text"
+                placeholder="Código de descuento (opcional)"
+                value={codigoDescuento}
+                onChange={(event) => {
+                  setCodigoDescuento(event.target.value.toUpperCase())
+                  setCodigoValidado(null)
+                }}
+              />
+            )}
             {codigoValidado?.valido && (
               <p className="registro-edad registro-codigo-ok">
                 ✓ Código {codigoValidado.codigo}: {textoDescuento(codigoValidado)}
@@ -486,23 +541,25 @@ export default function Registro() {
           </>
         )}
 
-        {paso === 3 && plan && (
+        {paso === 3 && (
           <>
             <p className="form-section-label">Pago</p>
 
-            <div className="suscripcion-plan-card">
-              <p className="suscripcion-plan-nombre">{plan.nombre}</p>
-              <p className="suscripcion-plan-precio">
-                {formatearPrecio(precioConDescuento(plan.precioPrimerMes, codigoValidado))} el
-                primer mes
-              </p>
-              {codigoValidado?.valido && (
-                <p className="suscripcion-vencimiento">
-                  Con el código {codigoValidado.codigo} (antes{' '}
-                  {formatearPrecio(plan.precioPrimerMes)}).
+            {plan && (
+              <div className="suscripcion-plan-card">
+                <p className="suscripcion-plan-nombre">{plan.nombre}</p>
+                <p className="suscripcion-plan-precio">
+                  {formatearPrecio(precioConDescuento(plan.precioPrimerMes, codigoValidado))} el
+                  primer mes
                 </p>
-              )}
-            </div>
+                {codigoValidado?.valido && (
+                  <p className="suscripcion-vencimiento">
+                    Con el código {codigoValidado.codigo} (antes{' '}
+                    {formatearPrecio(plan.precioPrimerMes)}).
+                  </p>
+                )}
+              </div>
+            )}
 
             {automatico ? (
               <>
@@ -511,11 +568,11 @@ export default function Registro() {
                   tarjeta o Mercado Pago y tu cuenta se activa al instante.
                 </p>
                 <p className="form-section-label">¿Preferís transferencia?</p>
-                <DatosDePago planId={planId} />
+                <DatosDePago planId={planId} cobro={cobroEspacio} />
               </>
             ) : (
               <>
-                <DatosDePago planId={planId} />
+                <DatosDePago planId={planId} cobro={cobroEspacio} />
                 <p className="registro-edad">
                   Cuando termines de pagar tocá "Ya pagué". Si preferís pagar después, podés avisar
                   desde la pantalla Suscripción.

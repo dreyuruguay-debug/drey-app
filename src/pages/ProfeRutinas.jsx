@@ -48,7 +48,9 @@ export default function ProfeRutinas() {
       {cargando ? (
         <Esqueleto />
       ) : clientes.length === 0 ? (
-        <p className="profe-vacio">Todavía no tenés clientes activos. Habilitalos desde "Pagos".</p>
+        <p className="profe-vacio">
+          Todavía no tenés clientes activos. Habilitalos desde "Cobros".
+        </p>
       ) : (
         <>
           <input

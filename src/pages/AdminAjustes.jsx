@@ -6,24 +6,21 @@ import Esqueleto from '../components/Esqueleto.jsx'
 import AjustesPortada from '../components/AjustesPortada.jsx'
 import AjustesDrive from '../components/AjustesDrive.jsx'
 import AjustesDrey from '../components/AjustesDrey.jsx'
+import { Campo, DatosDeCobroDelEspacio, PlanesDelEspacio } from '../components/CobroDeEspacio.jsx'
 import { mostrarAviso } from '../services/avisos.js'
-import {
-  cargarConfiguracion,
-  crearPlan,
-  guardarAjustes,
-  guardarPlan,
-  useConfiguracion,
-} from '../services/configuracion.js'
-import { formatearPrecio, listaDePlanes } from '../data/planes.js'
+import { cargarConfiguracion, guardarAjustes, useConfiguracion } from '../services/configuracion.js'
+import { cargarEspaciosAdmin } from '../services/suscripcionDrey.js'
+import { listaDePlanes } from '../data/planes.js'
 
 // Ajustes del negocio (solo el Admin). Todo se guarda en la base (tablas
 // "planes" y "ajustes", supabase/sql/022) y la app lo usa al instante:
 // no hace falta entrar a Supabase ni cambiar código. Cada cambio queda
 // anotado en el Historial.
 //
-//   · Planes: nombre, descripción, precios, link de Mercado Pago y si se
-//     ofrece al registrarse. Planes nuevos.
-//   · Cobro: datos para transferencia y cobro automático con Mercado Pago.
+//   · Cobro de alumnos: cada profe y gimnasio cobra a sus alumnos con sus
+//     planes y sus datos de cobro (supabase/sql/034). Los maneja cada
+//     dueño desde Cobros; acá el Admin los puede ver y corregir, eligiendo
+//     el espacio. Abajo, los datos para alumnos sin profe ni gimnasio.
 //   · WhatsApp: link del grupo de la comunidad.
 //   · Plazos: días de aviso antes del vencimiento y días de gracia.
 //   · Portada: textos, secciones, foto del fundador y videos de la página
@@ -37,8 +34,7 @@ import { formatearPrecio, listaDePlanes } from '../data/planes.js'
 // Arriba, el acceso al administrador de notificaciones (pantalla propia:
 // pages/AdminNotificaciones.jsx, supabase/sql/030).
 const PESTANAS = [
-  { id: 'planes', label: 'Planes' },
-  { id: 'cobro', label: 'Cobro' },
+  { id: 'cobro', label: 'Cobro de alumnos' },
   { id: 'whatsapp', label: 'WhatsApp' },
   { id: 'plazos', label: 'Plazos' },
   { id: 'drey', label: 'DREY' },
@@ -51,7 +47,7 @@ export default function AdminAjustes() {
   const [parametros, setParametros] = useSearchParams()
   const pestana = PESTANAS.some((item) => item.id === parametros.get('tab'))
     ? parametros.get('tab')
-    : 'planes'
+    : 'cobro'
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
@@ -79,8 +75,6 @@ export default function AdminAjustes() {
 
       {cargando ? (
         <Esqueleto />
-      ) : pestana === 'planes' ? (
-        <SeccionPlanes cobroAutomatico={config.cobroAutomatico} />
       ) : pestana === 'cobro' ? (
         <SeccionCobro config={config} />
       ) : pestana === 'whatsapp' ? (
@@ -120,217 +114,82 @@ function avisarResultado(error, textoOk) {
   return false
 }
 
-// --- Planes ------------------------------------------------------------------
+// --- Cobro de alumnos -------------------------------------------------------
 
-const PLAN_VACIO = {
-  nombre: '',
-  descripcion: '',
-  precioPrimerMes: '',
-  precioDesdeSegundoMes: '',
-  linkMercadoPago: '',
-  activo: true,
-}
+const PESTANAS_COBRO = [
+  { id: 'planes', label: 'Planes' },
+  { id: 'datos', label: 'Datos de cobro' },
+]
 
-function SeccionPlanes({ cobroAutomatico }) {
-  const planes = listaDePlanes()
-  const [creando, setCreando] = useState(false)
+function SeccionCobro({ config }) {
+  const [espacios, setEspacios] = useState(null)
+  const [elegido, setElegido] = useState('')
+  const [parte, setParte] = useState('planes')
+
+  useEffect(() => {
+    cargarEspaciosAdmin().then(({ espacios: lista }) => {
+      setEspacios(lista)
+      // Arranca en el espacio con más planes (el de Facu, al principio).
+      const conPlanes = [...lista].sort(
+        (a, b) =>
+          listaDePlanes({ espacioId: b.id }).length - listaDePlanes({ espacioId: a.id }).length,
+      )
+      setElegido((actual) => actual || conPlanes[0]?.id || '')
+    })
+  }, [])
 
   return (
     <>
       <p className="profe-nota">
-        Los precios nuevos valen para los próximos pagos (lo que ya se cobró no cambia). Los planes
-        no se borran porque hay clientes que los tienen: si ya no lo ofrecés, ocultalo.
+        Cada profe y cada gimnasio cobra a sus alumnos: pone sus planes y sus datos de cobro desde
+        su panel (Cobros). Acá los podés ver y corregir. Los alumnos ven los de su profe o gimnasio.
       </p>
-      <div className="lista-tarjetas">
-        {planes.map((plan) => (
-          <FormularioPlan key={plan.id} plan={plan} cobroAutomatico={cobroAutomatico} />
-        ))}
-      </div>
 
-      {creando ? (
-        <FormularioPlan
-          plan={PLAN_VACIO}
-          cobroAutomatico={cobroAutomatico}
-          nuevo
-          idsExistentes={planes.map((plan) => plan.id)}
-          onListo={() => setCreando(false)}
-        />
+      {espacios === null ? (
+        <Esqueleto />
+      ) : espacios.length === 0 ? (
+        <p className="profe-vacio">Todavía no hay profes ni gimnasios.</p>
       ) : (
-        <button
-          type="button"
-          className="boton-secundario ajustes-nuevo-plan"
-          onClick={() => setCreando(true)}
-        >
-          + Crear un plan nuevo
-        </button>
+        <>
+          <Campo etiqueta="Profe o gimnasio">
+            <select
+              className="auth-input"
+              value={elegido}
+              onChange={(event) => setElegido(event.target.value)}
+            >
+              {espacios.map((espacio) => (
+                <option key={espacio.id} value={espacio.id}>
+                  {espacio.nombre} ({espacio.codigo}) ·{' '}
+                  {listaDePlanes({ espacioId: espacio.id }).length} planes
+                </option>
+              ))}
+            </select>
+          </Campo>
+          <Pestanas
+            etiqueta="Qué ver del espacio"
+            opciones={PESTANAS_COBRO}
+            activa={parte}
+            onCambiar={setParte}
+          />
+          {elegido &&
+            (parte === 'planes' ? (
+              <PlanesDelEspacio key={elegido} espacioId={elegido} />
+            ) : (
+              <DatosDeCobroDelEspacio key={elegido} espacioId={elegido} />
+            ))}
+        </>
       )}
+
+      <SinEspacio config={config} />
     </>
   )
 }
 
-function FormularioPlan({ plan, cobroAutomatico, nuevo = false, idsExistentes = [], onListo }) {
-  const [formulario, setFormulario] = useState(() => ({
-    ...plan,
-    precioPrimerMes: String(plan.precioPrimerMes ?? ''),
-    precioDesdeSegundoMes: String(plan.precioDesdeSegundoMes ?? ''),
-    linkMercadoPago: plan.linkMercadoPago || '',
-    descripcion: plan.descripcion || '',
-  }))
-  const [guardando, setGuardando] = useState(false)
-  const [mensaje, setMensaje] = useState('')
-
-  const cambiado =
-    nuevo ||
-    [
-      'nombre',
-      'descripcion',
-      'precioPrimerMes',
-      'precioDesdeSegundoMes',
-      'linkMercadoPago',
-      'activo',
-    ].some((campo) => String(formulario[campo] ?? '') !== String(plan[campo] ?? ''))
-
-  function cambiar(campo, valor) {
-    setFormulario((actual) => ({ ...actual, [campo]: valor }))
-    setMensaje('')
-  }
-
-  async function guardar(event) {
-    event.preventDefault()
-    const problema = revisarPlan(formulario)
-    if (problema) {
-      setMensaje(problema)
-      return
-    }
-    setGuardando(true)
-    const error = nuevo
-      ? await crearPlan(formulario, idsExistentes)
-      : await guardarPlan(plan.id, formulario)
-    setGuardando(false)
-    if (avisarResultado(error, nuevo ? 'Plan creado' : 'Plan guardado')) onListo?.()
-  }
-
-  return (
-    <form
-      className={formulario.activo ? 'ajustes-tarjeta' : 'ajustes-tarjeta ajustes-tarjeta-oculta'}
-      onSubmit={guardar}
-    >
-      <div className="ajustes-tarjeta-cabecera">
-        <strong>{nuevo ? 'Plan nuevo' : plan.nombre}</strong>
-        {!nuevo && (
-          <small>
-            {formatearPrecio(plan.precioPrimerMes)} el primer mes ·{' '}
-            {formatearPrecio(plan.precioDesdeSegundoMes)} por mes
-            {plan.activo === false ? ' · oculto' : ''}
-          </small>
-        )}
-      </div>
-
-      <Campo etiqueta="Nombre">
-        <input
-          className="auth-input"
-          type="text"
-          value={formulario.nombre}
-          onChange={(event) => cambiar('nombre', event.target.value)}
-          placeholder="Ej. Plan seguimiento"
-        />
-      </Campo>
-      <Campo etiqueta="Descripción (la ve el cliente al elegir)">
-        <input
-          className="auth-input"
-          type="text"
-          value={formulario.descripcion}
-          onChange={(event) => cambiar('descripcion', event.target.value)}
-          placeholder="Qué incluye"
-        />
-      </Campo>
-      <div className="codigo-fila">
-        <Campo etiqueta="Primer mes ($U)">
-          <input
-            className="auth-input"
-            type="number"
-            min="0"
-            step="1"
-            inputMode="numeric"
-            value={formulario.precioPrimerMes}
-            onChange={(event) => cambiar('precioPrimerMes', event.target.value)}
-          />
-        </Campo>
-        <Campo etiqueta="Por mes ($U)">
-          <input
-            className="auth-input"
-            type="number"
-            min="0"
-            step="1"
-            inputMode="numeric"
-            value={formulario.precioDesdeSegundoMes}
-            onChange={(event) => cambiar('precioDesdeSegundoMes', event.target.value)}
-          />
-        </Campo>
-      </div>
-      {!cobroAutomatico && (
-        <Campo etiqueta="Link de pago de Mercado Pago (opcional)">
-          <input
-            className="auth-input"
-            type="url"
-            value={formulario.linkMercadoPago}
-            onChange={(event) => cambiar('linkMercadoPago', event.target.value)}
-            placeholder="https://mpago.la/…"
-          />
-        </Campo>
-      )}
-      <label className="form-checkbox-row">
-        <input
-          type="checkbox"
-          checked={formulario.activo !== false}
-          onChange={(event) => cambiar('activo', event.target.checked)}
-        />
-        <span>Se ofrece al registrarse (si lo destildás, queda oculto)</span>
-      </label>
-
-      {mensaje && <p className="auth-message">{mensaje}</p>}
-      <div className="codigo-fila">
-        {nuevo && (
-          <button type="button" className="boton-secundario boton-chico" onClick={onListo}>
-            Cancelar
-          </button>
-        )}
-        <button
-          type="submit"
-          className="boton-principal boton-chico"
-          disabled={guardando || !cambiado}
-        >
-          {guardando ? 'Guardando…' : nuevo ? 'Crear plan' : 'Guardar cambios'}
-        </button>
-      </div>
-    </form>
-  )
-}
-
-// Devuelve el problema a corregir, o '' si está todo bien.
-function revisarPlan(plan) {
-  if (!plan.nombre.trim()) return 'Poné un nombre para el plan.'
-  for (const [campo, texto] of [
-    ['precioPrimerMes', 'el primer mes'],
-    ['precioDesdeSegundoMes', 'cada mes'],
-  ]) {
-    const valor = Number(plan[campo])
-    if (plan[campo] === '' || !Number.isInteger(valor) || valor < 0) {
-      return `Poné el precio de ${texto} en pesos, sin puntos ni decimales (ej. 1500).`
-    }
-  }
-  if (plan.linkMercadoPago && !/^https?:\/\//i.test(plan.linkMercadoPago.trim())) {
-    return 'El link de Mercado Pago tiene que empezar con https://'
-  }
-  return ''
-}
-
-// --- Cobro -------------------------------------------------------------------
-
-function SeccionCobro({ config }) {
+// Datos para los alumnos de antes que no tienen profe ni gimnasio (los
+// ven en Suscripción) y el estado del cobro automático.
+function SinEspacio({ config }) {
   const [datos, setDatos] = useState(() => ({ ...config.transferencia }))
   const [guardando, setGuardando] = useState(false)
-  const [confirmando, setConfirmando] = useState(false)
   const cambiado = ['banco', 'titular', 'cuenta', 'moneda'].some(
     (campo) => (datos[campo] || '') !== (config.transferencia[campo] || ''),
   )
@@ -343,17 +202,11 @@ function SeccionCobro({ config }) {
     avisarResultado(error, 'Datos para transferencia guardados')
   }
 
-  async function cambiarCobroAutomatico(valor) {
-    setConfirmando(false)
-    const error = await guardarAjustes({ cobroAutomatico: valor })
-    avisarResultado(error, valor ? 'Cobro automático activado' : 'Cobro automático desactivado')
-  }
-
   return (
     <>
-      <p className="profe-seccion-label">Datos para transferencia</p>
+      <p className="profe-seccion-label">Alumnos sin profe ni gimnasio</p>
       <p className="profe-nota">
-        Los ven los clientes al registrarse y en Suscripción. Dejá vacío lo que no quieras mostrar.
+        Los ven solo los alumnos que todavía no tienen profe ni gimnasio, en Suscripción.
       </p>
       <form className="ajustes-tarjeta" onSubmit={guardarTransferencia}>
         {[
@@ -385,50 +238,27 @@ function SeccionCobro({ config }) {
 
       <p className="profe-seccion-label">Cobro automático con Mercado Pago</p>
       <div className="ajustes-tarjeta">
-        <div className="ajustes-interruptor">
-          <span className="ajustes-interruptor-texto">
-            <strong>{config.cobroAutomatico ? 'Activado' : 'Desactivado'}</strong>
-            <small>
-              {config.cobroAutomatico
-                ? 'El cliente paga con tarjeta desde la app y la cuenta se habilita sola.'
-                : 'Los clientes pagan con el link de cada plan o por transferencia, y la cuenta se habilita desde Pagos.'}
-            </small>
-          </span>
+        <span className="ajustes-interruptor-texto">
+          <strong>{config.cobroAutomatico ? 'Activado' : 'Apagado'}</strong>
+          <small>
+            {config.cobroAutomatico
+              ? 'Los alumnos pagan con tarjeta desde la app.'
+              : 'Cada profe y gimnasio cobra a sus alumnos con el link de cada plan o por transferencia, y habilita la cuenta desde Cobros. El cobro automático vuelve cuando cada uno pueda conectar su propia cuenta de Mercado Pago.'}
+          </small>
+        </span>
+        {config.cobroAutomatico && (
           <button
             type="button"
-            className={config.cobroAutomatico ? 'interruptor interruptor-on' : 'interruptor'}
-            role="switch"
-            aria-checked={config.cobroAutomatico}
-            aria-label="Cobro automático con Mercado Pago"
-            onClick={() =>
-              config.cobroAutomatico ? cambiarCobroAutomatico(false) : setConfirmando(true)
+            className="boton-secundario boton-chico"
+            onClick={async () =>
+              avisarResultado(
+                await guardarAjustes({ cobroAutomatico: false }),
+                'Cobro automático apagado',
+              )
             }
-          />
-        </div>
-        {confirmando && (
-          <div className="aviso-baja">
-            <strong>¿Ya está configurado Mercado Pago?</strong>
-            <span>
-              Activalo solo si ya hiciste el paso de Mercado Pago de la guía (funciones de Supabase
-              y token). Si no, los clientes no van a poder pagar con tarjeta.
-            </span>
-            <div className="equipo-confirmar">
-              <button
-                type="button"
-                className="boton-principal boton-chico"
-                onClick={() => cambiarCobroAutomatico(true)}
-              >
-                Sí, activar
-              </button>
-              <button
-                type="button"
-                className="boton-secundario boton-chico"
-                onClick={() => setConfirmando(false)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
+          >
+            Apagar
+          </button>
         )}
       </div>
     </>
@@ -597,14 +427,5 @@ function SeccionPlazos({ config }) {
         </button>
       </form>
     </>
-  )
-}
-
-function Campo({ etiqueta, children }) {
-  return (
-    <label className="ajustes-campo">
-      <span>{etiqueta}</span>
-      {children}
-    </label>
   )
 }
