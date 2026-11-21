@@ -101,7 +101,9 @@ function filasDeEjercicios(programa, semanas, sesiones) {
           tipo: nombreCortoDeMetodo(bloque.metodo),
           ejercicio: item.ejercicio?.nombre || '',
           idEjercicio: item.ejercicio?.id || '',
-          semanas: semanasDelEjercicio(item, semanas).map(valoresDeSemana),
+          semanas: semanasDelEjercicio(item, semanas).map((semana) =>
+            valoresDeSemana(semana, item.porTiempo === true),
+          ),
           hecho: hecho?.get(item) || Array(semanas).fill(''),
           // En un bloque de varios ejercicios, el descanso va al final (es
           // el descanso al terminar la vuelta).
@@ -125,10 +127,13 @@ function filasDeEjercicios(programa, semanas, sesiones) {
 
 // Una semana → valores para la planilla: reps "10" (número) o "8-12"
 // (texto, con guion común, como lo escribe el profe); kg número o vacío.
-function valoresDeSemana(prescripcion) {
+// En un ejercicio por tiempo los segundos van con "seg" ("6 seg",
+// "20-30 seg"): así al volver a subir la planilla se leen como segundos.
+function valoresDeSemana(prescripcion, porTiempo = false) {
   const { desde, hasta } = separarReps(prescripcion.reps)
   let reps = prescripcion.reps || ''
   if (desde !== '') reps = hasta !== '' && hasta !== desde ? `${desde}-${hasta}` : desde
+  if (porTiempo && reps !== '') reps = `${reps} seg`
   return { series: prescripcion.series ?? '', reps, kg: prescripcion.kg ?? '' }
 }
 

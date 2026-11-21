@@ -81,9 +81,12 @@ function EjercicioPrevio({ item, semanas }) {
   const plan = semanasDelEjercicio(item, semanas)
   const igual = plan.every((semana) => mismaPrescripcion(semana, plan[0]))
   const calentamiento = textoSeriesCalentamiento(borradorACalentamiento(item))
-  const extras = [item.rpe && `RPE ${item.rpe}`, item.tempo && `Tempo ${item.tempo}`].filter(
-    Boolean,
-  )
+  const porTiempo = item.porTiempo === true
+  const extras = [
+    porTiempo && '⏱ por tiempo',
+    item.rpe && `RPE ${item.rpe}`,
+    item.tempo && `Tempo ${item.tempo}`,
+  ].filter(Boolean)
   return (
     <div className="planilla-ejercicio">
       <p className="planilla-ejercicio-nombre">
@@ -94,7 +97,7 @@ function EjercicioPrevio({ item, semanas }) {
       </p>
       {igual ? (
         <p className="ejercicio-objetivo">
-          {textoPrescripcion(plan[0])}
+          {textoPrescripcion(plan[0], porTiempo)}
           {semanas > 1 ? ' · todas las semanas' : ''}
           {extras.length ? ` · ${extras.join(' · ')}` : ''}
         </p>
@@ -104,7 +107,7 @@ function EjercicioPrevio({ item, semanas }) {
           <ol className="ejercicio-semanas-lista">
             {plan.map((semana, indice) => (
               <li key={indice}>
-                <strong>S{indice + 1}</strong> {textoPrescripcion(semana)}
+                <strong>S{indice + 1}</strong> {textoPrescripcion(semana, porTiempo)}
               </li>
             ))}
           </ol>

@@ -501,6 +501,9 @@ function leerFilaDeEjercicio(fila, columnas, semanas, hoja, informe) {
   }
 
   // Semanas: lo vacío repite la semana anterior.
+  // Si en alguna semana las repeticiones están en segundos ("6 seg"), el
+  // ejercicio es por tiempo (utils/porTiempo.js) en todas sus semanas.
+  let porTiempo = false
   const prescripciones = []
   semanas.forEach((columnasSemana, indice) => {
     const numeroSemana = indice + 1
@@ -517,10 +520,11 @@ function leerFilaDeEjercicio(fila, columnas, semanas, hoja, informe) {
     if (reps.error) {
       informe.error(
         lugar(columnasSemana.reps),
-        `${prefijo}: las repeticiones no son válidas (un número, como 10, o un rango, como 8-12; dice "${textoDe(celda(columnasSemana.reps))}").`,
+        `${prefijo}: las repeticiones no son válidas (un número, como 10; un rango, como 8-12; o segundos, como 30 seg; dice "${textoDe(celda(columnasSemana.reps))}").`,
       )
     }
     if (reps.aviso) informe.aviso(lugar(columnasSemana.reps), `${prefijo}: ${reps.aviso}`)
+    if (reps.porTiempo) porTiempo = true
     const kg = leerPeso(celda(columnasSemana.kg))
     if (kg.error) {
       informe.error(
@@ -579,6 +583,7 @@ function leerFilaDeEjercicio(fila, columnas, semanas, hoja, informe) {
     nombre,
     idEjercicio: idEjercicio || null,
     idFila: textoDe(dato('idFila')) || null,
+    porTiempo,
     semanas: prescripciones,
     descanso: descanso.valor,
     rpe: rpe.valor,
@@ -1228,6 +1233,7 @@ function armarBloque(filas, indice, numero, semanas, informe, separado = false) 
       calentamientoSeries: [],
       id: fila.idFila || undefined,
       ejercicio: fila.ejercicio,
+      porTiempo: fila.porTiempo === true,
       ...prescripcionABorrador(primera),
       semanasPlan: semanas > 1 ? resto.map(prescripcionABorrador) : null,
       rpe: fila.rpe ?? '',
@@ -1418,6 +1424,32 @@ function leerEntero(valor, minimo, maximo) {
 
 // Repeticiones: 10 · "10" · "8-12" · "8 a 12" · "8–12". Si Excel lo
 // convirtió en fecha (8-10 → 8 de octubre), se recupera.
+// En segundos (ejercicio por tiempo, como la plancha): "6 seg" · "6s" ·
+// "6 segundos" · "6''" · "20-30 seg". Devuelve además porTiempo: true.
+const SUFIJO_SEGUNDOS = String.raw`(?:s|seg|segs|segundo|segundos|sec|"|''|”|″)\.?`
+const MAXIMO_SEGUNDOS_DE_SERIE = 600
+
+function leerSegundosDeSerie(texto) {
+  const rango = texto.match(
+    new RegExp(String.raw`^(\d{1,3})\s*(?:-|–|—|a|/)\s*(\d{1,3})\s*${SUFIJO_SEGUNDOS}$`),
+  )
+  if (rango) {
+    const desde = Number(rango[1])
+    const hasta = Number(rango[2])
+    if (desde >= 1 && hasta >= desde && hasta <= MAXIMO_SEGUNDOS_DE_SERIE) {
+      return { valor: textoReps(desde, hasta), porTiempo: true }
+    }
+    return { valor: null, error: true }
+  }
+  const uno = texto.match(new RegExp(String.raw`^(\d{1,3})\s*${SUFIJO_SEGUNDOS}$`))
+  if (!uno) return null
+  const segundos = Number(uno[1])
+  if (segundos >= 1 && segundos <= MAXIMO_SEGUNDOS_DE_SERIE) {
+    return { valor: String(segundos), porTiempo: true }
+  }
+  return { valor: null, error: true }
+}
+
 function leerReps(valor) {
   if (vacio(valor)) return { valor: null }
   if (valor instanceof Date) {
@@ -1430,6 +1462,8 @@ function leerReps(valor) {
     }
   }
   const texto = String(valor).trim().toLowerCase()
+  const enSegundos = leerSegundosDeSerie(texto)
+  if (enSegundos) return enSegundos
   const rango = texto.match(
     /^(\d{1,3})\s*(?:-|–|—|a|\/)\s*(\d{1,3})(?:\s*(?:reps?|repeticiones))?$/,
   )

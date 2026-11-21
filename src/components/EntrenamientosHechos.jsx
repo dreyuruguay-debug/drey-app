@@ -3,13 +3,16 @@ import EditorEntrenamiento from './EditorEntrenamiento.jsx'
 import { mostrarAviso } from '../services/avisos.js'
 import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
 import { textoFechaCorta } from '../utils/dias.js'
+import { textoDeEsfuerzo } from '../data/esfuerzo.js'
 
 const CANTIDAD_INICIAL = 5
 const CANTIDAD_POR_TOQUE = 10
 
 // "Tus entrenamientos" (Progreso del alumno): los últimos que hizo, del
-// más nuevo al más viejo. Tocando uno se abre la ventana para corregir
-// un peso o una repetición que quedó mal (EditorEntrenamiento.jsx).
+// más nuevo al más viejo, cada uno con cómo se sintió (el grado de
+// exigencia) y lo que le escribió al profe. Tocando uno se abre la
+// ventana para verlo, corregir un peso o una repetición que quedó mal, o
+// borrarlo si se guardó sin querer (EditorEntrenamiento.jsx).
 //
 //   sesiones: su historial, del más viejo al más nuevo (como lo entrega
 //     services/datosCliente.js). Los que esperan señal traen "pendiente".
@@ -18,6 +21,7 @@ const CANTIDAD_POR_TOQUE = 10
 //     un peso o una repetición" al terminar de entrenar). alAbrir avisa
 //     que ya se abrió, para no volver a abrirlo.
 //   onCorregido(cambios): se guardó una corrección ({ id, detalle, ... }).
+//   onBorrado(id): se borró ese entrenamiento.
 export default function EntrenamientosHechos({
   sesiones,
   nombresDeRutinas = {},
@@ -25,6 +29,7 @@ export default function EntrenamientosHechos({
   abrirId = null,
   alAbrir,
   onCorregido,
+  onBorrado,
 }) {
   const [cantidad, setCantidad] = useState(CANTIDAD_INICIAL)
   const [editandoId, setEditandoId] = useState(null)
@@ -41,6 +46,12 @@ export default function EntrenamientosHechos({
     return nombresDeRutinas[sesion.rutina_id] || 'Entrenamiento'
   }
 
+  function alBorrar(id) {
+    setEditandoId(null)
+    onBorrado?.(id)
+    mostrarAviso('Entrenamiento borrado')
+  }
+
   function alGuardar(cambios) {
     setEditandoId(null)
     onCorregido(cambios)
@@ -55,7 +66,9 @@ export default function EntrenamientosHechos({
     <section className="bloque-pagina">
       <p className="seccion-etiqueta">Tus entrenamientos</p>
       <p className="profe-nota entrenamientos-nota">
-        ¿Anotaste mal un peso o te olvidaste de marcar un ejercicio? Tocá el entrenamiento y corregilo.
+        Tocá un entrenamiento para verlo: ahí está cómo te sentiste y lo que le escribiste a tu
+        profe. También podés corregir un peso mal anotado, marcar un ejercicio que te olvidaste o
+        borrarlo si se guardó sin querer.
       </p>
       <div className="lista-tarjetas">
         {recientes.slice(0, cantidad).map((sesion) => (
@@ -64,12 +77,18 @@ export default function EntrenamientosHechos({
             type="button"
             className="tarjeta-rutina"
             onClick={() => setEditandoId(sesion.id)}
-            aria-label={`Corregir ${titulo(sesion)} del ${textoFechaCorta(sesion.fecha)}`}
+            aria-label={`Ver o corregir ${titulo(sesion)} del ${textoFechaCorta(sesion.fecha)}`}
           >
             <span className="entrenamiento-fecha">{textoFechaCorta(sesion.fecha)}</span>
             <span className="tarjeta-rutina-textos">
               <strong>{titulo(sesion)}</strong>
               <small>{textoDeEntrenamiento(sesion)}</small>
+              {textoDeEsfuerzo(sesion.esfuerzo) && (
+                <small>{textoDeEsfuerzo(sesion.esfuerzo)}</small>
+              )}
+              {sesion.comentario && (
+                <small className="entrenamiento-comentario">“{sesion.comentario}”</small>
+              )}
               {sesion.pendiente && <small className="texto-alerta">Sin enviar todavía</small>}
               {sesion.editado_en && <small>Corregido el {textoFechaCorta(sesion.editado_en)}</small>}
             </span>
@@ -97,6 +116,7 @@ export default function EntrenamientosHechos({
           titulo={`${titulo(editando)} · ${textoFechaCorta(editando.fecha)}`}
           onCerrar={() => setEditandoId(null)}
           onGuardado={alGuardar}
+          onBorrado={onBorrado ? alBorrar : undefined}
         />
       )}
     </section>

@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import ListaRutinasCliente from '../components/ListaRutinasCliente.jsx'
+import { textoDeEsfuerzo } from '../data/esfuerzo.js'
 import EditorEntrenamiento from '../components/EditorEntrenamiento.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import {
@@ -202,6 +203,13 @@ export default function ProfeClienteDetalle() {
     planesDelAlumno.length > 0 &&
     (esAdmin || (esDuenoDe(espacio) && espacio?.id === cliente.espacio_id))
   const whatsapp = linkWhatsApp(cliente.celular, `Hola ${cliente.nombre}!`)
+  // Se borró un entrenamiento (guardado sin querer): sale de la lista.
+  function alBorrar(sesionId) {
+    setCorrigiendoId(null)
+    setSesiones((actual) => actual.filter((sesion) => sesion.id !== sesionId))
+    mostrarAviso('Entrenamiento borrado')
+  }
+
   const corrigiendo = corrigiendoId ? sesiones.find((sesion) => sesion.id === corrigiendoId) : null
 
   return (
@@ -308,9 +316,9 @@ export default function ProfeClienteDetalle() {
                       <span className="profe-progreso-rutina">
                         {sesion.rutinas?.nombre || 'Rutina borrada'}
                       </span>
-                      {sesion.esfuerzo && (
+                      {textoDeEsfuerzo(sesion.esfuerzo) && (
                         <span className="profe-progreso-esfuerzo">
-                          Esfuerzo {sesion.esfuerzo}/5
+                          {textoDeEsfuerzo(sesion.esfuerzo)}
                         </span>
                       )}
                     </div>
@@ -470,6 +478,7 @@ export default function ProfeClienteDetalle() {
           )}`}
           onCerrar={() => setCorrigiendoId(null)}
           onGuardado={alCorregir}
+          onBorrado={alBorrar}
         />
       )}
     </ProfeLayout>

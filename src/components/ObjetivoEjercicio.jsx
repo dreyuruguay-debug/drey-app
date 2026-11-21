@@ -1,10 +1,12 @@
 import { textoSeriesCalentamiento } from '../utils/seriesCalentamiento.js'
 import { textoProgresion } from '../utils/ciclos.js'
 import { normalizarSemanas, resumenPorSemana } from '../utils/semanas.js'
+import { esPorTiempo, textoSeriesPor } from '../utils/porTiempo.js'
 
 // Lo que se le pide al cliente en un ejercicio: series × repeticiones,
 // peso objetivo, RPE, tempo, sus series de calentamiento y las notas del
 // profe. Si cada semana del ciclo es distinta, una línea por semana.
+// En un ejercicio por tiempo dice los segundos ("3 × 6 seg · ⏱ por tiempo").
 // Se usa en el editor del profe (components/BloqueProfe.jsx).
 // semanasCiclo: semanas del ciclo de la rutina (0 = sin ciclo).
 export default function ObjetivoEjercicio({ ejercicio, semanasCiclo = 0 }) {
@@ -12,7 +14,9 @@ export default function ObjetivoEjercicio({ ejercicio, semanasCiclo = 0 }) {
   const porSemana = normalizarSemanas(ejercicio.semanas).length
     ? resumenPorSemana(ejercicio, semanasCiclo)
     : []
+  const porTiempo = esPorTiempo(ejercicio)
   const extras = [
+    porTiempo && '⏱ por tiempo',
     ejercicio.rpe && `RPE ${ejercicio.rpe}`,
     ejercicio.tempo && `Tempo ${ejercicio.tempo}`,
   ].filter(Boolean)
@@ -34,14 +38,14 @@ export default function ObjetivoEjercicio({ ejercicio, semanasCiclo = 0 }) {
         </div>
       ) : (
         <p className="ejercicio-objetivo">
-          Objetivo: {ejercicio.series} × {ejercicio.reps_objetivo || '—'}
+          Objetivo: {textoSeriesPor(ejercicio)}
           {ejercicio.kg_objetivo ? ` · Peso objetivo ${ejercicio.kg_objetivo} kg` : ''}
           {extras.length ? ` · ${extras.join(' · ')}` : ''}
         </p>
       )}
-      {textoProgresion(ejercicio.progresion) && (
+      {textoProgresion(ejercicio.progresion, porTiempo) && (
         <p className="ejercicio-progresion">
-          📈 Progresión: {textoProgresion(ejercicio.progresion)}
+          📈 Progresión: {textoProgresion(ejercicio.progresion, porTiempo)}
         </p>
       )}
       {calentamiento && <p className="ejercicio-calentamiento">Calentamiento: {calentamiento}</p>}

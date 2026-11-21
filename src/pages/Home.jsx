@@ -34,7 +34,12 @@ import {
 } from '../utils/dias.js'
 import { estimarMinutos, formatearReloj } from '../utils/entrenamiento.js'
 import { textoDuracionCalentamiento } from '../utils/calentamiento.js'
-import { entrenamientosEnCursoDeHoy, resumenEnCurso } from '../utils/entrenamientoEnCurso.js'
+import {
+  borrarEnCurso,
+  entrenamientosEnCursoDeHoy,
+  resumenEnCurso,
+} from '../utils/entrenamientoEnCurso.js'
+import { mostrarAviso } from '../services/avisos.js'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -88,6 +93,9 @@ export default function Home() {
   const [datos, setDatos] = useState(guardado?.inicio || null)
   const [sesiones, setSesiones] = useState(guardado?.historial.sesiones || [])
   const [sinConexion, setSinConexion] = useState(false)
+  // Sirve solo para volver a dibujar Inicio cuando se cancela el
+  // entrenamiento a medias (está guardado en el celular, no en un estado).
+  const [, setEnCursoCancelados] = useState(0)
   const [mostrarBienvenida, setMostrarBienvenida] = useState(
     () => Boolean(guardado) && debeVerBienvenida(guardado.usuarioId),
   )
@@ -175,6 +183,18 @@ export default function Home() {
   const cartelDelEspacio = !planBloqueado && Boolean(datos?.acceso?.espacio_cartel)
   // El entrenamiento a medias de hoy (el último que tocó), si hay.
   const enCurso = entrenamientosEnCursoDeHoy(hoy)[0] || null
+
+  // "Cancelar entrenamiento" en la tarjeta naranja: descarta el que quedó
+  // a medias (lo empezó sin querer). No queda guardado.
+  function cancelarEnCurso(rutinaId) {
+    const seguro = window.confirm(
+      '¿Cancelar este entrenamiento? Se descarta lo que marcaste y no queda guardado.',
+    )
+    if (!seguro) return
+    borrarEnCurso(rutinaId)
+    setEnCursoCancelados((cantidad) => cantidad + 1)
+    mostrarAviso('Entrenamiento cancelado: no se guardó nada')
+  }
   // "15 min" si todas las actividades del calentamiento tienen tiempo.
   const duracionCalentamiento = textoDuracionCalentamiento(rutinaHoy?.calentamiento)
 
@@ -280,6 +300,7 @@ export default function Home() {
             rutinaId={enCurso.rutinaId}
             datos={enCurso.datos}
             nombre={enCurso.datos.nombre || nombreDeRutina(calendario, enCurso.rutinaId)}
+            onCancelar={() => cancelarEnCurso(enCurso.rutinaId)}
           />
         ) : rutinaHoy ? (
           <div className="hoy-tarjeta">
@@ -396,8 +417,9 @@ export default function Home() {
 }
 
 // Entrenamiento a medias de hoy: tarjeta y botón naranjas para seguirlo
-// donde quedó (el tiempo en pausa no cuenta).
-function TarjetaEnCurso({ rutinaId, datos, nombre }) {
+// donde quedó (el tiempo en pausa no cuenta). "Cancelar entrenamiento"
+// lo descarta sin guardar nada (por si lo empezó sin querer).
+function TarjetaEnCurso({ rutinaId, datos, nombre, onCancelar }) {
   const resumen = resumenEnCurso(datos)
   return (
     <div className="hoy-tarjeta hoy-tarjeta-en-curso">
@@ -421,6 +443,9 @@ function TarjetaEnCurso({ rutinaId, datos, nombre }) {
         </svg>
         {resumen.faltaGuardar ? 'Guardar entrenamiento' : 'Seguir entrenamiento'}
       </Link>
+      <button type="button" className="boton-texto boton-texto-peligro" onClick={onCancelar}>
+        Cancelar entrenamiento (no guardar nada)
+      </button>
     </div>
   )
 }

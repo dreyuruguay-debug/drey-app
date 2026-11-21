@@ -130,12 +130,14 @@ export function cambiosEntre(antes, despues, campos) {
 //
 // {
 //   metodo, config, grupo, descansoMin, descansoMax,
-//   ejercicios: [{ id, ejercicio, series, repsDesde, repsHasta, kg, rpe,
-//                  tempo, notas,
+//   ejercicios: [{ id, ejercicio, porTiempo, series, repsDesde, repsHasta,
+//                  kg, rpe, tempo, notas,
 //                  calentamiento, calentamientoSeries, calentamientoDescanso,
 //                  calentamientoNota, progresionKg, progresionReps,
 //                  semanasPlan }]
 // }
+// porTiempo: el ejercicio va por segundos en vez de repeticiones (plancha):
+// repsDesde / repsHasta son segundos (utils/porTiempo.js).
 // calentamiento: sí/no. calentamientoSeries: [{ reps, kg }] (una por
 // serie de calentamiento). calentamientoDescanso: segundos. Ver
 // utils/seriesCalentamiento.js.
@@ -150,6 +152,7 @@ export function cambiosEntre(antes, despues, campos) {
 // hecha a mano y una subida desde Excel son exactamente lo mismo.
 
 export const VALORES_INICIALES_EJERCICIO = {
+  porTiempo: false,
   series: 4,
   repsDesde: 10,
   repsHasta: '',
@@ -210,6 +213,7 @@ export function bloqueABorrador(bloque, semanasCiclo = 0) {
       return {
         id: fila.id,
         ejercicio: { id: fila.ejercicio_id, ...(fila.ejercicios || {}) },
+        porTiempo: fila.por_tiempo === true,
         series: fila.series ?? VALORES_INICIALES_EJERCICIO.series,
         repsDesde: reps.desde,
         repsHasta: reps.hasta,
@@ -306,7 +310,7 @@ export function validarBorrador(borrador) {
   for (const item of borrador.ejercicios) {
     if (!(Number(item.series) >= 1)) return `Poné cuántas series lleva ${item.ejercicio.nombre}.`
     if (!textoReps(item.repsDesde, item.repsHasta)) {
-      return `Poné las repeticiones de ${item.ejercicio.nombre}.`
+      return `Poné ${item.porTiempo ? 'los segundos' : 'las repeticiones'} de ${item.ejercicio.nombre}.`
     }
     if (item.calentamiento) {
       const series = item.calentamientoSeries || []
@@ -314,7 +318,7 @@ export function validarBorrador(borrador) {
         return `Agregá al menos una serie de calentamiento a ${item.ejercicio.nombre} (o elegí "No").`
       }
       if (series.some((serie) => !(Number(serie.reps) >= 1))) {
-        return `Poné las repeticiones de cada serie de calentamiento de ${item.ejercicio.nombre}.`
+        return `Poné ${item.porTiempo ? 'los segundos' : 'las repeticiones'} de cada serie de calentamiento de ${item.ejercicio.nombre}.`
       }
       if (!(Number(item.calentamientoDescanso) >= 0)) {
         return `Poné el descanso de calentamiento de ${item.ejercicio.nombre} (en segundos).`
@@ -322,7 +326,7 @@ export function validarBorrador(borrador) {
     }
     for (const [indice, semana] of (item.semanasPlan || []).entries()) {
       if (!(Number(semana.series) >= 1) || !textoReps(semana.repsDesde, semana.repsHasta)) {
-        return `Semana ${indice + 2} de ${item.ejercicio.nombre}: poné las series y las repeticiones.`
+        return `Semana ${indice + 2} de ${item.ejercicio.nombre}: poné las series y ${item.porTiempo ? 'los segundos' : 'las repeticiones'}.`
       }
     }
     if (String(item.tempo ?? '').trim().length > MAXIMO_TEMPO) {
@@ -373,6 +377,7 @@ export function borradorAFilas(borrador) {
       id: item.id,
       ejercicio_id: ejercicioId,
       ejercicios: datosEjercicio,
+      por_tiempo: item.porTiempo === true,
       series: Math.max(1, Number.parseInt(item.series, 10) || 1),
       reps_objetivo: textoReps(item.repsDesde, item.repsHasta),
       kg_objetivo: numeroONull(item.kg),

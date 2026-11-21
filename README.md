@@ -457,6 +457,48 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   planilla y no se guarda para usar sin señal (`vite.config.js` y
   `herramientas/serviceWorkerDrey.js`).
 
+## Mejoras al entrenar (SQL 036, noviembre 2026)
+
+- **Mirar la rutina sin entrenar.** Desde "Mis rutinas" (o "Ver la rutina
+  antes de empezar") la rutina se abre entera solo para mirarla: nada
+  arranca hasta tocar "Empezar entrenamiento"; "Volver" (o la ✕) sale sin
+  anotar nada. Los ejercicios no llevan al modo entrenar (la foto sí se ve
+  en grande). `components/entrenar/VistaGeneral.jsx` (`soloMirar`).
+- **Cancelar un entrenamiento.** "Cancelar entrenamiento (no guardar
+  nada)" en la pausa, en el final y en la tarjeta naranja de Inicio:
+  descarta lo marcado, con confirmación. Mientras no marcó nada, el botón
+  de arriba dice "Salir" en vez de "Pausar". `pages/RutinaDetalle.jsx`
+  (`cancelarEntrenamiento`), `pages/Home.jsx`.
+- **Borrar un entrenamiento guardado.** En la ventana del entrenamiento
+  (`components/EditorEntrenamiento.jsx`), "Borrar este entrenamiento": el
+  alumno los suyos; su profe o el Admin, los de sus alumnos (política de
+  DELETE en `sesiones`). `services/entrenamientos.js` (`borrarEntrenamiento`).
+- **El alumno ve cómo se sintió y lo que escribió.** "Tus entrenamientos"
+  (Progreso) muestra el grado de exigencia ("Exigencia 4/5 · Duro") y el
+  mensaje al profe, también dentro de la ventana. Textos en
+  `data/esfuerzo.js`.
+- **Ejercicios por tiempo** (plancha: 3 × 6 seg). En el asistente de
+  bloques, "Se mide por: Repeticiones / ⏱ Tiempo (segundos)". Se guarda en
+  `por_tiempo` (rutina_ejercicios y plantilla_ejercicios); las
+  repeticiones pasan a ser segundos. El alumno tiene "▶ Empezar
+  cronómetro" en cada serie (5 s de preparación, cuenta regresiva, bip y
+  vibración; al terminar la serie queda hecha sola; "Parar" anota lo que
+  aguantó). El entrenamiento guarda `por_tiempo: true` en ese ejercicio.
+  En Excel: en "Repeticiones" se escribe `6 seg` (o `20-30 seg`, `6s`).
+  `utils/porTiempo.js`, `components/entrenar/CronometroDeSerie.jsx`,
+  `utils/sonido.js`. No suman volumen (kg × reps) ni 1RM.
+- **Récords** (`utils/records.js`): de **peso** (más kilos que nunca) y de
+  **tonelaje de la serie** (kg × reps de una serie: 10 × 100 = 1.000 kg; 12
+  × 50 = 600 kg no es récord; 12 × 90 = 1.080 kg sí). Reemplaza al récord
+  de repeticiones, que queda solo para ejercicios sin peso; en los de
+  tiempo, más segundos. "Tus mejores marcas" muestra también la serie de
+  más tonelaje.
+- **Récord de tiempo de la rutina.** Se guarda cuánto duró cada
+  entrenamiento (`sesiones.duracion_seg`, sin las pausas). Si hace todas
+  las series en menos tiempo que su mejor entrenamiento completo de esa
+  rutina, el final avisa "🏆 ¡Récord de tiempo!". Los entrenamientos de
+  antes no tienen duración y no participan.
+
 ## Rutina completa antes de empezar
 
 - Al tocar una rutina en "Mis rutinas" (o "Ver la rutina antes de

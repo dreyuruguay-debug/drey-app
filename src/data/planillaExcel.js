@@ -145,6 +145,7 @@ export const INSTRUCCIONES = [
   'Columna "Hizo" de cada semana (si aparece): lo que levantó el alumno esa semana ("45 kg × 10, 10, 9"; F = al fallo). Es solo para mirar y decidir: al subir la planilla no se lee. Si la rutina no tiene ciclo, en la semana 1 está la última vez que la hizo.',
   'Superseries y circuitos: poné la misma letra en "Bloque" (A1, A2) y elegí el "Tipo de bloque". Si el bloque queda vacío, el ejercicio va solo.',
   'Repeticiones: un número (10) o un rango (8-12). Peso vacío o "-": sin peso. Descanso en segundos (90) o rango (60-90).',
+  'Ejercicios por tiempo (plancha, colgado): en "Repeticiones" escribí los segundos con "seg" (6 seg, o 20-30 seg). El alumno va a tener un cronómetro en cada serie.',
   'Hoja "Calentamiento" (opcional): las series de aproximación de cada ejercicio (Día, Orden y Ejercicio como en la hoja Ejercicios).',
   'Hoja "Actividades" (opcional): calentamiento previo y vuelta a la calma de cada día (cinta, movilidad, estiramientos...).',
   'No borres las columnas ocultas ni la hoja "Configuración": sirven para actualizar las rutinas sin duplicarlas.',

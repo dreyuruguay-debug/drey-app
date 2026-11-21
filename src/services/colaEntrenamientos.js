@@ -43,6 +43,22 @@ const CODIGOS_SESION_VENCIDA = ['PGRST301', 'PGRST302', 'PGRST303']
 // "No tiene permiso": puede ser una sesión vencida que no se renovó.
 const SIN_PERMISO = '42501'
 
+// La base no conoce una columna que se le mandó (PostgREST / Postgres).
+const CODIGOS_COLUMNA_INEXISTENTE = ['PGRST204', '42703']
+// Columnas que se agregaron después (SQL 036). Si la base todavía no las
+// tiene, el entrenamiento se manda sin ellas en vez de quedar trabado.
+const COLUMNAS_OPCIONALES = ['duracion_seg']
+
+function faltaUnaColumna(error) {
+  return Boolean(error) && CODIGOS_COLUMNA_INEXISTENTE.includes(error.code)
+}
+
+function sinColumnasOpcionales(fila) {
+  const copia = { ...fila }
+  for (const columna of COLUMNAS_OPCIONALES) delete copia[columna]
+  return copia
+}
+
 // Lo que devuelve guardarEntrenamiento.
 export const ENVIADO = 'enviado' // ya está en la base
 export const EN_COLA = 'en-cola' // quedó en el celular; se manda solo
@@ -125,6 +141,14 @@ async function insertar(fila) {
       ESPERA_ENVIO_MS,
     ).catch((excepcion) => ({ error: excepcion }))
     if (!errorRenovar) error = await insertarUnaVez(fila)
+  }
+
+  if (faltaUnaColumna(error)) {
+    // La base todavía no tiene una columna nueva (falta correr un SQL):
+    // el entrenamiento se guarda igual, sin ese dato.
+    const sinNuevas = sinColumnasOpcionales(fila)
+    error = await insertarUnaVez(sinNuevas)
+    if (!error) return { error: null, fila: sinNuevas }
   }
 
   if (error?.code === RUTINA_INEXISTENTE && fila.rutina_id) {
@@ -259,6 +283,18 @@ export async function corregirPendiente(id, detalle) {
   const item = cola.find((otro) => otro.fila.id === id)
   if (!item) return false
   cambiarEnLaCola(id, { fila: { ...item.fila, detalle } })
+  return true
+}
+
+// Borra un entrenamiento que todavía espera ser enviado (el alumno lo
+// guardó sin querer). Devuelve true si estaba en la cola; false si ya se
+// envió (hay que borrarlo en la base: services/entrenamientos.js).
+// Si justo se está enviando, espera a que termine.
+export async function quitarPendiente(id) {
+  if (envioEnCurso) await envioEnCurso.catch(() => {})
+  if (enviando.has(id)) await enviando.get(id).catch(() => {})
+  if (!leerCola().some((otro) => otro.fila.id === id)) return false
+  sacarDeLaCola(id)
   return true
 }
 

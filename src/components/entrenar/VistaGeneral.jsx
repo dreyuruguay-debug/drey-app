@@ -11,6 +11,7 @@ import { semanaDelCiclo } from '../../utils/ciclos.js'
 import { formatearNumero } from '../../utils/progreso.js'
 import { obtenerFechaHoyISO } from '../../utils/dias.js'
 import { miniaturaDeEjercicio } from '../../utils/imagenes.js'
+import { textoSeriesPor } from '../../utils/porTiempo.js'
 
 // La rutina completa de un vistazo. Se abre al tocar una rutina en "Mis
 // rutinas", con "Ver la rutina antes de empezar" (Inicio) y con "Ver toda
@@ -21,12 +22,21 @@ import { miniaturaDeEjercicio } from '../../utils/imagenes.js'
 // del profe, la pausa y la vuelta a la calma. Si ya empezó, también
 // cuánto lleva hecho de cada uno. Tocar un ejercicio o una actividad
 // lleva directo a él.
+//
+// soloMirar: entró a ver la rutina sin entrenar (desde "Mis rutinas").
+// No arranca nada: los ejercicios no llevan al modo entrenar (la foto sí
+// se ve en grande) y abajo están "Empezar entrenamiento" (onEmpezar) y
+// "Volver" (onVolver, igual que la ✕). Sin soloMirar es la vista de
+// siempre: la ✕ y el botón de abajo la cierran (onCerrar).
 export default function VistaGeneral({
   rutina,
   bloques,
   series,
   calentamiento,
   empezado,
+  soloMirar = false,
+  onEmpezar,
+  onVolver,
   onElegir,
   onElegirCalentamiento,
   onCerrar,
@@ -63,7 +73,12 @@ export default function VistaGeneral({
           <h1 className="vista-general-titulo">{rutina.nombre}</h1>
           {rutina.musculos && <p className="entrenar-objetivo">{rutina.musculos}</p>}
         </div>
-        <button type="button" className="asistente-cerrar" onClick={onCerrar} aria-label="Cerrar">
+        <button
+          type="button"
+          className="asistente-cerrar"
+          onClick={soloMirar ? onVolver : onCerrar}
+          aria-label={soloMirar ? 'Volver sin empezar' : 'Cerrar'}
+        >
           ✕
         </button>
       </div>
@@ -82,11 +97,17 @@ export default function VistaGeneral({
 
       {rutina.descripcion && <p className="vista-general-descripcion">{rutina.descripcion}</p>}
 
+      {soloMirar && (
+        <p className="vista-general-solo-mirar">
+          Estás mirando la rutina: no se anota nada hasta que toques “Empezar entrenamiento”.
+        </p>
+      )}
+
       {rutina.calentamiento?.length > 0 && calentamiento && (
         <BloqueCalentamiento
           actividades={rutina.calentamiento}
           estado={calentamiento}
-          onElegir={onElegirCalentamiento}
+          onElegir={soloMirar ? null : onElegirCalentamiento}
         />
       )}
 
@@ -109,7 +130,7 @@ export default function VistaGeneral({
                 estado={estadoDeEjercicio(series[indice])}
                 empezado={empezado}
                 onVerFoto={() => verFoto(item, indice)}
-                onElegir={() => onElegir(indice)}
+                onElegir={soloMirar ? null : () => onElegir(indice)}
               />
             ))}
             {descanso && (
@@ -135,9 +156,20 @@ export default function VistaGeneral({
       )}
 
       <div className="vista-general-botones">
-        <button type="button" className="boton-principal" onClick={onCerrar}>
-          {empezado ? 'Seguir entrenando' : 'Empezar'}
-        </button>
+        {soloMirar ? (
+          <>
+            <button type="button" className="boton-principal" onClick={onEmpezar}>
+              Empezar entrenamiento
+            </button>
+            <button type="button" className="boton-secundario" onClick={onVolver}>
+              Volver (solo quería mirarla)
+            </button>
+          </>
+        ) : (
+          <button type="button" className="boton-principal" onClick={onCerrar}>
+            {empezado ? 'Seguir entrenando' : 'Volver a los ejercicios'}
+          </button>
+        )}
         {empezado && (
           <button type="button" className="boton-texto" onClick={onTerminar}>
             Terminar el entrenamiento ahora
@@ -161,9 +193,11 @@ export default function VistaGeneral({
 // lo que pidió el profe. Tocar el texto lleva al ejercicio.
 function EjercicioDeLaRutina({ item, estado, empezado, onVerFoto, onElegir }) {
   const datos = item.ejercicios || {}
+  // Mirando la rutina sin entrenar (sin onElegir) el texto no es un botón.
+  const Contenedor = onElegir ? 'button' : 'div'
   const calentamiento = textoSeriesCalentamiento(item.calentamiento)
   const objetivo = [
-    `${item.series} × ${item.reps_objetivo || '—'}`,
+    textoSeriesPor(item),
     item.kg_objetivo ? `${formatearNumero(Number(item.kg_objetivo))} kg` : '',
     item.rpe ? `RPE ${item.rpe}` : '',
     item.tempo ? `Tempo ${item.tempo}` : '',
@@ -188,7 +222,10 @@ function EjercicioDeLaRutina({ item, estado, empezado, onVerFoto, onElegir }) {
           {estado.completo ? '✓' : ''}
         </span>
       )}
-      <button type="button" className="vista-general-ejercicio-boton" onClick={onElegir}>
+      <Contenedor
+        className="vista-general-ejercicio-boton"
+        {...(onElegir ? { type: 'button', onClick: onElegir } : {})}
+      >
         <span className="vista-general-ejercicio-texto">
           <strong>{datos.nombre || 'Ejercicio'}</strong>
           <small>{objetivo}</small>
@@ -207,7 +244,7 @@ function EjercicioDeLaRutina({ item, estado, empezado, onVerFoto, onElegir }) {
             {estado.hechas}/{estado.total}
           </span>
         )}
-      </button>
+      </Contenedor>
     </div>
   )
 }
@@ -225,12 +262,12 @@ function BloqueCalentamiento({ actividades, estado, onElegir }) {
       </div>
       {actividades.map((actividad, indice) => {
         const hecha = estado.hechas[indice]
+        const Fila = onElegir ? 'button' : 'div'
         return (
-          <button
+          <Fila
             key={`${actividad.nombre}-${indice}`}
-            type="button"
             className="vista-general-ejercicio"
-            onClick={() => onElegir(indice)}
+            {...(onElegir ? { type: 'button', onClick: () => onElegir(indice) } : {})}
           >
             <span className={hecha ? 'entrenar-check' : 'entrenar-check entrenar-check-vacio'}>
               {hecha ? '✓' : ''}
@@ -240,7 +277,7 @@ function BloqueCalentamiento({ actividades, estado, onElegir }) {
               {actividad.items?.length > 0 && <small>{actividad.items.join(' · ')}</small>}
             </span>
             <span className="vista-general-ejercicio-estado">{actividad.duracion}</span>
-          </button>
+          </Fila>
         )
       })}
     </section>

@@ -128,45 +128,72 @@ export async function cargarHistorial(usuarioId) {
 // services/entrenamientos.js; la base anota cuándo en "editado_en").
 // Una vez por día se baja todo, para quedar exactamente igual al
 // servidor pase lo que pase.
-const CAMPOS_HISTORIAL = 'id, rutina_id, fecha, esfuerzo, detalle, creado_en'
+// "comentario" es lo que el alumno le escribió al profe al guardar: él
+// también lo ve en "Tus entrenamientos".
+const CAMPOS_HISTORIAL = 'id, rutina_id, fecha, esfuerzo, comentario, detalle, creado_en'
 const CAMPO_CORREGIDO = 'editado_en'
+// Columnas que se agregaron después y que la base puede no tener todavía
+// (si falta correr su SQL): "editado_en" (029, correcciones) y
+// "duracion_seg" (036, cuánto duró). Si la base no conoce alguna, el
+// historial se pide sin ella y todo lo demás sigue andando.
+const CAMPOS_OPCIONALES = [CAMPO_CORREGIDO, 'duracion_seg']
 const HISTORIAL_COMPLETO_CADA_MS = 24 * 60 * 60 * 1000
 // Margen al pedir "lo nuevo" (lo repetido se descarta por su id).
 const MARGEN_NUEVOS_MS = 60 * 1000
 // Error de la base cuando se le pide una columna que no existe.
 const COLUMNA_INEXISTENTE = '42703'
-// true si la base todavía no tiene "editado_en" (SQL 029 sin instalar):
-// se pide el historial como antes, sin correcciones.
-let sinCorrecciones = false
+// Las opcionales que esta base no tiene (se descubre al pedirlas).
+const camposQueFaltan = new Set()
+// Marca de "ya se bajó el historial completo". Lleva versión: al cambiar
+// lo que se pide de cada entrenamiento (v2: comentario y duración), se
+// baja todo una vez para que los entrenamientos viejos también lo traigan.
+const CLAVE_HISTORIAL_COMPLETO = 'historial-completo-v2'
 
 async function traerHistorial(usuarioId) {
   const guardado = leerCopia(usuarioId, 'historial')
   const ultimoCambioMs = Array.isArray(guardado)
     ? guardado.reduce((mayor, sesion) => Math.max(mayor, ultimoCambioDe(sesion)), 0)
     : 0
-  const ultimoCompleto = leerCopia(usuarioId, 'historial-completo') || 0
+  const ultimoCompleto = leerCopia(usuarioId, CLAVE_HISTORIAL_COMPLETO) || 0
   const soloNuevos =
     ultimoCambioMs > 0 && Date.now() - ultimoCompleto < HISTORIAL_COMPLETO_CADA_MS
   const desde = soloNuevos ? new Date(ultimoCambioMs - MARGEN_NUEVOS_MS).toISOString() : null
 
-  let respuesta = sinCorrecciones ? null : await pedirHistorial(usuarioId, desde, true)
-  if (respuesta?.error?.code === COLUMNA_INEXISTENTE) sinCorrecciones = true
-  if (sinCorrecciones) respuesta = await pedirHistorial(usuarioId, desde, false)
+  // Si la base no conoce una columna opcional, se anota y se vuelve a
+  // pedir sin ella (como mucho, una vez por columna).
+  let respuesta = await pedirHistorial(usuarioId, desde)
+  for (let intento = 0; intento < CAMPOS_OPCIONALES.length; intento++) {
+    const faltante = campoQueFalta(respuesta?.error)
+    if (!faltante) break
+    camposQueFaltan.add(faltante)
+    respuesta = await pedirHistorial(usuarioId, desde)
+  }
   const { data, error } = respuesta
   if (error) return { error }
 
   if (!soloNuevos) {
-    guardarCopia(usuarioId, 'historial-completo', Date.now())
+    guardarCopia(usuarioId, CLAVE_HISTORIAL_COMPLETO, Date.now())
     return { datos: data }
   }
   if (data.length === 0) return { datos: guardado }
   return { datos: mezclarSesiones(guardado, data) }
 }
 
+// La columna opcional que la base dijo no tener, o null si el error es
+// otro (o no hay error).
+function campoQueFalta(error) {
+  if (error?.code !== COLUMNA_INEXISTENTE) return null
+  const pedidos = CAMPOS_OPCIONALES.filter((campo) => !camposQueFaltan.has(campo))
+  const mensaje = `${error.message || ''}`
+  return pedidos.find((campo) => mensaje.includes(campo)) || pedidos[0] || null
+}
+
 // Pide los entrenamientos del alumno: todos, o solo los creados o
 // corregidos desde "desde" (una fecha con hora, o null).
-function pedirHistorial(usuarioId, desde, conCorrecciones) {
-  const campos = conCorrecciones ? `${CAMPOS_HISTORIAL}, ${CAMPO_CORREGIDO}` : CAMPOS_HISTORIAL
+function pedirHistorial(usuarioId, desde) {
+  const opcionales = CAMPOS_OPCIONALES.filter((campo) => !camposQueFaltan.has(campo))
+  const conCorrecciones = opcionales.includes(CAMPO_CORREGIDO)
+  const campos = [CAMPOS_HISTORIAL, ...opcionales].join(', ')
   return traerTodasLasFilas(() => {
     let consulta = supabase.from('sesiones').select(campos).eq('cliente_id', usuarioId)
     if (desde && conCorrecciones) {
@@ -209,6 +236,18 @@ export function guardarSesionCorregida(usuarioId, sesion) {
     usuarioId,
     'historial',
     guardado.map((otra) => (otra.id === sesion.id ? { ...otra, ...sesion } : otra)),
+  )
+}
+
+// Saca de la copia del celular un entrenamiento recién borrado, así
+// desaparece al instante de Progreso, "La vez pasada" y los récords.
+export function quitarSesionGuardada(usuarioId, sesionId) {
+  const guardado = leerCopia(usuarioId, 'historial')
+  if (!Array.isArray(guardado) || !guardado.some((otra) => otra.id === sesionId)) return
+  guardarCopia(
+    usuarioId,
+    'historial',
+    guardado.filter((otra) => otra.id !== sesionId),
   )
 }
 

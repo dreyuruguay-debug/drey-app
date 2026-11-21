@@ -1,4 +1,6 @@
 import { obtenerLunesDeSemana, sumarDias } from './dias.js'
+import { esPorTiempo } from './porTiempo.js'
+import { tonelajeDeSerie } from './records.js'
 
 // Cálculos de progresión a partir de las sesiones guardadas (tabla
 // "sesiones"). Cada sesión tiene "detalle": una lista de ejercicios con
@@ -26,25 +28,34 @@ export function redondear(valor, decimales = 1) {
 }
 
 // Números de un ejercicio en una sesión: carga máxima, volumen (kg ×
-// reps sumado), mejor serie, cantidad de series y de repeticiones, la
-// mayor cantidad de repeticiones en una serie y el 1RM estimado (fórmula
-// de Epley: kg × (1 + reps / 30), el peso que podría levantar una sola
-// vez). null si no hizo ninguna serie válida. La usa también
-// utils/evaluacion.js.
+// reps sumado), mejor serie (la más pesada), la serie de más tonelaje
+// (kg × reps de UNA serie: utils/records.js), cantidad de series y de
+// repeticiones, la mayor cantidad de repeticiones en una serie y el 1RM
+// estimado (fórmula de Epley: kg × (1 + reps / 30), el peso que podría
+// levantar una sola vez). null si no hizo ninguna serie válida. La usa
+// también utils/evaluacion.js.
+//
+// En un ejercicio por tiempo (utils/porTiempo.js) las "reps" son
+// segundos: no suma volumen ni 1RM (kilos × segundos no significa nada)
+// y "porTiempo" vale true.
 export function numerosDeEjercicio(itemDetalle) {
   const series = seriesValidas(itemDetalle)
   if (series.length === 0) return null
+  const porTiempo = esPorTiempo(itemDetalle)
   const kgMax = Math.max(...series.map((serie) => serie.kg))
-  const volumen = series.reduce((total, serie) => total + serie.kg * serie.reps, 0)
+  const volumen = porTiempo ? 0 : series.reduce((total, serie) => total + serie.kg * serie.reps, 0)
   const mejor = series.reduce((a, b) => (b.kg > a.kg || (b.kg === a.kg && b.reps > a.reps) ? b : a))
+  const mejorTonelaje = series.reduce((a, b) => (tonelajeDeSerie(b) > tonelajeDeSerie(a) ? b : a))
   return {
     kgMax,
     volumen,
     mejorSerie: mejor,
+    serieDeMasTonelaje: porTiempo ? null : mejorTonelaje,
+    porTiempo,
     series: series.length,
     reps: series.reduce((total, serie) => total + serie.reps, 0),
     repsMax: Math.max(...series.map((serie) => serie.reps)),
-    rmEstimado: Math.max(...series.map((serie) => serie.kg * (1 + serie.reps / 30))),
+    rmEstimado: porTiempo ? 0 : Math.max(...series.map((serie) => serie.kg * (1 + serie.reps / 30))),
   }
 }
 
@@ -155,9 +166,12 @@ export function formatearCambio(valor, unidad = ' kg') {
   return `${signo}${formatearNumero(Math.abs(valor))}${unidad}`
 }
 
-// Récords personales: la mejor serie (más kilos; a igual peso, más
-// repeticiones) de cada ejercicio, con la fecha en que la hizo.
-// Devuelve [{ ejercicio_id, nombre, kg, reps, fecha }], los más nuevos primero.
+// Récords personales de cada ejercicio, con la fecha en que los hizo:
+//   · la serie más pesada (más kilos; a igual peso, más repeticiones);
+//   · la serie de más tonelaje (kg × reps de una serie), si levantó peso.
+// Ver utils/records.js. Devuelve
+// [{ ejercicio_id, nombre, kg, reps, fecha, porTiempo,
+//    tonelaje: { kg, reps, total, fecha } | null }], los más nuevos primero.
 export function recordsPorEjercicio(sesiones) {
   const mejores = new Map()
   for (const sesion of ordenarPorFecha(sesiones)) {
@@ -166,15 +180,27 @@ export function recordsPorEjercicio(sesiones) {
       if (!numeros) continue
       const actual = mejores.get(item.ejercicio_id)
       const serie = numeros.mejorSerie
+      const nuevo = actual || {
+        ejercicio_id: item.ejercicio_id,
+        nombre: item.nombre || 'Ejercicio',
+        tonelaje: null,
+      }
       if (!actual || serie.kg > actual.kg || (serie.kg === actual.kg && serie.reps > actual.reps)) {
-        mejores.set(item.ejercicio_id, {
-          ejercicio_id: item.ejercicio_id,
+        Object.assign(nuevo, {
           nombre: item.nombre || 'Ejercicio',
           kg: serie.kg,
           reps: serie.reps,
           fecha: sesion.fecha,
+          porTiempo: numeros.porTiempo,
         })
       }
+      const pesada = numeros.serieDeMasTonelaje
+      const total = pesada ? tonelajeDeSerie(pesada) : 0
+      if (total > 0 && total > (nuevo.tonelaje?.total || 0)) {
+        nuevo.tonelaje = { kg: pesada.kg, reps: pesada.reps, total, fecha: sesion.fecha }
+        if (sesion.fecha > nuevo.fecha) nuevo.fecha = sesion.fecha
+      }
+      mejores.set(item.ejercicio_id, nuevo)
     }
   }
   return [...mejores.values()].sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0))

@@ -10,6 +10,8 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 //   onSeguir: vuelve a entrenar (el tiempo sigue desde donde quedó).
 //   onSalir: vuelve a Inicio; queda en pausa y guardado en el celular.
 //   onTerminar: pasa al final para guardar lo que hizo.
+//   onCancelar: descarta el entrenamiento (lo empezó sin querer): no se
+//     guarda nada. Pide confirmación (pages/RutinaDetalle.jsx).
 export default function PantallaPausa({
   nombre,
   segundos,
@@ -19,6 +21,7 @@ export default function PantallaPausa({
   onSeguir,
   onSalir,
   onTerminar,
+  onCancelar,
 }) {
   // El calentamiento cuenta como una parte más del avance.
   const partes = seriesTotales + (calentamiento ? 1 : 0)
@@ -61,6 +64,9 @@ export default function PantallaPausa({
         </button>
         <button type="button" className="boton-texto" onClick={onTerminar}>
           Terminar el entrenamiento ahora
+        </button>
+        <button type="button" className="boton-texto boton-texto-peligro" onClick={onCancelar}>
+          Cancelar entrenamiento (no guardar nada)
         </button>
       </div>
 

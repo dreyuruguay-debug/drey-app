@@ -84,6 +84,7 @@ function emparejar(items, detalle) {
 //   con pesos distintos:     "40×10, 42,5×10, 45×8"
 //   sin peso:                "12, 12, 10 reps"
 //   no hizo ninguna:         "No lo hizo"
+//   por tiempo (plancha):    "30, 30, 25 seg" · "10 kg × 30, 30 seg"
 // Las de calentamiento no cuentan (igual que en récords y gráficas). Las
 // series al fallo llevan una "F" ("10, 10, 9F").
 export function textoDeLoHecho(guardado) {
@@ -91,11 +92,17 @@ export function textoDeLoHecho(guardado) {
     (serie) => serie && serie.hecha !== false,
   )
   if (!hechas.length) return 'No lo hizo'
+  const porTiempo = guardado?.por_tiempo === true
   const reps = (serie) => `${Number(serie.reps) || 0}${serie.fallo === true ? 'F' : ''}`
   const pesos = hechas.map((serie) => Number(serie.kg) || 0)
-  if (pesos.every((kg) => kg === 0)) return `${hechas.map(reps).join(', ')} reps`
-  if (pesos.every((kg) => kg === pesos[0])) {
-    return `${formatearPeso(pesos[0])} kg × ${hechas.map(reps).join(', ')}`
+  if (pesos.every((kg) => kg === 0)) {
+    return `${hechas.map(reps).join(', ')} ${porTiempo ? 'seg' : 'reps'}`
   }
-  return hechas.map((serie) => `${formatearPeso(serie.kg)}×${reps(serie)}`).join(', ')
+  const sufijo = porTiempo ? ' seg' : ''
+  if (pesos.every((kg) => kg === pesos[0])) {
+    return `${formatearPeso(pesos[0])} kg × ${hechas.map(reps).join(', ')}${sufijo}`
+  }
+  return hechas
+    .map((serie) => `${formatearPeso(serie.kg)}×${reps(serie)}${porTiempo ? 's' : ''}`)
+    .join(', ')
 }

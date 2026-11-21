@@ -1,3 +1,4 @@
+import { textoDeSerie } from './porTiempo.js'
 import { diasEntre, sumarDias } from './dias.js'
 import {
   DIAS_POR_CICLO,
@@ -74,7 +75,7 @@ function compararEjercicio(inicio, fin, sinComparacion) {
   if (sinComparacion) {
     return {
       estado: 'nuevo',
-      texto: `Primera vez: ${textoSerie(fin.mejorSerie)}. El mes que viene ya se compara.`,
+      texto: `Primera vez: ${textoSerie(fin.mejorSerie, fin.porTiempo)}. El mes que viene ya se compara.`,
     }
   }
   const difKg = redondear(fin.kgMax - inicio.kgMax, 2)
@@ -95,17 +96,19 @@ function compararEjercicio(inicio, fin, sinComparacion) {
     }
   }
   // Mismo peso: miramos las repeticiones de la mejor serie y el volumen.
+  // (En un ejercicio por tiempo son segundos: utils/porTiempo.js.)
   const peso = fin.kgMax > 0 ? `con ${formatearPeso(fin.kgMax)} kg` : 'con tu peso corporal'
+  const cantidad = fin.porTiempo ? 'segundos' : 'repeticiones'
   if (difReps > 0) {
     return {
       estado: 'sube',
-      texto: `Más repeticiones ${peso}: de ${inicio.mejorSerie.reps} a ${fin.mejorSerie.reps} (+${difReps}).`,
+      texto: `Más ${cantidad} ${peso}: de ${inicio.mejorSerie.reps} a ${fin.mejorSerie.reps} (+${difReps}).`,
     }
   }
   if (difReps < 0) {
     return {
       estado: 'baja',
-      texto: `Menos repeticiones ${peso}: de ${inicio.mejorSerie.reps} a ${fin.mejorSerie.reps}.`,
+      texto: `Menos ${cantidad} ${peso}: de ${inicio.mejorSerie.reps} a ${fin.mejorSerie.reps}.`,
     }
   }
   if (cambioVolumen != null && cambioVolumen >= UMBRAL_VOLUMEN) {
@@ -120,12 +123,13 @@ function compararEjercicio(inicio, fin, sinComparacion) {
       texto: `Mismo peso, con menos volumen por sesión (${formatearNumero(cambioVolumen)}%).`,
     }
   }
-  return { estado: 'igual', texto: `Se mantuvo: ${textoSerie(fin.mejorSerie)}.` }
+  return { estado: 'igual', texto: `Se mantuvo: ${textoSerie(fin.mejorSerie, fin.porTiempo)}.` }
 }
 
-export function textoSerie(serie) {
+// "45 kg × 10" · "12 reps" · "30 seg" (ejercicio por tiempo).
+export function textoSerie(serie, porTiempo = false) {
   if (!serie) return '—'
-  return serie.kg > 0 ? `${formatearPeso(serie.kg)} kg × ${serie.reps}` : `${serie.reps} reps`
+  return textoDeSerie(serie.kg > 0 ? formatearPeso(serie.kg) : 0, serie.reps, porTiempo)
 }
 
 // Todas las sesiones de cada ejercicio, en orden: Map(id → [{ fecha, nombre, numeros }]).

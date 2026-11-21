@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom'
 import SeccionActividades from '../SeccionActividades.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
+import { NIVELES_DE_ESFUERZO } from '../../data/esfuerzo.js'
 
 // Última pantalla del modo entrenar: la vuelta a la calma (si el profe
 // la cargó), un resumen de lo que hizo (con el calentamiento, que cuenta
 // como una parte más), "¿Cómo te sentiste?" y el botón para guardar el
 // entrenamiento.
 //
-// resumen: { series, total, segundos, records, calentamiento,
-// seriesCalentamiento } — series/total son las efectivas;
+// resumen: { series, total, segundos, records, recordDeTiempo,
+// calentamiento, seriesCalentamiento } — series/total son las efectivas;
+// recordDeTiempo: { antes } (segundos de su mejor tiempo anterior) si
+// completó toda la rutina más rápido que nunca, o null;
 // calentamiento es el de la rutina ({ hechas, total, completo } o null)
 // y seriesCalentamiento las series de calentamiento de los ejercicios
 // ({ hechas, total }).
@@ -19,6 +22,8 @@ import { formatearReloj } from '../../utils/entrenamiento.js'
 // aviso y el botón sirve para reintentar.
 // corregirEn: adónde ir para corregir un peso o una repetición del
 // entrenamiento recién guardado (Progreso), o null.
+// onCancelar: "No guardar": descarta el entrenamiento (lo empezó sin
+// querer). Pide confirmación (pages/RutinaDetalle.jsx).
 export default function PantallaFinal({
   vueltaCalma,
   resumen,
@@ -28,6 +33,7 @@ export default function PantallaFinal({
   onComentario,
   onFinalizar,
   onVolver,
+  onCancelar,
   guardando,
   guardado,
   pendienteDeEnvio,
@@ -56,6 +62,7 @@ export default function PantallaFinal({
           {resumen.records > 0 &&
             ` · ${resumen.records} ${resumen.records === 1 ? 'récord nuevo' : 'récords nuevos'}`}
         </p>
+        {resumen.recordDeTiempo && <RecordDeTiempo resumen={resumen} />}
         <Link to="/inicio" className="boton-principal">
           Volver al inicio
         </Link>
@@ -98,6 +105,8 @@ export default function PantallaFinal({
         </div>
       </div>
 
+      {resumen.recordDeTiempo && <RecordDeTiempo resumen={resumen} />}
+
       {vueltaCalma?.length > 0 && (
         <div className="entrenar-tarjeta">
           <span className="entrenar-etiqueta-chica">Vuelta a la calma</span>
@@ -108,13 +117,7 @@ export default function PantallaFinal({
       <div className="final-esfuerzo">
         <p className="final-pregunta">¿Cómo te sentiste?</p>
         <div className="final-esfuerzo-opciones">
-          {[
-            [1, 'Muy fácil'],
-            [2, 'Fácil'],
-            [3, 'Bien'],
-            [4, 'Duro'],
-            [5, 'Al límite'],
-          ].map(([valor, texto]) => (
+          {NIVELES_DE_ESFUERZO.map(({ valor, texto }) => (
             <button
               key={valor}
               type="button"
@@ -156,7 +159,27 @@ export default function PantallaFinal({
       <button type="button" className="boton-texto" onClick={onVolver}>
         ← Volver a los ejercicios
       </button>
+      {!modoPrevia && (
+        <button
+          type="button"
+          className="boton-texto boton-texto-peligro"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          No guardar: cancelar este entrenamiento
+        </button>
+      )}
     </div>
+  )
+}
+
+// "🏆 ¡Récord de tiempo!": completó toda la rutina más rápido que nunca.
+function RecordDeTiempo({ resumen }) {
+  return (
+    <p className="final-record-tiempo" role="status">
+      🏆 ¡Récord de tiempo! Completaste toda la rutina en {formatearReloj(resumen.segundos)} (tu
+      mejor tiempo era {formatearReloj(resumen.recordDeTiempo.antes)}).
+    </p>
   )
 }
 

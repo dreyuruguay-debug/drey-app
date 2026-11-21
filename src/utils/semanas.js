@@ -174,10 +174,10 @@ export function mismaPrescripcion(a, b) {
 
 // --- Textos ---
 
-// "3 × 10 · 70 kg"
-export function textoPrescripcion(prescripcion) {
+// "3 × 10 · 70 kg" ("3 × 30 seg" en un ejercicio por tiempo).
+export function textoPrescripcion(prescripcion, porTiempo = false) {
   const series = prescripcion.series ?? '—'
-  const base = `${series} × ${prescripcion.reps || '—'}`
+  const base = `${series} × ${prescripcion.reps || '—'}${porTiempo ? ' seg' : ''}`
   return prescripcion.kg ? `${base} · ${formatearNumero(prescripcion.kg)} kg` : base
 }
 
@@ -187,7 +187,7 @@ export function resumenPorSemana(ejercicio, total) {
   if (!tienePlanSemanal(ejercicio) || !(total > 1)) return []
   return planDelCiclo(ejercicio, total).map((prescripcion, indice) => ({
     semana: indice + 1,
-    texto: textoPrescripcion(prescripcion),
+    texto: textoPrescripcion(prescripcion, ejercicio?.por_tiempo === true),
   }))
 }
 

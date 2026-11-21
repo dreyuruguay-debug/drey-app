@@ -12,6 +12,8 @@ import { TIPO_CALENTAMIENTO, TIPO_EFECTIVA } from './seriesCalentamiento.js'
 // pages/RutinaDetalle.jsx): una fila por ejercicio,
 //   { ejercicio_id, nombre, metodo, series: [{ kg, reps, hecha, fallo }],
 //     calentamiento: [{ kg, reps, hecha }] }   (calentamiento es opcional)
+// "por_tiempo: true" está solo en los ejercicios por tiempo: ahí las
+// "reps" son segundos (utils/porTiempo.js).
 // "fallo: true" está solo en las series efectivas que llegaron al fallo
 // (los entrenamientos de antes no lo tienen: cuentan como sin fallo).
 // Las efectivas van en "series" (de ahí salen los récords y las
@@ -175,12 +177,23 @@ export function resumenDeEntrenamiento(sesion) {
   return { ejercicios: detalle.length, series, alFallo }
 }
 
-// "6 ejercicios · 22 series · 3 al fallo" (o "Sin series anotadas").
+// "6 ejercicios · 22 series · 3 al fallo · 48 min" (o "Sin series
+// anotadas"). Los minutos, solo si se guardó cuánto duró (SQL 036).
 export function textoDeEntrenamiento(sesion) {
   const { ejercicios, series, alFallo } = resumenDeEntrenamiento(sesion)
   if (!ejercicios) return 'Sin series anotadas'
-  const texto = `${ejercicios} ${ejercicios === 1 ? 'ejercicio' : 'ejercicios'} · ${series} ${
-    series === 1 ? 'serie' : 'series'
-  }`
-  return alFallo ? `${texto} · ${alFallo} al fallo` : texto
+  const partes = [
+    `${ejercicios} ${ejercicios === 1 ? 'ejercicio' : 'ejercicios'}`,
+    `${series} ${series === 1 ? 'serie' : 'series'}`,
+  ]
+  if (alFallo) partes.push(`${alFallo} al fallo`)
+  const minutos = minutosDeEntrenamiento(sesion)
+  if (minutos) partes.push(`${minutos} min`)
+  return partes.join(' · ')
+}
+
+// Cuántos minutos duró (redondeado, mínimo 1), o 0 si no se sabe.
+export function minutosDeEntrenamiento(sesion) {
+  const segundos = Number(sesion?.duracion_seg) || 0
+  return segundos > 0 ? Math.max(1, Math.round(segundos / 60)) : 0
 }

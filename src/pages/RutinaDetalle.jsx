@@ -67,7 +67,19 @@ import {
   segundosRestantes,
   sumarAlDescanso,
 } from '../utils/descanso.js'
-import { formatearNumero } from '../utils/progreso.js'
+import { formatearNumero, formatearPeso } from '../utils/progreso.js'
+import { esPorTiempo, pasoDeSegundos, textoDeSerie } from '../utils/porTiempo.js'
+import {
+  RECORD_PESO,
+  RECORD_REPS,
+  RECORD_SEGUNDOS,
+  RECORD_TONELAJE,
+  esRecordDeTiempo,
+  mejorTiempoDeRutina,
+  mejoresMarcas,
+  recordDeSerie,
+  sumarSerieAMarca,
+} from '../utils/records.js'
 import { ejerciciosDeLaSemana, semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
@@ -97,6 +109,22 @@ const VIBRACION_FIN_TIEMPO = [300, 150, 300]
 //      récords ni las gráficas.
 //   3. Final: cómo le fue en el calentamiento, vuelta a la calma,
 //      "¿Cómo te sentiste?" y guardar.
+//
+// Mirar sin entrenar: desde "Mis rutinas" (o "Ver la rutina antes de
+// empezar") la rutina se abre entera, solo para mirarla (?vista=completa).
+// Nada arranca hasta tocar "Empezar entrenamiento"; con "Volver" se sale
+// sin que quede nada anotado.
+//
+// Cancelar: si arrancó sin querer, "Cancelar entrenamiento" (en la
+// pausa y en el final) descarta lo que lleva hecho: no se guarda nada.
+//
+// Ejercicios por tiempo (plancha): las repeticiones son segundos y cada
+// serie tiene su cronómetro (utils/porTiempo.js,
+// components/entrenar/CronometroDeSerie.jsx).
+//
+// Récords (utils/records.js): de peso y de tonelaje de la serie (kg ×
+// reps) en cada ejercicio, y de tiempo si completa toda la rutina más
+// rápido que nunca. Para eso se guarda cuánto duró ("duracion_seg").
 //
 // Tiempo del entrenamiento (arriba a la derecha): arranca cuando empieza
 // (el calentamiento o, si no tiene, al abrir la rutina) y se frena en la
@@ -129,7 +157,10 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [rutina, setRutina] = useState(null)
   const [ejercicios, setEjercicios] = useState([])
   const [anteriorPorEjercicio, setAnteriorPorEjercicio] = useState({})
+  // Mejor marca de cada ejercicio (utils/records.js) y el menor tiempo
+  // en que completó esta rutina (null si nunca), para avisar los récords.
   const [mejoresPorEjercicio, setMejoresPorEjercicio] = useState({})
+  const [mejorTiempo, setMejorTiempo] = useState(null)
   const [sugerencias, setSugerencias] = useState([])
 
   const [series, setSeries] = useState([])
@@ -150,6 +181,11 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [ahora, setAhora] = useState(() => Date.now())
   const [aviso, setAviso] = useState(null)
   const [vistaGeneral, setVistaGeneral] = useState(parametros.get('vista') === 'completa')
+  // Entró solo a mirar la rutina (desde "Mis rutinas"): hasta que toca
+  // "Empezar entrenamiento" no arranca nada.
+  const [soloMirando, setSoloMirando] = useState(parametros.get('vista') === 'completa')
+  // Tocó "Cancelar entrenamiento": al salir ya no se guarda nada.
+  const cancelado = useRef(false)
 
   const [fase, setFase] = useState('entrenando')
   const [esfuerzo, setEsfuerzo] = useState(null)
@@ -224,7 +260,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const sePuedeRetomar =
     !cargando && !modoPrevia && fase !== 'guardado' && yaEmpezo(series, calentamiento)
   useEffect(() => {
-    if (sePuedeRetomar) guardarEnCurso(id, datosEnCurso())
+    if (sePuedeRetomar && !cancelado.current) guardarEnCurso(id, datosEnCurso())
   }, [series, calentamiento, enCalentamiento, reloj, pausa, visible, records, sePuedeRetomar])
 
   function datosEnCurso(cambios = {}) {
@@ -249,7 +285,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // pasa afuera no cuenta. (Bloquear el celular no pausa: sigue
   // entrenando.)
   const alSalir = useRef(null)
-  alSalir.current = sePuedeRetomar ? datosEnCurso() : null
+  alSalir.current = sePuedeRetomar && !cancelado.current ? datosEnCurso() : null
   useEffect(
     () => () => {
       const datos = alSalir.current
@@ -348,20 +384,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       anteriores = anterior
 
       // Mejor marca histórica de cada ejercicio (en cualquier rutina),
-      // para avisar si hoy hace un récord.
-      mejores = {}
-      for (const sesion of sesiones) {
-        for (const item of sesion.detalle || []) {
-          for (const fila of item.series || []) {
-            if (fila.hecha === false) continue
-            const actual = mejores[item.ejercicio_id] || { kg: 0, reps: 0 }
-            mejores[item.ejercicio_id] = {
-              kg: Math.max(actual.kg, Number(fila.kg) || 0),
-              reps: Math.max(actual.reps, Number(fila.reps) || 0),
-            }
-          }
-        }
-      }
+      // para avisar si hoy hace un récord, y el mejor tiempo de esta rutina.
+      mejores = mejoresMarcas(sesiones)
+      setMejorTiempo(mejorTiempoDeRutina(sesiones, id))
     }
 
     setRutina(datos || null)
@@ -411,13 +436,14 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       lista.forEach((ejercicio, indice) => {
         for (const serie of enCurso.series[indice]) {
           if (!serie.hecha || esSerieDeCalentamiento(serie)) continue
-          const actual = mejores[ejercicio.ejercicio_id] || { kg: 0, reps: 0 }
-          mejores[ejercicio.ejercicio_id] = {
-            kg: Math.max(actual.kg, Number(serie.kg) || 0),
-            reps: Math.max(actual.reps, Number(serie.reps) || 0),
-          }
+          mejores[ejercicio.ejercicio_id] = sumarSerieAMarca(
+            mejores[ejercicio.ejercicio_id],
+            serie,
+          )
         }
       })
+      // Ya está entrenando: no es "solo mirar".
+      setSoloMirando(false)
     } else {
       const nuevo = crearCalentamiento(datos?.calentamiento)
       // El tiempo arranca cuando empieza a entrenar: con calentamiento, al
@@ -473,8 +499,13 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     )
   }
 
+  // En un ejercicio por tiempo, los + / − de los segundos van de a 1 en
+  // los tiempos cortos y de a 5 en los largos (utils/porTiempo.js).
   function ajustarValor(exIndex, serieIndex, campo, delta) {
-    fijarValor(exIndex, serieIndex, campo, (valor) => valor + delta)
+    const enSegundos = campo === 'reps' && esPorTiempo(ejercicios[exIndex])
+    fijarValor(exIndex, serieIndex, campo, (valor) =>
+      enSegundos ? valor + Math.sign(delta) * pasoDeSegundos(valor, delta) : valor + delta,
+    )
   }
 
   // "Llegué al fallo" de una serie (se prende y se apaga). Ver
@@ -485,18 +516,23 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     )
   }
 
-  function marcarSerie(exIndex, serieIndex) {
+  // Marca (o desmarca) una serie. cambios: valores que se fijan junto con
+  // la marca (el cronómetro de una serie por tiempo pasa los segundos que
+  // aguantó: { reps }).
+  function marcarSerie(exIndex, serieIndex, cambios = null) {
     const relojActual = iniciarReloj()
     const hecha = !series[exIndex][serieIndex].hecha
     const nuevas = series.map((filas, i) =>
       i !== exIndex
         ? filas
-        : filas.map((fila, j) => (j !== serieIndex ? fila : { ...fila, hecha })),
+        : filas.map((fila, j) =>
+            j !== serieIndex ? fila : { ...fila, ...(hecha ? cambios : null), hecha },
+          ),
     )
     setSeries(nuevas)
     if (!hecha) return
 
-    revisarRecord(exIndex, serieIndex)
+    revisarRecord(exIndex, nuevas[exIndex][serieIndex])
 
     const turno = turnos.find((item) => item.exIndex === exIndex && item.serieIndex === serieIndex)
     // Si salteó un ejercicio (máquina ocupada) y está haciendo otro, sigue
@@ -557,42 +593,39 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     const filas = lista[turno.exIndex] || []
     const serie = filas[turno.serieIndex]
     const etiqueta = etiquetaDeSerie(filas, turno.serieIndex)
-    const reps = etiqueta.calentamiento ? serie?.reps : ejercicio.reps_objetivo || serie?.reps
+    const cantidad = etiqueta.calentamiento ? serie?.reps : ejercicio.reps_objetivo || serie?.reps
+    const porTiempo = esPorTiempo(ejercicio)
+    const kg = Number(serie?.kg) || 0
     return {
       titulo: `${ejercicio.ejercicios?.nombre || 'Ejercicio'} · ${etiqueta.texto} de ${etiqueta.total}`,
-      detalle: `${formatearNumero(Number(serie?.kg))} kg × ${reps} reps`,
+      detalle: porTiempo
+        ? textoDeSerie(kg ? formatearPeso(kg) : 0, cantidad, true)
+        : `${formatearNumero(kg)} kg × ${cantidad} reps`,
       calentamiento: etiqueta.calentamiento,
     }
   }
 
-  // Compara la serie recién marcada contra su mejor marca histórica (las
-  // de calentamiento no cuentan).
-  function revisarRecord(exIndex, serieIndex) {
-    if (modoPrevia || esSerieDeCalentamiento(series[exIndex][serieIndex])) return
+  // Compara la serie recién marcada contra la mejor marca histórica del
+  // ejercicio (las de calentamiento no cuentan). Ver utils/records.js: de
+  // peso, de tonelaje de la serie (kg × reps) y, sin peso o por tiempo, de
+  // repeticiones o de segundos.
+  function revisarRecord(exIndex, fila) {
+    if (modoPrevia || esSerieDeCalentamiento(fila)) return
     const ejercicio = ejercicios[exIndex]
     const ejercicioId = ejercicio?.ejercicio_id
     if (!ejercicioId) return
-    const fila = series[exIndex][serieIndex]
-    const kg = Number(fila.kg) || 0
-    const reps = Number(fila.reps) || 0
     const mejor = mejoresPorEjercicio[ejercicioId]
     setMejoresPorEjercicio((actual) => ({
       ...actual,
-      [ejercicioId]: { kg: Math.max(mejor?.kg || 0, kg), reps: Math.max(mejor?.reps || 0, reps) },
+      [ejercicioId]: sumarSerieAMarca(actual[ejercicioId], fila),
     }))
-    // El primer intento de un ejercicio no cuenta como récord.
-    if (!mejor) return
-    const nombre = ejercicio.ejercicios?.nombre || 'este ejercicio'
-    let texto = null
-    if (kg > mejor.kg && kg > 0) {
-      texto = `🏆 ¡Récord de peso en ${nombre}! ${formatearNumero(kg)} kg`
-    } else if (reps > mejor.reps && reps > 0) {
-      texto = `🏆 ¡Récord de repeticiones en ${nombre}! ${reps} reps`
-    }
-    if (texto) {
-      setRecords((cantidad) => cantidad + 1)
-      mostrarAvisoTemporal(texto, 'record')
-    }
+    const record = recordDeSerie(mejor, fila, esPorTiempo(ejercicio))
+    if (!record) return
+    setRecords((cantidad) => cantidad + 1)
+    mostrarAvisoTemporal(
+      textoDeRecord(record, fila, ejercicio.ejercicios?.nombre || 'este ejercicio'),
+      'record',
+    )
   }
 
   // --- Calentamiento ---
@@ -689,11 +722,39 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     setFase('entrenando')
   }
 
-  // "Pausar" (arriba a la izquierda). En la vista previa del profe es
-  // "Salir".
+  // "Pausar" (arriba a la izquierda). En la vista previa del profe, y
+  // mientras el alumno todavía no hizo nada, es "Salir": no hay nada que
+  // pausar ni que guardar.
   function tocarPausar() {
-    if (modoPrevia) navigate(-1)
+    if (modoPrevia || !yaEmpezo(series, calentamiento)) volverAtras()
     else pausar()
+  }
+
+  // Vuelve a la pantalla de antes (o a Inicio, si abrió la app directo acá).
+  function volverAtras() {
+    if (modoPrevia || window.history.length > 1) navigate(-1)
+    else navigate('/inicio', { replace: true })
+  }
+
+  // "Cancelar entrenamiento": lo empezó sin querer (o no lo va a
+  // terminar). Se descarta lo que lleva hecho: no se guarda nada ni queda
+  // "en pausa". Pide confirmación porque no se puede deshacer.
+  function cancelarEntrenamiento() {
+    const seguro = window.confirm(
+      '¿Cancelar este entrenamiento? Se descarta lo que marcaste y no queda guardado.',
+    )
+    if (!seguro) return
+    cancelado.current = true
+    borrarEnCurso(id)
+    navigate('/inicio', { replace: true })
+  }
+
+  // "Empezar entrenamiento" después de mirar la rutina: sin calentamiento
+  // arranca el tiempo; con calentamiento arranca al tocar su "Empezar".
+  function empezarAEntrenar() {
+    setSoloMirando(false)
+    if (!enCalentamiento) iniciarReloj()
+    setVistaGeneral(false)
   }
 
   async function finalizar() {
@@ -718,6 +779,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
         hecha: fila.hecha,
         ...(fila.hecha && fila.fallo ? { fallo: true } : {}),
       })
+      // "por_tiempo" solo se guarda en los ejercicios por tiempo (sus
+      // "reps" son segundos).
       const filas = series[exIndex]
       const calentamiento = filas.filter(esSerieDeCalentamiento).map(aGuardar)
       return {
@@ -726,6 +789,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
         metodo: ejercicio.metodo || 'normal',
         series: filas.filter((fila) => !esSerieDeCalentamiento(fila)).map(aGuardar),
         ...(calentamiento.length ? { calentamiento } : {}),
+        ...(esPorTiempo(ejercicio) ? { por_tiempo: true } : {}),
       }
     })
     const fila = nuevaFilaDeEntrenamiento({
@@ -734,6 +798,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       fecha: hoy,
       esfuerzo,
       comentario: comentario.trim() || null,
+      // Cuánto duró, sin las pausas (el tiempo ya está frenado en el final).
+      duracion_seg: Math.round(segundosDeReloj(reloj, Date.now())),
       detalle,
     })
     const resultado = await guardarEntrenamiento(fila)
@@ -815,6 +881,12 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const seriesHechas = cuentaSeries.hechas
 
   if (fase !== 'entrenando') {
+    // Récord de tiempo: completó todas las series más rápido que nunca
+    // (utils/records.js). Cuenta como un récord más.
+    const segundosTotales = segundosDeReloj(reloj, Date.now())
+    const recordDeTiempo =
+      !modoPrevia &&
+      esRecordDeTiempo(segundosTotales, mejorTiempo, totalSeries > 0 && seriesHechas === totalSeries)
     return (
       <div className="screen entrenar">
         {avisoPrevia}
@@ -823,8 +895,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           resumen={{
             series: seriesHechas,
             total: totalSeries,
-            segundos: segundosDeReloj(reloj, Date.now()),
-            records,
+            segundos: segundosTotales,
+            records: records + (recordDeTiempo ? 1 : 0),
+            recordDeTiempo: recordDeTiempo ? { antes: mejorTiempo } : null,
             calentamiento: resumenDeCalentamiento(calentamiento),
             seriesCalentamiento: {
               hechas: cuentaSeries.calentamientoHechas,
@@ -837,6 +910,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           onComentario={setComentario}
           onFinalizar={finalizar}
           onVolver={volverDelFinal}
+          onCancelar={cancelarEntrenamiento}
           guardando={guardando}
           guardado={fase === 'guardado'}
           pendienteDeEnvio={pendienteDeEnvio}
@@ -870,7 +944,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
 
       <header className="entrenar-barra">
         <button type="button" className="boton-secundario boton-chico" onClick={tocarPausar}>
-          {modoPrevia ? 'Salir' : 'Pausar'}
+          {modoPrevia || !empezado ? 'Salir' : 'Pausar'}
         </button>
         <span className="entrenar-barra-titulo">
           {enCalentamiento ? 'Calentamiento' : `Ejercicio ${visible + 1} de ${ejercicios.length}`}
@@ -969,7 +1043,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
               ajustarValor(visible, serieIndex, campo, delta)
             }
             onFijar={(serieIndex, campo, valor) => fijarValor(visible, serieIndex, campo, valor)}
-            onMarcar={(serieIndex) => marcarSerie(visible, serieIndex)}
+            onMarcar={(serieIndex, cambios) => marcarSerie(visible, serieIndex, cambios)}
             onFallo={(serieIndex) => cambiarFallo(visible, serieIndex)}
           />
 
@@ -1004,6 +1078,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           series={series}
           calentamiento={calentamiento}
           empezado={empezado}
+          soloMirar={soloMirando && !empezado && !modoPrevia}
+          onEmpezar={empezarAEntrenar}
+          onVolver={volverAtras}
           onElegir={(indice) => {
             irAEjercicios(indice)
             setVistaGeneral(false)
@@ -1012,10 +1089,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             volverAlCalentamiento(indice)
             setVistaGeneral(false)
           }}
-          onCerrar={() => {
-            if (!enCalentamiento) iniciarReloj()
-            setVistaGeneral(false)
-          }}
+          onCerrar={() => setVistaGeneral(false)}
           onTerminar={irAlFinal}
         />
       )}
@@ -1047,6 +1121,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           onSeguir={seguir}
           onSalir={salirAlInicio}
           onTerminar={irAlFinal}
+          onCancelar={cancelarEntrenamiento}
         />
       )}
     </div>
@@ -1060,6 +1135,22 @@ function yaEmpezo(series, calentamiento) {
     series.some((filas) => filas.some((serie) => serie.hecha)) ||
     Boolean(resumenDeCalentamiento(calentamiento)?.empezado)
   )
+}
+
+// "🏆 ¡Récord de tonelaje en Sentadilla! 90 kg × 12 = 1.080 kg".
+function textoDeRecord(record, fila, nombre) {
+  const kg = formatearPeso(fila.kg)
+  switch (record.tipo) {
+    case RECORD_PESO:
+      return `🏆 ¡Récord de peso en ${nombre}! ${kg} kg`
+    case RECORD_TONELAJE:
+      return `🏆 ¡Récord de tonelaje en ${nombre}! ${kg} kg × ${fila.reps} = ${formatearNumero(record.valor)} kg`
+    case RECORD_SEGUNDOS:
+      return `🏆 ¡Récord de tiempo en ${nombre}! ${record.valor} seg`
+    case RECORD_REPS:
+    default:
+      return `🏆 ¡Récord de repeticiones en ${nombre}! ${record.valor} reps`
+  }
 }
 
 // Clase de un tramo de la barra de avance (calentamiento o ejercicio).

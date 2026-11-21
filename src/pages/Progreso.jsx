@@ -19,6 +19,7 @@ import {
   recordsPorEjercicio,
   volumenPorSemana,
 } from '../utils/progreso.js'
+import { textoDeSerie } from '../utils/porTiempo.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
@@ -85,6 +86,11 @@ export default function Progreso() {
     )
   }
 
+  // Un entrenamiento borrado: sale de la lista, los récords y las gráficas.
+  function alBorrar(id) {
+    setSesiones((actual) => actual.filter((sesion) => sesion.id !== id))
+  }
+
   return (
     <div className="screen has-bottom-nav pagina-cliente">
       <TopPattern />
@@ -140,11 +146,19 @@ export default function Progreso() {
                   <span className="tarjeta-rutina-textos">
                     <strong>{record.nombre}</strong>
                     <small>{textoFechaCorta(record.fecha)}</small>
+                    {record.tonelaje && (
+                      <small>
+                        Serie de más tonelaje: {formatearNumero(record.tonelaje.total)} kg (
+                        {formatearNumero(record.tonelaje.kg)} kg × {record.tonelaje.reps})
+                      </small>
+                    )}
                   </span>
                   <strong className="tarjeta-record-valor">
-                    {record.kg
-                      ? `${formatearNumero(record.kg)} kg × ${record.reps}`
-                      : `${record.reps} reps`}
+                    {textoDeSerie(
+                      record.kg ? formatearNumero(record.kg) : 0,
+                      record.reps,
+                      record.porTiempo,
+                    )}
                   </strong>
                 </div>
               ))}
@@ -194,6 +208,7 @@ export default function Progreso() {
             abrirId={parametros.get('corregir')}
             alAbrir={() => setParametros({}, { replace: true })}
             onCorregido={alCorregir}
+            onBorrado={alBorrar}
           />
         </>
       )}

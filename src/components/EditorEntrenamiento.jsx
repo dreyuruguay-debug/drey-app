@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import CasilleroNumero from './entrenar/CasilleroNumero.jsx'
 import MarcaFallo from './entrenar/MarcaFallo.jsx'
-import { corregirEntrenamiento, textoDeErrorAlCorregir } from '../services/entrenamientos.js'
+import {
+  borrarEntrenamiento,
+  corregirEntrenamiento,
+  textoDeErrorAlBorrar,
+  textoDeErrorAlCorregir,
+} from '../services/entrenamientos.js'
 import {
   MAXIMO_SERIES_POR_EJERCICIO,
   agregarSerie,
@@ -13,8 +18,10 @@ import {
   seriesGuardadas,
 } from '../utils/entrenamientoHecho.js'
 import { formatearPeso } from '../utils/progreso.js'
+import { esPorTiempo, nombreDeUnidad, unidadDe } from '../utils/porTiempo.js'
+import { textoDeEsfuerzo } from '../data/esfuerzo.js'
 
-// Ventana para corregir un entrenamiento YA GUARDADO: el peso, las
+// Ventana para ver y corregir un entrenamiento YA GUARDADO: el peso, las
 // repeticiones y si llegó al fallo en cada serie, por si quedó algo mal
 // anotado. La usan el
 // alumno (Progreso → "Tus entrenamientos") y el profe o el Admin (ficha
@@ -29,17 +36,53 @@ import { formatearPeso } from '../utils/progreso.js'
 // guardar. Con la corrección cambian solos los récords, las gráficas y
 // "La vez pasada".
 //
-//   sesion: el entrenamiento ({ id, detalle }).
+// Arriba se ve cómo se sintió (el grado de exigencia) y lo que le
+// escribió al profe al guardar: lo ven los dos, el alumno y el profe.
+// En los ejercicios por tiempo los números son segundos
+// (utils/porTiempo.js).
+//
+// Abajo, "Borrar este entrenamiento": para el que se guardó sin querer
+// (pide confirmación; no se puede deshacer).
+//
+//   sesion: el entrenamiento ({ id, detalle, esfuerzo, comentario }).
 //   clienteId: de quién es.
 //   titulo: lo que se muestra arriba ("Piernas · 5/10").
 //   onGuardado(cambios): se llama con { id, detalle, editado_en } cuando
 //     se guardó. onCerrar: cierra sin guardar.
-export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerrar, onGuardado }) {
+//   onBorrado(id): se borró el entrenamiento (si no se pasa, no se
+//     ofrece borrar).
+export default function EditorEntrenamiento({
+  sesion,
+  clienteId,
+  titulo,
+  onCerrar,
+  onGuardado,
+  onBorrado,
+}) {
   const original = Array.isArray(sesion.detalle) ? sesion.detalle : []
   const [detalle, setDetalle] = useState(original)
   const [guardando, setGuardando] = useState(false)
+  const [borrando, setBorrando] = useState(false)
   const [error, setError] = useState('')
   const hayCambios = !mismoDetalle(original, detalle)
+  const esfuerzo = textoDeEsfuerzo(sesion.esfuerzo)
+
+  async function borrar() {
+    if (borrando || guardando) return
+    const seguro = window.confirm(
+      '¿Borrar este entrenamiento? Se borra con todas sus series y no se puede deshacer.',
+    )
+    if (!seguro) return
+    setBorrando(true)
+    setError('')
+    const resultado = await borrarEntrenamiento({ id: sesion.id, clienteId })
+    setBorrando(false)
+    if (resultado.error) {
+      setError(textoDeErrorAlBorrar(resultado.error))
+      return
+    }
+    onBorrado(sesion.id)
+  }
 
   function cambiar(transformar) {
     setError('')
@@ -80,6 +123,13 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
           </button>
         </div>
         {titulo && <p className="corregir-subtitulo">{titulo}</p>}
+
+        {(esfuerzo || sesion.comentario) && (
+          <div className="corregir-sensacion">
+            {esfuerzo && <strong>{esfuerzo}</strong>}
+            {sesion.comentario && <p>“{sesion.comentario}”</p>}
+          </div>
+        )}
 
         {original.length === 0 ? (
           <p className="profe-nota">Este entrenamiento no tiene series anotadas.</p>
@@ -131,6 +181,23 @@ export default function EditorEntrenamiento({ sesion, clienteId, titulo, onCerra
             {hayCambios ? 'Cancelar' : 'Cerrar'}
           </button>
         </div>
+
+        {onBorrado && (
+          <div className="corregir-borrar">
+            <p className="profe-nota">
+              ¿Se guardó sin querer (por ejemplo, abriste la rutina solo para mirarla)? Podés
+              borrarlo: deja de contar en los récords y las gráficas.
+            </p>
+            <button
+              type="button"
+              className="boton-peligro"
+              onClick={borrar}
+              disabled={borrando || guardando}
+            >
+              {borrando ? 'Borrando…' : 'Borrar este entrenamiento'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -157,11 +224,16 @@ function EjercicioGuardado({
   const sinHacer = series.filter((serie) => !serie.hecha).length
   const efectivas = series.filter((serie) => serie.lista === 'series').length
   const nombre = item.nombre || 'Ejercicio'
+  // "reps" o "seg" (ejercicio por tiempo).
+  const unidad = unidadDe(item)
 
   return (
     <section className="corregir-ejercicio">
       <div className="corregir-ejercicio-cabecera">
-        <h3 className="corregir-ejercicio-nombre">{nombre}</h3>
+        <h3 className="corregir-ejercicio-nombre">
+          {nombre}
+          {esPorTiempo(item) && <small className="corregir-por-tiempo">⏱ por tiempo</small>}
+        </h3>
         {sinHacer > 1 && (
           <button type="button" className="corregir-marcar-todo" onClick={onMarcarTodo}>
             ✓ Marcar todo hecho
@@ -240,10 +312,10 @@ function EjercicioGuardado({
                         enVivo
                         valor={serie.reps}
                         campo="reps"
-                        etiqueta={`${serie.texto}, repeticiones`}
+                        etiqueta={`${serie.texto}, ${nombreDeUnidad(item)}`}
                         onFijar={(valor) => onCorregir(serie, 'reps', valor)}
                       />
-                      <small>reps</small>
+                      <small>{unidad}</small>
                     </label>
                   </span>
                 ) : (

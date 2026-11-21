@@ -397,6 +397,9 @@ function TarjetaTipo({ metodo, activo, onElegir }) {
 // Casilleros de un ejercicio del bloque: series, repeticiones (una
 // cantidad o un rango), peso objetivo, RPE, tempo, semanas del ciclo,
 // series de calentamiento y notas para el alumno.
+// "Se mide por": repeticiones o tiempo. Por tiempo (plancha, colgado...)
+// los casilleros de repeticiones pasan a ser segundos y el alumno tiene
+// un cronómetro en cada serie (utils/porTiempo.js).
 function ConfigEjercicio({
   item,
   numero,
@@ -405,6 +408,10 @@ function ConfigEjercicio({
   enfocarCalentamiento,
   onCambiar,
 }) {
+  const porTiempo = item.porTiempo === true
+  // "Repeticiones" / "Reps" o "Segundos" / "Seg", según cómo se mide.
+  const unidad = porTiempo ? 'Segundos' : 'Repeticiones'
+  const unidadCorta = porTiempo ? 'Seg' : 'Reps'
   return (
     <div className="config-ejercicio">
       <div className="ejercicio-header config-ejercicio-nombre">
@@ -412,6 +419,34 @@ function ConfigEjercicio({
           {numero ? `${numero}. ` : ''}
           {item.ejercicio.nombre}
         </span>
+      </div>
+
+      <div className="config-medida">
+        <span className="editor-rango-etiqueta">Se mide por</span>
+        <div className="chips-lista">
+          <button
+            type="button"
+            className={porTiempo ? 'chip' : 'chip chip-activo'}
+            onClick={() => onCambiar('porTiempo', false)}
+            aria-pressed={!porTiempo}
+          >
+            Repeticiones
+          </button>
+          <button
+            type="button"
+            className={porTiempo ? 'chip chip-activo' : 'chip'}
+            onClick={() => onCambiar('porTiempo', true)}
+            aria-pressed={porTiempo}
+          >
+            ⏱ Tiempo (segundos)
+          </button>
+        </div>
+        {porTiempo && (
+          <p className="profe-nota config-medida-nota">
+            Para plancha, colgado o isométricos: 3 series de 6 segundos. El alumno tiene un
+            cronómetro en cada serie.
+          </p>
+        )}
       </div>
 
       <div className="editor-campos config-ejercicio-campos">
@@ -427,14 +462,14 @@ function ConfigEjercicio({
           />
         </label>
         <div className="editor-campo">
-          <span>Repeticiones</span>
+          <span>{unidad}</span>
           <div className="config-reps">
             <input
               className="profe-input-tabla"
               type="number"
               min="1"
               inputMode="numeric"
-              aria-label="Repeticiones (desde)"
+              aria-label={`${unidad} (desde)`}
               value={item.repsDesde}
               onChange={(event) => onCambiar('repsDesde', event.target.value)}
             />
@@ -445,7 +480,7 @@ function ConfigEjercicio({
               min="1"
               inputMode="numeric"
               placeholder="—"
-              aria-label="Repeticiones (hasta, opcional)"
+              aria-label={`${unidad} (hasta, opcional)`}
               value={item.repsHasta}
               onChange={(event) => onCambiar('repsHasta', event.target.value)}
             />
@@ -493,11 +528,17 @@ function ConfigEjercicio({
           item={item}
           semanasCiclo={semanasCiclo}
           mostrarKg={mostrarKgObjetivo}
+          unidadCorta={unidadCorta}
           onCambiar={onCambiar}
         />
       )}
 
-      <ConfigCalentamiento item={item} enfocar={enfocarCalentamiento} onCambiar={onCambiar} />
+      <ConfigCalentamiento
+        item={item}
+        enfocar={enfocarCalentamiento}
+        unidadCorta={unidadCorta}
+        onCambiar={onCambiar}
+      />
 
       <label className="editor-campo config-notas">
         <span>Notas para el alumno (opcional)</span>
@@ -519,7 +560,8 @@ function ConfigEjercicio({
 //   · "Cada semana distinta": una fila por semana con series, reps y peso
 //     (la semana 1 es la de arriba). Es lo mismo que las columnas SEMANA
 //     de la planilla de Excel.
-function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
+// unidadCorta: "Reps" o "Seg" (ejercicio por tiempo).
+function ConfigSemanas({ item, semanasCiclo, mostrarKg, unidadCorta, onCambiar }) {
   const distinta = Boolean(item.semanasPlan)
   const semanas = item.semanasPlan || []
 
@@ -567,7 +609,10 @@ function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
         <div className="config-semanas">
           <p className="config-semanas-fila config-semanas-primera">
             <span className="config-semanas-numero">S1</span>
-            <span>{textoPrescripcion(borradorAPrescripcion(item))} (lo de arriba)</span>
+            <span>
+              {textoPrescripcion(borradorAPrescripcion(item), item.porTiempo === true)} (lo de
+              arriba)
+            </span>
           </p>
           {semanas.map((semana, indice) => {
             const nombre = `Semana ${indice + 2}`
@@ -587,14 +632,14 @@ function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
                   />
                 </label>
                 <div className="editor-campo">
-                  <span>Reps</span>
+                  <span>{unidadCorta}</span>
                   <div className="config-reps">
                     <input
                       className="profe-input-tabla"
                       type="number"
                       min="1"
                       inputMode="numeric"
-                      aria-label={`${nombre}: repeticiones (desde)`}
+                      aria-label={`${nombre}: ${unidadCorta.toLowerCase()} (desde)`}
                       value={semana.repsDesde}
                       onChange={(event) => cambiarSemana(indice, 'repsDesde', event.target.value)}
                     />
@@ -605,7 +650,7 @@ function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
                       min="1"
                       inputMode="numeric"
                       placeholder="—"
-                      aria-label={`${nombre}: repeticiones (hasta, opcional)`}
+                      aria-label={`${nombre}: ${unidadCorta.toLowerCase()} (hasta, opcional)`}
                       value={semana.repsHasta}
                       onChange={(event) => cambiarSemana(indice, 'repsHasta', event.target.value)}
                     />
@@ -653,7 +698,7 @@ function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
               </label>
             )}
             <label className="editor-campo">
-              <span>+ reps</span>
+              <span>+ {unidadCorta.toLowerCase()}</span>
               <input
                 className="profe-input-tabla"
                 type="number"
@@ -679,7 +724,8 @@ function ConfigSemanas({ item, semanasCiclo, mostrarKg, onCambiar }) {
 // calentamiento puede tener un peso distinto.
 // enfocar: se llegó desde "+ Series de calentamiento" del editor; la
 // pantalla baja sola hasta acá y lo resalta un momento.
-function ConfigCalentamiento({ item, enfocar, onCambiar }) {
+// unidadCorta: "Reps" o "Seg" (ejercicio por tiempo).
+function ConfigCalentamiento({ item, enfocar, unidadCorta, onCambiar }) {
   const series = item.calentamientoSeries || []
   const referencia = useRef(null)
 
@@ -753,7 +799,7 @@ function ConfigCalentamiento({ item, enfocar, onCambiar }) {
             <div key={indice} className="config-calentamiento-fila">
               <span className="config-calentamiento-numero">{indice + 1}.</span>
               <label className="editor-campo">
-                <span>Reps</span>
+                <span>{unidadCorta}</span>
                 <input
                   className="profe-input-tabla"
                   type="number"

@@ -140,12 +140,14 @@ export function ejerciciosParaCicloNuevo(ejercicios, semanas) {
   })
 }
 
-// Texto corto de la progresión: "+2,5 kg por semana", "+1 rep por semana".
-export function textoProgresion(progresion) {
+// Texto corto de la progresión: "+2,5 kg por semana", "+1 rep por semana"
+// ("+5 seg por semana" en un ejercicio por tiempo: utils/porTiempo.js).
+export function textoProgresion(progresion, porTiempo = false) {
   const partes = []
   if (Number(progresion?.kg) > 0) partes.push(`+${formatear(Number(progresion.kg))} kg`)
   if (Number(progresion?.reps) > 0) {
-    partes.push(`+${progresion.reps} ${Number(progresion.reps) === 1 ? 'rep' : 'reps'}`)
+    const unidad = porTiempo ? 'seg' : Number(progresion.reps) === 1 ? 'rep' : 'reps'
+    partes.push(`+${progresion.reps} ${unidad}`)
   }
   return partes.length ? `${partes.join(' y ')} por semana` : ''
 }

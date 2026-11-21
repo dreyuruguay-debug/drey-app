@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import InfoMetodo from '../InfoMetodo.jsx'
 import CasilleroNumero from './CasilleroNumero.jsx'
 import MarcaFallo from './MarcaFallo.jsx'
+import CronometroDeSerie from './CronometroDeSerie.jsx'
 import Ayuda from '../Ayuda.jsx'
 import { nombreCortoDeMetodo } from '../../data/metodos.js'
 import { TERMINOS } from '../../data/terminos.js'
@@ -9,6 +10,13 @@ import { formatearNumero, formatearPeso } from '../../utils/progreso.js'
 import { linkVideoSeguro } from '../../utils/linkVideo.js'
 import { PASO_KG, PASO_REPS, etiquetaDeSerie } from '../../utils/entrenamiento.js'
 import { esSerieDeCalentamiento, normalizarCalentamiento } from '../../utils/seriesCalentamiento.js'
+import {
+  esPorTiempo,
+  nombreDeUnidad,
+  textoDeSerie,
+  textoSeriesPor,
+  unidadDe,
+} from '../../utils/porTiempo.js'
 
 // Lo que tapan la barra de arriba y la de abajo (para saber si la serie
 // que toca se ve entera).
@@ -31,6 +39,12 @@ const MARGEN_ABAJO_PX = 110
 // Si tiene series de calentamiento (aproximación), van primero y son
 // iguales a las efectivas (mismo componente), pero en amarillo y con
 // "✓ Calentamiento hecho". Hasta no hacerlas no se abre la serie 1.
+//
+// Ejercicio por tiempo (plancha: utils/porTiempo.js): en vez de
+// repeticiones, segundos. La serie que toca tiene "▶ Empezar cronómetro"
+// (CronometroDeSerie.jsx): cuenta los segundos, avisa al terminar y la
+// serie queda hecha sola. También se puede marcar a mano con "✓ Serie
+// hecha" si la hizo sin el cronómetro.
 //
 // Cuando cambia la serie que toca (al marcar una), la pantalla baja sola
 // hasta ella si quedó tapada, así el botón siempre está a la vista (al
@@ -65,6 +79,7 @@ export default function PantallaEjercicio({
   const notaCalentamiento = normalizarCalentamiento(ejercicio.calentamiento)?.nota
   const conCalentamiento = series.some(esSerieDeCalentamiento)
   const esGrupo = bloque.cantidad > 1
+  const porTiempo = esPorTiempo(ejercicio)
 
   return (
     <div className="entrenar-pantalla">
@@ -97,7 +112,9 @@ export default function PantallaEjercicio({
       <div className="entrenar-encabezado">
         <h1 className="entrenar-titulo">{datos.nombre || 'Ejercicio'}</h1>
         <p className="entrenar-objetivo">
-          {ejercicio.series} series × {ejercicio.reps_objetivo || '—'} reps
+          {porTiempo
+            ? `${textoSeriesPor(ejercicio)} · ⏱ por tiempo`
+            : `${ejercicio.series} series × ${ejercicio.reps_objetivo || '—'} reps`}
           {ejercicio.kg_objetivo ? ` · ${formatearNumero(Number(ejercicio.kg_objetivo))} kg` : ''}
           {ejercicio.rpe && (
             <>
@@ -126,7 +143,14 @@ export default function PantallaEjercicio({
         )}
         {anterior && (
           <p className="entrenar-anterior">
-            La vez pasada: {formatearNumero(Number(anterior.kg))} kg × {anterior.reps}
+            La vez pasada:{' '}
+            {porTiempo
+              ? textoDeSerie(
+                  Number(anterior.kg) ? formatearNumero(Number(anterior.kg)) : 0,
+                  anterior.reps,
+                  true,
+                )
+              : `${formatearNumero(Number(anterior.kg))} kg × ${anterior.reps}`}
           </p>
         )}
       </div>
@@ -160,9 +184,12 @@ export default function PantallaEjercicio({
               actual={indice === actual}
               refActual={indice === actual ? serieActual : undefined}
               repsObjetivo={ejercicio.reps_objetivo}
+              porTiempo={porTiempo}
+              unidad={unidadDe(ejercicio)}
+              nombreUnidad={nombreDeUnidad(ejercicio)}
               onAjustar={(campo, delta) => onAjustar(indice, campo, delta)}
               onFijar={(campo, valor) => onFijar(indice, campo, valor)}
-              onMarcar={() => onMarcar(indice)}
+              onMarcar={(cambios) => onMarcar(indice, cambios)}
               onFallo={() => onFallo(indice)}
             />
           )
@@ -188,11 +215,16 @@ function FilaSerie({
   actual,
   refActual,
   repsObjetivo,
+  porTiempo,
+  unidad,
+  nombreUnidad,
   onAjustar,
   onFijar,
   onMarcar,
   onFallo,
 }) {
+  // "× 30 seg" en los ejercicios por tiempo; "× 10" en los demás.
+  const sufijo = porTiempo ? ` ${unidad}` : ''
   const tipo = etiqueta.calentamiento ? ' entrenar-serie-calentamiento' : ''
   const kg = formatearPeso(serie.kg)
   // En las de calentamiento se muestran sus repeticiones; en las
@@ -218,22 +250,29 @@ function FilaSerie({
             <Stepper
               valor={serie.reps}
               campo="reps"
-              unidad="reps"
+              unidad={unidad}
               onRestar={() => onAjustar('reps', -PASO_REPS)}
               onSumar={() => onAjustar('reps', PASO_REPS)}
               onFijar={(valor) => onFijar('reps', valor)}
-              etiqueta="repeticiones"
+              etiqueta={nombreUnidad}
             />
           </div>
           {!etiqueta.calentamiento && <InterruptorFallo activo={serie.fallo} onCambiar={onFallo} />}
+          {/* Por tiempo: el cronómetro es el botón principal; al terminar
+              marca la serie con los segundos que aguantó. */}
+          {porTiempo && (
+            <CronometroDeSerie
+              objetivo={serie.reps}
+              calentamiento={etiqueta.calentamiento}
+              onTerminado={(segundos) => onMarcar({ reps: segundos })}
+            />
+          )}
           <button
             type="button"
-            className={
-              etiqueta.calentamiento ? 'boton-principal boton-calentamiento' : 'boton-principal'
-            }
-            onClick={onMarcar}
+            className={claseDeBotonHecha(etiqueta.calentamiento, porTiempo)}
+            onClick={() => onMarcar()}
           >
-            {etiqueta.calentamiento ? '✓ Calentamiento hecho' : '✓ Serie hecha'}
+            {textoDeBotonHecha(etiqueta.calentamiento, porTiempo)}
           </button>
         </li>
       </>
@@ -249,11 +288,11 @@ function FilaSerie({
           className={
             serie.hecha ? `entrenar-serie entrenar-serie-hecha${tipo}` : `entrenar-serie${tipo}`
           }
-          onClick={serie.hecha ? onMarcar : undefined}
+          onClick={serie.hecha ? () => onMarcar() : undefined}
           disabled={!serie.hecha}
           aria-label={
             serie.hecha
-              ? `${etiqueta.texto} hecha: ${serie.kg} kg por ${serie.reps}${
+              ? `${etiqueta.texto} hecha: ${serie.kg} kg por ${serie.reps}${sufijo}${
                   serie.fallo ? ', al fallo' : ''
                 }. Tocá para corregirla`
               : `${etiqueta.texto}, pendiente`
@@ -266,11 +305,24 @@ function FilaSerie({
           {serie.hecha && serie.fallo && <MarcaFallo />}
           <span className="entrenar-serie-valor">
             {kg} kg × {serie.hecha ? serie.reps : repsPendiente}
+            {sufijo}
           </span>
         </button>
       </li>
     </>
   )
+}
+
+// El botón para marcar la serie a mano. En un ejercicio por tiempo el
+// principal es el cronómetro: este pasa a ser secundario.
+function claseDeBotonHecha(calentamiento, porTiempo) {
+  if (porTiempo) return 'boton-secundario'
+  return calentamiento ? 'boton-principal boton-calentamiento' : 'boton-principal'
+}
+
+function textoDeBotonHecha(calentamiento, porTiempo) {
+  const texto = calentamiento ? '✓ Calentamiento hecho' : '✓ Serie hecha'
+  return porTiempo ? `${texto} (sin cronómetro)` : texto
 }
 
 // "Llegué al fallo": un interruptor (encendido / apagado) en la serie que
