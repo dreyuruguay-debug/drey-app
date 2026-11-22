@@ -457,6 +457,35 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   planilla y no se guarda para usar sin señal (`vite.config.js` y
   `herramientas/serviceWorkerDrey.js`).
 
+## Baja de alumnos, mensajes del profe y fiestas (SQL 037, noviembre 2026)
+
+- **Dar de baja a un alumno** que ya no sigue: ficha del alumno → Pagos →
+  "Dar de baja". Pasa al estado `baja`: sale de todas las listas del panel
+  (el filtro vive en `delEspacioActivo`, `services/espacio.js`) y deja de
+  ver sus rutinas, pero **conserva su cuenta y su historial**. En Inicio ve
+  "Tu cuenta está dada de baja". Al pie de Clientes, "Alumnos dados de
+  baja" (`components/AlumnosDeBaja.jsx`) con "Volver a sumar": queda
+  pendiente y se habilita desde Cobros como siempre. Lo hacen su profe, el
+  dueño del gimnasio o el Admin (`dar_de_baja_alumno`, `reactivar_alumno`).
+  El cupo se libera como siempre (SQL 032): al terminar el período ya pago
+  del espacio. Si un alumno dado de baja pasa a otro profe, queda
+  pendiente con el nuevo. Servicio: `services/bajas.js`.
+- **Mensajes del profe** (`/profe/mensajes`, `pages/ProfeMensajes.jsx`, se
+  entra desde Clientes o desde la ficha de un alumno): un mensaje de hasta
+  300 letras, para todos sus alumnos o para uno, con "Desde" y "Hasta". El
+  alumno lo ve a pantalla completa al abrir la app, una vez por día
+  (`components/MensajeDelDia.jsx`, montado en `pages/Home.jsx`; lo visto se
+  anota en el celular: `utils/mensajesDelDia.js`). Tabla `mensajes_profe`;
+  el alumno los lee con `mensajes_para_mi()`. "Todos mis alumnos" son los
+  que lo tienen como profe. El Admin no escribe mensajes.
+- **Fiestas** (`data/fiestas.js`): Navidad (24 y 25/12), fin de año (31/12)
+  y Año Nuevo (1/1). Esos días el cartel lleva el adorno de la fiesta
+  (arbolito o fuegos artificiales, `components/AdornoDeFiesta.jsx`) y queda
+  un adorno chico en una esquina de Inicio. Si el profe programó un
+  mensaje para ese día (botones "Navidad", "Fin de año", "Año Nuevo"), se
+  muestra el suyo; si no, el saludo de la fiesta firmado con su nombre.
+  Para sumar otra fiesta alcanza con agregarla en `data/fiestas.js`.
+
 ## Mejoras al entrenar (SQL 036, noviembre 2026)
 
 - **Mirar la rutina sin entrenar.** Desde "Mis rutinas" (o "Ver la rutina

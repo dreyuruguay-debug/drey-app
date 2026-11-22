@@ -1,3 +1,4 @@
+import AlumnosDeBaja from '../components/AlumnosDeBaja.jsx'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
@@ -175,6 +176,11 @@ export default function ProfeClientes() {
         <Link to="/profe/solicitudes" className="boton-secundario">
           Solicitudes{solicitudes > 0 ? ` (${solicitudes})` : ''}
         </Link>
+        {!esAdmin && (
+          <Link to="/profe/mensajes" className="boton-secundario">
+            💬 Mensaje a mis alumnos
+          </Link>
+        )}
       </div>
 
       {solicitudes > 0 && (
@@ -322,6 +328,8 @@ export default function ProfeClientes() {
           })}
         </div>
       )}
+
+      <AlumnosDeBaja onCambio={cargarClientes} />
     </ProfeLayout>
   )
 }

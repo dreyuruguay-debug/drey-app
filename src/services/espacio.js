@@ -189,11 +189,16 @@ export function useEspacioActivoId() {
 
 // FILTRO DEL PANEL: los alumnos del espacio activo (y los que todavía no
 // tienen espacio, que esperan que alguien los tome, como siempre).
-// Sin espacio activo (el Admin, o la base sin el SQL 032) no filtra.
+// Sin espacio activo (el Admin, o la base sin el SQL 032) no filtra por
+// espacio.
 //   delEspacioActivo(supabase.from('perfiles').select('*'))
-export function delEspacioActivo(consulta) {
+// Los alumnos dados de baja (estado 'baja', supabase/sql/037) nunca
+// aparecen en las listas del panel; con { deBaja: true } trae solo esos
+// (services/bajas.js).
+export function delEspacioActivo(consulta, { deBaja = false } = {}) {
   const id = espacioActivoId()
-  return id ? consulta.or(`espacio_id.eq.${id},espacio_id.is.null`) : consulta
+  const delEspacio = id ? consulta.or(`espacio_id.eq.${id},espacio_id.is.null`) : consulta
+  return deBaja ? delEspacio.eq('estado', 'baja') : delEspacio.neq('estado', 'baja')
 }
 
 // Atajo: los clientes (ni profes ni Admin) del espacio activo.

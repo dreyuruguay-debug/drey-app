@@ -66,6 +66,7 @@ export async function abrirComprobante(rutaArchivo) {
 // vencimiento que ve el alumno (data/vencimiento.js).
 export function estadoDeCuenta(cliente, hoyISO) {
   if (!cliente) return { texto: '', tono: 'neutro' }
+  if (cliente.estado === 'baja') return { texto: 'Dado de baja', tono: 'neutro' }
   if (cliente.baja_solicitada_en) return { texto: 'Pidió la baja', tono: 'alerta' }
   if (cliente.estado === 'pendiente') return { texto: 'Pendiente', tono: 'alerta' }
   if (cliente.aviso_pago) return { texto: 'Avisó pago', tono: 'alerta' }

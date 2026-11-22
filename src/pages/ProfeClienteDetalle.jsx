@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import ListaRutinasCliente from '../components/ListaRutinasCliente.jsx'
+import { darDeBaja, estaDeBaja, textoDeErrorDeBaja, volverASumar } from '../services/bajas.js'
 import { textoDeEsfuerzo } from '../data/esfuerzo.js'
 import EditorEntrenamiento from '../components/EditorEntrenamiento.jsx'
 import { supabase } from '../services/supabaseClient.js'
@@ -48,6 +49,7 @@ const PESTANAS = [
 // corregir un peso o una repetición mal anotados (EditorEntrenamiento.jsx).
 export default function ProfeClienteDetalle() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   const pestana = PESTANAS.some((item) => item.id === parametros.get('tab'))
     ? parametros.get('tab')
@@ -203,6 +205,33 @@ export default function ProfeClienteDetalle() {
     planesDelAlumno.length > 0 &&
     (esAdmin || (esDuenoDe(espacio) && espacio?.id === cliente.espacio_id))
   const whatsapp = linkWhatsApp(cliente.celular, `Hola ${cliente.nombre}!`)
+  // Dar de baja (services/bajas.js): pide confirmación; se puede revertir
+  // con "Volver a sumar".
+  async function darDeBajaAlAlumno() {
+    const nombre = cliente.nombre || 'este alumno'
+    const seguro = window.confirm(
+      `¿Dar de baja a ${nombre}? Sale de tus listas y deja de ver sus rutinas. Conserva su cuenta y su historial, y lo podés volver a sumar cuando quieras.`,
+    )
+    if (!seguro) return
+    const error = await darDeBaja(id)
+    if (error) {
+      mostrarAviso(textoDeErrorDeBaja(error), 'error')
+      return
+    }
+    mostrarAviso(`${nombre} quedó dado de baja`)
+    navigate('/profe/clientes')
+  }
+
+  async function sumarDeNuevo() {
+    const error = await volverASumar(id)
+    if (error) {
+      mostrarAviso(textoDeErrorDeBaja(error), 'error')
+      return
+    }
+    mostrarAviso('Volvió: ahora habilitá su cuenta')
+    cargarTodo({ silencioso: true })
+  }
+
   // Se borró un entrenamiento (guardado sin querer): sale de la lista.
   function alBorrar(sesionId) {
     setCorrigiendoId(null)
@@ -210,6 +239,7 @@ export default function ProfeClienteDetalle() {
     mostrarAviso('Entrenamiento borrado')
   }
 
+  const deBaja = estaDeBaja(cliente)
   const corrigiendo = corrigiendoId ? sesiones.find((sesion) => sesion.id === corrigiendoId) : null
 
   return (
@@ -408,8 +438,24 @@ export default function ProfeClienteDetalle() {
               </div>
             </dl>
             <AvisoCupo problema={problemaPago} onCerrar={() => setProblemaPago(null)} />
+            {deBaja && (
+              <div className="aviso-baja">
+                <strong>
+                  Dado de baja
+                  {cliente.baja_en ? ` el ${textoFechaCorta(cliente.baja_en)}` : ''}
+                </strong>
+                <span>
+                  No aparece en tus listas ni puede ver sus rutinas. Conserva su cuenta y su
+                  historial. Si vuelve, tocá “Volver a sumar” y después habilitalo.
+                </span>
+              </div>
+            )}
             <div className="acciones-columna">
-              {cliente.estado === 'pendiente' ? (
+              {deBaja ? (
+                <button type="button" className="boton-principal" onClick={sumarDeNuevo}>
+                  Volver a sumar
+                </button>
+              ) : cliente.estado === 'pendiente' ? (
                 <button
                   type="button"
                   className="boton-principal"
@@ -444,7 +490,24 @@ export default function ProfeClienteDetalle() {
                   Escribirle por WhatsApp
                 </a>
               )}
+              {!deBaja && (
+                <Link to={`/profe/mensajes?cliente=${id}`} className="boton-secundario">
+                  💬 Dejarle un mensaje en la app
+                </Link>
+              )}
             </div>
+            {!deBaja && (
+              <div className="ficha-dar-de-baja">
+                <p className="profe-nota">
+                  ¿Ya no sigue entrenando? Dalo de baja: sale de tus listas y deja de ver sus
+                  rutinas, pero conserva su cuenta y su historial, y lo podés volver a sumar. El
+                  cupo que ocupa se libera al terminar el período que ya pagaste.
+                </p>
+                <button type="button" className="boton-peligro" onClick={darDeBajaAlAlumno}>
+                  Dar de baja a {cliente.nombre || 'este alumno'}
+                </button>
+              </div>
+            )}
             {pagos.length > 0 && (
               <>
                 <p className="seccion-etiqueta">Pagos</p>

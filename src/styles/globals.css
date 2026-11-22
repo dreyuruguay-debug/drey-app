@@ -10662,3 +10662,250 @@ div.vista-general-ejercicio {
 .config-medida-nota {
   margin: 0;
 }
+
+/* ============================================================
+   Baja de alumnos, mensajes del profe y fiestas (noviembre 2026)
+   ============================================================ */
+
+/* "Alumnos dados de baja" (al pie de Clientes) y "Mensajes que ya pasaron" */
+.alumnos-de-baja,
+.mensajes-pasados {
+  margin-top: 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.alumnos-de-baja summary,
+.mensajes-pasados summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.alumnos-de-baja .profe-nota {
+  margin: 0.6rem 0;
+}
+
+.mensajes-pasados .lista-tarjetas {
+  margin-top: 0.75rem;
+}
+
+/* "Dar de baja" en la ficha del alumno (pestaña Pagos) */
+.ficha-dar-de-baja {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--drey-borde);
+}
+
+.ficha-dar-de-baja .profe-nota {
+  margin: 0 0 0.6rem;
+}
+
+/* Pantalla "Mensajes a mis alumnos" (panel del profe) */
+.mensajes-volver {
+  width: auto;
+  padding-left: 0;
+  text-align: left;
+}
+
+.mensajes-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1.5rem;
+  max-width: 640px;
+}
+
+/* (Los campos no se estiran para llenar el alto del formulario.) */
+.mensajes-formulario .editor-campo {
+  flex: 0 0 auto;
+}
+
+.mensajes-formulario .form-textarea {
+  min-height: 6.5rem;
+}
+
+.mensajes-formulario .chip {
+  text-align: left;
+}
+
+.mensajes-fechas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.mensajes-fiestas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mensajes-fiestas .profe-nota {
+  margin: 0;
+}
+
+.mensaje-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.mensaje-tarjeta-texto {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mensaje-tarjeta-datos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.mensaje-tarjeta-borrar {
+  width: auto;
+  align-self: flex-start;
+  padding: 0.25rem 0;
+}
+
+/* El mensaje grande que ve el alumno al abrir la app (components/MensajeDelDia.jsx) */
+.mensaje-dia {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  padding: 2rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
+  background: var(--drey-bg);
+  animation: mensaje-dia-entrada 0.3s ease-out;
+}
+
+.mensaje-dia > * {
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes mensaje-dia-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mensaje-dia-contenido {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.mensaje-dia-marca {
+  font-family: var(--fuente-titulos);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--drey-accent-texto);
+}
+
+.mensaje-dia-titulo {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.mensaje-dia-texto {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(1.7rem, 7.5vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.mensaje-dia-firma {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--drey-texto-suave);
+}
+
+/* En una fiesta: el título más grande y un fondo apenas festivo */
+.mensaje-dia-fiesta {
+  background:
+    radial-gradient(circle at 15% 12%, rgba(255, 210, 63, 0.16), transparent 45%),
+    radial-gradient(circle at 88% 22%, rgba(229, 72, 77, 0.14), transparent 45%),
+    var(--drey-bg);
+}
+
+.mensaje-dia-fiesta .mensaje-dia-titulo {
+  font-family: var(--fuente-titulos);
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.mensaje-dia-fiesta .mensaje-dia-texto {
+  font-size: clamp(1.3rem, 5.5vw, 1.7rem);
+  font-weight: 700;
+}
+
+/* Adornos de las fiestas (components/AdornoDeFiesta.jsx) */
+.adorno-fiesta {
+  flex: 0 0 auto;
+}
+
+.adorno-fiesta-brillo {
+  animation: adorno-fiesta-titila 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes adorno-fiesta-titila {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* El adorno chico que queda en una esquina de Inicio el día de la fiesta:
+   arriba del menú de abajo y sin tapar toques. */
+.adorno-fiesta-esquina {
+  position: fixed;
+  right: 0.5rem;
+  bottom: calc(4.6rem + env(safe-area-inset-bottom));
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adorno-fiesta-brillo,
+  .mensaje-dia {
+    animation: none;
+  }
+}

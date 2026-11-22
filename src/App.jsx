@@ -30,6 +30,7 @@ import {
   ProfeClienteProgreso,
   ProfeClientes,
   ProfeCodigos,
+  ProfeMensajes,
   ProfeCuentas,
   ProfeEjercicios,
   ProfeEquipo,
@@ -122,6 +123,7 @@ export default function App() {
             <Route path="/profe/solicitudes" element={<ProfeSolicitudes />} />
             <Route path="/profe/ejercicios" element={<ProfeEjercicios />} />
             <Route path="/profe/clientes" element={<ProfeClientes />} />
+            <Route path="/profe/mensajes" element={<ProfeMensajes />} />
             <Route path="/profe/clientes/:id" element={<ProfeClienteDetalle />} />
             {/* Rutinas: elegir cliente → sus rutinas → asistente paso a paso */}
             <Route path="/profe/rutinas" element={<ProfeRutinas />} />

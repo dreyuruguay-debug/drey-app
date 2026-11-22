@@ -63,6 +63,7 @@ const RUTAS_CLIENTES = [
   '/profe/rutinas',
   '/profe/calendario',
   '/profe/progresion',
+  '/profe/mensajes',
   '/profe/solicitudes',
 ]
 

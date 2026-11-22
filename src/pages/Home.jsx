@@ -40,6 +40,7 @@ import {
   resumenEnCurso,
 } from '../utils/entrenamientoEnCurso.js'
 import { mostrarAviso } from '../services/avisos.js'
+import MensajeDelDia from '../components/MensajeDelDia.jsx'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -165,12 +166,17 @@ export default function Home() {
   const rutinaHoy = calendario[diaHoy]?.rutinas || null
   const ejerciciosHoy = rutinaHoy ? datos?.ejerciciosPorRutina?.[rutinaHoy.id] || [] : []
   const cantidadRutinas = datos?.cantidadRutinas || 0
+  // Su profe lo dio de baja (supabase/sql/037): conserva la cuenta y el
+  // historial, pero no ve rutinas hasta que lo vuelvan a sumar.
+  const cuentaDeBaja = perfil?.estado === 'baja'
   const cuentaPendiente = perfil?.estado === 'pendiente'
   const plan = estadoDelPlan(perfil, hoy)
   // La base de datos es la que decide si puede ver sus rutinas; si no
   // respondió (sin señal), se usa la misma regla calculada acá.
   const planBloqueado =
-    !cuentaPendiente && (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
+    !cuentaPendiente &&
+    !cuentaDeBaja &&
+    (datos?.acceso ? datos.acceso.acceso === false : plan.tipo === 'vencido')
   // Su profe o gimnasio no está al día (supabase/sql/035): primero un
   // cartel suave y, pasados los días, sin acceso. Nunca se habla de plata
   // ni de DREY: solo "acercate a tu profe".
@@ -225,6 +231,9 @@ export default function Home() {
         </Link>
       </header>
 
+      {/* El mensaje del día de su profe y el adorno de las fiestas. */}
+      <MensajeDelDia activo={!cargando && !cuentaPendiente && !cuentaDeBaja} />
+
       {cuentaPendiente && (
         <Link to="/suscripcion" className="home-aviso-pendiente">
           {perfil?.aviso_pago
@@ -239,13 +248,13 @@ export default function Home() {
         </p>
       )}
 
-      {!cuentaPendiente && !planBloqueado && plan.tipo === 'por-vencer' && (
+      {!cuentaPendiente && !cuentaDeBaja && !planBloqueado && plan.tipo === 'por-vencer' && (
         <Link to="/suscripcion" className="home-aviso-pendiente">
           Tu plan {textoVence(plan.dias)}. Tocá acá para renovarlo.
         </Link>
       )}
 
-      {!planBloqueado && plan.tipo === 'gracia' && (
+      {!cuentaDeBaja && !planBloqueado && plan.tipo === 'gracia' && (
         <Link to="/suscripcion" className="home-aviso-pendiente home-aviso-urgente">
           Tu plan venció el {textoFechaCorta(perfil.vencimiento)}.{' '}
           {plan.dias === 0
@@ -278,7 +287,13 @@ export default function Home() {
       )}
 
       <section className="inicio-hoy">
-        {cuentaPendiente ? (
+        {cuentaDeBaja ? (
+          <TarjetaMensaje
+            titulo="Tu cuenta está dada de baja"
+            texto="Tu profe te dio de baja, así que por ahora no ves rutinas. Tu historial y tus récords siguen guardados. Si querés volver a entrenar, hablá con tu profe para que te vuelva a sumar."
+            accion={{ texto: 'Ver mi progreso', to: '/progreso', secundaria: true }}
+          />
+        ) : cuentaPendiente ? (
           <TarjetaMensaje
             titulo="Cuenta pendiente"
             texto="En cuanto se confirme tu pago vas a ver acá tu entrenamiento del día."

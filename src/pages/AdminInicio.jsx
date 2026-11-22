@@ -203,6 +203,8 @@ async function cargar() {
           'id, nombre, apellido, estado, vencimiento, plan, profe_id, aviso_pago, baja_solicitada_en',
         )
         .match(SOLO_CLIENTES)
+        // Los dados de baja no cuentan (supabase/sql/037).
+        .neq('estado', 'baja')
         .order('id'),
     ),
     traerTodasLasFilas(() =>

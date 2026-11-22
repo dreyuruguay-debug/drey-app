@@ -59,6 +59,7 @@ export const ProfeClienteProgreso = pantallaDiferida(
   () => import('./pages/ProfeClienteProgreso.jsx'),
 )
 export const ProfeCodigos = pantallaDiferida(() => import('./pages/ProfeCodigos.jsx'))
+export const ProfeMensajes = pantallaDiferida(() => import('./pages/ProfeMensajes.jsx'))
 
 // Textos legales: se leen poco, así que también se cargan aparte.
 export const Legal = pantallaDiferida(() => import('./pages/Legal.jsx'), PANTALLAS_CLIENTE)
