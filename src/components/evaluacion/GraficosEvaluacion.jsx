@@ -200,3 +200,66 @@ function recortar(texto, largo) {
   const limpio = String(texto || '')
   return limpio.length > largo ? `${limpio.slice(0, largo - 1)}…` : limpio
 }
+
+// Entrenamientos de cada mes del año (12 barras, con la cantidad arriba
+// y la inicial del mes abajo). Para la evaluación del año.
+//   meses: [{ nombre, entrenamientos }]
+export function GraficoMeses({ meses, colores }) {
+  const ANCHO = 320
+  const ALTO = 150
+  const M = { arriba: 20, derecha: 4, abajo: 22, izquierda: 4 }
+  const anchoUtil = ANCHO - M.izquierda - M.derecha
+  const altoUtil = ALTO - M.arriba - M.abajo
+  const tope = Math.max(...meses.map((mes) => mes.entrenamientos), 1) * 1.1
+  const columna = anchoUtil / meses.length
+  const anchoBarra = columna * 0.62
+  const y = (valor) => M.arriba + altoUtil - (valor / tope) * altoUtil
+
+  return (
+    <svg
+      viewBox={`0 0 ${ANCHO} ${ALTO}`}
+      className="evaluacion-svg"
+      role="img"
+      aria-label="Entrenamientos por mes"
+    >
+      <line
+        x1={M.izquierda}
+        x2={ANCHO - M.derecha}
+        y1={y(0)}
+        y2={y(0)}
+        style={{ stroke: colores.guia, strokeWidth: 1 }}
+      />
+      {meses.map((mes, indice) => {
+        const centro = M.izquierda + columna * (indice + 0.5)
+        return (
+          <g key={mes.nombre}>
+            <rect
+              x={centro - anchoBarra / 2}
+              y={y(mes.entrenamientos)}
+              width={anchoBarra}
+              height={Math.max(mes.entrenamientos > 0 ? 2 : 0, y(0) - y(mes.entrenamientos))}
+              rx="4"
+              style={{ fill: colores.barra }}
+            />
+            <text
+              x={centro}
+              y={y(mes.entrenamientos) - 5}
+              textAnchor="middle"
+              style={{ fill: colores.textoFuerte, fontSize: 10, fontWeight: 700, fontFamily: FUENTE }}
+            >
+              {mes.entrenamientos > 0 ? mes.entrenamientos : ''}
+            </text>
+            <text
+              x={centro}
+              y={ALTO - 7}
+              textAnchor="middle"
+              style={{ fill: colores.texto, fontSize: 10, fontWeight: 600, fontFamily: FUENTE }}
+            >
+              {mes.nombre.slice(0, 3)}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}

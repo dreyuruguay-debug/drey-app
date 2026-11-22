@@ -14,6 +14,101 @@ export const CAMPOS_MEDIDA = [
   { clave: 'grasa', etiqueta: '% de grasa', unidad: '%', paso: '0.1' },
 ]
 
+// VALORACIÓN ANTROPOMÉTRICA (la que hace la nutricionista; SQL 038). Se
+// carga en la misma medición, a mano o desde Excel:
+//   · Composición: % de masa muscular y grasa visceral (el peso y el %
+//     de grasa ya están en CAMPOS_MEDIDA).
+//   · Pliegues, en milímetros. La SUMA no se guarda: se calcula
+//     (sumaDePliegues) y va en cada medición como "suma_pliegues"
+//     (conSumaDePliegues), así se muestra y se grafica como un campo más.
+export const CAMPOS_COMPOSICION = [
+  { clave: 'masa_muscular', etiqueta: '% de masa muscular', corta: '% m. musc', unidad: '%', paso: '0.1' },
+  { clave: 'grasa_visceral', etiqueta: 'Grasa visceral', corta: 'Grasa visc', unidad: '', paso: '0.5' },
+]
+
+export const PLIEGUES = [
+  { clave: 'pl_triceps', etiqueta: 'Tríceps', unidad: 'mm', paso: '0.5' },
+  { clave: 'pl_espalda', etiqueta: 'Espalda', unidad: 'mm', paso: '0.5' },
+  { clave: 'pl_oblicuo', etiqueta: 'Oblicuo', unidad: 'mm', paso: '0.5' },
+  { clave: 'pl_abdomen', etiqueta: 'Abdomen', unidad: 'mm', paso: '0.5' },
+  { clave: 'pl_muslo', etiqueta: 'Muslo', unidad: 'mm', paso: '0.5' },
+  { clave: 'pl_pantorrilla', etiqueta: 'Pantorrilla', unidad: 'mm', paso: '0.5' },
+]
+
+export const CLAVE_SUMA_PLIEGUES = 'suma_pliegues'
+const CAMPO_SUMA_PLIEGUES = {
+  clave: CLAVE_SUMA_PLIEGUES,
+  etiqueta: 'Suma de pliegues',
+  unidad: 'mm',
+}
+
+// Todo lo que se puede mostrar en el resumen y graficar: las medidas de
+// siempre, la composición y la suma de pliegues.
+export const CAMPOS_PARA_GRAFICAR = [...CAMPOS_MEDIDA, ...CAMPOS_COMPOSICION, CAMPO_SUMA_PLIEGUES]
+
+// Lo que se escribe en una medición además de las medidas de siempre.
+export const CAMPOS_ANTROPOMETRIA = [...CAMPOS_COMPOSICION, ...PLIEGUES]
+
+function tieneValor(valor) {
+  return valor !== null && valor !== undefined && valor !== ''
+}
+
+// Suma de los pliegues cargados (mm), o null si no cargó ninguno.
+export function sumaDePliegues(medicion) {
+  const cargados = PLIEGUES.filter((pliegue) => tieneValor(medicion?.[pliegue.clave]))
+  if (!cargados.length) return null
+  const suma = cargados.reduce((total, pliegue) => total + Number(medicion[pliegue.clave]), 0)
+  return Math.round(suma * 10) / 10
+}
+
+// Las mediciones con su "suma_pliegues" calculada (no se guarda).
+export function conSumaDePliegues(mediciones) {
+  return (mediciones || []).map((medicion) => ({
+    ...medicion,
+    [CLAVE_SUMA_PLIEGUES]: sumaDePliegues(medicion),
+  }))
+}
+
+// true si esa medición tiene algo de la valoración antropométrica.
+export function tieneAntropometria(medicion) {
+  return CAMPOS_ANTROPOMETRIA.some((campo) => tieneValor(medicion?.[campo.clave]))
+}
+
+// Las dos tablas de la valoración, como las arma la nutricionista:
+//   composicion: una fila por fecha → [{ id, fecha, peso, grasa,
+//     masa_muscular, grasa_visceral }]
+//   pliegues: una columna por fecha → { fechas: [{ id, fecha }],
+//     filas: [{ clave, etiqueta, valores: [n | null] }], sumas: [n | null] }
+// Entran las mediciones con algún dato antropométrico (y su peso). null
+// si no hay ninguna.
+export function tablasAntropometricas(mediciones) {
+  const conDatos = ordenarPorFecha(mediciones || []).filter(tieneAntropometria)
+  if (!conDatos.length) return null
+  const numero = (valor) => (tieneValor(valor) ? Number(valor) : null)
+  const conPliegues = conDatos.filter((medicion) => sumaDePliegues(medicion) !== null)
+  return {
+    composicion: conDatos.map((medicion) => ({
+      id: medicion.id,
+      fecha: medicion.fecha,
+      peso: numero(medicion.peso),
+      grasa: numero(medicion.grasa),
+      masa_muscular: numero(medicion.masa_muscular),
+      grasa_visceral: numero(medicion.grasa_visceral),
+    })),
+    pliegues: conPliegues.length
+      ? {
+          fechas: conPliegues.map((medicion) => ({ id: medicion.id, fecha: medicion.fecha })),
+          filas: PLIEGUES.map((pliegue) => ({
+            clave: pliegue.clave,
+            etiqueta: pliegue.etiqueta,
+            valores: conPliegues.map((medicion) => numero(medicion[pliegue.clave])),
+          })),
+          sumas: conPliegues.map(sumaDePliegues),
+        }
+      : null,
+  }
+}
+
 export const VISTAS_FOTO = [
   { clave: 'frente', etiqueta: 'Frente' },
   { clave: 'perfil', etiqueta: 'Perfil' },

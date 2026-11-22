@@ -10,17 +10,26 @@ import {
 } from '../services/medidas.js'
 import { mostrarAviso } from '../services/avisos.js'
 import {
+  CAMPOS_ANTROPOMETRIA,
+  CAMPOS_COMPOSICION,
   CAMPOS_MEDIDA,
+  CAMPOS_PARA_GRAFICAR,
+  PLIEGUES,
   VISTAS_FOTO,
   alturaConocida,
   calcularIMC,
   cambioDe,
   CLAVE_OTRAS_FOTOS,
+  conSumaDePliegues,
   fotosDeMedicion,
   ordenarPorFecha,
   rutasDeFotos,
   serieDe,
+  sumaDePliegues,
+  tablasAntropometricas,
 } from '../utils/medidas.js'
+import TablaAntropometrica from './medidas/TablaAntropometrica.jsx'
+import PlanillaDeMedidas from './medidas/PlanillaDeMedidas.jsx'
 import VisorFotos from './VisorFotos.jsx'
 import { formatearNumero } from '../utils/progreso.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
@@ -37,6 +46,13 @@ import Esqueleto from './Esqueleto.jsx'
 // se ve en grande, con anterior / siguiente y "Borrar esta foto".
 //
 // La primera medición es la "evaluación inicial": además pide la altura.
+//
+// Valoración antropométrica (la de la nutricionista, SQL 038): en cada
+// medición se pueden cargar también el % de masa muscular, la grasa
+// visceral y los 6 pliegues; la suma de pliegues se calcula sola. Se ve
+// en dos tablas (components/medidas/TablaAntropometrica.jsx) y se puede
+// cargar todo junto desde Excel (components/medidas/PlanillaDeMedidas.jsx).
+// La fecha se elige: sirve para cargar medidas de hace tiempo.
 export default function PanelMedidas({ clienteId, esProfe = false }) {
   const [mediciones, setMediciones] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -60,7 +76,8 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
   async function cargar() {
     setCargando(true)
     const resultado = await cargarMediciones(clienteId)
-    setMediciones(resultado.mediciones)
+    // Cada una con su suma de pliegues calculada (utils/medidas.js).
+    setMediciones(conSumaDePliegues(resultado.mediciones))
     setError(resultado.error ? 'No pudimos cargar las medidas. Revisá tu conexión.' : '')
     setLinks(await linksDeFotos(resultado.mediciones.flatMap(rutasDeFotos)))
     setCargando(false)
@@ -74,7 +91,9 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
   }
 
   const ordenadas = useMemo(() => ordenarPorFecha(mediciones), [mediciones])
-  const camposConDatos = CAMPOS_MEDIDA.filter((campo) => cambioDe(mediciones, campo.clave))
+  const camposConDatos = CAMPOS_PARA_GRAFICAR.filter((campo) => cambioDe(mediciones, campo.clave))
+  const campoDeLaGrafica = CAMPOS_PARA_GRAFICAR.find((campo) => campo.clave === campoGrafica)
+  const antropometria = useMemo(() => tablasAntropometricas(mediciones), [mediciones])
   const altura = alturaConocida(mediciones)
   const ultimoPeso = cambioDe(mediciones, 'peso')?.ultima
   const imc = calcularIMC(ultimoPeso, altura)
@@ -146,8 +165,12 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
         />
       ) : (
         <button type="button" className="boton-principal" onClick={() => setFormulario(true)}>
-          {mediciones.length === 0 ? '+ Cargar evaluación inicial' : '+ Cargar medidas de hoy'}
+          {mediciones.length === 0 ? '+ Cargar evaluación inicial' : '+ Cargar medidas'}
         </button>
+      )}
+
+      {!formulario && (
+        <PlanillaDeMedidas clienteId={clienteId} mediciones={mediciones} onCargado={cargar} />
       )}
 
       {mediciones.length === 0 ? (
@@ -200,10 +223,17 @@ export default function PanelMedidas({ clienteId, esProfe = false }) {
 
           {serieDe(mediciones, campoGrafica).length > 1 && (
             <GraficoProgreso
-              titulo={CAMPOS_MEDIDA.find((campo) => campo.clave === campoGrafica)?.etiqueta}
+              titulo={campoDeLaGrafica?.etiqueta}
               puntos={serieDe(mediciones, campoGrafica)}
-              unidad={` ${CAMPOS_MEDIDA.find((campo) => campo.clave === campoGrafica)?.unidad}`}
+              unidad={` ${campoDeLaGrafica?.unidad || ''}`}
             />
+          )}
+
+          {antropometria && (
+            <section className="bloque-pagina">
+              <p className="seccion-etiqueta">Valoración antropométrica</p>
+              <TablaAntropometrica tablas={antropometria} />
+            </section>
           )}
 
           {todasLasFotos.length > 0 && (
@@ -501,13 +531,37 @@ function AgregarFotos({ onElegir }) {
 }
 
 function resumenDeMedicion(medicion) {
-  const partes = CAMPOS_MEDIDA.filter((campo) => medicion[campo.clave] != null).map(
-    (campo) =>
-      `${campo.etiqueta} ${formatearNumero(Number(medicion[campo.clave]))} ${campo.unidad}`,
-  )
+  const partes = [...CAMPOS_MEDIDA, ...CAMPOS_COMPOSICION]
+    .filter((campo) => medicion[campo.clave] != null)
+    .map((campo) =>
+      `${campo.etiqueta} ${formatearNumero(Number(medicion[campo.clave]))} ${campo.unidad}`.trim(),
+    )
+  const suma = sumaDePliegues(medicion)
+  if (suma !== null) partes.push(`Pliegues ${formatearNumero(suma)} mm`)
   const fotos = fotosDeMedicion(medicion).length
   if (fotos) partes.push(`${fotos} ${fotos === 1 ? 'foto' : 'fotos'}`)
   return partes.join(' · ') || 'Sin datos'
+}
+
+// Un casillero de número del formulario ("Tríceps (mm)").
+function CampoNumero({ campo, valores, onCambiar }) {
+  return (
+    <label className="editor-campo">
+      <span>
+        {campo.etiqueta}
+        {campo.unidad ? ` (${campo.unidad})` : ''}
+      </span>
+      <input
+        className="auth-input"
+        type="number"
+        inputMode="decimal"
+        step={campo.paso}
+        min="0"
+        value={valores[campo.clave] ?? ''}
+        onChange={(event) => onCambiar(campo.clave, event.target.value)}
+      />
+    </label>
+  )
 }
 
 function FormularioMedicion({
@@ -533,10 +587,19 @@ function FormularioMedicion({
     setValores((actual) => ({ ...actual, [clave]: valor }))
   }
 
+  // La suma de pliegues mientras se escribe (acepta la coma decimal).
+  const sumaEnVivo = sumaDePliegues(
+    Object.fromEntries(
+      PLIEGUES.map((pliegue) => {
+        const texto = String(valores[pliegue.clave] ?? '').replace(',', '.').trim()
+        return [pliegue.clave, texto && !Number.isNaN(Number(texto)) ? Number(texto) : null]
+      }),
+    ),
+  )
   async function guardar(event) {
     event.preventDefault()
     const datos = { fecha: valores.fecha, tipo: esInicial ? 'inicial' : 'control' }
-    for (const campo of CAMPOS_MEDIDA) {
+    for (const campo of [...CAMPOS_MEDIDA, ...CAMPOS_ANTROPOMETRIA]) {
       const texto = String(valores[campo.clave] ?? '')
         .replace(',', '.')
         .trim()
@@ -554,7 +617,9 @@ function FormularioMedicion({
       ...otras.map((archivo) => ({ vista: CLAVE_OTRAS_FOTOS, archivo })),
     ]
     const hayAlgo =
-      CAMPOS_MEDIDA.some((campo) => datos[campo.clave] !== undefined) || archivos.length > 0
+      [...CAMPOS_MEDIDA, ...CAMPOS_ANTROPOMETRIA].some(
+        (campo) => datos[campo.clave] !== undefined,
+      ) || archivos.length > 0
     if (!hayAlgo) {
       setMensaje('Cargá al menos una medida o una foto.')
       return
@@ -569,8 +634,10 @@ function FormularioMedicion({
     setGuardando(false)
     if (error) {
       setMensaje(
-        error.message?.includes('check')
-          ? 'Algún valor está fuera de rango.'
+        error.message?.includes('column')
+          ? 'Falta activar la valoración antropométrica en la base de datos (SQL 038 de Supabase).'
+          : error.message?.includes('check')
+            ? 'Algún valor está fuera de rango.'
           : error.message || 'No pudimos guardar.',
       )
       return
@@ -581,7 +648,12 @@ function FormularioMedicion({
 
   return (
     <form className="medidas-formulario" onSubmit={guardar}>
-      <p className="seccion-etiqueta">{esInicial ? 'Evaluación inicial' : 'Medidas de hoy'}</p>
+      <p className="seccion-etiqueta">{esInicial ? 'Evaluación inicial' : 'Cargar medidas'}</p>
+      {!esInicial && (
+        <p className="profe-nota">
+          Elegí la fecha en que se tomaron: puede ser hoy o un día de hace tiempo.
+        </p>
+      )}
       {esInicial && (
         <p className="profe-nota">
           {esProfe
@@ -629,6 +701,27 @@ function FormularioMedicion({
           </label>
         ))}
       </div>
+
+      <details className="medidas-antropometria">
+        <summary>Valoración antropométrica (nutricionista) · opcional</summary>
+        <div className="medidas-campos">
+          {CAMPOS_COMPOSICION.map((campo) => (
+            <CampoNumero key={campo.clave} campo={campo} valores={valores} onCambiar={cambiar} />
+          ))}
+        </div>
+        <p className="editor-rango-etiqueta">Pliegues (mm)</p>
+        <div className="medidas-campos">
+          {PLIEGUES.map((campo) => (
+            <CampoNumero key={campo.clave} campo={campo} valores={valores} onCambiar={cambiar} />
+          ))}
+        </div>
+        <p className="medidas-suma-pliegues">
+          Suma de pliegues:{' '}
+          <strong>
+            {sumaEnVivo === null ? '—' : `${formatearNumero(sumaEnVivo)} mm`}
+          </strong>
+        </p>
+      </details>
 
       <p className="editor-rango-etiqueta">
         Fotos de progreso (opcional, solo las ven vos y tu profe)

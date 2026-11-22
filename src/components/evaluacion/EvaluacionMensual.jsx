@@ -310,7 +310,8 @@ function SeccionMedidas({ medidas }) {
   )
 }
 
-function Cifra({ valor, etiqueta, cambio, signo }) {
+// (La usa también la evaluación del año: EvaluacionAnual.jsx.)
+export function Cifra({ valor, etiqueta, cambio, signo }) {
   return (
     <div className="evaluacion-cifra">
       <span className="evaluacion-cifra-valor">{valor}</span>
@@ -332,14 +333,14 @@ function Dato({ etiqueta, valor, cambio, signo }) {
   )
 }
 
-function claseSigno(signo, base) {
+export function claseSigno(signo, base) {
   if (signo > 0) return `${base} evaluacion-sube`
   if (signo < 0) return `${base} evaluacion-baja`
   return base
 }
 
 // "▲ 12,5%", "▼ 3%", "= 0%"; '' si no hay con qué comparar.
-function textoPorcentaje(valor) {
+export function textoPorcentaje(valor) {
   if (valor == null) return ''
   if (valor > 0) return `▲ ${formatearNumero(valor)}%`
   if (valor < 0) return `▼ ${formatearNumero(Math.abs(valor))}%`
@@ -354,7 +355,7 @@ function textoDiferencia(valor) {
 }
 
 // Las medidas no son "buenas" o "malas" (depende del objetivo): van sin color.
-function textoCambioMedida(valor, unidad) {
+export function textoCambioMedida(valor, unidad) {
   if (valor == null) return '—'
   if (valor === 0) return `0 ${unidad}`
   return `${valor > 0 ? '+' : '−'}${formatearNumero(Math.abs(valor))} ${unidad}`

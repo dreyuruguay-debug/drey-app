@@ -457,6 +457,42 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   planilla y no se guarda para usar sin señal (`vite.config.js` y
   `herramientas/serviceWorkerDrey.js`).
 
+## Valoración antropométrica y evaluación del año (SQL 038, noviembre 2026)
+
+- **Valoración antropométrica** (la que hace la nutricionista). En cada
+  medición (`mediciones`), además del peso y el % de grasa: `masa_muscular`
+  (%), `grasa_visceral` y los 6 pliegues en mm (`pl_triceps`, `pl_espalda`,
+  `pl_oblicuo`, `pl_abdomen`, `pl_muslo`, `pl_pantorrilla`). La **suma de
+  pliegues** no se guarda: se calcula (`sumaDePliegues`, `utils/medidas.js`).
+  Se cargan en "Cargar medidas" (sección "Valoración antropométrica",
+  eligiendo la fecha: sirve para medidas de hace tiempo) o todas juntas
+  desde Excel. Se ven en dos tablas como las de la nutricionista
+  (`components/medidas/TablaAntropometrica.jsx`) y en el resumen y la
+  gráfica de siempre (`CAMPOS_PARA_GRAFICAR`). Las usan el alumno (Mis
+  medidas) y el profe (ficha → Medidas): es el mismo `PanelMedidas.jsx`.
+- **Valoración en Excel** (`components/medidas/PlanillaDeMedidas.jsx`):
+  "Bajar planilla" (una fila por fecha, con lo ya cargado) y "Subir
+  planilla". Al subir muestra qué va a pasar y recién guarda con "Cargar":
+  una fecha nueva se agrega; una que ya estaba se completa (lo vacío no
+  borra nada). Si algo no se entiende, lista los problemas con su fila y no
+  carga nada. Acepta fechas día/mes/año y números con unidad ("85,7 kg").
+  Lógica en `utils/planillaMedidas.js`; archivo en
+  `services/planillaMedidas.js`.
+- **Evaluación del año** (`evaluaciones_anuales`, una por alumno y año).
+  Profe: ficha → Progreso → "Evaluaciones y gráficas" → "Evaluación del
+  año" (`components/evaluacion/EditorEvaluacionAnual.jsx`): elige el año,
+  ve todo armado solo, escribe su comentario y los objetivos para el año
+  que viene, la publica y baja el PDF. Trae: lo más destacado, el año en
+  números (entrenamientos, semanas, mejor racha, volumen, horas, récords,
+  exigencia), entrenamientos por mes, los ejercicios que más mejoraron,
+  todos los ejercicios (cómo empezó y terminó, serie de más tonelaje) y las
+  medidas con la valoración antropométrica (inicio y fin del año). Borrador
+  = se recalcula con lo de hoy; publicada = queda fija ("Dejar de publicar"
+  para corregirla). Alumno: Progreso → "Evaluación del año"
+  (`EvaluacionesAnualesAlumno.jsx`). Cálculos en `utils/evaluacionAnual.js`;
+  plantilla en `EvaluacionAnual.jsx` (la misma para la app y el PDF:
+  `services/pdfEvaluacion.js` ahora recibe la plantilla).
+
 ## Baja de alumnos, mensajes del profe y fiestas (SQL 037, noviembre 2026)
 
 - **Dar de baja a un alumno** que ya no sigue: ficha del alumno → Pagos →

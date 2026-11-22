@@ -11,6 +11,7 @@ import BottomNav from '../components/BottomNav.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import NotificacionAvance from '../components/NotificacionAvance.jsx'
 import EntrenamientosHechos from '../components/EntrenamientosHechos.jsx'
+import EvaluacionesAnualesAlumno from '../components/evaluacion/EvaluacionesAnualesAlumno.jsx'
 import { calcularRachaSemanas, textoFechaCorta } from '../utils/dias.js'
 import {
   ejerciciosEntrenados,
@@ -218,6 +219,8 @@ export default function Progreso() {
           <NotificacionAvance clienteId={usuarioId} />
         </div>
       )}
+
+      {!cargando && usuarioId && <EvaluacionesAnualesAlumno clienteId={usuarioId} />}
 
       <BottomNav />
     </div>

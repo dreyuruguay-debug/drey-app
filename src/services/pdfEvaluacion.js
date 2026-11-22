@@ -2,8 +2,8 @@ import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import EvaluacionMensual from '../components/evaluacion/EvaluacionMensual.jsx'
 
-// Arma el PDF de una evaluación mensual, en el celular o la compu (sin
-// servidor):
+// Arma el PDF de una evaluación (la mensual o la del año), en el celular
+// o la compu (sin servidor):
 //   1. Dibuja la plantilla (EvaluacionMensual, versión PDF) fuera de la
 //      pantalla, con fondo blanco y la cabecera negra de DREY.
 //   2. Le saca una "foto" a cada parte (data-bloque) con html2canvas.
@@ -24,7 +24,18 @@ const CALIDAD = 0.9
 const ESCALA = 2
 
 // datos: { resumen, nombreAlumno, nombreProfe }. Devuelve un Blob (PDF).
-export async function crearPdfEvaluacion({ resumen, nombreAlumno, nombreProfe }) {
+//   Plantilla: el componente que se dibuja (por defecto, la evaluación
+//     mensual; la del año pasa EvaluacionAnual). Recibe { resumen,
+//     nombreAlumno, nombreProfe, paraPdf }.
+//   tituloPie: lo que va al pie de cada hoja ("Evaluación 2026"); por
+//     defecto, el número de ciclo.
+export async function crearPdfEvaluacion({
+  resumen,
+  nombreAlumno,
+  nombreProfe,
+  Plantilla = EvaluacionMensual,
+  tituloPie = null,
+}) {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
     import('jspdf'),
     import('html2canvas-pro'),
@@ -38,7 +49,7 @@ export async function crearPdfEvaluacion({ resumen, nombreAlumno, nombreProfe })
 
   try {
     raiz.render(
-      createElement(EvaluacionMensual, { resumen, nombreAlumno, nombreProfe, paraPdf: true }),
+      createElement(Plantilla, { resumen, nombreAlumno, nombreProfe, paraPdf: true }),
     )
     await esperarDibujo(escenario)
 
@@ -92,7 +103,13 @@ export async function crearPdfEvaluacion({ resumen, nombreAlumno, nombreProfe })
       primera = false
     }
 
-    numerarPaginas(pdf, resumen, nombreAlumno, anchoHoja, altoHoja)
+    numerarPaginas(
+      pdf,
+      tituloPie || `Evaluación ${resumen?.ciclo ?? ''}`,
+      nombreAlumno,
+      anchoHoja,
+      altoHoja,
+    )
     return pdf.output('blob')
   } finally {
     raiz.unmount()
@@ -116,9 +133,9 @@ async function esperarDibujo(escenario) {
   )
 }
 
-function numerarPaginas(pdf, resumen, nombreAlumno, anchoHoja, altoHoja) {
+function numerarPaginas(pdf, titulo, nombreAlumno, anchoHoja, altoHoja) {
   const total = pdf.getNumberOfPages()
-  const texto = `DREY · Evaluación ${resumen?.ciclo ?? ''}${nombreAlumno ? ` · ${nombreAlumno}` : ''}`
+  const texto = `DREY · ${titulo}${nombreAlumno ? ` · ${nombreAlumno}` : ''}`
   for (let pagina = 1; pagina <= total; pagina++) {
     pdf.setPage(pagina)
     pdf.setFont('helvetica', 'normal')

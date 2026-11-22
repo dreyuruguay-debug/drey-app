@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import EditorEvaluacion from '../components/evaluacion/EditorEvaluacion.jsx'
+import EditorEvaluacionAnual from '../components/evaluacion/EditorEvaluacionAnual.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import { traerTodasLasFilas } from '../services/paginado.js'
 import { actualizarDatosEvaluacion, generarResumenesPendientes } from '../services/progreso.js'
@@ -25,6 +26,8 @@ import Esqueleto from '../components/Esqueleto.jsx'
 import { textoFechaCorta } from '../utils/dias.js'
 
 // Progresión de un cliente, para el profe:
+//   0. Evaluación del año: general, de enero a diciembre (abajo de las
+//      mensuales; components/evaluacion/EditorEvaluacionAnual.jsx).
 //   1. Evaluaciones mensuales (cada ciclo de 4 semanas): el profe las
 //      revisa, las completa (medidas opcionales, notas, comentario,
 //      objetivos), las publica para el alumno, descarga el PDF y lo
@@ -67,7 +70,7 @@ export default function ProfeClienteProgreso() {
       traerTodasLasFilas(() =>
         supabase
           .from('sesiones')
-          .select('id, fecha, esfuerzo, detalle')
+          .select('id, fecha, esfuerzo, detalle, duracion_seg')
           .eq('cliente_id', id)
           .order('fecha')
           .order('id'),
@@ -152,6 +155,17 @@ export default function ProfeClienteProgreso() {
           nombreProfe={nombreProfe}
           ajustesDrive={ajustesDrive}
           onCambio={() => cargar({ silencioso: true })}
+        />
+      )}
+
+      {/* La evaluación general del año (components/evaluacion/EditorEvaluacionAnual.jsx). */}
+      {!cargando && (
+        <EditorEvaluacionAnual
+          clienteId={id}
+          nombreAlumno={cliente ? nombreCliente : ''}
+          nombreProfe={nombreProfe}
+          sesiones={sesiones}
+          mediciones={mediciones}
         />
       )}
 
