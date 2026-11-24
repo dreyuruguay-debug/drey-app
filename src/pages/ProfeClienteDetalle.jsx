@@ -32,6 +32,7 @@ import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import AvisoCupo from '../components/AvisoCupo.jsx'
 import { problemaDeCupo } from '../utils/cupos.js'
+import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 
 const PESTANAS = [
   { id: 'rutinas', label: 'Rutinas' },
@@ -50,6 +51,7 @@ const PESTANAS = [
 export default function ProfeClienteDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [confirmar, hojaConfirmar] = useConfirmar()
   const [parametros, setParametros] = useSearchParams()
   const pestana = PESTANAS.some((item) => item.id === parametros.get('tab'))
     ? parametros.get('tab')
@@ -209,9 +211,13 @@ export default function ProfeClienteDetalle() {
   // con "Volver a sumar".
   async function darDeBajaAlAlumno() {
     const nombre = cliente.nombre || 'este alumno'
-    const seguro = window.confirm(
-      `¿Dar de baja a ${nombre}? Sale de tus listas y deja de ver sus rutinas. Conserva su cuenta y su historial, y lo podés volver a sumar cuando quieras.`,
-    )
+    const seguro = await confirmar({
+      titulo: `¿Dar de baja a ${nombre}?`,
+      texto:
+        'Sale de tus listas y deja de ver sus rutinas. Conserva su cuenta y su historial, y lo podés volver a sumar cuando quieras.',
+      confirmar: 'Sí, dar de baja',
+      cancelar: 'No, dejarlo',
+    })
     if (!seguro) return
     const error = await darDeBaja(id)
     if (error) {
@@ -544,6 +550,7 @@ export default function ProfeClienteDetalle() {
           onBorrado={alBorrar}
         />
       )}
+      {hojaConfirmar}
     </ProfeLayout>
   )
 }

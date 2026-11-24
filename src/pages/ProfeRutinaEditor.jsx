@@ -35,6 +35,7 @@ import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
 import { MAXIMO_SEMANAS } from '../utils/semanas.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 
 // De 2 a 12 semanas (lo mismo que acepta la planilla de Excel).
 const OPCIONES_SEMANAS = Array.from({ length: MAXIMO_SEMANAS - 1 }, (_, indice) => indice + 2)
@@ -60,6 +61,7 @@ const ERROR_GUARDAR = 'No pudimos guardar el cambio. Revisá tu conexión y prob
 export default function ProfeRutinaEditor({ tipo }) {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [confirmar, hojaConfirmar] = useConfirmar()
   const esRutina = tipo === 'rutina'
   const nombreTipo = esRutina ? 'rutina' : 'plantilla'
 
@@ -197,12 +199,13 @@ export default function ProfeRutinaEditor({ tipo }) {
   // última semana del ciclo anterior, y se vuelve a la semana 1.
   async function empezarCicloNuevo() {
     const semanas = Number(datos.ciclo_semanas)
-    if (
-      !window.confirm(
-        `¿Empezar un ciclo nuevo de ${semanas} semanas desde hoy? Los ejercicios que suben de peso arrancan desde el peso de la última semana; los que tienen cada semana distinta repiten su plan.`,
-      )
-    )
-      return
+    const seguro = await confirmar({
+      titulo: '¿Empezar un ciclo nuevo?',
+      texto: `Arranca hoy un ciclo de ${semanas} semanas. Los ejercicios que suben de peso arrancan desde el peso de la última semana; los que tienen cada semana distinta repiten su plan.`,
+      confirmar: 'Empezar ciclo nuevo',
+      peligro: false,
+    })
+    if (!seguro) return
     const error = await aplicarLista(ejerciciosParaCicloNuevo(items, semanas))
     if (error) {
       setMensaje(error)
@@ -242,7 +245,13 @@ export default function ProfeRutinaEditor({ tipo }) {
 
   async function quitarUnBloque(bloque, indiceBloque) {
     const nombres = bloque.items.map(({ item }) => item.ejercicios?.nombre).join(' + ')
-    if (!window.confirm(`¿Quitar "${nombres}" de la ${nombreTipo}?`)) return
+    const seguro = await confirmar({
+      titulo: bloque.items.length > 1 ? '¿Quitar estos ejercicios?' : '¿Quitar este ejercicio?',
+      texto: `"${nombres}" sale de la ${nombreTipo}.`,
+      confirmar: 'Sí, quitar',
+      cancelar: 'No, dejarlo',
+    })
+    if (!seguro) return
     setMensaje(await aplicarLista(quitarBloque(items, indiceBloque)))
   }
 
@@ -617,6 +626,7 @@ export default function ProfeRutinaEditor({ tipo }) {
           onCerrar={() => setAsistente(null)}
         />
       )}
+      {hojaConfirmar}
     </ProfeLayout>
   )
 }

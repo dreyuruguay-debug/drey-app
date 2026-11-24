@@ -709,7 +709,7 @@ textarea {
   gap: 0.2rem;
   color: var(--drey-texto-tenue);
   text-decoration: none;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   padding: 0.35rem 0.75rem;
@@ -940,7 +940,7 @@ textarea {
   flex-direction: column;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--drey-texto-apagado);
@@ -1124,57 +1124,21 @@ textarea {
   margin-bottom: 0.85rem;
 }
 
-.comunidad-post-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--drey-texto-claro);
-  margin-bottom: 0.35rem;
-}
-
-.comunidad-post-autor {
-  font-weight: 700;
-  color: var(--drey-text);
-}
-
 .comunidad-post-texto {
   margin: 0 0 0.5rem;
   font-size: 0.9rem;
 }
 
-.comunidad-comentario {
-  margin: 0.3rem 0 0;
-  padding: 0.4rem 0.6rem;
-  background: var(--drey-superficie-3);
-  border-radius: 10px;
+.comunidad-novedad-firma {
+  margin: 0;
   font-size: 0.8rem;
+  color: var(--drey-texto-tenue);
 }
 
-.comunidad-comentar-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.6rem;
-}
-
-.comunidad-comentar-input {
-  flex: 1;
-  min-width: 0;
-  border-radius: 999px;
-  border: 1px solid var(--drey-borde-control);
-  background: var(--drey-bg);
-  color: var(--drey-text);
-  padding: 0.5rem 0.9rem;
-  font-size: 0.8rem;
-}
-
-.comunidad-comentar-boton {
-  background: none;
-  border: none;
-  color: var(--drey-accent-texto);
-  font-weight: 700;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  cursor: pointer;
+.comunidad-vacio {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--drey-texto-suave);
 }
 
 .comunidad-codigos {
@@ -1557,7 +1521,7 @@ textarea {
    rutina). */
 .estado-chip.estado-chip-chico {
   padding: 0.15rem 0.55rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1787,7 +1751,7 @@ textarea {
 .profe-grupo-card-musculos {
   display: block;
   margin-top: 0.25rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 400;
   color: var(--drey-texto-apagado);
 }
@@ -1940,7 +1904,7 @@ textarea {
 
 .grafico-eje {
   fill: var(--drey-texto-apagado);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .grafico-linea {
@@ -2094,7 +2058,7 @@ textarea {
   color: var(--drey-sobre-accent);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
 }
 
@@ -3256,7 +3220,7 @@ div.tarjeta-rutina {
   box-shadow: none;
   border: 2px solid var(--drey-accent);
   color: var(--drey-accent-texto);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -4318,7 +4282,7 @@ div.tarjeta-rutina {
 }
 
 .final-esfuerzo-chip small {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--drey-texto-suave);
 }
 
@@ -4514,7 +4478,7 @@ div.tarjeta-rutina {
 }
 
 .tarea-nivel {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -6391,7 +6355,7 @@ div.tarjeta-rutina {
   background: var(--drey-black);
   border: 1px solid var(--drey-borde-control);
   color: #ffffff;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   line-height: 16px;
   text-align: center;
 }
@@ -7532,6 +7496,25 @@ div.tarjeta-rutina {
   min-width: 190px;
 }
 
+/* Debajo de los botones: acceso para profes y gimnasios. */
+.portada-para-profes {
+  margin: 1.1rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.portada-para-profes a {
+  color: var(--drey-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.portada-para-profes a:hover,
+.portada-para-profes a:focus-visible {
+  text-decoration: underline;
+}
+
 @media (max-width: 520px) {
   .portada-botones {
     flex-direction: column;
@@ -8250,7 +8233,7 @@ div.tarjeta-rutina {
     margin: 1.1rem 0 0.25rem;
     padding: 1rem 0.8rem 0;
     border-top: 1px solid var(--drey-borde-suave);
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -8760,6 +8743,25 @@ div.tarjeta-rutina {
   font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
+}
+
+/* Confirmar una acción (components/ConfirmarAccion.jsx): el texto de qué
+   pasa y los dos botones, uno arriba del otro. */
+.confirmar-texto {
+  margin: 0 0 1.25rem;
+  color: var(--drey-texto-suave);
+  line-height: 1.5;
+}
+
+.confirmar-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.confirmar-botones .boton-secundario,
+.confirmar-botones .boton-principal {
+  width: 100%;
 }
 
 .hoja-inferior-cerrar {
@@ -9911,7 +9913,7 @@ div.tarjeta-rutina {
   border-radius: 999px;
   background: var(--drey-amarillo-fondo);
   color: var(--drey-amarillo-texto);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -9921,7 +9923,7 @@ div.tarjeta-rutina {
   flex: 0 0 auto;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   background: var(--drey-superficie-3);
   color: var(--drey-texto-suave);
@@ -9995,7 +9997,7 @@ div.tarjeta-rutina {
 }
 
 .evaluacion-mini-caja small {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   color: var(--drey-texto-tenue);
 }
 
@@ -10021,7 +10023,7 @@ div.tarjeta-rutina {
 }
 
 .evaluacion-pie {
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   line-height: 1.4;
   color: var(--drey-texto-tenue);
 }
@@ -10532,6 +10534,46 @@ div.tarjeta-rutina {
 .registro-codigo-espacio .auth-input {
   flex: 1;
   min-width: 0;
+}
+
+/* Registro del alumno, paso "Tu profe": el código destacado arriba y la
+   lista abajo, separados por "o elegilo de la lista". */
+.registro-codigo-caja {
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+  border: 1.5px solid var(--drey-accent);
+  border-radius: 16px;
+  background: var(--drey-superficie);
+}
+
+.registro-codigo-caja-titulo {
+  margin: 0 0 0.25rem;
+  font-weight: 800;
+}
+
+.registro-codigo-caja-ayuda {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.registro-separador {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.75rem;
+  color: var(--drey-texto-tenue);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.registro-separador::before,
+.registro-separador::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--drey-borde);
 }
 
 .selector-espacio-mas {

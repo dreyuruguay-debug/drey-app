@@ -5,53 +5,44 @@ import BottomNav from '../components/BottomNav.jsx'
 import { linkGrupoWhatsapp } from '../data/comunidad.js'
 import { useConfiguracion } from '../services/configuracion.js'
 import { cargarCodigosDeRopa } from '../services/codigos.js'
-import { textoFechaCorta } from '../utils/dias.js'
+import { cargarMensajesDeHoy } from '../services/mensajesProfe.js'
+import { mensajesParaMostrar } from '../utils/mensajesDelDia.js'
+import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 
-// Comunidad y beneficios: muro de novedades del profe, códigos de
+// Comunidad y beneficios: las novedades de su profe, los códigos de
 // descuento de la marca de ropa DREY y el acceso al grupo de WhatsApp
 // de la comunidad (no hay chat dentro de la app).
 //
+// Las novedades son los mensajes que el profe escribió para hoy
+// (pages/ProfeMensajes.jsx, supabase/sql/037): los mismos que el alumno
+// ve en grande al abrir la app (components/MensajeDelDia.jsx), acá a mano
+// para volver a leerlos. En las fiestas, si el profe no escribió nada,
+// aparece el saludo de la fiesta.
+//
 // Los códigos de ropa son reales: los crea el profe en Pagos → Códigos
 // de descuento → "De ropa" (solo los ven los clientes con el plan al
-// día). Las publicaciones del muro son de ejemplo por ahora y los
-// comentarios todavía no se guardan. El link del grupo de WhatsApp lo
-// carga el Admin en Ajustes → WhatsApp.
-const PUBLICACIONES_EJEMPLO = [
-  {
-    id: 1,
-    autor: 'Profe',
-    fecha: '15 de septiembre',
-    texto: 'Este sábado hay clase grupal al aire libre a las 9hs. ¡Los espero!',
-  },
-  {
-    id: 2,
-    autor: 'Profe',
-    fecha: '10 de septiembre',
-    texto: 'Nueva tanda de remeras DREY disponible. Los clientes activos tienen descuento.',
-  },
-]
+// día). El link del grupo de WhatsApp lo carga el Admin en Ajustes →
+// WhatsApp (solo lo ven los alumnos al día, supabase/sql/039).
 
 export default function Comunidad() {
   useConfiguracion() // el link del grupo lo carga el Admin en Ajustes
   const whatsappGrupoUrl = linkGrupoWhatsapp()
-  const [comentarios, setComentarios] = useState({})
-  const [textoNuevo, setTextoNuevo] = useState({})
+  const [novedades, setNovedades] = useState(null) // null = cargando
   const [codigos, setCodigos] = useState([])
 
   useEffect(() => {
-    cargarCodigosDeRopa().then(setCodigos)
+    let vigente = true
+    cargarCodigosDeRopa().then((lista) => {
+      if (vigente) setCodigos(lista)
+    })
+    cargarMensajesDeHoy().then((datos) => {
+      if (!vigente) return
+      setNovedades(datos ? mensajesParaMostrar(datos, obtenerFechaHoyISO()) : [])
+    })
+    return () => {
+      vigente = false
+    }
   }, [])
-
-  function handleComentar(event, publicacionId) {
-    event.preventDefault()
-    const texto = (textoNuevo[publicacionId] || '').trim()
-    if (!texto) return
-    setComentarios((actual) => ({
-      ...actual,
-      [publicacionId]: [...(actual[publicacionId] || []), texto],
-    }))
-    setTextoNuevo((actual) => ({ ...actual, [publicacionId]: '' }))
-  }
 
   return (
     <div className="screen has-bottom-nav">
@@ -77,43 +68,17 @@ export default function Comunidad() {
           </button>
         )}
 
-        <p className="comunidad-seccion-label">Muro</p>
-        {PUBLICACIONES_EJEMPLO.map((publicacion) => (
-          <div key={publicacion.id} className="comunidad-post">
-            <div className="comunidad-post-header">
-              <span className="comunidad-post-autor">{publicacion.autor}</span>
-              <span className="comunidad-post-fecha">{publicacion.fecha}</span>
+        <p className="comunidad-seccion-label">Novedades de tu profe</p>
+        {novedades === null ? null : novedades.length === 0 ? (
+          <p className="comunidad-vacio">Cuando tu profe publique novedades, las vas a ver acá.</p>
+        ) : (
+          novedades.map((novedad) => (
+            <div key={novedad.id} className="comunidad-post">
+              <p className="comunidad-post-texto">{novedad.texto}</p>
+              <p className="comunidad-novedad-firma">{novedad.firma}</p>
             </div>
-            <p className="comunidad-post-texto">{publicacion.texto}</p>
-
-            {(comentarios[publicacion.id] || []).map((comentario, index) => (
-              <p key={index} className="comunidad-comentario">
-                {comentario}
-              </p>
-            ))}
-
-            <form
-              className="comunidad-comentar-form"
-              onSubmit={(event) => handleComentar(event, publicacion.id)}
-            >
-              <input
-                className="comunidad-comentar-input"
-                type="text"
-                placeholder="Escribir un comentario…"
-                value={textoNuevo[publicacion.id] || ''}
-                onChange={(event) =>
-                  setTextoNuevo((actual) => ({
-                    ...actual,
-                    [publicacion.id]: event.target.value,
-                  }))
-                }
-              />
-              <button type="submit" className="comunidad-comentar-boton">
-                Enviar
-              </button>
-            </form>
-          </div>
-        ))}
+          ))
+        )}
 
         <p className="comunidad-seccion-label">Beneficios</p>
         <div className="comunidad-codigos">

@@ -179,6 +179,13 @@ function PaginaPortada({ previa, mostrando, ingresar }) {
             <p className="portada-subtitulo">{textoDe(pagina, 'portada.subtitulo')}</p>
           </div>
           <EntradaPortada onIniciarSesion={abrirIngreso} miCuenta={miCuenta} />
+          {/* Para profes y gimnasios: DREY también es para ellos (registro
+              por tipo de cuenta, pages/RegistroElegir.jsx). */}
+          {!miCuenta && (
+            <p className="portada-para-profes">
+              ¿Sos profe o tenés un gimnasio? <Link to="/registro">Sumate a DREY →</Link>
+            </p>
+          )}
         </div>
         <button type="button" className="portada-conocenos" onClick={irAConocenos}>
           Conócenos

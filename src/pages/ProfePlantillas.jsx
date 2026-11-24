@@ -4,6 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import { supabase } from '../services/supabaseClient.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 
 // Plantillas de rutina: se arman una sola vez (con sus ejercicios,
 // métodos, series, reps, kg objetivo y descansos) y después, desde el
@@ -15,6 +16,7 @@ export default function ProfePlantillas() {
   const [plantillas, setPlantillas] = useState([])
   const [cantidadPorPlantilla, setCantidadPorPlantilla] = useState({})
   const [mensaje, setMensaje] = useState('')
+  const [confirmar, hojaConfirmar] = useConfirmar()
 
   useEffect(() => {
     cargarTodo()
@@ -36,7 +38,13 @@ export default function ProfePlantillas() {
   }
 
   async function handleBorrar(plantilla) {
-    if (!window.confirm(`¿Borrar la plantilla "${plantilla.nombre}"? No se puede deshacer.`)) return
+    const seguro = await confirmar({
+      titulo: '¿Borrar la plantilla?',
+      texto: `"${plantilla.nombre}" se borra y no se puede deshacer.`,
+      confirmar: 'Sí, borrar',
+      cancelar: 'No, dejarla',
+    })
+    if (!seguro) return
     const { error } = await supabase.from('plantillas').delete().eq('id', plantilla.id)
     if (error) {
       setMensaje('No pudimos borrar la plantilla. Probá de nuevo.')
@@ -100,6 +108,7 @@ export default function ProfePlantillas() {
       <Link to="/profe/plantillas/nueva" className="profe-boton-agregar-ejercicio">
         + Agregar plantilla
       </Link>
+      {hojaConfirmar}
     </ProfeLayout>
   )
 }

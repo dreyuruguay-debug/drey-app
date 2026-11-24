@@ -44,6 +44,7 @@ import MensajeDelDia from '../components/MensajeDelDia.jsx'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 import { useConfiguracion } from '../services/configuracion.js'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
@@ -85,6 +86,7 @@ export default function Home() {
   useConfiguracion() // nombre del plan y reglas de vencimiento (Ajustes del Admin)
   const instalacion = useInstalacion()
   const navigate = useNavigate()
+  const [confirmar, hojaConfirmar] = useConfirmar()
   const [parametros, setParametros] = useSearchParams()
   // Lo último guardado en el celular se muestra al instante (sin
   // "Cargando…") y se actualiza apenas contesta el servidor.
@@ -192,10 +194,13 @@ export default function Home() {
 
   // "Cancelar entrenamiento" en la tarjeta naranja: descarta el que quedó
   // a medias (lo empezó sin querer). No queda guardado.
-  function cancelarEnCurso(rutinaId) {
-    const seguro = window.confirm(
-      '¿Cancelar este entrenamiento? Se descarta lo que marcaste y no queda guardado.',
-    )
+  async function cancelarEnCurso(rutinaId) {
+    const seguro = await confirmar({
+      titulo: '¿Cancelar el entrenamiento?',
+      texto: 'Se descarta lo que marcaste y no queda guardado.',
+      confirmar: 'Sí, descartar',
+      cancelar: 'No, dejarlo',
+    })
     if (!seguro) return
     borrarEnCurso(rutinaId)
     setEnCursoCancelados((cantidad) => cantidad + 1)
@@ -427,6 +432,7 @@ export default function Home() {
       )}
 
       <BottomNav />
+      {hojaConfirmar}
     </div>
   )
 }

@@ -82,6 +82,7 @@ import {
 } from '../utils/records.js'
 import { ejerciciosDeLaSemana, semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
 const DURACION_AVISO_MS = 3000
@@ -149,6 +150,7 @@ const VIBRACION_FIN_TIEMPO = [300, 150, 300]
 export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [confirmar, hojaConfirmar] = useConfirmar()
   const [parametros] = useSearchParams()
   const hoy = obtenerFechaHoyISO()
 
@@ -739,10 +741,13 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // "Cancelar entrenamiento": lo empezó sin querer (o no lo va a
   // terminar). Se descarta lo que lleva hecho: no se guarda nada ni queda
   // "en pausa". Pide confirmación porque no se puede deshacer.
-  function cancelarEntrenamiento() {
-    const seguro = window.confirm(
-      '¿Cancelar este entrenamiento? Se descarta lo que marcaste y no queda guardado.',
-    )
+  async function cancelarEntrenamiento() {
+    const seguro = await confirmar({
+      titulo: '¿Cancelar el entrenamiento?',
+      texto: 'Se descarta lo que marcaste y no queda guardado.',
+      confirmar: 'Sí, descartar',
+      cancelar: 'Seguir entrenando',
+    })
     if (!seguro) return
     cancelado.current = true
     borrarEnCurso(id)
@@ -918,6 +923,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           corregirEn={sesionGuardadaId ? `/progreso?corregir=${sesionGuardadaId}` : null}
           modoPrevia={modoPrevia}
         />
+        {hojaConfirmar}
       </div>
     )
   }
@@ -1124,6 +1130,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           onCancelar={cancelarEntrenamiento}
         />
       )}
+      {hojaConfirmar}
     </div>
   )
 }

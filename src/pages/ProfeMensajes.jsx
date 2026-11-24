@@ -14,6 +14,7 @@ import {
 import { FIESTAS, proximaFechaDe } from '../data/fiestas.js'
 import { estadoDeMensaje } from '../utils/mensajesDelDia.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 
 const TEXTO_ESTADO = {
   hoy: { texto: 'Se está mostrando', clase: 'estado-ok' },
@@ -45,6 +46,7 @@ export default function ProfeMensajes() {
   const [clientes, setClientes] = useState([])
   const [mensajes, setMensajes] = useState([])
   const [faltaInstalar, setFaltaInstalar] = useState(false)
+  const [confirmar, hojaConfirmar] = useConfirmar()
 
   const [clienteId, setClienteId] = useState(parametros.get('cliente') || '')
   const [texto, setTexto] = useState('')
@@ -111,7 +113,13 @@ export default function ProfeMensajes() {
   }
 
   async function borrar(mensaje) {
-    if (!window.confirm('¿Borrar este mensaje? Los alumnos dejan de verlo.')) return
+    const seguro = await confirmar({
+      titulo: '¿Borrar este mensaje?',
+      texto: 'Tus alumnos dejan de verlo.',
+      confirmar: 'Sí, borrar',
+      cancelar: 'No, dejarlo',
+    })
+    if (!seguro) return
     if (await borrarMensaje(mensaje.id)) {
       mostrarAviso('No pudimos borrar el mensaje', 'error')
       return
@@ -253,6 +261,7 @@ export default function ProfeMensajes() {
           <ListaDeMensajes mensajes={pasados} hoy={hoy} onBorrar={borrar} />
         </details>
       )}
+      {hojaConfirmar}
     </ProfeLayout>
   )
 }

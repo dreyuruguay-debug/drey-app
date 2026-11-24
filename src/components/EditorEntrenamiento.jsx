@@ -20,6 +20,7 @@ import {
 import { formatearPeso } from '../utils/progreso.js'
 import { esPorTiempo, nombreDeUnidad, unidadDe } from '../utils/porTiempo.js'
 import { textoDeEsfuerzo } from '../data/esfuerzo.js'
+import { useConfirmar } from './ConfirmarAccion.jsx'
 
 // Ventana para ver y corregir un entrenamiento YA GUARDADO: el peso, las
 // repeticiones y si llegó al fallo en cada serie, por si quedó algo mal
@@ -64,14 +65,18 @@ export default function EditorEntrenamiento({
   const [guardando, setGuardando] = useState(false)
   const [borrando, setBorrando] = useState(false)
   const [error, setError] = useState('')
+  const [confirmar, hojaConfirmar] = useConfirmar()
   const hayCambios = !mismoDetalle(original, detalle)
   const esfuerzo = textoDeEsfuerzo(sesion.esfuerzo)
 
   async function borrar() {
     if (borrando || guardando) return
-    const seguro = window.confirm(
-      '¿Borrar este entrenamiento? Se borra con todas sus series y no se puede deshacer.',
-    )
+    const seguro = await confirmar({
+      titulo: '¿Borrar este entrenamiento?',
+      texto: 'Se borra con todas sus series y no se puede deshacer.',
+      confirmar: 'Sí, borrar',
+      cancelar: 'No, dejarlo',
+    })
     if (!seguro) return
     setBorrando(true)
     setError('')
@@ -199,6 +204,7 @@ export default function EditorEntrenamiento({
           </div>
         )}
       </div>
+      {hojaConfirmar}
     </div>
   )
 }

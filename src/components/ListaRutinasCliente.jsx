@@ -6,6 +6,7 @@ import { mostrarAviso } from '../services/avisos.js'
 import { abreviaturaDia } from '../utils/dias.js'
 import MenuAcciones from './MenuAcciones.jsx'
 import CopiarRutina from './CopiarRutina.jsx'
+import { useConfirmar } from './ConfirmarAccion.jsx'
 
 // Las rutinas de un cliente (pestaña "Rutinas" de su ficha): cada una con
 // sus días, su estado y el menú ⋯ (Editar, Asignar días, Ver como alumno,
@@ -27,9 +28,16 @@ export default function ListaRutinasCliente({
 }) {
   const navigate = useNavigate()
   const [copiando, setCopiando] = useState(false)
+  const [confirmar, hojaConfirmar] = useConfirmar()
 
   async function borrar(rutina) {
-    if (!window.confirm(`¿Borrar "${rutina.nombre}"? No se puede deshacer.`)) return
+    const seguro = await confirmar({
+      titulo: '¿Borrar la rutina?',
+      texto: `"${rutina.nombre}" se borra y no se puede deshacer.`,
+      confirmar: 'Sí, borrar',
+      cancelar: 'No, dejarla',
+    })
+    if (!seguro) return
     const { error } = await supabase.from('rutinas').delete().eq('id', rutina.id)
     if (error) {
       mostrarAviso('No pudimos borrar la rutina', 'error')
@@ -157,6 +165,7 @@ export default function ListaRutinasCliente({
           onCerrar={() => setCopiando(false)}
         />
       )}
+      {hojaConfirmar}
     </div>
   )
 }

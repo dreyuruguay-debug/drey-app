@@ -397,47 +397,58 @@ export default function Registro() {
 
         {paso === PASO_PROFE && (
           <>
-            <p className="form-section-label">Elegí tu profe o gimnasio</p>
-
-            <div className="registro-codigo-espacio">
-              <input
-                className="auth-input"
-                type="text"
-                placeholder="¿Te pasaron un código? (ej. FITCENTER)"
-                value={codigoEspacio}
-                onChange={(event) => {
-                  setCodigoEspacio(event.target.value.toUpperCase())
-                  setMensajeCodigo('')
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    buscarCodigo()
+            {/* Lo más común: el profe o el gimnasio le pasó su código.
+                Va primero y destacado; la lista queda abajo. */}
+            <div className="registro-codigo-caja">
+              <p className="registro-codigo-caja-titulo">
+                ¿Tu profe o gimnasio te pasó un código?
+              </p>
+              <p className="registro-codigo-caja-ayuda">
+                Escribilo acá y te anotamos directo con él.
+              </p>
+              <div className="registro-codigo-espacio">
+                <input
+                  className="auth-input"
+                  type="text"
+                  aria-label="Código de tu profe o gimnasio"
+                  placeholder="Ej. FITCENTER"
+                  value={codigoEspacio}
+                  onChange={(event) => {
+                    setCodigoEspacio(event.target.value.toUpperCase())
+                    setMensajeCodigo('')
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      buscarCodigo()
+                    }
+                  }}
+                />
+                {conEspacios && (
+                  <button
+                    type="button"
+                    className="boton-secundario boton-chico"
+                    disabled={buscandoCodigo || !codigoEspacio.trim()}
+                    onClick={() => buscarCodigo()}
+                  >
+                    {buscandoCodigo ? 'Buscando…' : 'Buscar'}
+                  </button>
+                )}
+              </div>
+              {mensajeCodigo && (
+                <p
+                  className={
+                    mensajeCodigo.startsWith('✓')
+                      ? 'registro-edad registro-codigo-ok'
+                      : 'registro-edad'
                   }
-                }}
-              />
-              {conEspacios && (
-                <button
-                  type="button"
-                  className="boton-secundario boton-chico"
-                  disabled={buscandoCodigo || !codigoEspacio.trim()}
-                  onClick={() => buscarCodigo()}
                 >
-                  {buscandoCodigo ? 'Buscando…' : 'Buscar'}
-                </button>
+                  {mensajeCodigo}
+                </p>
               )}
             </div>
-            {mensajeCodigo && (
-              <p
-                className={
-                  mensajeCodigo.startsWith('✓')
-                    ? 'registro-edad registro-codigo-ok'
-                    : 'registro-edad'
-                }
-              >
-                {mensajeCodigo}
-              </p>
-            )}
+
+            <p className="registro-separador">o elegilo de la lista</p>
 
             {cargandoOpciones ? (
               <Esqueleto tipo="linea" />

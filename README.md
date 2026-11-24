@@ -481,6 +481,30 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - **`.gitignore`** (claves, `node_modules`, `dist`) y **`.env.example`**
   (modelo de las variables, sin claves).
 
+## Mejoras de diseño (auditoría de noviembre 2026, tanda 3)
+
+- **Letra mínima de 12 px**: lo que tenía 9–10 px (menú de abajo, pasos
+  del registro y de los asistentes, etiquetas chicas, evaluación, ejes de
+  las gráficas) pasa a 0,75rem como mínimo (`styles/globals.css`).
+- **Confirmaciones con el estilo de DREY**: ninguna pantalla usa más la
+  ventanita del navegador (`window.confirm`). Todas usan `useConfirmar()`
+  (`components/ConfirmarAccion.jsx`): la hoja de abajo con título, qué va
+  a pasar, el botón rojo que dice lo que hace ("Sí, borrar", "Sí,
+  descartar"...) y el de volver. Se usa en: borrar un entrenamiento, una
+  rutina, una plantilla o un mensaje; cancelar un entrenamiento (Inicio y
+  modo entrenar); quitar un ejercicio de la rutina; empezar un ciclo nuevo
+  (botón verde) y dar de baja a un alumno.
+- **Portada**: debajo de "Iniciar sesión" y "Registrarme", la línea
+  "¿Sos profe o tenés un gimnasio? Sumate a DREY →" (va a `/registro`).
+  Solo la ve quien no inició sesión.
+- **Registro del alumno, paso "Tu profe"**: el código del profe o gimnasio
+  va primero, en un recuadro destacado; la lista queda abajo, después de
+  "o elegilo de la lista".
+- **Comunidad**: se fue el muro de ejemplo (publicaciones inventadas y
+  comentarios que no se guardaban). En su lugar, "Novedades de tu profe":
+  los mensajes reales que el profe escribió para hoy (`mensajes_para_mi`,
+  SQL 037; en las fiestas, el saludo).
+
 ## Limpieza: cobro automático viejo y archivos (SQL 040, noviembre 2026)
 
 - **Se borró el cobro automático con Mercado Pago** (el alumno le pagaba a
