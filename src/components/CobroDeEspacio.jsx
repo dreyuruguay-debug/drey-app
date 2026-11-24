@@ -50,7 +50,7 @@ const PLAN_VACIO = {
 }
 
 export function PlanesDelEspacio({ espacioId }) {
-  const config = useConfiguracion() // se vuelve a dibujar al guardar
+  useConfiguracion() // se vuelve a dibujar al guardar
   const planes = listaDePlanes({ espacioId })
   const [creando, setCreando] = useState(false)
 
@@ -72,7 +72,6 @@ export function PlanesDelEspacio({ espacioId }) {
             key={`${plan.id}-${plan.nombre}-${plan.precioDesdeSegundoMes}-${plan.activo}`}
             espacioId={espacioId}
             plan={plan}
-            cobroAutomatico={config.cobroAutomatico}
           />
         ))}
       </div>
@@ -81,7 +80,6 @@ export function PlanesDelEspacio({ espacioId }) {
         <FormularioPlan
           espacioId={espacioId}
           plan={PLAN_VACIO}
-          cobroAutomatico={config.cobroAutomatico}
           nuevo
           onListo={() => setCreando(false)}
         />
@@ -98,7 +96,7 @@ export function PlanesDelEspacio({ espacioId }) {
   )
 }
 
-function FormularioPlan({ espacioId, plan, cobroAutomatico, nuevo = false, onListo }) {
+function FormularioPlan({ espacioId, plan, nuevo = false, onListo }) {
   const [formulario, setFormulario] = useState(() => ({
     ...plan,
     precioPrimerMes: String(plan.precioPrimerMes ?? ''),
@@ -198,17 +196,15 @@ function FormularioPlan({ espacioId, plan, cobroAutomatico, nuevo = false, onLis
           />
         </Campo>
       </div>
-      {!cobroAutomatico && (
-        <Campo etiqueta="Link de pago de Mercado Pago de este plan (opcional)">
-          <input
-            className="auth-input"
-            type="url"
-            value={formulario.linkMercadoPago}
-            onChange={(event) => cambiar('linkMercadoPago', event.target.value)}
-            placeholder="https://mpago.la/…"
-          />
-        </Campo>
-      )}
+      <Campo etiqueta="Link de pago de Mercado Pago de este plan (opcional)">
+        <input
+          className="auth-input"
+          type="url"
+          value={formulario.linkMercadoPago}
+          onChange={(event) => cambiar('linkMercadoPago', event.target.value)}
+          placeholder="https://mpago.la/…"
+        />
+      </Campo>
       <label className="form-checkbox-row">
         <input
           type="checkbox"

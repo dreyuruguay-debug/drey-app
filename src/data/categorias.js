@@ -15,8 +15,6 @@ export const CATEGORIAS = [
   { nombre: 'Brazos', musculos: 'Bíceps · Tríceps · Antebrazo' },
 ]
 
-export const NOMBRES_CATEGORIAS = CATEGORIAS.map((categoria) => categoria.nombre)
-
 // Categorías de un ejercicio. Si todavía no tiene ninguna asignada,
 // usa su grupo muscular (así ningún ejercicio queda "perdido").
 export function categoriasDeEjercicio(ejercicio) {

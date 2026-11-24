@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { supabase } from '../services/supabaseClient.js'
@@ -7,31 +7,21 @@ import { obtenerUsuarioActual } from '../services/sesion.js'
 import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import { cargarMiCobro } from '../services/cobroEspacio.js'
 import DatosDePago from '../components/DatosDePago.jsx'
-import PagoMercadoPago from '../components/PagoMercadoPago.jsx'
 import { obtenerPlan, formatearPrecio } from '../data/planes.js'
-import { cobroAutomatico } from '../data/pagos.js'
 import { useConfiguracion } from '../services/configuracion.js'
 import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { comprimirImagen } from '../utils/imagenes.js'
+import { problemaDeComprobante } from '../utils/comprobantes.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
-
-const REVISAR_PAGO_CADA_MS = 3000
-const REVISAR_PAGO_VECES = 10
 
 // Suscripción: plan, estado (al día, por vencer, días de gracia,
 // vencido), cómo pagar y los últimos pagos.
 //
-// Dos formas de pagar:
-//   1. Mercado Pago automático (si el Admin lo activó en Ajustes): paga
-//      con tarjeta y la cuenta se activa sola al instante.
-//   2. Transferencia: ve los datos, sube el comprobante y toca "Ya pagué";
-//      el profe lo confirma desde "Cobros".
-//
-// Al volver de Mercado Pago la dirección trae ?pago=ok / pendiente /
-// error. Con "ok", la pantalla revisa unos segundos hasta ver la cuenta
-// actualizada (Mercado Pago avisa a la base casi al instante).
+// Cómo se paga: por transferencia o con el link de Mercado Pago de su
+// profe o gimnasio. Después sube el comprobante (si quiere) y toca
+// "Ya pagué"; el profe lo confirma desde "Cobros".
 //
 // Los datos para pagar son los del profe o gimnasio del alumno (mi_cobro,
 // supabase/sql/034): a ellos les paga. "Ya pagué" les avisa a ellos.
@@ -42,7 +32,6 @@ const REVISAR_PAGO_VECES = 10
 export default function Suscripcion() {
   useConfiguracion() // planes, precios y datos de pago (Ajustes del Admin)
   const navigate = useNavigate()
-  const [parametros, setParametros] = useSearchParams()
   const [perfil, setPerfil] = useState(null)
   const [pagos, setPagos] = useState([])
   // Datos de cobro de su profe o gimnasio (undefined = los de Ajustes).
@@ -51,32 +40,13 @@ export default function Suscripcion() {
   const [comprobante, setComprobante] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState('')
-  const [vueltaDePago, setVueltaDePago] = useState(() => parametros.get('pago'))
-  const revisiones = useRef(0)
 
   useEffect(() => {
     cargarPerfil()
-    // Se limpia la dirección para que un "recargar" no repita el aviso.
-    if (parametros.get('pago')) setParametros({}, { replace: true })
   }, [])
 
-  // Volvió de pagar: se revisa cada 3 segundos hasta ver el pago aprobado.
-  useEffect(() => {
-    if (vueltaDePago !== 'ok' || !perfil) return undefined
-    if (pagos[0]?.estado === 'aprobado' && pagoReciente(pagos[0])) {
-      setVueltaDePago('aprobado')
-      return undefined
-    }
-    if (revisiones.current >= REVISAR_PAGO_VECES) return undefined
-    const temporizador = setTimeout(() => {
-      revisiones.current += 1
-      cargarPerfil({ silencioso: true })
-    }, REVISAR_PAGO_CADA_MS)
-    return () => clearTimeout(temporizador)
-  }, [vueltaDePago, perfil, pagos])
-
-  async function cargarPerfil({ silencioso = false } = {}) {
-    if (!silencioso) setCargando(true)
+  async function cargarPerfil() {
+    setCargando(true)
     const usuario = await obtenerUsuarioActual()
     if (!usuario) {
       navigate(RUTA_INGRESAR)
@@ -103,6 +73,12 @@ export default function Suscripcion() {
     let comprobantePath = perfil.comprobante_nombre || null
     if (comprobante) {
       const archivo = await comprimirImagen(comprobante, 1600)
+      const problema = problemaDeComprobante(archivo)
+      if (problema) {
+        setEnviando(false)
+        setMensaje(problema)
+        return
+      }
       const rutaArchivo = `${perfil.id}/${Date.now()}-${archivo.name.replace(/[^\w.-]/g, '_')}`
       const { error: errorSubida } = await supabase.storage
         .from('comprobantes')
@@ -139,7 +115,6 @@ export default function Suscripcion() {
 
   const plan = obtenerPlan(perfil?.plan)
   const estado = estadoDelPlan(perfil, obtenerFechaHoyISO())
-  const automatico = cobroAutomatico()
 
   return (
     <div className="screen has-bottom-nav">
@@ -150,12 +125,10 @@ export default function Suscripcion() {
         </Link>
         <h1 className="suscripcion-titulo">Suscripción</h1>
 
-        <AvisoVueltaDePago estado={vueltaDePago} />
-
         <div className="suscripcion-plan-card">
           <p className="suscripcion-plan-nombre">{plan?.nombre || 'Sin plan'}</p>
           {plan && <p className="suscripcion-plan-descripcion">{plan.descripcion}</p>}
-          {plan && !automatico && (
+          {plan && (
             <p className="suscripcion-plan-precio">
               {formatearPrecio(plan.precioDesdeSegundoMes)} por mes
             </p>
@@ -171,18 +144,10 @@ export default function Suscripcion() {
           </p>
         </div>
 
-        {automatico && perfil && (
-          <PagoMercadoPago onAprobado={() => cargarPerfil({ silencioso: true })} />
-        )}
-
-        {automatico && (
-          <p className="seccion-etiqueta suscripcion-otra-forma">O por transferencia</p>
-        )}
-
         <DatosDePago planId={perfil?.plan} cobro={cobro} />
 
         <div className="suscripcion-bloque">
-          <p className="suscripcion-bloque-titulo">¿Ya pagaste por transferencia?</p>
+          <p className="suscripcion-bloque-titulo">¿Ya pagaste?</p>
           {perfil?.aviso_pago ? (
             <p className="suscripcion-bloque-texto">
               {perfil?.estado === 'pendiente'
@@ -242,28 +207,4 @@ function textoEstado(estado, perfil) {
     default:
       return vence ? `Al día. Vence el ${vence}.` : 'Al día.'
   }
-}
-
-function pagoReciente(pago) {
-  return Date.now() - new Date(pago.aprobado_en || pago.creado_en).getTime() < 30 * 60 * 1000
-}
-
-function AvisoVueltaDePago({ estado }) {
-  if (!estado) return null
-  const textos = {
-    ok: ['Procesando tu pago…', 'Mercado Pago nos está avisando. Tarda unos segundos.'],
-    aprobado: ['¡Pago aprobado!', 'Tu plan ya está activo. Gracias.'],
-    pendiente: [
-      'Tu pago está pendiente',
-      'Si pagaste en efectivo (Abitab, Redpagos), tu plan se activa solo cuando se acredite.',
-    ],
-    error: ['El pago no se completó', 'No se cobró nada. Podés probar de nuevo.'],
-  }
-  const [titulo, texto] = textos[estado] || textos.error
-  return (
-    <div className={`aviso-pago aviso-pago-${estado}`} role="status">
-      <strong>{titulo}</strong>
-      <span>{texto}</span>
-    </div>
-  )
 }

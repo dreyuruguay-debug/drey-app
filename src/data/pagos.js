@@ -20,23 +20,13 @@ export function datosTransferencia() {
   return Object.keys(datos).length ? datos : null
 }
 
-// Cobro AUTOMÁTICO con Mercado Pago: el cliente paga con tarjeta desde la
-// app y la cuenta se habilita sola. El Admin lo activa en Ajustes recién
-// cuando está configurado Mercado Pago (funciones de Supabase y token).
-// Mientras está apagado se usa el link de pago de cada plan.
-export function cobroAutomatico() {
-  return Boolean(configuracion().cobroAutomatico)
-}
-
-// Link de pago de Mercado Pago del plan (pago manual), o '' si no tiene.
+// Link de pago de Mercado Pago del plan, o '' si no tiene.
 export function obtenerLinkMercadoPago(planId) {
   return obtenerPlan(planId)?.linkMercadoPago || ''
 }
 
-// El link de Mercado Pago para pagar "a mano" un plan: el del plan; si no
-// tiene, el general del profe o gimnasio ("cobro", services/cobroEspacio.js).
-// Con el cobro automático activado no hay link (se paga desde Suscripción).
+// El link de Mercado Pago para pagar un plan: el del plan; si no tiene, el
+// general del profe o gimnasio ("cobro", services/cobroEspacio.js).
 export function linkDePago(planId, cobro) {
-  if (cobroAutomatico()) return ''
   return obtenerLinkMercadoPago(planId) || cobro?.linkMercadoPago || ''
 }

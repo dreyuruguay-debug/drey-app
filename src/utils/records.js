@@ -20,7 +20,6 @@ export const RECORD_PESO = 'peso'
 export const RECORD_TONELAJE = 'tonelaje'
 export const RECORD_REPS = 'reps'
 export const RECORD_SEGUNDOS = 'segundos'
-export const RECORD_TIEMPO_RUTINA = 'tiempo-rutina'
 
 export function tonelajeDeSerie(serie) {
   return (Number(serie?.kg) || 0) * (Number(serie?.reps) || 0)

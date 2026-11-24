@@ -53,10 +53,6 @@ export function normalizarCalentamiento(valor) {
   return { series, descanso, nota: leidas.length ? null : detalle || null }
 }
 
-export function cantidadDeCalentamiento(valor) {
-  return normalizarCalentamiento(valor)?.series.length || 0
-}
-
 export function descansoDeCalentamiento(valor) {
   return normalizarCalentamiento(valor)?.descanso ?? DESCANSO_CALENTAMIENTO_POR_DEFECTO
 }

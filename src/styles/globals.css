@@ -329,7 +329,6 @@ html.drey-cambiando-tema *::after {
 .solicitud-fila,
 .ficha-profe,
 .corregir-ejercicio,
-.pago-mp,
 .dia-fila,
 .paso-item,
 .planilla-dia {
@@ -5052,96 +5051,10 @@ div.tarjeta-rutina {
   margin-top: 1.25rem;
 }
 
-/* ---------- Suscripción: vencimiento y Mercado Pago ---------- */
+/* ---------- Suscripción: vencimiento y pagos ---------- */
 .suscripcion-vencida {
   color: var(--drey-naranja-texto);
   font-weight: 700;
-}
-
-.suscripcion-otra-forma {
-  margin-top: 1.5rem;
-}
-
-.pago-mp {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 1rem;
-  border: 1px solid var(--drey-borde);
-  border-radius: 16px;
-  background: var(--drey-superficie);
-}
-
-.pago-mp-precio {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.6rem;
-}
-
-.pago-mp-precio span {
-  flex: 1 1 100%;
-  color: var(--drey-texto-suave);
-  font-size: 0.85rem;
-}
-
-.pago-mp-precio .pago-mp-tachado {
-  flex: 0 0 auto;
-  text-decoration: line-through;
-}
-
-.pago-mp-precio strong {
-  font-family: var(--fuente-titulos);
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.pago-mp-codigo {
-  flex: 1 1 100%;
-  color: var(--drey-accent-texto);
-  font-weight: 700;
-}
-
-.pago-mp-form-codigo {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.pago-mp .boton-texto {
-  padding: 0.25rem;
-  text-align: left;
-}
-
-.pago-mp-nota {
-  font-size: 0.78rem;
-}
-
-.aviso-pago {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  background: var(--drey-azul-fondo);
-  color: var(--drey-azul-texto);
-  font-size: 0.88rem;
-}
-
-.aviso-pago-aprobado {
-  background: var(--drey-verde-fondo);
-  color: var(--drey-accent-texto);
-}
-
-.aviso-pago-error,
-.aviso-pago-pendiente {
-  background: var(--drey-naranja-fondo);
-  color: var(--drey-naranja-texto);
-}
-
-.aviso-pago span {
-  color: var(--drey-texto-claro);
 }
 
 .pago-fila {
@@ -9552,16 +9465,6 @@ div.tarjeta-rutina {
 
 .aviso-apagado .aviso-tarjeta-textos {
   opacity: 0.6;
-}
-
-.aviso-etiqueta {
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
-  background: var(--drey-azul-fondo);
-  color: var(--drey-azul-texto);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
 }
 
 .aviso-tarjeta-textos:focus-visible,

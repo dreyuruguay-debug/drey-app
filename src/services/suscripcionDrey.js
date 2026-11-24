@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient.js'
 import { obtenerUsuarioActual } from './sesion.js'
 import { comprimirImagen } from '../utils/imagenes.js'
+import { problemaDeComprobante } from '../utils/comprobantes.js'
 import { normalizarTexto } from '../utils/texto.js'
 
 // Suscripción DREY: lo que pagan los profes y gimnasios a DREY, por cupos
@@ -114,6 +115,8 @@ export async function avisarPagoDrey(espacioId, archivo) {
     const subir = archivo.type?.startsWith('image/')
       ? await comprimirImagen(archivo, 1600)
       : archivo
+    const problema = problemaDeComprobante(subir)
+    if (problema) return { message: problema, comprobante: true }
     ruta = `${usuario.id}/drey-${Date.now()}-${subir.name.replace(/[^\w.-]/g, '_')}`
     const { error: errorSubida } = await supabase.storage.from('comprobantes').upload(ruta, subir)
     if (errorSubida) return errorSubida

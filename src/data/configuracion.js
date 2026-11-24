@@ -14,7 +14,6 @@ const CLAVE_CELULAR = 'drey-configuracion'
 export const CONFIGURACION_POR_DEFECTO = Object.freeze({
   planes: null, // null = los de data/planes.js
   transferencia: { banco: '', titular: '', cuenta: '', moneda: '' },
-  cobroAutomatico: false,
   whatsappGrupoUrl: '',
   diasAviso: 5,
   diasDeGracia: 3,

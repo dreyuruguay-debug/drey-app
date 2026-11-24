@@ -46,7 +46,6 @@ function ajustesDesdeFila(fila) {
       cuenta: fila.transferencia_cuenta || '',
       moneda: fila.transferencia_moneda || '',
     },
-    cobroAutomatico: Boolean(fila.cobro_automatico),
     whatsappGrupoUrl: fila.whatsapp_grupo_url || '',
     diasAviso: fila.dias_aviso,
     diasDeGracia: fila.dias_de_gracia,
@@ -142,7 +141,6 @@ export function useConfiguracion() {
 
 export async function guardarAjustes({
   transferencia,
-  cobroAutomatico,
   whatsappGrupoUrl,
   diasAviso,
   diasDeGracia,
@@ -157,7 +155,6 @@ export async function guardarAjustes({
     cambios.transferencia_cuenta = limpio(transferencia.cuenta)
     cambios.transferencia_moneda = limpio(transferencia.moneda)
   }
-  if (cobroAutomatico !== undefined) cambios.cobro_automatico = Boolean(cobroAutomatico)
   if (whatsappGrupoUrl !== undefined) cambios.whatsapp_grupo_url = limpio(whatsappGrupoUrl)
   if (diasAviso !== undefined) cambios.dias_aviso = Number(diasAviso)
   if (diasDeGracia !== undefined) cambios.dias_de_gracia = Number(diasDeGracia)

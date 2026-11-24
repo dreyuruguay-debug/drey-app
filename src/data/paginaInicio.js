@@ -24,9 +24,9 @@ export const VIDEOS_POR_DEFECTO = Object.freeze({
   posterCompu: '/inicio/poster-compu.jpg',
 })
 
-// En las respuestas se pueden usar estas marcas: se reemplazan por los
-// números que el Admin eligió en Ajustes → Plazos.
-export const MARCAS_DE_PLAZOS = ['{dias_aviso}', '{dias_de_gracia}']
+// En las respuestas se pueden usar las marcas {dias_aviso} y
+// {dias_de_gracia}: se reemplazan por los números que el Admin eligió en
+// Ajustes → Plazos.
 
 export const TEXTOS_POR_DEFECTO = Object.freeze({
   'portada.saludo': 'Bienvenido a DREY',
@@ -301,12 +301,6 @@ export function textoDe(pagina, clave) {
   const propio = pagina?.textos?.[clave]
   if (typeof propio === 'string' && propio.trim()) return propio.trim()
   return TEXTOS_POR_DEFECTO[clave] ?? ''
-}
-
-// ¿El Admin escribió un texto propio en ese campo?
-export function tieneTextoPropio(pagina, clave) {
-  const propio = pagina?.textos?.[clave]
-  return typeof propio === 'string' && Boolean(propio.trim())
 }
 
 export function preguntasDe(pagina) {

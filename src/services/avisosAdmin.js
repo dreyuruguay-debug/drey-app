@@ -68,7 +68,6 @@ function desdeLaBase(fila) {
     destinosPosibles: fila.destinos_posibles || [],
     planes: fila.planes || [],
     variables: fila.variables || [],
-    requiere: fila.requiere,
     nota: fila.nota,
   }
 }

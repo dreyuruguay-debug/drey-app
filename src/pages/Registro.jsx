@@ -17,7 +17,7 @@ import DatosDePago from '../components/DatosDePago.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
 import CasillasConsentimiento from '../components/CasillasConsentimiento.jsx'
 import { formatearPrecio, listaDePlanes } from '../data/planes.js'
-import { cobroAutomatico, linkDePago } from '../data/pagos.js'
+import { linkDePago } from '../data/pagos.js'
 import { VERSION_TERMINOS } from '../data/versionLegal.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { validarCodigo } from '../services/pagos.js'
@@ -45,9 +45,8 @@ import LogoDrey from '../components/LogoDrey.jsx'
 //                      no la da (supabase/sql/039); la ve en Suscripción.
 //
 // Recién en el paso 4 se crea la cuenta. Queda "pendiente" hasta que
-// se paga: con el cobro automático de Mercado Pago (Ajustes del Admin) se
-// activa sola al pagar desde Suscripción; por transferencia o con el link
-// de Mercado Pago, la habilita el profe.
+// paga (por transferencia o con el link de Mercado Pago) y su profe o
+// gimnasio la habilita.
 //
 // Los planes y precios salen de la base de datos (planes_de_espacio, solo
 // los visibles del espacio elegido). Sin el SQL 034, o si no eligió
@@ -106,10 +105,9 @@ export default function Registro() {
   const [cobroEspacio, setCobroEspacio] = useState(undefined)
   const [cargandoPlanes, setCargandoPlanes] = useState(false)
 
-  // Forma de cobro (Ajustes del Admin) y planes de respaldo.
+  // Planes de respaldo (Ajustes del Admin).
   useConfiguracion()
   const planes = planesEspacio ?? listaDePlanes({ soloVisibles: true })
-  const automatico = cobroAutomatico()
 
   const edad = calcularEdad(fechaNacimiento)
   const plan = planes.find((opcion) => opcion.id === planId)
@@ -311,9 +309,7 @@ export default function Registro() {
         <p className="registro-gracias-texto">
           {resultado.avisoPago
             ? 'Avisaste tu pago. Esperando autorización del profesor.'
-            : automatico
-              ? 'Tu cuenta queda pendiente hasta que pagues. Entrá a la app y pagá desde Suscripción: se activa al instante.'
-              : 'Tu cuenta queda pendiente hasta que pagues. Confirmá tu email y entrá a la app: en Suscripción vas a ver los datos para pagar y, cuando pagues, tocás "Ya pagué".'}
+            : 'Tu cuenta queda pendiente hasta que pagues. Confirmá tu email y entrá a la app: en Suscripción vas a ver los datos para pagar y, cuando pagues, tocás "Ya pagué".'}
         </p>
         <p className="registro-gracias-texto">
           Te mandamos un email para confirmar tu cuenta. Revisá también la carpeta de spam.
@@ -565,25 +561,12 @@ export default function Registro() {
               </div>
             )}
 
-            {automatico ? (
-              <>
-                <p className="registro-edad">
-                  Creá tu cuenta, confirmá tu email y entrá a la app: desde Suscripción pagás con
-                  tarjeta o Mercado Pago y tu cuenta se activa al instante.
-                </p>
-                <p className="form-section-label">¿Preferís transferencia?</p>
-                <DatosDePago planId={planId} cobro={cobroEspacio} sinCuenta />
-              </>
-            ) : (
-              <>
-                <DatosDePago planId={planId} cobro={cobroEspacio} sinCuenta />
-                <p className="registro-edad">
-                  {puedePagarYa
-                    ? 'Si ya pagaste con Mercado Pago, tocá "Ya pagué con Mercado Pago". Si no, creá tu cuenta y pagá cuando quieras desde Suscripción.'
-                    : 'Creá tu cuenta y, cuando pagues, avisalo desde la pantalla Suscripción.'}
-                </p>
-              </>
-            )}
+            <DatosDePago planId={planId} cobro={cobroEspacio} sinCuenta />
+            <p className="registro-edad">
+              {puedePagarYa
+                ? 'Si ya pagaste con Mercado Pago, tocá "Ya pagué con Mercado Pago". Si no, creá tu cuenta y pagá cuando quieras desde Suscripción.'
+                : 'Creá tu cuenta y, cuando pagues, avisalo desde la pantalla Suscripción.'}
+            </p>
           </>
         )}
 

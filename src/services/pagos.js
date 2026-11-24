@@ -1,7 +1,9 @@
 import { supabase } from './supabaseClient.js'
 
-// Cobro con Mercado Pago y códigos de descuento (ver supabase/sql/014 y
-// supabase/functions). Cada función devuelve datos simples para mostrar.
+// Códigos de descuento y pagos de los alumnos (supabase/sql/014 y 034).
+// Cada función devuelve datos simples para mostrar. (El cobro automático
+// con tarjeta se borró en el SQL 040: cada alumno le paga a su profe o
+// gimnasio y el profe confirma el pago desde Cobros.)
 
 // ¿Sirve este código para este plan? Se puede usar sin haber iniciado
 // sesión (en el registro). Devuelve { valido, mensaje, porcentaje,
@@ -16,39 +18,9 @@ export async function validarCodigo(codigo, planId) {
   return data || { valido: false }
 }
 
-// Cuánto paga este mes el cliente que está usando la app (con su código
-// si tiene). Devuelve { monto, monto_base, descuento, primer_mes,
-// plan_nombre, codigo, mensaje_codigo } o { error }.
-export async function consultarMiPrecio(codigo) {
-  const { data, error } = await supabase.rpc('mi_precio', { p_codigo: codigo?.trim() || null })
-  if (error) return { error: 'No pudimos calcular el precio. Revisá tu conexión.' }
-  return data || { error: 'No pudimos calcular el precio.' }
-}
-
-// Arranca el pago: la función de Supabase "mp-crear-pago" arma el cobro
-// en Mercado Pago y devuelve el link. Devuelve:
-//   { url }         → hay que ir a Mercado Pago a pagar.
-//   { aprobado }    → el descuento cubrió el 100%: ya quedó activo.
-//   { error }       → texto para mostrar.
-export async function iniciarPagoMercadoPago(codigo) {
-  const { data, error } = await supabase.functions.invoke('mp-crear-pago', {
-    body: { codigo: codigo?.trim() || null },
-  })
-  if (error) {
-    let mensaje = 'No pudimos conectar con Mercado Pago. Probá de nuevo en un rato.'
-    try {
-      const cuerpo = await error.context?.json?.()
-      if (cuerpo?.error) mensaje = cuerpo.error
-    } catch {
-      // Se usa el mensaje general.
-    }
-    return { error: mensaje }
-  }
-  return data || { error: 'No pudimos conectar con Mercado Pago.' }
-}
-
-// Últimos pagos de un cliente (Mercado Pago y los confirmados por el profe) (para Suscripción y la
-// ficha del cliente). Si la tabla no existe todavía, devuelve [].
+// Últimos pagos de un cliente (los confirmados por el profe y, de antes,
+// los de Mercado Pago) para Suscripción y la ficha del cliente. Si la
+// tabla no existe todavía, devuelve [].
 export async function cargarPagos(clienteId, cantidad = 5) {
   const { data, error } = await supabase
     .from('pagos')

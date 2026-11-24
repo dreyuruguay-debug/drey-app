@@ -8,7 +8,7 @@ las siga en el gimnasio y registre lo que levantó.
 - **React + Vite** — la web que ven el cliente y el profe.
 - **Cloudflare Pages** — publica la web automáticamente con cada cambio.
 - **Supabase** — usuarios, base de datos y las fotos que sube el profe.
-- **Mercado Pago** — cobro de las suscripciones (funciones en `supabase/functions`).
+- **Mercado Pago** — links de pago que cargan los profes, gimnasios y DREY en cada plan (el cobro automático con tarjeta se borró en el SQL 040).
 - **Sentry** — aviso por mail cuando algo falla en el celular de un cliente (variable `VITE_SENTRY_DSN` en Cloudflare; sin ella no se usa).
 
 ## Tipos de cuenta
@@ -159,8 +159,8 @@ D1 a D9) está en "DREY - Plan cobro por cupos y registro por tipo.txt".
   El profe de un gimnasio que puede habilitar ve solo "Pagos".
 - **Admin → Ajustes → Cobro de alumnos**: elige un profe o gimnasio y ve o
   corrige sus planes y datos de cobro. Se fueron las pestañas "Planes" y
-  "Cobro". El cobro automático con Mercado Pago para alumnos queda
-  apagado (cobraría en la cuenta de DREY).
+  "Cobro". (El cobro automático con Mercado Pago para alumnos se borró en
+  el SQL 040: cobraba en la cuenta de DREY.)
 - **Registro del alumno**: el paso "Tu plan" muestra los planes del profe o
   gimnasio elegido (`planes_de_espacio()`) y el paso "Pago" sus datos
   (`datos_cobro_de_espacio()`). Si todavía no cargó planes, sigue sin plan.
@@ -480,6 +480,25 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   funciona sin señal.
 - **`.gitignore`** (claves, `node_modules`, `dist`) y **`.env.example`**
   (modelo de las variables, sin claves).
+
+## Limpieza: cobro automático viejo y archivos (SQL 040, noviembre 2026)
+
+- **Se borró el cobro automático con Mercado Pago** (el alumno le pagaba a
+  DREY con tarjeta y la cuenta se activaba sola; estaba apagado desde el
+  SQL 034). Se fueron: el botón de pago con tarjeta de Suscripción, el
+  aviso de "volviste de Mercado Pago", el interruptor de Ajustes, las
+  funciones `mp-crear-pago` y `mp-webhook`, y en la base `mi_precio()`,
+  `registrar_pago_aprobado()` y el aviso "Pago con Mercado Pago" (profe-mp).
+  Quedan el historial de pagos, `calcular_precio()` (la usa "Confirmar
+  pago" del profe) y los links de Mercado Pago de cada plan.
+- **Topes a los archivos** (bucket `comprobantes`: fotos o PDF hasta
+  10 MB; `fotos-progreso`: fotos hasta 10 MB). La app avisa con un mensaje
+  claro si el comprobante no sirve (`utils/comprobantes.js`).
+- **Perfiles**: se quitó la regla "cada uno crea el suyo" (los perfiles los
+  crea solo la base al registrarse).
+- **Código sin uso** borrado: `Boton.jsx`, `ProfileIcon.jsx`,
+  `data/rutinas.js`, `PagoMercadoPago.jsx` y funciones sueltas que nadie
+  llamaba.
 
 ## Valoración antropométrica y evaluación del año (SQL 038, noviembre 2026)
 
@@ -862,7 +881,7 @@ y llega el aviso de Sentry con el motivo.
 
 - `src/pages` — una carpeta por pantalla completa (Página de inicio, Login, Inicio, Rutinas, Suscripción, Comunidad, Mis datos, Panel del profe).
 - `src/components` — piezas reutilizables (botones, tarjetas, barra de progreso, temporizador).
-- `src/services` — conexión con Supabase y Mercado Pago, copia sin señal, aviso de errores.
+- `src/services` — conexión con Supabase, copia sin señal, cierre de sesión y aviso de errores.
 - `src/data` — datos fijos (métodos, textos legales en `legal.js`, versión en `versionLegal.js`) y la configuración del negocio que maneja el Admin (`configuracion.js`), con sus lecturas: planes (`planes.js`), vencimiento (`vencimiento.js`), datos de pago (`pagos.js`) y comunidad (`comunidad.js`).
 - `src/utils` — cálculos que no leen la base (fechas, progreso, tareas del profe).
 - `src/styles` — colores (negro, gris, blanco, verde) y tipografía.

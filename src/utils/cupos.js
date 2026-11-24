@@ -16,11 +16,6 @@ export function porcentajeCupos({ total, usados }) {
   return Math.min(100, Math.round(((usados ?? 0) / total) * 100))
 }
 
-export function cuposLibres({ total, usados }) {
-  if (total == null) return null
-  return Math.max(0, total - (usados ?? 0))
-}
-
 // Qué decir cuando la base no deja habilitar a un alumno. Devuelve
 // { texto, motivo } (motivo: 'cupo' | 'permiso' | 'suscripcion' | null),
 // o null si el error no es de cupos.

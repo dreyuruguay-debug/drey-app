@@ -30,10 +30,6 @@ export function recordado(clave) {
   return memoria.get(clave)
 }
 
-export function olvidar(clave) {
-  memoria.delete(clave)
-}
-
 // Borra todo lo guardado menos las claves de "menos" (por ejemplo, al
 // cambiar de espacio en el panel: lo de un espacio no se muestra en el
 // otro, pero el tipo de cuenta sigue sabido).

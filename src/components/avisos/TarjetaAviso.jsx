@@ -13,10 +13,7 @@ export default function TarjetaAviso({ tipo, extras, onAbrir, onAlternar }) {
       }
     >
       <button type="button" className="aviso-tarjeta-textos" onClick={onAbrir}>
-        <strong>
-          {tipo.nombre}
-          {tipo.requiere === 'mercadopago' && <span className="aviso-etiqueta">Mercado Pago</span>}
-        </strong>
+        <strong>{tipo.nombre}</strong>
         <small>{resumenDeCuando(tipo, extras)}</small>
         <small className="aviso-tarjeta-quien">{resumenDeAQuien(tipo, extras.planes)}</small>
       </button>

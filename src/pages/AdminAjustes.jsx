@@ -235,32 +235,6 @@ function SinEspacio({ config }) {
           {guardando ? 'Guardando…' : 'Guardar datos'}
         </button>
       </form>
-
-      <p className="profe-seccion-label">Cobro automático con Mercado Pago</p>
-      <div className="ajustes-tarjeta">
-        <span className="ajustes-interruptor-texto">
-          <strong>{config.cobroAutomatico ? 'Activado' : 'Apagado'}</strong>
-          <small>
-            {config.cobroAutomatico
-              ? 'Los alumnos pagan con tarjeta desde la app.'
-              : 'Cada profe y gimnasio cobra a sus alumnos con el link de cada plan o por transferencia, y habilita la cuenta desde Cobros. El cobro automático vuelve cuando cada uno pueda conectar su propia cuenta de Mercado Pago.'}
-          </small>
-        </span>
-        {config.cobroAutomatico && (
-          <button
-            type="button"
-            className="boton-secundario boton-chico"
-            onClick={async () =>
-              avisarResultado(
-                await guardarAjustes({ cobroAutomatico: false }),
-                'Cobro automático apagado',
-              )
-            }
-          >
-            Apagar
-          </button>
-        )}
-      </div>
     </>
   )
 }

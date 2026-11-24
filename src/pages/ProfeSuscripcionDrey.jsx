@@ -147,9 +147,11 @@ export default function ProfeSuscripcionDrey() {
     setGuardando('')
     if (error) {
       setMensaje(
-        error.message?.includes('Primero elegí')
-          ? 'Primero elegí un plan.'
-          : 'No pudimos avisar el pago. Probá de nuevo.',
+        error.comprobante
+          ? error.message
+          : error.message?.includes('Primero elegí')
+            ? 'Primero elegí un plan.'
+            : 'No pudimos avisar el pago. Probá de nuevo.',
       )
       return
     }
