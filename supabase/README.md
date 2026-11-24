@@ -2,7 +2,7 @@
 
 Tablas ya creadas (los scripts que las crean están en `supabase/sql/`, en el orden en que se fueron aplicando; `007`, `008` y `009` también vienen juntos en `INSTALAR_BASE_DE_DATOS.sql` de la entrega del 23/09/2026; `010` es de la entrega del 24/09/2026; `011` a `018`, de la del 25/09/2026, que trae también `007`–`010` por las dudas):
 
-- **perfiles** — clientes y profe, con su plan, estado (pendiente/activo), vencimiento y si es profe (`es_profe`). Se completa sola cuando alguien se registra, con un trigger (`handle_new_user`) sobre `auth.users`.
+- **perfiles** (001) — clientes y profe, con su plan, estado (pendiente/activo), vencimiento y si es profe (`es_profe`). Se completa sola cuando alguien se registra, con un trigger (`handle_new_user`) sobre `auth.users`. El 001 se creó a mano en Supabase al principio y se recuperó de la base real en noviembre 2026: con él, la base se puede reconstruir entera corriendo los SQL en orden (001, 002, 003...).
 - **ejercicios** — biblioteca por grupo muscular, con foto (`imagen_url`) y link a video. La carga el profe desde "Biblioteca de ejercicios"; los 750 de FitCron vienen del SQL 023.
 - **rutinas** — Rutina A, B, C... de cada cliente (`cliente_id`), armadas por el profe desde el detalle de cada cliente.
 - **rutina_ejercicios** — los ejercicios de cada rutina, con series, reps objetivo, kg objetivo y las opciones de descanso.
