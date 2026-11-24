@@ -1,14 +1,22 @@
-import { horaDelProximoCambio, HORA_CLARO_DESDE, HORA_CLARO_HASTA, useTema } from '../services/tema.js'
+import {
+  COLORES,
+  horaDelProximoCambio,
+  HORA_CLARO_DESDE,
+  HORA_CLARO_HASTA,
+  useTema,
+} from '../services/tema.js'
 
-// "Apariencia": modo claro, oscuro o automático según la hora. Lo usan el
+// "Apariencia": modo claro, oscuro o automático según la hora, y el color
+// de botones y textos destacados. Lo usan el
 // Perfil del alumno, Mi cuenta del profe y el Inicio del Admin. Se guarda
 // en este celular (ver services/tema.js).
 //
 //   · Interruptor "Automático según la hora" (prendido de entrada).
 //   · Con el automático apagado: dos tarjetas, Claro y Oscuro, con una
 //     muestra de cómo se ve cada uno.
+//   · "Color": circulitos para elegir el color (verde DREY de entrada).
 export default function SelectorTema() {
-  const { preferencia, tema, cambiarAutomatico, elegirFijo } = useTema()
+  const { preferencia, tema, cambiarAutomatico, elegirFijo, elegirColor } = useTema()
   const { automatico } = preferencia
 
   return (
@@ -52,6 +60,8 @@ export default function SelectorTema() {
         />
       </div>
 
+      <SelectorColor elegido={preferencia.color} tema={tema} onElegir={elegirColor} />
+
       <p className="apariencia-nota" aria-live="polite">
         {automatico ? (
           <>
@@ -67,6 +77,59 @@ export default function SelectorTema() {
         )}
       </p>
     </section>
+  )
+}
+
+// Un circulito por color, pintado con el tono del modo que se está viendo.
+function SelectorColor({ elegido, tema, onElegir }) {
+  return (
+    <div className="apariencia-colores">
+      <p className="apariencia-colores-titulo" id="apariencia-color-titulo">
+        Color
+      </p>
+      <div className="apariencia-colores-lista" role="radiogroup" aria-labelledby="apariencia-color-titulo">
+        {COLORES.map((color) => {
+          const esElegido = color.id === elegido
+          return (
+            <button
+              key={color.id}
+              type="button"
+              role="radio"
+              aria-checked={esElegido}
+              className={esElegido ? 'apariencia-color apariencia-color-elegido' : 'apariencia-color'}
+              onClick={() => onElegir(color.id)}
+            >
+              <span
+                className="apariencia-color-circulo"
+                style={{ background: color.muestra[tema] }}
+                aria-hidden="true"
+              >
+                {esElegido && <IconoTilde />}
+              </span>
+              <small>{color.nombre}</small>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function IconoTilde() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
   )
 }
 

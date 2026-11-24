@@ -18,10 +18,11 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0d0d0d" />
 
-    <!-- Modo claro u oscuro ANTES de dibujar la página, para que no parpadee.
-         Es la misma regla que src/services/tema.js (si se cambia el horario
-         o la clave "drey-tema", cambiarlo en los dos lugares):
-         automático = claro de 8:00 a 20:00 y oscuro el resto. -->
+    <!-- Modo claro u oscuro y color ANTES de dibujar la página, para que no
+         parpadee. Es la misma regla que src/services/tema.js (si se cambia el
+         horario, la clave "drey-tema" o la lista de colores, cambiarlo en los
+         dos lugares): automático = claro de 8:00 a 20:00 y oscuro el resto;
+         color = el elegido en Apariencia o, si no hay, el verde de DREY. -->
     <script>
       (function () {
         try {
@@ -38,7 +39,10 @@
             return clave.indexOf('sb-') === 0 && clave.slice(-11) === '-auth-token'
           })
           if (enPortada && (!conSesion || location.search.indexOf('vista=') !== -1)) tema = 'oscuro'
+          var colores = ['verde', 'rosa', 'violeta', 'azul', 'turquesa', 'mono']
+          var color = colores.indexOf(p.color) !== -1 ? p.color : 'verde'
           document.documentElement.setAttribute('data-tema', tema)
+          document.documentElement.setAttribute('data-color', color)
           document
             .querySelector('meta[name="theme-color"]')
             .setAttribute('content', tema === 'claro' ? '#f3f4f2' : '#0d0d0d')

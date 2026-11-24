@@ -9,6 +9,9 @@
    · :root               → modo OSCURO (el diseño original de DREY).
    · [data-tema="claro"]  → modo CLARO: mismos nombres, otros valores.
    · .portada (página de inicio con video) queda siempre oscura.
+   · [data-color="rosa"] etc. → color a elección de botones y textos
+     destacados (bloque "COLORES A ELECCIÓN", más abajo). Sin elegir nada
+     queda el verde de DREY de estos dos bloques.
 
    Para agregar un color nuevo: definirlo en los DOS bloques.
    ========================================================================== */
@@ -31,6 +34,9 @@
   --drey-accent: #3ddc84;
   --drey-accent-texto: #3ddc84;
   --drey-sobre-accent: #0d0d0d;
+  /* El mismo acento en números R, G, B, para fondos transparentes:
+     rgba(var(--drey-accent-rgb), 0.1) */
+  --drey-accent-rgb: 61, 220, 132;
   /* Elementos "al revés" (fondo del color del texto): chips y pestañas elegidas */
   --drey-invertido-fondo: #ffffff;
   --drey-invertido-texto: #0d0d0d;
@@ -110,6 +116,7 @@
   --drey-accent: #3ddc84;
   --drey-accent-texto: #0e8f4a;
   --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 61, 220, 132;
   --drey-invertido-fondo: #101211;
   --drey-invertido-texto: #ffffff;
 
@@ -163,6 +170,113 @@
   --drey-logo-filtro: invert(1);
   --drey-franja-filtro: invert(1);
   color-scheme: light;
+}
+
+/* ==========================================================================
+   COLORES A ELECCIÓN (Perfil / Mi cuenta → Apariencia → Color)
+   --------------------------------------------------------------------------
+   Cambian solo el color de botones, títulos destacados y marcas de "listo".
+   Los fondos y los textos comunes siguen siendo los del modo claro/oscuro,
+   así todo se sigue leyendo bien. Cada color tiene DOS tonos:
+     · modo oscuro: más brillante, con letra negra encima de los botones.
+     · modo claro: más intenso, con letra blanca encima (contraste 4.5:1 o
+       más, la medida de "se lee bien" de accesibilidad).
+   La página de inicio (.portada) y el PDF quedan siempre con el verde.
+   La lista de colores está también en services/tema.js e index.html.
+   ========================================================================== */
+:root[data-color='rosa'] {
+  --drey-accent: #f472b6;
+  --drey-accent-texto: #f68fc5;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 244, 114, 182;
+  --drey-verde-fondo: #2e1222;
+  --drey-texto-verde: #fbd3e8;
+  --drey-texto-verde-suave: #f5a3cc;
+}
+:root[data-color='rosa'][data-tema='claro'] {
+  --drey-accent: #d6246e;
+  --drey-accent-texto: #be185d;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 214, 36, 110;
+  --drey-verde-fondo: #fce7f1;
+  --drey-texto-verde: #831843;
+  --drey-texto-verde-suave: #a3285f;
+}
+
+:root[data-color='violeta'] {
+  --drey-accent: #a78bfa;
+  --drey-accent-texto: #b49cfb;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 167, 139, 250;
+  --drey-verde-fondo: #1f1838;
+  --drey-texto-verde: #e2dafe;
+  --drey-texto-verde-suave: #c4b5fd;
+}
+:root[data-color='violeta'][data-tema='claro'] {
+  --drey-accent: #7c3aed;
+  --drey-accent-texto: #6d28d9;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 124, 58, 237;
+  --drey-verde-fondo: #efeafe;
+  --drey-texto-verde: #4c1d95;
+  --drey-texto-verde-suave: #5b33b0;
+}
+
+:root[data-color='azul'] {
+  --drey-accent: #60a5fa;
+  --drey-accent-texto: #7ab4fb;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 96, 165, 250;
+  --drey-verde-fondo: #12233d;
+  --drey-texto-verde: #d3e5fd;
+  --drey-texto-verde-suave: #a3c8fb;
+}
+:root[data-color='azul'][data-tema='claro'] {
+  --drey-accent: #2563eb;
+  --drey-accent-texto: #1d4ed8;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 37, 99, 235;
+  --drey-verde-fondo: #e5eefd;
+  --drey-texto-verde: #1e3a8a;
+  --drey-texto-verde-suave: #2b50a8;
+}
+
+:root[data-color='turquesa'] {
+  --drey-accent: #2dd4bf;
+  --drey-accent-texto: #2dd4bf;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 45, 212, 191;
+  --drey-verde-fondo: #0f2a27;
+  --drey-texto-verde: #c9f3ec;
+  --drey-texto-verde-suave: #8fe3d6;
+}
+:root[data-color='turquesa'][data-tema='claro'] {
+  --drey-accent: #0f766e;
+  --drey-accent-texto: #0f766e;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 15, 118, 110;
+  --drey-verde-fondo: #ddf4f0;
+  --drey-texto-verde: #134e4a;
+  --drey-texto-verde-suave: #1f6f68;
+}
+
+:root[data-color='mono'] {
+  --drey-accent: #f2f2f2;
+  --drey-accent-texto: #ffffff;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 242, 242, 242;
+  --drey-verde-fondo: #232323;
+  --drey-texto-verde: #f0f0f0;
+  --drey-texto-verde-suave: #c8c8c8;
+}
+:root[data-color='mono'][data-tema='claro'] {
+  --drey-accent: #101211;
+  --drey-accent-texto: #101211;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 16, 18, 17;
+  --drey-verde-fondo: #e6e9e4;
+  --drey-texto-verde: #101211;
+  --drey-texto-verde-suave: #3b3f3c;
 }
 
 /* Al cambiar de modo, los colores pasan suave (no de golpe). La clase la
@@ -615,7 +729,7 @@ textarea {
   display: block;
   margin: 1rem 1.5rem 0;
   padding: 0.85rem 1rem;
-  background: rgba(61, 220, 132, 0.12);
+  background: rgba(var(--drey-accent-rgb), 0.12);
   border: 1px solid var(--drey-accent);
   border-radius: 14px;
   color: var(--drey-text);
@@ -771,7 +885,7 @@ textarea {
 
 .plan-card-activo {
   border-color: var(--drey-accent);
-  background: rgba(61, 220, 132, 0.08);
+  background: rgba(var(--drey-accent-rgb), 0.08);
 }
 
 .plan-card-nombre {
@@ -1751,7 +1865,7 @@ textarea {
   margin: 0 auto 1.5rem;
   padding: 0.9rem 0 0.1rem;
   border-left: 3px solid var(--drey-accent);
-  background: rgba(61, 220, 132, 0.04);
+  background: rgba(var(--drey-accent-rgb), 0.04);
   border-radius: 0 16px 16px 0;
 }
 
@@ -1937,7 +2051,7 @@ textarea {
 .resumen-comentario {
   margin: 0;
   padding: 0.75rem;
-  background: rgba(61, 220, 132, 0.08);
+  background: rgba(var(--drey-accent-rgb), 0.08);
   border-left: 3px solid var(--drey-accent);
   border-radius: 0 10px 10px 0;
   font-size: 0.85rem;
@@ -2539,7 +2653,7 @@ a.profe-boton-agregar-ejercicio {
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
   border: 1px solid var(--drey-accent);
-  background: rgba(61, 220, 132, 0.06);
+  background: rgba(var(--drey-accent-rgb), 0.06);
 }
 
 .asistente-elegido-nombre {
@@ -3578,7 +3692,7 @@ div.tarjeta-rutina {
 }
 
 .entrenar-avance-tramo.parcial {
-  background: rgba(61, 220, 132, 0.45);
+  background: rgba(var(--drey-accent-rgb), 0.45);
 }
 
 .entrenar-avance-tramo.hecho {
@@ -9032,7 +9146,7 @@ div.tarjeta-rutina {
 
 .apariencia-muestra i:first-child {
   width: 55%;
-  background: var(--drey-green);
+  background: var(--drey-accent);
 }
 
 .apariencia-muestra-claro {
@@ -9049,6 +9163,84 @@ div.tarjeta-rutina {
 
 .apariencia-muestra-oscuro i + i {
   background: #2a2a2a;
+}
+
+/* Color a elección: un circulito por color (components/SelectorTema.jsx). */
+.apariencia-colores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  box-shadow: var(--drey-sombra);
+}
+
+.apariencia-colores-titulo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--drey-text);
+}
+
+.apariencia-colores-lista {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem 0.4rem;
+}
+
+.apariencia-color {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.35rem 0.2rem;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  cursor: pointer;
+}
+
+.apariencia-color small {
+  font-size: 0.75rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.apariencia-color-elegido small {
+  color: var(--drey-text);
+  font-weight: 700;
+}
+
+.apariencia-color-circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-sobre-accent);
+}
+
+.apariencia-color-elegido .apariencia-color-circulo {
+  box-shadow:
+    0 0 0 3px var(--drey-superficie),
+    0 0 0 5px var(--drey-accent);
+}
+
+.apariencia-color:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 2px;
+}
+
+@media (min-width: 560px) {
+  .apariencia-colores-lista {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 .apariencia-nota {
@@ -9946,6 +10138,8 @@ div.tarjeta-rutina {
   --drey-texto-tenue: #6d726e;
   --drey-accent: #3ddc84;
   --drey-accent-texto: #0e8f4a;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 61, 220, 132;
   --drey-superficie: #ffffff;
   --drey-superficie-2: #f3f4f2;
   --drey-superficie-3: #e6e9e4;
