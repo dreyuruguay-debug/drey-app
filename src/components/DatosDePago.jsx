@@ -1,28 +1,34 @@
-import { cobroAutomatico, datosTransferencia, obtenerLinkMercadoPago } from '../data/pagos.js'
+import { cobroAutomatico, datosTransferencia, linkDePago } from '../data/pagos.js'
 import { useConfiguracion } from '../services/configuracion.js'
 import { datosParaMostrar } from '../services/cobroEspacio.js'
 
 // Cómo pagar un plan "a mano": datos para transferencia y, mientras el
 // cobro automático no esté activado, el link de Mercado Pago. Lo usan el
 // Registro (paso "Pago") y la pantalla de Suscripción, así los dos
-// muestran exactamente lo mismo.
+// muestran lo mismo.
 //
 // "cobro" son los datos de cobro del profe o gimnasio del alumno
 // (services/cobroEspacio.js, supabase/sql/034). Sin "cobro" (la base
 // todavía no tiene ese SQL) se usan los de Ajustes, como antes.
 // El link de Mercado Pago: el del plan; si no tiene, el general del
-// espacio.
+// espacio (data/pagos.js → linkDePago).
+//
+// "sinCuenta" (Registro): todavía no hay cuenta creada, así que los datos
+// de la cuenta bancaria no se muestran (supabase/sql/039: no se pueden
+// pedir sin sesión). Se avisa que aparecen en Suscripción.
 //
 // Con el cobro automático activado (Ajustes del Admin) el botón de
 // Mercado Pago lo muestra Suscripción (PagoMercadoPago.jsx) y acá queda
 // solo la transferencia.
-export default function DatosDePago({ planId, cobro }) {
+export default function DatosDePago({ planId, cobro, sinCuenta = false }) {
   useConfiguracion() // se vuelve a dibujar si cambian los planes
   const automatico = cobroAutomatico()
-  const transferencia = cobro === undefined ? datosTransferencia() : datosParaMostrar(cobro)
-  const linkMercadoPago = automatico
-    ? ''
-    : obtenerLinkMercadoPago(planId) || cobro?.linkMercadoPago || ''
+  const transferencia = sinCuenta
+    ? null
+    : cobro === undefined
+      ? datosTransferencia()
+      : datosParaMostrar(cobro)
+  const linkMercadoPago = linkDePago(planId, cobro)
 
   return (
     <>
@@ -33,7 +39,11 @@ export default function DatosDePago({ planId, cobro }) {
       )}
       <div className="suscripcion-bloque">
         <p className="suscripcion-bloque-titulo">Datos para transferencia</p>
-        {transferencia ? (
+        {sinCuenta ? (
+          <p className="suscripcion-bloque-texto">
+            Por seguridad, la cuenta bancaria la ves cuando entres a la app, en Suscripción.
+          </p>
+        ) : transferencia ? (
           <div className="pago-transferencia">
             {Object.entries(transferencia).map(([etiqueta, valor]) => (
               <p key={etiqueta} className="suscripcion-bloque-texto">

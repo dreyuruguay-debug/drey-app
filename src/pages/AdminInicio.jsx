@@ -6,6 +6,7 @@ import SelectorTema from '../components/SelectorTema.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import Numero from '../components/Numero.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { cerrarSesion } from '../services/cerrarSesion.js'
 import { traerTodasLasFilas } from '../services/paginado.js'
 import { cargarPlanesConPrecios } from '../services/planes.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
@@ -42,8 +43,8 @@ export default function AdminInicio() {
     }
   }, [])
 
-  async function cerrarSesion() {
-    await supabase.auth.signOut()
+  async function salir() {
+    await cerrarSesion()
     navigate(RUTA_INGRESAR)
   }
 
@@ -174,7 +175,7 @@ export default function AdminInicio() {
 
           <SelectorTema />
 
-          <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
+          <button type="button" className="boton-texto perfil-salir" onClick={salir}>
             Cerrar sesión
           </button>
         </>

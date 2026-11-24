@@ -6,7 +6,9 @@ import { supabase } from './supabaseClient.js'
 // guardarPlanDeEspacio) y sus DATOS DE COBRO: banco, titular, cuenta,
 // moneda, alias y un link general de Mercado Pago. Acá se leen y se
 // guardan esos datos, y se buscan los de un espacio por su código (en el
-// registro, sin sesión) o los del alumno que inició sesión (Suscripción).
+// registro, sin sesión: solo el nombre y el link de Mercado Pago, nunca la
+// cuenta bancaria, supabase/sql/039) o los del alumno que inició sesión
+// (Suscripción: todos los de SU espacio).
 //
 // Los datos se manejan siempre con esta forma:
 //   { banco, titular, cuenta, moneda, alias, linkMercadoPago, espacio }
@@ -74,7 +76,8 @@ export async function cargarPlanesDeEspacio(codigo) {
   return { planes, error }
 }
 
-// Registro (sin sesión): cómo se le paga al espacio con ese código.
+// Registro (sin sesión): a quién se le paga y el link de Mercado Pago del
+// espacio con ese código (la cuenta bancaria no viene, SQL 039).
 export async function cargarCobroDeEspacio(codigo) {
   const { data, error } = await supabase.rpc('datos_cobro_de_espacio', { p_codigo: codigo })
   return { cobro: cobroDesdeFila(data), error }

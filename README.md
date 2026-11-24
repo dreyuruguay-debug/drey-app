@@ -457,6 +457,30 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
   planilla y no se guarda para usar sin señal (`vite.config.js` y
   `herramientas/serviceWorkerDrey.js`).
 
+## Privacidad de datos (SQL 039, auditoría de noviembre 2026)
+
+- **Cuentas bancarias de los espacios**: sin sesión ya no se pueden pedir.
+  En el registro del alumno (paso "Pago") se ve a quién le paga y el link
+  de Mercado Pago, con el aviso de que la cuenta bancaria aparece en
+  Suscripción (`DatosDePago` con `sinCuenta`). Los botones del final son
+  "Crear mi cuenta" y, solo si hay link de Mercado Pago, "Ya pagué con
+  Mercado Pago" (`linkDePago`, `data/pagos.js`).
+- **Ajustes del negocio**: la tabla `ajustes` la lee solo el Admin. La app
+  pide `mis_ajustes()`, que le da a cada uno lo suyo: reglas generales a
+  todos; grupo de WhatsApp a los alumnos al día; datos para pagarle a DREY
+  a profes y gimnasios; todo al Admin. `services/configuracion.js` la
+  vuelve a pedir cada vez que alguien entra o sale de su cuenta (y, sin el
+  SQL 039, lee la tabla como antes).
+- **Cerrar sesión**: una sola función para toda la app,
+  `services/cerrarSesion.js` (la usan Perfil, Mi cuenta del profe, el
+  panel del profe, el del Admin y la pantalla de consentimiento). Borra del
+  celular las copias sin señal, lo anotado del panel y los datos privados
+  de la configuración; no borra los entrenamientos sin enviar ni el
+  entrenamiento a medias. Sale solo de ese celular (`scope: 'local'`) y
+  funciona sin señal.
+- **`.gitignore`** (claves, `node_modules`, `dist`) y **`.env.example`**
+  (modelo de las variables, sin claves).
+
 ## Valoración antropométrica y evaluación del año (SQL 038, noviembre 2026)
 
 - **Valoración antropométrica** (la que hace la nutricionista). En cada

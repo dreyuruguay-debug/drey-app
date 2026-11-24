@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient.js'
 import { usuarioGuardado } from './sesion.js'
 import { olvidarTodo, recordado, recordar, unaVezCada } from './memoriaSesion.js'
-import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
+import { borrarClave, guardarJSON, leerJSON } from '../utils/almacenLocal.js'
 import { SOLO_CLIENTES } from '../utils/roles.js'
 
 // El ESPACIO ACTIVO del panel (supabase/sql/032).
@@ -48,6 +48,12 @@ function guardado() {
 function guardar(estado) {
   recordar(CLAVE_MEMORIA, estado)
   guardarJSON(CLAVE_CELULAR, estado)
+}
+
+// Al cerrar sesión (services/cerrarSesion.js): se borra la lista de
+// espacios anotada en el celular.
+export function olvidarMisEspacios() {
+  borrarClave(CLAVE_CELULAR)
 }
 
 // Lista de espacios del profe (la última conocida), o null si todavía no

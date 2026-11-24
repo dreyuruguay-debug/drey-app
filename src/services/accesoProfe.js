@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient.js'
 import { esErrorDeRed, obtenerUsuarioActual, usuarioGuardado } from './sesion.js'
 import { recordado, recordar } from './memoriaSesion.js'
-import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
+import { borrarClave, guardarJSON, leerJSON } from '../utils/almacenLocal.js'
 import { entraAlPanel } from '../utils/roles.js'
 import { clientesDelEspacio } from './espacio.js'
 
@@ -55,6 +55,12 @@ export function esAdminConocido() {
   if (enCelular?.usuarioId === usuario.id && 'esAdmin' in enCelular)
     return Boolean(enCelular.esAdmin)
   return null
+}
+
+// Al cerrar sesión (services/cerrarSesion.js): se borra lo anotado en el
+// celular. (La memoria de la app se vacía sola, ver memoriaSesion.js.)
+export function olvidarAccesoProfe() {
+  borrarClave(CLAVE_CELULAR)
 }
 
 // Confirma con el servidor (una sola vez por sesión).

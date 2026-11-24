@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
+import { cerrarSesion } from '../services/cerrarSesion.js'
 import { clientesDelEspacio, esDuenoDe, espacioActivo, useEspacios } from '../services/espacio.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
@@ -153,8 +154,8 @@ export default function PanelProfe() {
     setCargando(false)
   }
 
-  async function cerrarSesion() {
-    await supabase.auth.signOut()
+  async function salir() {
+    await cerrarSesion()
     navigate(RUTA_INGRESAR)
   }
 
@@ -252,7 +253,7 @@ export default function PanelProfe() {
             <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando un alumno te pide entrenar con vos, cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
           </div>
 
-          <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
+          <button type="button" className="boton-texto perfil-salir" onClick={salir}>
             Cerrar sesión
           </button>
         </>

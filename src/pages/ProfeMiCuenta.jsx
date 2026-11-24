@@ -4,7 +4,7 @@ import ProfeLayout from '../components/ProfeLayout.jsx'
 import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import OpcionInstalar from '../components/instalar/OpcionInstalar.jsx'
 import SelectorTema from '../components/SelectorTema.jsx'
-import { supabase } from '../services/supabaseClient.js'
+import { cerrarSesion } from '../services/cerrarSesion.js'
 import {
   EVENTO_SOLICITUDES,
   contarSolicitudesPendientes,
@@ -52,8 +52,8 @@ export default function ProfeMiCuenta() {
     }
   }, [])
 
-  async function cerrarSesion() {
-    await supabase.auth.signOut()
+  async function salir() {
+    await cerrarSesion()
     navigate(RUTA_INGRESAR)
   }
 
@@ -120,7 +120,7 @@ export default function ProfeMiCuenta() {
 
       <SelectorTema />
 
-      <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
+      <button type="button" className="boton-texto perfil-salir" onClick={salir}>
         Cerrar sesión
       </button>
     </ProfeLayout>

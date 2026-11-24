@@ -6,7 +6,7 @@ import TopPattern from '../components/TopPattern.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import { obtenerPlan } from '../data/planes.js'
 import { olvidarBienvenida } from '../utils/bienvenida.js'
-import { borrarCopias } from '../services/copiaLocal.js'
+import { cerrarSesion } from '../services/cerrarSesion.js'
 import {
   cargarMisSolicitudes,
   cargarProfesDisponibles,
@@ -80,11 +80,10 @@ export default function Perfil() {
     setMiProfe(textoMiProfe(data?.profe_id, profes, solicitudes))
   }
 
-  async function cerrarSesion() {
-    // Se borra lo guardado en el celular para usar sin señal: si entra
-    // otra persona en este celular, no ve nada del anterior.
-    borrarCopias(usuarioId)
-    await supabase.auth.signOut()
+  async function salir() {
+    // cerrarSesion borra lo guardado en el celular: si entra otra persona
+    // en este celular, no ve nada del anterior.
+    await cerrarSesion()
     navigate(RUTA_INGRESAR)
   }
 
@@ -166,7 +165,7 @@ export default function Perfil() {
 
       <SelectorTema />
 
-      <button type="button" className="boton-texto perfil-salir" onClick={cerrarSesion}>
+      <button type="button" className="boton-texto perfil-salir" onClick={salir}>
         Cerrar sesión
       </button>
 

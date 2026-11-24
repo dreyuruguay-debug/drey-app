@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CasillasConsentimiento from './CasillasConsentimiento.jsx'
 import { aceptarTerminos } from '../services/privacidad.js'
-import { supabase } from '../services/supabaseClient.js'
+import { cerrarSesion } from '../services/cerrarSesion.js'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 import LogoDrey from './LogoDrey.jsx'
 
@@ -34,7 +34,7 @@ export default function ConsentimientoPendiente({ onAceptado }) {
   }
 
   async function salir() {
-    await supabase.auth.signOut()
+    await cerrarSesion()
     navigate(RUTA_INGRESAR)
   }
 

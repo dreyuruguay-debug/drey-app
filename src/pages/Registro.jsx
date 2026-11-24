@@ -17,7 +17,7 @@ import DatosDePago from '../components/DatosDePago.jsx'
 import PasosAsistente from '../components/PasosAsistente.jsx'
 import CasillasConsentimiento from '../components/CasillasConsentimiento.jsx'
 import { formatearPrecio, listaDePlanes } from '../data/planes.js'
-import { cobroAutomatico } from '../data/pagos.js'
+import { cobroAutomatico, linkDePago } from '../data/pagos.js'
 import { VERSION_TERMINOS } from '../data/versionLegal.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { validarCodigo } from '../services/pagos.js'
@@ -39,13 +39,15 @@ import LogoDrey from '../components/LogoDrey.jsx'
 //   3. Tu plan        (uno de los planes DE ESE PROFE O GIMNASIO + código
 //                      de descuento, que se revisa en la base antes de
 //                      seguir; supabase/sql/034)
-//   4. Pago           (los datos de cobro de ese profe o gimnasio y botón
-//                      "Ya pagué")
+//   4. Pago           (a quién le paga, el link de Mercado Pago si hay, y
+//                      "Crear mi cuenta" / "Ya pagué con Mercado Pago"). La
+//                      cuenta bancaria NO se muestra acá: sin sesión la base
+//                      no la da (supabase/sql/039); la ve en Suscripción.
 //
 // Recién en el paso 4 se crea la cuenta. Queda "pendiente" hasta que
 // se paga: con el cobro automático de Mercado Pago (Ajustes del Admin) se
-// activa sola al pagar desde Suscripción; por transferencia, la habilita
-// el profe.
+// activa sola al pagar desde Suscripción; por transferencia o con el link
+// de Mercado Pago, la habilita el profe.
 //
 // Los planes y precios salen de la base de datos (planes_de_espacio, solo
 // los visibles del espacio elegido). Sin el SQL 034, o si no eligió
@@ -111,6 +113,8 @@ export default function Registro() {
 
   const edad = calcularEdad(fechaNacimiento)
   const plan = planes.find((opcion) => opcion.id === planId)
+  // Con link de Mercado Pago puede pagar antes de crear la cuenta.
+  const puedePagarYa = Boolean(linkDePago(planId, cobroEspacio))
 
   useEffect(() => {
     cargarOpcionesDeProfe()
@@ -309,7 +313,7 @@ export default function Registro() {
             ? 'Avisaste tu pago. Esperando autorización del profesor.'
             : automatico
               ? 'Tu cuenta queda pendiente hasta que pagues. Entrá a la app y pagá desde Suscripción: se activa al instante.'
-              : 'Tu cuenta queda pendiente. Cuando pagues, entrá a Suscripción y tocá "Ya pagué".'}
+              : 'Tu cuenta queda pendiente hasta que pagues. Confirmá tu email y entrá a la app: en Suscripción vas a ver los datos para pagar y, cuando pagues, tocás "Ya pagué".'}
         </p>
         <p className="registro-gracias-texto">
           Te mandamos un email para confirmar tu cuenta. Revisá también la carpeta de spam.
@@ -568,14 +572,15 @@ export default function Registro() {
                   tarjeta o Mercado Pago y tu cuenta se activa al instante.
                 </p>
                 <p className="form-section-label">¿Preferís transferencia?</p>
-                <DatosDePago planId={planId} cobro={cobroEspacio} />
+                <DatosDePago planId={planId} cobro={cobroEspacio} sinCuenta />
               </>
             ) : (
               <>
-                <DatosDePago planId={planId} cobro={cobroEspacio} />
+                <DatosDePago planId={planId} cobro={cobroEspacio} sinCuenta />
                 <p className="registro-edad">
-                  Cuando termines de pagar tocá "Ya pagué". Si preferís pagar después, podés avisar
-                  desde la pantalla Suscripción.
+                  {puedePagarYa
+                    ? 'Si ya pagaste con Mercado Pago, tocá "Ya pagué con Mercado Pago". Si no, creá tu cuenta y pagá cuando quieras desde Suscripción.'
+                    : 'Creá tu cuenta y, cuando pagues, avisalo desde la pantalla Suscripción.'}
                 </p>
               </>
             )}
@@ -588,7 +593,7 @@ export default function Registro() {
           <button type="submit" className="auth-submit" disabled={revisando}>
             {revisando ? 'Revisando el código…' : 'Siguiente'}
           </button>
-        ) : automatico ? (
+        ) : (
           <>
             <button
               type="button"
@@ -598,33 +603,16 @@ export default function Registro() {
             >
               {loading ? 'Creando cuenta…' : 'Crear mi cuenta'}
             </button>
-            <button
-              type="button"
-              className="registro-boton-secundario"
-              disabled={loading}
-              onClick={() => crearCuenta(true)}
-            >
-              Ya pagué por transferencia
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="auth-submit"
-              disabled={loading}
-              onClick={() => crearCuenta(true)}
-            >
-              {loading ? 'Creando cuenta…' : 'Ya pagué'}
-            </button>
-            <button
-              type="button"
-              className="registro-boton-secundario"
-              disabled={loading}
-              onClick={() => crearCuenta(false)}
-            >
-              Pago más tarde
-            </button>
+            {puedePagarYa && (
+              <button
+                type="button"
+                className="registro-boton-secundario"
+                disabled={loading}
+                onClick={() => crearCuenta(true)}
+              >
+                Ya pagué con Mercado Pago
+              </button>
+            )}
           </>
         )}
 

@@ -4,6 +4,7 @@ import {
   aplicarConfiguracion,
   configuracion,
   escucharConfiguracion,
+  olvidarDatosPrivados,
 } from '../data/configuracion.js'
 import { PLANES } from '../data/planes.js'
 
@@ -15,6 +16,11 @@ import { PLANES } from '../data/planes.js'
 // Si no hay señal o la base todavía no tiene el SQL 022, se sigue usando
 // lo último conocido (o los valores por defecto): la app nunca se traba
 // por esto.
+//
+// Los ajustes se piden con mis_ajustes() (supabase/sql/039): cada uno
+// recibe solo lo que le toca (el link del grupo de WhatsApp, los alumnos
+// al día; los datos para pagarle a DREY, los profes; todo, el Admin). Por
+// eso se vuelven a pedir cada vez que alguien entra o sale de su cuenta.
 
 function planDesdeFila(fila) {
   const respaldo = PLANES.find((plan) => plan.id === fila.id)
@@ -44,16 +50,18 @@ function ajustesDesdeFila(fila) {
     whatsappGrupoUrl: fila.whatsapp_grupo_url || '',
     diasAviso: fila.dias_aviso,
     diasDeGracia: fila.dias_de_gracia,
+    // Los datos para pagarle a DREY se completan siempre (vacíos si no le
+    // tocan a esta cuenta): así no queda en el celular lo de otra cuenta.
+    dreyCobro: {
+      banco: fila.drey_banco || '',
+      titular: fila.drey_titular || '',
+      cuenta: fila.drey_cuenta || '',
+      moneda: fila.drey_moneda || '',
+      linkMercadoPago: fila.drey_link_mp || '',
+    },
     // Cobro por cupos (SQL 032). Sin ese SQL, quedan los de por defecto.
     ...('prueba_activa' in fila
       ? {
-          dreyCobro: {
-            banco: fila.drey_banco || '',
-            titular: fila.drey_titular || '',
-            cuenta: fila.drey_cuenta || '',
-            moneda: fila.drey_moneda || '',
-            linkMercadoPago: fila.drey_link_mp || '',
-          },
           prueba: {
             activa: Boolean(fila.prueba_activa),
             dias: fila.prueba_dias,
@@ -83,7 +91,7 @@ async function pedirConfiguracion() {
   try {
     const [respuestaPlanes, respuestaAjustes] = await Promise.all([
       supabase.from('planes').select('*').order('orden'),
-      supabase.from('ajustes').select('*').eq('id', 1).maybeSingle(),
+      pedirAjustes(),
     ])
     const nueva = { ...configuracion() }
     if (!respuestaPlanes.error && respuestaPlanes.data?.length) {
@@ -98,6 +106,28 @@ async function pedirConfiguracion() {
   }
   return configuracion()
 }
+
+// Los ajustes que le tocan a quien usa la app (mis_ajustes, SQL 039). Si
+// la base todavía no tiene ese SQL, se leen de la tabla como antes.
+// Devuelve { data, error }, igual que una consulta de Supabase.
+const FUNCION_INEXISTENTE = ['PGRST202', '42883']
+
+async function pedirAjustes() {
+  const respuesta = await supabase.rpc('mis_ajustes')
+  if (!FUNCION_INEXISTENTE.includes(respuesta.error?.code)) return respuesta
+  return supabase.from('ajustes').select('*').eq('id', 1).maybeSingle()
+}
+
+// Al entrar o salir de una cuenta cambia lo que corresponde ver: al salir
+// se borra enseguida lo privado y, en los dos casos, se vuelve a pedir.
+// (Se pide en el turno siguiente: Supabase no deja hacer consultas dentro
+// de este aviso.)
+supabase.auth.onAuthStateChange((evento) => {
+  if (evento === 'SIGNED_OUT') olvidarDatosPrivados()
+  if (evento === 'SIGNED_IN' || evento === 'SIGNED_OUT') {
+    setTimeout(() => cargarConfiguracion(), 0)
+  }
+})
 
 // Para las pantallas: devuelve la configuración y vuelve a dibujar la
 // pantalla cuando cambia (por ejemplo, cuando llega de la base).

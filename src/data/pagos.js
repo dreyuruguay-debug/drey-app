@@ -32,3 +32,11 @@ export function cobroAutomatico() {
 export function obtenerLinkMercadoPago(planId) {
   return obtenerPlan(planId)?.linkMercadoPago || ''
 }
+
+// El link de Mercado Pago para pagar "a mano" un plan: el del plan; si no
+// tiene, el general del profe o gimnasio ("cobro", services/cobroEspacio.js).
+// Con el cobro automático activado no hay link (se paga desde Suscripción).
+export function linkDePago(planId, cobro) {
+  if (cobroAutomatico()) return ''
+  return obtenerLinkMercadoPago(planId) || cobro?.linkMercadoPago || ''
+}

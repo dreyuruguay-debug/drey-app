@@ -1,0 +1,22 @@
+# Archivos que NUNCA se suben a GitHub (GitHub Desktop ni los muestra).
+
+# Claves y configuración privada (las de verdad van en Cloudflare)
+.env
+.env.*
+!.env.example
+
+# Lo que se descarga o se arma solo (npm install / npm run build)
+node_modules/
+dist/
+.wrangler/
+
+# Registros y archivos temporales
+*.log
+npm-debug.log*
+
+# Archivos del sistema y de editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
