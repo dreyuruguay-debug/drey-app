@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
+import Icono from '../components/Icono.jsx'
 import { PANTALLA_COMPU, useCoincide } from '../components/useCoincide.js'
 import AjustesPortada from '../components/AjustesPortada.jsx'
 import AjustesDrive from '../components/AjustesDrive.jsx'
@@ -75,7 +76,8 @@ export default function AdminAjustes() {
   const elegida = SECCIONES.find((item) => !item.to && item.id === parametros.get('tab'))
   // En el celular, sin sección elegida se ve solo la lista. En la compu
   // siempre hay una abierta (la primera, si no se eligió).
-  const seccion = elegida || (enCompu ? SECCIONES.find((item) => item.id === SECCION_INICIAL) : null)
+  const seccion =
+    elegida || (enCompu ? SECCIONES.find((item) => item.id === SECCION_INICIAL) : null)
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
@@ -130,7 +132,7 @@ function ListaDeAjustes({ activa, onAbrir }) {
         const contenido = (
           <>
             <span className="ajustes-fila-icono">
-              <IconoAjuste tipo={item.icono} />
+              <Icono nombre={item.icono} tamano={20} />
             </span>
             <span className="ajustes-fila-textos">
               <strong>{item.label}</strong>
@@ -159,35 +161,6 @@ function ListaDeAjustes({ activa, onAbrir }) {
         )
       })}
     </nav>
-  )
-}
-
-const TRAZOS = {
-  campana: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" />,
-  pago: <path d="M2 8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zM2 10h20" />,
-  chat: <path d="M21 12a8 8 0 0 1-11.8 7L3 21l2-6A8 8 0 1 1 21 12z" />,
-  reloj: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2" />,
-  drey: <path d="M4 4h16v16H4zM9 8v8M9 8h3a4 4 0 0 1 0 8H9" />,
-  portada: <path d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6" />,
-  nube: <path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z" />,
-  historial: <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2" />,
-}
-
-function IconoAjuste({ tipo }) {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {TRAZOS[tipo]}
-    </svg>
   )
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { activarNotificaciones, estadoNotificaciones } from '../../services/notificaciones.js'
 import { mostrarAviso } from '../../services/avisos.js'
 import GuiaInstalacion from '../instalar/GuiaInstalacion.jsx'
+import Icono from '../Icono.jsx'
 
 // Interruptor "Avisarme al terminar" de la pantalla de descanso
 // (PantallaDescanso.jsx). Prendido: si sale de DREY mientras descansa, le
@@ -44,7 +45,9 @@ export default function InterruptorAvisoDescanso({ prendido, onCambiar }) {
         onClick={() => onCambiar(!prendido)}
       >
         <span className="descanso-aviso-fin-textos">
-          <strong>🔔 Avisarme al terminar</strong>
+          <strong>
+            <Icono nombre="campana" /> Avisarme al terminar
+          </strong>
           <small>
             Si salís de DREY o se bloquea el celular, te llega una notificación cuando termina.
           </small>

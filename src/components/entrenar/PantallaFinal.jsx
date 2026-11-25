@@ -2,14 +2,21 @@ import { Link } from 'react-router-dom'
 import SeccionActividades from '../SeccionActividades.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
 import { NIVELES_DE_ESFUERZO } from '../../data/esfuerzo.js'
+import Icono from '../Icono.jsx'
 
 // Última pantalla del modo entrenar: la vuelta a la calma (si el profe
 // la cargó), un resumen de lo que hizo (con el calentamiento, que cuenta
 // como una parte más), "¿Cómo te sentiste?" y el botón para guardar el
 // entrenamiento.
 //
+// Si rompió récords, arriba aparece el festejo: el trofeo con una
+// animación corta y en qué ejercicios (FestejoDeRecords). Con "reducir
+// movimiento" pedido en el celular, sin animación.
+//
 // resumen: { series, total, segundos, records, recordDeTiempo,
-// calentamiento, seriesCalentamiento } — series/total son las efectivas;
+// ejerciciosConRecord, calentamiento, seriesCalentamiento } — series/total
+// son las efectivas; ejerciciosConRecord: nombres de los ejercicios donde
+// rompió un récord hoy;
 // recordDeTiempo: { antes } (segundos de su mejor tiempo anterior) si
 // completó toda la rutina más rápido que nunca, o null;
 // calentamiento es el de la rutina ({ hechas, total, completo } o null)
@@ -63,6 +70,7 @@ export default function PantallaFinal({
             ` · ${resumen.records} ${resumen.records === 1 ? 'récord nuevo' : 'récords nuevos'}`}
         </p>
         {resumen.recordDeTiempo && <RecordDeTiempo resumen={resumen} />}
+        {resumen.records > 0 && <FestejoDeRecords resumen={resumen} />}
         <Link to="/inicio" className="boton-principal">
           Volver al inicio
         </Link>
@@ -82,6 +90,8 @@ export default function PantallaFinal({
     <div className="entrenar-pantalla">
       <span className="entrenar-etiqueta">Último paso</span>
       <h1 className="entrenar-titulo">¡Buen trabajo!</h1>
+
+      {resumen.records > 0 && <FestejoDeRecords resumen={resumen} />}
 
       {resumen.calentamiento && <FilaCalentamiento calentamiento={resumen.calentamiento} />}
 
@@ -173,12 +183,32 @@ export default function PantallaFinal({
   )
 }
 
-// "🏆 ¡Récord de tiempo!": completó toda la rutina más rápido que nunca.
+// El festejo de los récords de hoy: el trofeo que aparece con un brillo y
+// en qué ejercicios los rompió.
+function FestejoDeRecords({ resumen }) {
+  const nombres = resumen.ejerciciosConRecord || []
+  return (
+    <div className="festejo-record" role="status">
+      <span className="festejo-record-trofeo" aria-hidden="true">
+        <Icono nombre="trofeo" tamano={34} />
+      </span>
+      <span className="festejo-record-textos">
+        <strong>
+          {resumen.records === 1 ? '¡Rompiste un récord!' : `¡Rompiste ${resumen.records} récords!`}
+        </strong>
+        {nombres.length > 0 && <small>{nombres.join(' · ')}</small>}
+      </span>
+    </div>
+  )
+}
+
+// "¡Récord de tiempo!": completó toda la rutina más rápido que nunca.
 function RecordDeTiempo({ resumen }) {
   return (
     <p className="final-record-tiempo" role="status">
-      🏆 ¡Récord de tiempo! Completaste toda la rutina en {formatearReloj(resumen.segundos)} (tu
-      mejor tiempo era {formatearReloj(resumen.recordDeTiempo.antes)}).
+      <Icono nombre="trofeo" /> ¡Récord de tiempo! Completaste toda la rutina en{' '}
+      {formatearReloj(resumen.segundos)} (tu mejor tiempo era{' '}
+      {formatearReloj(resumen.recordDeTiempo.antes)}).
     </p>
   )
 }
@@ -204,7 +234,7 @@ function FilaCalentamiento({ calentamiento }) {
           {hechas} de {total} {total === 1 ? 'actividad' : 'actividades'}
         </small>
       </span>
-      <span aria-hidden="true">🔥</span>
+      <Icono nombre="fuego" tamano={20} />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { CATEGORIAS, categoriasDeEjercicio } from '../data/categorias.js'
 import { ejerciciosRecomendados, textoGrupos } from '../data/gruposMusculares.js'
 import { ejerciciosActivos, filtrarPorBusqueda } from '../utils/biblioteca.js'
 import VisorEjercicios, { MiniaturaEjercicio } from './VisorEjercicios.jsx'
+import Icono from './Icono.jsx'
 
 const RECOMENDADOS = 'recomendados'
 
@@ -68,7 +69,7 @@ export default function SelectorEjercicios({
               className={vista === RECOMENDADOS ? 'chip chip-activo' : 'chip'}
               onClick={() => setVista(RECOMENDADOS)}
             >
-              ★ Recomendados
+              <Icono nombre="estrella" /> Recomendados
             </button>
           )}
           {CATEGORIAS.map(({ nombre }) => (

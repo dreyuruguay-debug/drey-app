@@ -12,6 +12,7 @@ import { formatearNumero } from '../../utils/progreso.js'
 import { obtenerFechaHoyISO } from '../../utils/dias.js'
 import { miniaturaDeEjercicio } from '../../utils/imagenes.js'
 import { textoSeriesPor } from '../../utils/porTiempo.js'
+import Icono from '../Icono.jsx'
 
 // La rutina completa de un vistazo. Se abre al tocar una rutina en "Mis
 // rutinas", con "Ver la rutina antes de empezar" (Inicio) y con "Ver toda
@@ -237,7 +238,11 @@ function EjercicioDeLaRutina({ item, estado, empezado, onVerFoto, onElegir }) {
                 : ''}
             </small>
           )}
-          {item.notas && <small className="vista-general-notas">📝 {item.notas}</small>}
+          {item.notas && (
+            <small className="vista-general-notas">
+              <Icono nombre="nota" /> {item.notas}
+            </small>
+          )}
         </span>
         {empezado && (
           <span className="vista-general-ejercicio-estado">
@@ -255,7 +260,9 @@ function BloqueCalentamiento({ actividades, estado, onElegir }) {
   return (
     <section className="entrenar-tarjeta vista-general-calentamiento">
       <div className="vista-general-bloque">
-        <span>🔥 Calentamiento</span>
+        <span>
+          <Icono nombre="fuego" /> Calentamiento
+        </span>
         <span className="vista-general-bloque-estado">
           {resumen.hechas}/{resumen.total}
         </span>

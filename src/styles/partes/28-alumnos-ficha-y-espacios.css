@@ -22,60 +22,6 @@
   flex: 0 0 auto;
 }
 
-/* Chips para filtrar, con cuántos hay en cada uno. Se deslizan de costado
-   si no entran. */
-.clientes-chips {
-  display: flex;
-  gap: 0.45rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin-bottom: 0.9rem;
-  padding-bottom: 0.1rem;
-}
-
-.clientes-chips::-webkit-scrollbar {
-  display: none;
-}
-
-.clientes-chip {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  padding: 0 0.9rem;
-  border-radius: 999px;
-  border: 1px solid var(--drey-borde-fuerte);
-  background: none;
-  color: var(--drey-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.clientes-chip-activo {
-  background: var(--drey-invertido-fondo);
-  border-color: var(--drey-invertido-fondo);
-  color: var(--drey-invertido-texto);
-}
-
-.clientes-chip-numero {
-  min-width: 1.4rem;
-  padding: 0 0.35rem;
-  border-radius: 999px;
-  background: var(--drey-superficie-3);
-  color: var(--drey-text);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  text-align: center;
-}
-
-.clientes-chip-activo .clientes-chip-numero {
-  background: rgba(var(--drey-accent-rgb), 0.35);
-  color: var(--drey-invertido-texto);
-}
-
 /* Tarjeta de cada alumno (celular) */
 .cliente-tarjeta {
   display: flex;

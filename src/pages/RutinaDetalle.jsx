@@ -176,6 +176,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [pausa, setPausa] = useState(null)
   const [visible, setVisible] = useState(0)
   const [records, setRecords] = useState(0)
+  // En qué ejercicios rompió un récord hoy (para festejarlo al final).
+  const [ejerciciosConRecord, setEjerciciosConRecord] = useState([])
   const [descanso, setDescanso] = useState(null)
   // "Avisarme al terminar" el descanso (se recuerda en el celular).
   const [avisoDescanso, setAvisoDescanso] = useState(() => avisoDeDescansoPrendido())
@@ -276,7 +278,17 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     !cargando && !modoPrevia && fase !== 'guardado' && yaEmpezo(series, calentamiento)
   useEffect(() => {
     if (sePuedeRetomar && !cancelado.current) guardarEnCurso(id, datosEnCurso())
-  }, [series, calentamiento, enCalentamiento, reloj, pausa, visible, records, sePuedeRetomar])
+  }, [
+    series,
+    calentamiento,
+    enCalentamiento,
+    reloj,
+    pausa,
+    visible,
+    records,
+    ejerciciosConRecord,
+    sePuedeRetomar,
+  ])
 
   function datosEnCurso(cambios = {}) {
     return {
@@ -291,6 +303,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       fase: fase === 'final' ? 'final' : 'entrenando',
       visible,
       records,
+      ejerciciosConRecord,
       ...cambios,
     }
   }
@@ -409,6 +422,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     if (inicio.retomado) {
       setFase(inicio.fase)
       setRecords(inicio.records)
+      setEjerciciosConRecord(inicio.ejerciciosConRecord)
       // Ya está entrenando: no es "solo mirar".
       setSoloMirando(false)
     }
@@ -571,10 +585,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     const record = recordDeSerie(mejor, fila, esPorTiempo(ejercicio))
     if (!record) return
     setRecords((cantidad) => cantidad + 1)
-    mostrarAvisoTemporal(
-      textoDeRecord(record, fila, ejercicio.ejercicios?.nombre || 'este ejercicio'),
-      'record',
-    )
+    const nombre = ejercicio.ejercicios?.nombre || 'este ejercicio'
+    setEjerciciosConRecord((lista) => (lista.includes(nombre) ? lista : [...lista, nombre]))
+    mostrarAvisoTemporal(textoDeRecord(record, fila, nombre), 'record')
   }
 
   // --- Calentamiento ---
@@ -854,6 +867,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
             segundos: segundosTotales,
             records: records + (recordDeTiempo ? 1 : 0),
             recordDeTiempo: recordDeTiempo ? { antes: mejorTiempo } : null,
+            ejerciciosConRecord,
             calentamiento: resumenDeCalentamiento(calentamiento),
             seriesCalentamiento: {
               hechas: cuentaSeries.calentamientoHechas,

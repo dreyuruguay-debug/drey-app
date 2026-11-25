@@ -5,6 +5,7 @@ import { cargarResumenEspacio } from '../services/suscripcionDrey.js'
 import { recordado, recordar } from '../services/memoriaSesion.js'
 import { estadoDeEspacio } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
+import Icono from './Icono.jsx'
 
 // "Tu gimnasio de un vistazo" en el Inicio del dueño (supabase/sql/035):
 // la suscripción DREY, la barra de cupos y los números de sus alumnos.
@@ -102,7 +103,7 @@ export default function ResumenEspacio({ espacio }) {
               to="/profe/tablero"
               className="boton-secundario boton-chico resumen-espacio-tablero"
             >
-              📊 Ver el tablero completo
+              <Icono nombre="tablero" /> Ver el tablero completo
             </Link>
             <Link to="/profe/equipo" className="boton-texto">
               Ver el equipo y sus alumnos

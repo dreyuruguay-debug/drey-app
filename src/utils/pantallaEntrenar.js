@@ -122,6 +122,7 @@ export function prepararEntrenamiento({
       fase: enFinal ? 'final' : 'entrenando',
       visible: Math.min(guardadoEnCurso.visible || 0, Math.max(0, lista.length - 1)),
       records: guardadoEnCurso.records || 0,
+      ejerciciosConRecord: guardadoEnCurso.ejerciciosConRecord || [],
       estadoInicial: null,
     }
   }

@@ -4,6 +4,7 @@ import { mostrarAviso } from '../services/avisos.js'
 import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
 import { textoFechaCorta } from '../utils/dias.js'
 import { textoDeEsfuerzo } from '../data/esfuerzo.js'
+import Icono from './Icono.jsx'
 
 const CANTIDAD_INICIAL = 5
 const CANTIDAD_POR_TOQUE = 10
@@ -90,10 +91,12 @@ export default function EntrenamientosHechos({
                 <small className="entrenamiento-comentario">“{sesion.comentario}”</small>
               )}
               {sesion.pendiente && <small className="texto-alerta">Sin enviar todavía</small>}
-              {sesion.editado_en && <small>Corregido el {textoFechaCorta(sesion.editado_en)}</small>}
+              {sesion.editado_en && (
+                <small>Corregido el {textoFechaCorta(sesion.editado_en)}</small>
+              )}
             </span>
             <span className="entrenamiento-corregir" aria-hidden="true">
-              ✎
+              <Icono nombre="lapiz" />
             </span>
           </button>
         ))}

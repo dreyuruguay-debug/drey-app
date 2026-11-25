@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { cargarHistorial } from '../services/configuracion.js'
-import { fechaLocalISO, textoFechaCorta } from '../utils/dias.js'
+import Chips from '../components/Chips.jsx'
+import { fechaLocalISO, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import { filtrarHistorial, PERIODOS_HISTORIAL } from '../utils/historial.js'
 
 // Historial de cambios del Admin (tabla "historial_admin",
 // supabase/sql/022). La base anota sola cada cambio que hace el Admin:
@@ -12,7 +14,9 @@ import { fechaLocalISO, textoFechaCorta } from '../utils/dias.js'
 // de la página de inicio (supabase/sql/027), de las notificaciones
 // (supabase/sql/030) y del cobro por cupos: planes y pagos DREY y cambios
 // de espacios (supabase/sql/032). Acá se ven los
-// últimos 200, agrupados por día.
+// últimos 500, agrupados por día, con filtros (utils/historial.js): por
+// tipo de cambio, por período (hoy · 7 días · 30 días · todo) y por texto
+// (un nombre, un plan, un código).
 const TIPOS = {
   plan: 'Planes',
   ajustes: 'Ajustes',
@@ -32,9 +36,11 @@ export default function AdminHistorial() {
   const [filas, setFilas] = useState([])
   const [error, setError] = useState(false)
   const [tipo, setTipo] = useState('')
+  const [periodo, setPeriodo] = useState('')
+  const [texto, setTexto] = useState('')
 
   useEffect(() => {
-    cargarHistorial(200).then((resultado) => {
+    cargarHistorial(500).then((resultado) => {
       setFilas(resultado.filas)
       setError(Boolean(resultado.error))
       setCargando(false)
@@ -43,8 +49,8 @@ export default function AdminHistorial() {
 
   const porDia = useMemo(() => {
     const grupos = new Map()
-    for (const fila of filas) {
-      if (tipo && fila.tipo !== tipo) continue
+    const filtradas = filtrarHistorial(filas, { tipo, periodo, texto, hoy: obtenerFechaHoyISO() })
+    for (const fila of filtradas) {
       const fecha = new Date(fila.creado_en)
       const dia = fechaLocalISO(fecha)
       if (!grupos.has(dia)) grupos.set(dia, [])
@@ -54,7 +60,8 @@ export default function AdminHistorial() {
       })
     }
     return [...grupos.entries()]
-  }, [filas, tipo])
+  }, [filas, tipo, periodo, texto])
+  const hayFiltros = Boolean(tipo || periodo || texto.trim())
 
   return (
     <ProfeLayout titulo="Historial de cambios" volverA="/profe/ajustes" soloAdmin>
@@ -62,6 +69,22 @@ export default function AdminHistorial() {
         Todo lo que cambiás como Admin queda anotado acá solo, con fecha y hora. También quién
         archiva, recupera o borra ejercicios de la Biblioteca.
       </p>
+
+      <input
+        className="auth-input profe-buscador"
+        type="search"
+        placeholder="Buscar un nombre, un plan, un código…"
+        value={texto}
+        onChange={(event) => setTexto(event.target.value)}
+        aria-label="Buscar en los cambios"
+      />
+
+      <Chips
+        opciones={PERIODOS_HISTORIAL}
+        activo={periodo}
+        onCambiar={setPeriodo}
+        etiqueta="Período"
+      />
 
       <select
         className="profe-calendario-select estadisticas-filtro"
@@ -85,7 +108,11 @@ export default function AdminHistorial() {
           022), hacelo primero.
         </p>
       ) : porDia.length === 0 ? (
-        <p className="profe-vacio">Todavía no hay cambios anotados.</p>
+        <p className="profe-vacio">
+          {hayFiltros
+            ? 'No hay cambios que coincidan con los filtros.'
+            : 'Todavía no hay cambios anotados.'}
+        </p>
       ) : (
         porDia.map(([dia, cambios]) => (
           <section key={dia} className="bloque-pagina">

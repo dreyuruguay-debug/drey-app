@@ -19,25 +19,31 @@ import RecordatorioEntreno from '../components/RecordatorioEntreno.jsx'
 import SelectorTema from '../components/SelectorTema.jsx'
 import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 
-// "Perfil" del cliente: su profe (o elegir uno), sus datos, la
-// suscripción, la comunidad, la privacidad, mostrarle DREY a un amigo (la
-// página de inicio sin cerrar sesión), volver a ver la bienvenida,
-// avisarle un problema al profe, la apariencia (modo claro / oscuro /
-// automático) y cerrar sesión. Reemplaza a la vieja
-// pantalla "Más".
-const OPCIONES = [
+// "Perfil" del cliente, ordenado en 3 grupos (noviembre 2026):
+//   · Mi cuenta: su profe (o elegir uno), sus datos, la suscripción y la
+//     privacidad.
+//   · Preferencias: instalar la app, notificaciones, recordatorio para
+//     entrenar y la apariencia (modo claro / oscuro / automático y color).
+//   · Ayuda y más: cómo usar la app (la bienvenida), avisarle un problema
+//     al profe, la comunidad y mostrarle DREY a un amigo (la página de
+//     inicio sin cerrar sesión).
+// Abajo de todo, cerrar sesión. Reemplaza a la vieja pantalla "Más".
+const OPCIONES_CUENTA = [
   { to: '/mis-datos', titulo: 'Mis datos', detalle: 'Peso, objetivo, lesiones, celular' },
   {
     to: '/suscripcion',
     titulo: 'Suscripción y pagos',
     detalle: 'Tu plan, vencimiento y cómo pagar',
   },
-  { to: '/comunidad', titulo: 'Comunidad y beneficios', detalle: 'Grupo de WhatsApp y descuentos' },
   {
     to: '/mi-privacidad',
     titulo: 'Privacidad y mis datos',
     detalle: 'Descargar tus datos, términos, pedir la baja',
   },
+]
+
+const OPCIONES_MAS = [
+  { to: '/comunidad', titulo: 'Comunidad y beneficios', detalle: 'Grupo de WhatsApp y descuentos' },
   {
     to: RUTA_MOSTRAR_PORTADA,
     titulo: 'Mostrar DREY a un amigo',
@@ -107,63 +113,67 @@ export default function Perfil() {
         </div>
       </header>
 
-      <nav className="lista-tarjetas" aria-label="Opciones del perfil">
-        {miProfe && (
-          <Link
-            to="/profes"
-            className={miProfe.destacar ? 'tarjeta-rutina tarjeta-destacada' : 'tarjeta-rutina'}
-          >
-            <span className="tarjeta-rutina-textos">
-              <strong>{miProfe.titulo}</strong>
-              <small>{miProfe.detalle}</small>
-            </span>
-            <span className="tarjeta-flecha" aria-hidden="true">
-              ›
-            </span>
-          </Link>
-        )}
-        {OPCIONES.map((opcion) => (
-          <Link key={opcion.to} to={opcion.to} className="tarjeta-rutina">
-            <span className="tarjeta-rutina-textos">
-              <strong>{opcion.titulo}</strong>
-              <small>{opcion.detalle}</small>
-            </span>
-            <span className="tarjeta-flecha" aria-hidden="true">
-              ›
-            </span>
-          </Link>
-        ))}
-        {linkProblema(profe, perfil) && (
-          <a
-            href={linkProblema(profe, perfil)}
-            className="tarjeta-rutina"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span className="tarjeta-rutina-textos">
-              <strong>Reportar un problema</strong>
-              <small>Contale a {profe.nombre || 'tu profe'} qué pasó (por WhatsApp)</small>
-            </span>
-            <span className="tarjeta-flecha" aria-hidden="true">
-              ›
-            </span>
-          </a>
-        )}
-        <OpcionInstalar />
-        <InterruptorNotificaciones textoActivar="Te avisamos el día que te toca entrenar, cuando tenés rutina nueva y antes de que venza tu plan." />
-        <RecordatorioEntreno />
-        <button type="button" className="tarjeta-rutina" onClick={verBienvenida}>
-          <span className="tarjeta-rutina-textos">
-            <strong>Cómo usar la app</strong>
-            <small>Ver de nuevo la bienvenida</small>
-          </span>
-          <span className="tarjeta-flecha" aria-hidden="true">
-            ›
-          </span>
-        </button>
-      </nav>
+      <section className="perfil-grupo" aria-labelledby="perfil-cuenta">
+        <p id="perfil-cuenta" className="seccion-etiqueta">
+          Mi cuenta
+        </p>
+        <nav className="lista-tarjetas" aria-label="Mi cuenta">
+          {miProfe && (
+            <Link
+              to="/profes"
+              className={miProfe.destacar ? 'tarjeta-rutina tarjeta-destacada' : 'tarjeta-rutina'}
+            >
+              <TextosOpcion titulo={miProfe.titulo} detalle={miProfe.detalle} />
+            </Link>
+          )}
+          {OPCIONES_CUENTA.map((opcion) => (
+            <Link key={opcion.to} to={opcion.to} className="tarjeta-rutina">
+              <TextosOpcion titulo={opcion.titulo} detalle={opcion.detalle} />
+            </Link>
+          ))}
+        </nav>
+      </section>
 
-      <SelectorTema />
+      <section className="perfil-grupo" aria-labelledby="perfil-preferencias">
+        <p id="perfil-preferencias" className="seccion-etiqueta">
+          Preferencias
+        </p>
+        <div className="lista-tarjetas">
+          <OpcionInstalar />
+          <InterruptorNotificaciones textoActivar="Te avisamos el día que te toca entrenar, cuando tenés rutina nueva y antes de que venza tu plan." />
+          <RecordatorioEntreno />
+        </div>
+        <SelectorTema />
+      </section>
+
+      <section className="perfil-grupo" aria-labelledby="perfil-mas">
+        <p id="perfil-mas" className="seccion-etiqueta">
+          Ayuda y más
+        </p>
+        <nav className="lista-tarjetas" aria-label="Ayuda y más">
+          <button type="button" className="tarjeta-rutina" onClick={verBienvenida}>
+            <TextosOpcion titulo="Cómo usar la app" detalle="Ver de nuevo la bienvenida" />
+          </button>
+          {linkProblema(profe, perfil) && (
+            <a
+              href={linkProblema(profe, perfil)}
+              className="tarjeta-rutina"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <TextosOpcion
+                titulo="Reportar un problema"
+                detalle={`Contale a ${profe.nombre || 'tu profe'} qué pasó (por WhatsApp)`}
+              />
+            </a>
+          )}
+          {OPCIONES_MAS.map((opcion) => (
+            <Link key={opcion.to} to={opcion.to} className="tarjeta-rutina">
+              <TextosOpcion titulo={opcion.titulo} detalle={opcion.detalle} />
+            </Link>
+          ))}
+        </nav>
+      </section>
 
       <button type="button" className="boton-texto perfil-salir" onClick={salir}>
         Cerrar sesión
@@ -171,6 +181,21 @@ export default function Perfil() {
 
       <BottomNav />
     </div>
+  )
+}
+
+// Título, detalle y la flechita de cada opción.
+function TextosOpcion({ titulo, detalle }) {
+  return (
+    <>
+      <span className="tarjeta-rutina-textos">
+        <strong>{titulo}</strong>
+        <small>{detalle}</small>
+      </span>
+      <span className="tarjeta-flecha" aria-hidden="true">
+        ›
+      </span>
+    </>
   )
 }
 

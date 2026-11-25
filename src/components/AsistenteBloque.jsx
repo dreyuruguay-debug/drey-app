@@ -21,6 +21,7 @@ import PasosAsistente from './PasosAsistente.jsx'
 import SelectorEjercicios from './SelectorEjercicios.jsx'
 import EditorRango from './EditorRango.jsx'
 import InfoMetodo from './InfoMetodo.jsx'
+import Icono from './Icono.jsx'
 
 const PASOS = ['Tipo', 'Ejercicios', 'Configurar']
 const PASO_TIPO = 0
@@ -156,6 +157,36 @@ export default function AsistenteBloque({
     else guardarUltimosValores(borrador)
   }
 
+  // Atajos de teclado (en la compu): Enter pasa al casillero siguiente
+  // (kilos → repeticiones → …), Ctrl + Enter guarda el bloque y Escape
+  // cierra sin guardar. Ver components/AtajosDeTeclado.jsx.
+  function alApretarTecla(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onCerrar()
+      return
+    }
+    if (event.key !== 'Enter') return
+    if ((event.ctrlKey || event.metaKey) && paso === PASO_CONFIGURAR) {
+      event.preventDefault()
+      if (!guardando) guardar()
+      return
+    }
+    const campo = event.target
+    if (campo.tagName !== 'INPUT' || ['checkbox', 'radio'].includes(campo.type)) return
+    event.preventDefault()
+    const campos = [
+      ...event.currentTarget.querySelectorAll(
+        'input:not([type=checkbox]):not([type=radio]), select',
+      ),
+    ].filter((elemento) => !elemento.disabled)
+    const siguiente = campos[campos.indexOf(campo) + 1]
+    if (siguiente) {
+      siguiente.focus()
+      if (siguiente.select) siguiente.select()
+    }
+  }
+
   const esGrupo = cantidad > 1
   const textoCantidad = maximo
     ? `${maximo} ${maximo === 1 ? 'ejercicio' : 'ejercicios'}`
@@ -165,6 +196,7 @@ export default function AsistenteBloque({
     <div className="asistente-fondo" role="presentation">
       <div
         className="asistente-hoja"
+        onKeyDown={alApretarTecla}
         role="dialog"
         aria-modal="true"
         aria-label={editando ? 'Editar bloque' : 'Agregar ejercicios'}
@@ -438,7 +470,7 @@ function ConfigEjercicio({
             onClick={() => onCambiar('porTiempo', true)}
             aria-pressed={porTiempo}
           >
-            ⏱ Tiempo (segundos)
+            <Icono nombre="reloj" /> Tiempo (segundos)
           </button>
         </div>
         {porTiempo && (

@@ -21,6 +21,7 @@ import { formatearPeso } from '../utils/progreso.js'
 import { esPorTiempo, nombreDeUnidad, unidadDe } from '../utils/porTiempo.js'
 import { textoDeEsfuerzo } from '../data/esfuerzo.js'
 import { useConfirmar } from './ConfirmarAccion.jsx'
+import Icono from './Icono.jsx'
 
 // Ventana para ver y corregir un entrenamiento YA GUARDADO: el peso, las
 // repeticiones y si llegó al fallo en cada serie, por si quedó algo mal
@@ -142,9 +143,9 @@ export default function EditorEntrenamiento({
           <>
             <p className="profe-nota">
               Tocá el número que quedó mal, escribí el correcto y guardá. Se corrigen el peso, las
-              repeticiones y si llegó al fallo (botón &quot;Fallo&quot;). ¿Te olvidaste de marcar
-              un ejercicio? Tocá &quot;✓ Hecha&quot; en cada serie (o &quot;Marcar todo
-              hecho&quot;), poné el peso y las repeticiones, y guardá.
+              repeticiones y si llegó al fallo (botón &quot;Fallo&quot;). ¿Te olvidaste de marcar un
+              ejercicio? Tocá &quot;✓ Hecha&quot; en cada serie (o &quot;Marcar todo hecho&quot;),
+              poné el peso y las repeticiones, y guardá.
             </p>
             {detalle.map((item, ejercicioIndex) => (
               <EjercicioGuardado
@@ -157,7 +158,9 @@ export default function EditorEntrenamiento({
                     marcarSerieHecha(actual, ejercicioIndex, serie.lista, serie.indice, hecha),
                   )
                 }
-                onMarcarTodo={() => cambiar((actual) => marcarEjercicioHecho(actual, ejercicioIndex))}
+                onMarcarTodo={() =>
+                  cambiar((actual) => marcarEjercicioHecho(actual, ejercicioIndex))
+                }
                 onAgregar={() => cambiar((actual) => agregarSerie(actual, ejercicioIndex))}
                 onQuitar={(serie) =>
                   cambiar((actual) => quitarSerie(actual, ejercicioIndex, serie.indice))
@@ -238,7 +241,11 @@ function EjercicioGuardado({
       <div className="corregir-ejercicio-cabecera">
         <h3 className="corregir-ejercicio-nombre">
           {nombre}
-          {esPorTiempo(item) && <small className="corregir-por-tiempo">⏱ por tiempo</small>}
+          {esPorTiempo(item) && (
+            <small className="corregir-por-tiempo">
+              <Icono nombre="reloj" /> por tiempo
+            </small>
+          )}
         </h3>
         {sinHacer > 1 && (
           <button type="button" className="corregir-marcar-todo" onClick={onMarcarTodo}>

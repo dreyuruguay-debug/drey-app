@@ -20,6 +20,7 @@ import { contenidoDePlanilla, programaVacio } from '../utils/exportarPlanilla.js
 import { analizarPlanilla } from '../utils/importarPlanilla.js'
 import { planDeGuardado, programaDesdeRutinas } from '../utils/programa.js'
 import { obtenerFechaHoyISO } from '../utils/dias.js'
+import Icono from '../components/Icono.jsx'
 
 const TIPO_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -299,7 +300,11 @@ export default function ProfeExcel() {
                   ? '⬆ Subir otra vez (corregida)'
                   : '⬆ Elegir la planilla (.xlsx)'}
             </button>
-            {archivo && <p className="planilla-archivo-nombre">📄 {archivo.nombre}</p>}
+            {archivo && (
+              <p className="planilla-archivo-nombre">
+                <Icono nombre="documento" /> {archivo.nombre}
+              </p>
+            )}
           </section>
 
           {analisis && (

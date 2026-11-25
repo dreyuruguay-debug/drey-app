@@ -1,0 +1,535 @@
+/* ==================================================================
+   Entrega de noviembre 2026 (lo que quedaba del análisis de diseño):
+   íconos de línea, chips, Perfil en grupos, festejo de récords, alumno
+   en la compu, panel en la tablet, editor de rutinas (Guardar fijo,
+   arrastrar), atajos de teclado, tablero del gimnasio, historial del
+   Admin y pasos de los asistentes.
+   ================================================================== */
+
+/* ---------- Íconos de línea (components/Icono.jsx) ---------- */
+.icono {
+  flex: 0 0 auto;
+}
+
+/* Dentro de un texto: del tamaño de la letra, alineado con ella. */
+.icono-en-texto {
+  vertical-align: -0.14em;
+}
+
+.racha-icono {
+  color: var(--drey-naranja);
+}
+
+.tarjeta-record-icono {
+  display: flex;
+  color: var(--drey-naranja);
+}
+
+/* Chips para elegir una opción (components/Chips.jsx): filtros de
+   alumnos, período de las gráficas, historial. Se deslizan de costado si
+   no entran. */
+.chips {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.1rem;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-opcion {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip-opcion-activa {
+  background: var(--drey-invertido-fondo);
+  border-color: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+}
+
+.chip-opcion-numero {
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.chip-opcion-activa .chip-opcion-numero {
+  background: rgba(var(--drey-accent-rgb), 0.35);
+  color: var(--drey-invertido-texto);
+}
+
+.pagina-cliente > .chips {
+  margin: 1.25rem 1.25rem 0;
+}
+
+/* ---------- Perfil del alumno en grupos (pages/Perfil.jsx) ---------- */
+.perfil-grupo {
+  margin: 1.5rem 1.25rem 0;
+}
+
+.perfil-grupo > .seccion-etiqueta {
+  margin: 0 0 0.6rem;
+}
+
+.perfil-grupo .apariencia {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Festejo de récords al terminar de entrenar ---------- */
+.festejo-record {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin: 0.5rem 0 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-naranja-trazo);
+  background: var(--drey-naranja-fondo);
+  text-align: left;
+  animation: festejo-aparece 0.45s ease-out both;
+}
+
+.festejo-record-trofeo {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: rgba(245, 165, 74, 0.18);
+  color: var(--drey-naranja-texto);
+  animation: festejo-trofeo 1.1s ease-out 0.15s both;
+}
+
+.festejo-record-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.festejo-record-textos strong {
+  font-size: 1.05rem;
+}
+
+.festejo-record-textos small {
+  color: var(--drey-texto-2);
+  font-size: 0.9rem;
+}
+
+@keyframes festejo-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* El trofeo crece, se pasa un poquito y brilla una vez. */
+@keyframes festejo-trofeo {
+  0% {
+    transform: scale(0.3) rotate(-12deg);
+    box-shadow: 0 0 0 0 rgba(245, 165, 74, 0.55);
+  }
+  55% {
+    transform: scale(1.15) rotate(6deg);
+  }
+  75% {
+    transform: scale(0.96) rotate(0deg);
+    box-shadow: 0 0 0 14px rgba(245, 165, 74, 0);
+  }
+  100% {
+    transform: none;
+    box-shadow: 0 0 0 0 rgba(245, 165, 74, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .festejo-record,
+  .festejo-record-trofeo {
+    animation: none;
+  }
+}
+
+/* ---------- Pasos de los asistentes (components/PasosAsistente.jsx) ---------- */
+.pasos-asistente {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  align-self: center;
+}
+
+.pasos-asistente-texto {
+  margin: 0;
+  color: var(--drey-texto-suave);
+  font-size: 0.875rem;
+}
+
+.pasos-asistente-texto strong {
+  color: var(--drey-text);
+}
+
+.pasos-asistente-barra {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--drey-superficie-3);
+  overflow: hidden;
+}
+
+.pasos-asistente-barra span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--drey-accent);
+  transition: width 0.3s ease;
+}
+
+/* ---------- Editor de rutinas (pages/ProfeRutinaEditor.jsx) ---------- */
+/* En el celular, "Guardar rutina" queda fijo abajo, arriba del menú. */
+@media (max-width: 1023px) {
+  .editor-guardar-fijo {
+    position: sticky;
+    bottom: calc(4.9rem + env(safe-area-inset-bottom));
+    z-index: 15;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 16px;
+    border: 1px solid var(--drey-borde);
+    background: var(--drey-flotante);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .editor-guardar-fijo .profe-nota {
+    margin: 0 0 0.25rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.seccion-rutina-ayuda {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.8125rem;
+}
+
+/* Arrastrar bloques con el mouse (compu) */
+.bloque-arrastrable {
+  border-radius: 16px;
+  transition:
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.bloque-arrastrable[draggable='true'] {
+  cursor: grab;
+}
+
+.bloque-arrastrable[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.bloque-arrastrando {
+  opacity: 0.45;
+}
+
+.bloque-destino {
+  box-shadow: 0 -3px 0 0 var(--drey-accent);
+}
+
+/* ---------- Atajos de teclado (components/AtajosDeTeclado.jsx) ---------- */
+.atajos-boton {
+  margin-top: auto;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.atajos-lista {
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.atajos-fila {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.atajos-fila dt {
+  white-space: nowrap;
+}
+
+.atajos-fila dd {
+  margin: 0;
+  color: var(--drey-texto-2);
+}
+
+.atajos-lista kbd {
+  display: inline-block;
+  min-width: 1.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--drey-borde-control);
+  border-bottom-width: 2px;
+  background: var(--drey-superficie-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- Tablero del gimnasio (pages/ProfeTablero.jsx) ---------- */
+.tablero-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.tablero-acciones .boton-secundario {
+  width: auto;
+  gap: 0.4rem;
+}
+
+.tablero-carga {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.tablero-carga-barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--drey-superficie-3);
+  overflow: hidden;
+}
+
+.tablero-carga-barra span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--drey-accent);
+}
+
+.tablero-carga small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8125rem;
+}
+
+/* "¿Qué cambia si lo prendo?" (Equipo del gimnasio) */
+.equipo-interruptor-ayuda {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.equipo-interruptor-ayuda summary {
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.equipo-interruptor-ayuda ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--drey-texto-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* ---------- Alumno en la compu ----------
+   El menú de abajo pasa a ser una barra fija a la izquierda con el logo,
+   igual que el panel del profe, y el Inicio va en 2 columnas: "Hoy te
+   toca" a la izquierda; la racha, la semana y lo demás a la derecha. */
+.menu-alumno-marca {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .screen.has-bottom-nav:not(.pantalla-panel) {
+    padding-left: 240px;
+  }
+
+  /* Las pantallas de ancho fijo (560 px) quedan centradas en el lugar que
+     deja la barra, no debajo de ella. */
+  .screen.has-bottom-nav.pagina-cliente {
+    padding-left: 0;
+    margin-left: calc(240px + (100vw - 240px - 560px) / 2);
+  }
+
+  .bottom-nav.menu-alumno {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    width: 240px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding: 1.25rem 0.9rem;
+    border-top: none;
+    border-right: 1px solid var(--drey-borde-suave);
+  }
+
+  .menu-alumno-marca {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem 1.25rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--drey-borde-suave);
+  }
+
+  .menu-alumno-marca img {
+    height: 22px;
+    width: auto;
+    filter: var(--drey-logo-filtro);
+  }
+
+  .bottom-nav.menu-alumno .bottom-nav-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    max-width: none;
+    min-height: 2.9rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+  }
+
+  .bottom-nav.menu-alumno .bottom-nav-item:hover {
+    background: var(--drey-hover);
+    color: var(--drey-text);
+  }
+
+  .bottom-nav.menu-alumno .bottom-nav-item-activo,
+  .bottom-nav.menu-alumno .bottom-nav-item-activo:hover {
+    background: var(--drey-verde-fondo);
+    color: var(--drey-accent-texto);
+  }
+
+  /* Inicio en 2 columnas, centrado en el lugar que deja la barra */
+  .screen.has-bottom-nav.inicio {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-content: start;
+    column-gap: 0.5rem;
+    max-width: 1000px;
+    padding-left: 0;
+    margin-left: calc(240px + max(0px, (100vw - 240px - 1000px) / 2));
+  }
+
+  .screen.inicio > * {
+    grid-column: 1 / -1;
+  }
+
+  .screen.inicio > .inicio-hoy {
+    grid-column: 1;
+    grid-row: span 4;
+  }
+
+  .screen.inicio > .racha-tarjeta,
+  .screen.inicio > .inicio-semana,
+  .screen.inicio > .inicio-datos,
+  .screen.inicio > .instalar-tarjeta,
+  .screen.inicio > .invitacion-avisos {
+    grid-column: 2;
+  }
+}
+
+/* ---------- Panel en la tablet (768 a 1023 px) ----------
+   Menú angosto a la izquierda, solo con íconos (el nombre aparece al
+   pasar el mouse o con el lector de pantalla). Profe, Admin y alumno. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .screen.has-bottom-nav {
+    padding-left: 84px;
+  }
+
+  .bottom-nav.panel-menu,
+  .bottom-nav.menu-alumno {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    width: 84px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.35rem;
+    padding: 1rem 0.5rem;
+    border-top: none;
+    border-right: 1px solid var(--drey-borde-suave);
+    overflow-y: auto;
+  }
+
+  .bottom-nav.panel-menu .bottom-nav-item,
+  .bottom-nav.menu-alumno .bottom-nav-item {
+    flex: 0 0 auto;
+    max-width: none;
+    min-height: 3.6rem;
+    padding: 0.4rem 0.2rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    text-align: center;
+  }
+
+  .bottom-nav.panel-menu .bottom-nav-item-activo,
+  .bottom-nav.menu-alumno .bottom-nav-item-activo {
+    background: var(--drey-verde-fondo);
+  }
+
+  .bottom-nav.panel-menu .panel-buscar,
+  .bottom-nav.panel-menu .panel-menu-marca,
+  .bottom-nav.panel-menu .panel-menu-grupo {
+    display: none;
+  }
+
+  .barra-asignar {
+    bottom: 1rem;
+  }
+
+  .editor-guardar-fijo {
+    bottom: 1rem;
+  }
+}

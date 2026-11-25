@@ -1,3 +1,5 @@
+import Icono from './Icono.jsx'
+
 // Racha de semanas en el Inicio del alumno (utils/dias.js, calcularRacha):
 // cuántas semanas seguidas cumplió los días de su rutina y cuánto le falta
 // para que esta semana sume. Grande y arriba: es lo que más motiva a
@@ -20,7 +22,7 @@ export default function RachaSemanas({ racha }) {
   return (
     <section className={semanas > 0 ? 'racha-tarjeta' : 'racha-tarjeta racha-tarjeta-vacia'}>
       <span className="racha-icono" aria-hidden="true">
-        🔥
+        <Icono nombre="fuego" tamano={26} />
       </span>
       <div className="racha-textos">
         <p className="racha-titulo">

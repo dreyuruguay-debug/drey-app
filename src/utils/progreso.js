@@ -55,7 +55,9 @@ export function numerosDeEjercicio(itemDetalle) {
     series: series.length,
     reps: series.reduce((total, serie) => total + serie.reps, 0),
     repsMax: Math.max(...series.map((serie) => serie.reps)),
-    rmEstimado: porTiempo ? 0 : Math.max(...series.map((serie) => serie.kg * (1 + serie.reps / 30))),
+    rmEstimado: porTiempo
+      ? 0
+      : Math.max(...series.map((serie) => serie.kg * (1 + serie.reps / 30))),
   }
 }
 
@@ -224,4 +226,22 @@ export function ultimoRecord(sesiones) {
     }
   }
   return ultimo
+}
+
+// ---------- Período de las gráficas (Progreso del alumno) ----------
+// Qué tanto para atrás muestran las gráficas: las últimas 4 semanas, los
+// últimos 3 meses o todo. Las filas tienen "semana" (el lunes, AAAA-MM-DD).
+export const PERIODOS = [
+  { id: '4-semanas', label: '4 semanas', semanas: 4 },
+  { id: '3-meses', label: '3 meses', semanas: 13 },
+  { id: 'todo', label: 'Todo', semanas: null },
+]
+export const PERIODO_INICIAL = '3-meses'
+
+export function filtrarPorPeriodo(filas, periodoId, hoyISO) {
+  const periodo = PERIODOS.find((item) => item.id === periodoId)
+  if (!periodo?.semanas) return filas
+  // Esta semana y las anteriores hasta completar las del período.
+  const desde = sumarDias(obtenerLunesDeSemana(hoyISO), -7 * (periodo.semanas - 1))
+  return filas.filter((fila) => fila.semana >= desde)
 }

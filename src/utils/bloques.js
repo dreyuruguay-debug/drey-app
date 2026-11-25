@@ -84,6 +84,17 @@ export function moverBloque(items, indiceBloque, direccion) {
   return numerarOrden(bloques.flat())
 }
 
+// Lleva un bloque de un lugar a otro de un saque (arrastrarlo con el
+// mouse en la compu): el de "desde" queda en la posición "hasta" y los
+// demás se corren.
+export function moverBloqueA(items, desde, hasta) {
+  const bloques = filasPorBloque(items)
+  if (desde === hasta || desde < 0 || hasta < 0 || desde >= bloques.length) return items
+  const [movido] = bloques.splice(desde, 1)
+  bloques.splice(Math.min(hasta, bloques.length), 0, movido)
+  return numerarOrden(bloques.flat())
+}
+
 // Saca un bloque entero (con todos sus ejercicios).
 export function quitarBloque(items, indiceBloque) {
   const bloques = filasPorBloque(items)

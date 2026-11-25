@@ -2,6 +2,7 @@ import { textoSeriesCalentamiento } from '../utils/seriesCalentamiento.js'
 import { textoProgresion } from '../utils/ciclos.js'
 import { normalizarSemanas, resumenPorSemana } from '../utils/semanas.js'
 import { esPorTiempo, textoSeriesPor } from '../utils/porTiempo.js'
+import Icono from './Icono.jsx'
 
 // Lo que se le pide al cliente en un ejercicio: series × repeticiones,
 // peso objetivo, RPE, tempo, sus series de calentamiento y las notas del
@@ -16,7 +17,7 @@ export default function ObjetivoEjercicio({ ejercicio, semanasCiclo = 0 }) {
     : []
   const porTiempo = esPorTiempo(ejercicio)
   const extras = [
-    porTiempo && '⏱ por tiempo',
+    porTiempo && 'por tiempo',
     ejercicio.rpe && `RPE ${ejercicio.rpe}`,
     ejercicio.tempo && `Tempo ${ejercicio.tempo}`,
   ].filter(Boolean)
@@ -45,11 +46,15 @@ export default function ObjetivoEjercicio({ ejercicio, semanasCiclo = 0 }) {
       )}
       {textoProgresion(ejercicio.progresion, porTiempo) && (
         <p className="ejercicio-progresion">
-          📈 Progresión: {textoProgresion(ejercicio.progresion, porTiempo)}
+          <Icono nombre="subida" /> Progresión: {textoProgresion(ejercicio.progresion, porTiempo)}
         </p>
       )}
       {calentamiento && <p className="ejercicio-calentamiento">Calentamiento: {calentamiento}</p>}
-      {ejercicio.notas && <p className="ejercicio-notas">📝 {ejercicio.notas}</p>}
+      {ejercicio.notas && (
+        <p className="ejercicio-notas">
+          <Icono nombre="nota" /> {ejercicio.notas}
+        </p>
+      )}
     </>
   )
 }

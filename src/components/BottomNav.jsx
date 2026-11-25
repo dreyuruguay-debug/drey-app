@@ -30,7 +30,11 @@ export default function BottomNav() {
   const { pathname } = useLocation()
 
   return (
-    <nav className="bottom-nav" aria-label="Menú">
+    <nav className="bottom-nav menu-alumno" aria-label="Menú">
+      {/* Solo se ve en la compu, arriba de la barra lateral. */}
+      <div className="menu-alumno-marca" aria-hidden="true">
+        <img src="/drey-logo.png" alt="" />
+      </div>
       {ITEMS.map(({ to, label, rutas, Icono }) => {
         const activo = rutas.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`))
         return (

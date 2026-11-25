@@ -13,16 +13,21 @@ import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import NotificacionAvance from '../components/NotificacionAvance.jsx'
 import EntrenamientosHechos from '../components/EntrenamientosHechos.jsx'
 import EvaluacionesAnualesAlumno from '../components/evaluacion/EvaluacionesAnualesAlumno.jsx'
-import { calcularRacha, diasConRutina, textoFechaCorta } from '../utils/dias.js'
+import { calcularRacha, diasConRutina, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import {
   ejerciciosEntrenados,
+  filtrarPorPeriodo,
   formatearNumero,
+  PERIODO_INICIAL,
+  PERIODOS,
   progresoDeEjercicio,
   recordsPorEjercicio,
   volumenPorSemana,
 } from '../utils/progreso.js'
 import { textoDeSerie } from '../utils/porTiempo.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import Chips from '../components/Chips.jsx'
+import Icono from '../components/Icono.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
 const RECORDS_A_MOSTRAR = 5
@@ -32,6 +37,9 @@ const RECORDS_A_MOSTRAR = 5
 // corregir un peso o una repetición mal anotados) y los resúmenes de 4
 // semanas que publicó su profe. Todo sale de la tabla "sesiones" (más
 // los entrenamientos guardados en el celular que esperan señal).
+//
+// Las dos gráficas se ven por período (4 semanas · 3 meses · todo) y la
+// de la carga, del ejercicio que elija. Tocando un punto se ve el valor.
 //
 // Con ?corregir=<id> abre directo la corrección de ese entrenamiento
 // (así llega desde el final del modo entrenar).
@@ -47,6 +55,8 @@ export default function Progreso() {
   const [usuarioId, setUsuarioId] = useState(guardado?.usuarioId || null)
   const [sesiones, setSesiones] = useState(guardado?.sesiones || [])
   const [ejercicioElegido, setEjercicioElegido] = useState('')
+  const [periodo, setPeriodo] = useState(PERIODO_INICIAL)
+  const hoy = obtenerFechaHoyISO()
 
   useEffect(() => {
     cargar()
@@ -66,11 +76,14 @@ export default function Progreso() {
 
   const ejercicios = useMemo(() => ejerciciosEntrenados(sesiones), [sesiones])
   const records = useMemo(() => recordsPorEjercicio(sesiones), [sesiones])
-  const volumen = useMemo(() => volumenPorSemana(sesiones), [sesiones])
+  const volumen = useMemo(
+    () => filtrarPorPeriodo(volumenPorSemana(sesiones), periodo, hoy),
+    [sesiones, periodo, hoy],
+  )
   const elegido = ejercicioElegido || ejercicios[0]?.ejercicio_id || ''
   const historial = useMemo(
-    () => (elegido ? progresoDeEjercicio(sesiones, elegido) : []),
-    [sesiones, elegido],
+    () => (elegido ? filtrarPorPeriodo(progresoDeEjercicio(sesiones, elegido), periodo, hoy) : []),
+    [sesiones, elegido, periodo, hoy],
   )
   // La misma racha que en Inicio: semanas cumpliendo los días de su rutina.
   const racha = useMemo(() => {
@@ -150,7 +163,7 @@ export default function Progreso() {
               {records.slice(0, RECORDS_A_MOSTRAR).map((record) => (
                 <div key={record.ejercicio_id} className="tarjeta-record">
                   <span className="tarjeta-record-icono" aria-hidden="true">
-                    🏆
+                    <Icono nombre="trofeo" tamano={20} />
                   </span>
                   <span className="tarjeta-rutina-textos">
                     <strong>{record.nombre}</strong>
@@ -173,6 +186,13 @@ export default function Progreso() {
               ))}
             </div>
           </section>
+
+          <Chips
+            opciones={PERIODOS}
+            activo={periodo}
+            onCambiar={setPeriodo}
+            etiqueta="Período de las gráficas"
+          />
 
           <section className="bloque-pagina">
             <p className="seccion-etiqueta">Cómo sube tu carga</p>

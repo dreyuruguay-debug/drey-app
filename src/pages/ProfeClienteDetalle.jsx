@@ -36,6 +36,7 @@ import { PANTALLA_COMPU, useCoincide } from '../components/useCoincide.js'
 import AvisoCupo from '../components/AvisoCupo.jsx'
 import { problemaDeCupo } from '../utils/cupos.js'
 import { useConfirmar } from '../components/ConfirmarAccion.jsx'
+import Icono from '../components/Icono.jsx'
 
 const PESTANAS = [
   { id: 'rutinas', label: 'Rutinas' },
@@ -539,7 +540,7 @@ export default function ProfeClienteDetalle() {
                   )}
                   {!deBaja && (
                     <Link to={`/profe/mensajes?cliente=${id}`} className="boton-secundario">
-                      💬 Dejarle un mensaje en la app
+                      <Icono nombre="chat" /> Dejarle un mensaje en la app
                     </Link>
                   )}
                 </div>

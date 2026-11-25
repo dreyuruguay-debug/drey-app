@@ -16,6 +16,7 @@ import {
   nombreArchivoEvaluacion,
   notasLimpias,
 } from '../../utils/evaluacion.js'
+import Icono from '../Icono.jsx'
 
 // Una evaluación mensual en el panel del profe (ficha del alumno →
 // Progresión). Muestra la vista previa tal cual la va a ver el alumno y,
@@ -250,11 +251,14 @@ export default function EditorEvaluacion({
             onClick={() => mandarADrive()}
             disabled={Boolean(ocupado)}
           >
-            {ocupado === 'drive'
-              ? 'Guardando en Drive…'
-              : drive.archivoUrl
-                ? '↻ Volver a guardar en Drive'
-                : '☁ Guardar en Drive'}
+            {ocupado === 'drive' ? (
+              'Guardando en Drive…'
+            ) : (
+              <>
+                <Icono nombre="nube" />{' '}
+                {drive.archivoUrl ? 'Volver a guardar en Drive' : 'Guardar en Drive'}
+              </>
+            )}
           </button>
         ) : (
           <small className="evaluacion-sin-drive">

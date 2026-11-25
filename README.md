@@ -481,6 +481,39 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - **`.gitignore`** (claves, `node_modules`, `dist`) y **`.env.example`**
   (modelo de las variables, sin claves).
 
+## Entrega de noviembre: alumno, profe, gimnasio, Admin y SQL 044
+
+**Alumno**
+- **Progreso:** botones "4 semanas / 3 meses / Todo" arriba de las gráficas, y un selector de ejercicio.
+- **Perfil:** ordenado en tres grupos (Mi cuenta, Preferencias, Ayuda y más).
+- **Récord:** al terminar el entrenamiento, si batió una marca, aparece un festejo animado con el ejercicio (se apaga solo si el celular tiene "reducir movimiento").
+- **En la computadora:** menú a la izquierda con el logo y el Inicio en dos columnas ("Hoy te toca" a la izquierda; racha, semana y datos a la derecha).
+
+**Profe**
+- **Editor de rutinas en el celular:** el botón Guardar queda fijo abajo.
+- **En la computadora:** los bloques se pueden ordenar arrastrándolos con el mouse.
+- **Atajos de teclado:** Ctrl+K busca, Alt+N agrega ejercicios, Ctrl+Enter guarda, Enter pasa al casillero siguiente y Esc cierra. La tecla "?" o el botón "Atajos de teclado" del menú muestran la lista.
+
+**Gimnasio (dueño)**
+- **Tablero:** carga de alumnos por profe (barra), gráfica de las últimas 8 semanas y botón "Bajar alumnos en Excel".
+- **Equipo:** el interruptor "Los profes pueden habilitar alumnos" explica qué pasa prendido y apagado ("¿Qué cambia si lo prendo?").
+
+**Admin**
+- **Inicio:** quedan 4 accesos rápidos (Estadísticas, Planes y precios, Biblioteca, Historial).
+- **Historial de cambios:** buscador, filtro por período (Hoy / 7 días / 30 días / Todo) y por tipo.
+
+**General**
+- **Iconos:** los emojis de la app pasaron a iconos de línea (`src/components/Icono.jsx`). En los textos de WhatsApp quedan los emojis.
+- **Tablet (768 a 1023 px):** menú angosto de iconos a la izquierda.
+- **Registro:** muestra "Paso X de 4" con barra de avance.
+
+**SQL 044** (`supabase/sql/044_dueno_pasa_alumnos_y_semanas.sql`)
+- El dueño del gimnasio puede pasar alumnos de un profe a otro de su gimnasio. Antes la base lo bloqueaba.
+- Agrega `tablero_semanas`, que es lo que alimenta la gráfica de 8 semanas. Hasta correr este SQL la gráfica no aparece.
+- Se puede correr más de una vez sin problema.
+
+**Quedó afuera a propósito:** "Ver como" (que el Admin vea la app como un alumno o un profe). Necesita cambios de seguridad en la base para no exponer datos privados; se deja para más adelante.
+
 ## Diseño: alumnos, ficha, espacios y Admin (noviembre 2026, tandas 2 y 3)
 
 - **Lista de alumnos** (`pages/ProfeClientes.jsx`, cálculos en

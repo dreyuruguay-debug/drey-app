@@ -13,7 +13,7 @@
 export const SECCIONES_ACTIVIDADES = {
   calentamiento: {
     titulo: 'Calentamiento previo',
-    icono: '🔥',
+    icono: 'fuego', // components/Icono.jsx
     vacio: 'Sin configurar todavía',
     boton: '+ Configurar calentamiento',
     sugerencias: ['Cinta', 'Bicicleta', 'Elíptica', 'Remo', 'Movilidad', 'Activación'],
@@ -21,7 +21,7 @@ export const SECCIONES_ACTIVIDADES = {
   },
   vuelta_calma: {
     titulo: 'Vuelta a la calma',
-    icono: '🧘',
+    icono: 'calma',
     vacio: 'Opcional',
     boton: '+ Agregar vuelta a la calma',
     sugerencias: ['Caminata suave', 'Respiración', 'Movilidad', 'Estiramientos', 'Bicicleta suave'],

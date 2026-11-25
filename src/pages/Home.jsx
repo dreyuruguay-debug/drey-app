@@ -58,6 +58,7 @@ import Esqueleto from '../components/Esqueleto.jsx'
 import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 import { useConfiguracion } from '../services/configuracion.js'
 import { RUTA_INGRESAR } from '../data/rutas.js'
+import Icono from '../components/Icono.jsx'
 
 // Inicio e historial guardados en el celular del usuario de la sesión
 // guardada (o null si falta alguno: entonces se espera al servidor).
@@ -265,7 +266,12 @@ export default function Home() {
   const avisosDelCarrusel = avisosVisibles(avisos, silencio)
 
   function ocultarAvisos() {
-    setSilencio(silenciarAvisos(usuarioId, avisos.map((aviso) => aviso.id)))
+    setSilencio(
+      silenciarAvisos(
+        usuarioId,
+        avisos.map((aviso) => aviso.id),
+      ),
+    )
     mostrarAviso(`Avisos ocultos por ${HORAS_SILENCIO} horas. Siguen en la campanita.`)
   }
 
@@ -348,7 +354,8 @@ export default function Home() {
               )}
               {rutinaHoy.calentamiento?.length > 0 && (
                 <span className="chip chip-dato">
-                  🔥 Calentamiento{duracionCalentamiento ? ` ${duracionCalentamiento}` : ''}
+                  <Icono nombre="fuego" /> Calentamiento
+                  {duracionCalentamiento ? ` ${duracionCalentamiento}` : ''}
                 </span>
               )}
               {semanaDelCiclo(rutinaHoy, hoy) && !semanaDelCiclo(rutinaHoy, hoy).terminado && (
@@ -472,7 +479,9 @@ function TarjetaEnCurso({ rutinaId, datos, nombre, onCancelar }) {
       </span>
       <h2 className="hoy-nombre">{nombre || 'Tu rutina'}</h2>
       <div className="chips-lista">
-        <span className="chip chip-dato">⏱ {formatearReloj(resumen.segundos)}</span>
+        <span className="chip chip-dato">
+          <Icono nombre="reloj" /> {formatearReloj(resumen.segundos)}
+        </span>
         <span className="chip chip-dato">
           {resumen.seriesHechas} de {resumen.seriesTotales} series
         </span>

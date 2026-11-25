@@ -5,6 +5,7 @@ import { calcularRacha, diasConRutina, sumarDias } from '../src/utils/dias.js'
 import { RECORD_PESO, RECORD_REPS, RECORD_TONELAJE } from '../src/utils/records.js'
 import { prepararEntrenamiento } from '../src/utils/pantallaEntrenar.js'
 import { armarAvisosInicio, avisosVisibles, HORAS_SILENCIO } from '../src/utils/avisosInicio.js'
+import { filtrarPorPeriodo } from '../src/utils/progreso.js'
 
 // Martes 24/11/2026: la semana empieza el lunes 23.
 const HOY = '2026-11-24'
@@ -176,7 +177,11 @@ describe('avisos del Inicio', () => {
   })
 
   it('con el plan vencido y bloqueado no avisa vencimientos (lo dice la tarjeta grande)', () => {
-    const avisos = armarAvisosInicio({ ...base, plan: { tipo: 'gracia', dias: 0 }, planBloqueado: true })
+    const avisos = armarAvisosInicio({
+      ...base,
+      plan: { tipo: 'gracia', dias: 0 },
+      planBloqueado: true,
+    })
     expect(avisos).toEqual([])
   })
 
@@ -193,5 +198,22 @@ describe('avisos del Inicio', () => {
     const silencio = { hasta: ahora + HORAS_SILENCIO * 3600 * 1000, ids: ['medidas'] }
     const avisos = armarAvisosInicio({ ...base, avanceNuevo: true, tocaMedidas: true })
     expect(avisosVisibles(avisos, silencio, ahora).map((aviso) => aviso.id)).toEqual(['evaluacion'])
+  })
+})
+
+// Período de las gráficas de Progreso (utils/progreso.js).
+describe('período de las gráficas', () => {
+  const filas = ['2026-08-03', '2026-09-28', '2026-10-26', '2026-11-02', '2026-11-23'].map(
+    (semana) => ({ semana, valor: 1 }),
+  )
+
+  it('4 semanas, 3 meses o todo', () => {
+    const hoy = '2026-11-24'
+    expect(filtrarPorPeriodo(filas, '4-semanas', hoy).map((f) => f.semana)).toEqual([
+      '2026-11-02',
+      '2026-11-23',
+    ])
+    expect(filtrarPorPeriodo(filas, '3-meses', hoy)).toHaveLength(4)
+    expect(filtrarPorPeriodo(filas, 'todo', hoy)).toHaveLength(5)
   })
 })

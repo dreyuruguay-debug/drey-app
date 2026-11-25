@@ -1,6 +1,7 @@
 import RelojCircular from './RelojCircular.jsx'
 import InterruptorAvisoDescanso from './InterruptorAvisoDescanso.jsx'
 import { formatearReloj } from '../../utils/entrenamiento.js'
+import Icono from '../Icono.jsx'
 
 // Pantalla completa de descanso: un reloj grande que baja solo, botones
 // para sumar tiempo o seguir antes, y qué viene después. Si el profe dio
@@ -103,7 +104,9 @@ export default function PantallaDescanso({
             onClick={() => onCambiarSonido(!sonido)}
           >
             <span className="descanso-aviso-fin-textos">
-              <strong>{sonido ? '🔊' : '🔇'} Sonido al terminar</strong>
+              <strong>
+                <Icono nombre={sonido ? 'sonido' : 'silencio'} /> Sonido al terminar
+              </strong>
               <small>Bip en los últimos 3 segundos, además de la vibración.</small>
             </span>
             <span

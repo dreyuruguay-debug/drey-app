@@ -17,6 +17,7 @@ import {
   textoSeriesPor,
   unidadDe,
 } from '../../utils/porTiempo.js'
+import Icono from '../Icono.jsx'
 
 // Lo que tapan la barra de arriba y la de abajo (para saber si la serie
 // que toca se ve entera).
@@ -113,7 +114,7 @@ export default function PantallaEjercicio({
         <h1 className="entrenar-titulo">{datos.nombre || 'Ejercicio'}</h1>
         <p className="entrenar-objetivo">
           {porTiempo
-            ? `${textoSeriesPor(ejercicio)} · ⏱ por tiempo`
+            ? `${textoSeriesPor(ejercicio)} · por tiempo`
             : `${ejercicio.series} series × ${ejercicio.reps_objetivo || '—'} reps`}
           {ejercicio.kg_objetivo ? ` · ${formatearNumero(Number(ejercicio.kg_objetivo))} kg` : ''}
           {ejercicio.rpe && (
@@ -135,10 +136,15 @@ export default function PantallaEjercicio({
             </>
           )}
         </p>
-        {ejercicio.notas && <p className="entrenar-notas">📝 Tu profe: {ejercicio.notas}</p>}
+        {ejercicio.notas && (
+          <p className="entrenar-notas">
+            <Icono nombre="nota" /> Tu profe: {ejercicio.notas}
+          </p>
+        )}
         {sugerencia?.motivo && (
           <p className="entrenar-sugerencia">
-            💡 Hoy: {formatearNumero(Number(sugerencia.kg))} kg · {sugerencia.motivo}
+            <Icono nombre="idea" /> Hoy: {formatearNumero(Number(sugerencia.kg))} kg ·{' '}
+            {sugerencia.motivo}
           </p>
         )}
         {anterior && (
@@ -360,7 +366,9 @@ function Stepper({ valor, campo, unidad, onRestar, onSumar, onFijar, etiqueta })
       </button>
       <label className="entrenar-stepper-valor">
         <CasilleroNumero valor={valor} campo={campo} etiqueta={etiqueta} onFijar={onFijar} />
-        <small>{unidad} ✎</small>
+        <small>
+          {unidad} <Icono nombre="lapiz" />
+        </small>
       </label>
       <button type="button" onClick={onSumar} aria-label={`Sumar ${etiqueta}`}>
         +

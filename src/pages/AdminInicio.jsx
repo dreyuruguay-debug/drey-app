@@ -28,6 +28,8 @@ const MEMORIA_INICIO_ADMIN = 'inicio-admin'
 // semana) y suscripciones por vencer. Después, lo que espera una
 // respuesta, y más abajo y más chico, los números de los alumnos de todos
 // los espacios (utils/estadisticas.js, los mismos que en "Estadísticas").
+// Accesos rápidos: solo 4 (Estadísticas, Planes y precios, Biblioteca e
+// Historial); lo demás está en el menú (Espacios, Alumnos, Cobros).
 export default function AdminInicio() {
   const navigate = useNavigate()
   const guardado = recordado(MEMORIA_INICIO_ADMIN)
@@ -153,29 +155,14 @@ export default function AdminInicio() {
               <Link to="/profe/estadisticas" className="acceso acceso-principal">
                 Estadísticas
               </Link>
-              <Link to="/profe/ajustes" className="acceso acceso-principal">
+              <Link to="/profe/ajustes" className="acceso">
                 Planes y precios
-              </Link>
-              <Link to="/profe/equipo" className="acceso">
-                Profes y gimnasios
-              </Link>
-              <Link to="/profe/solicitudes" className="acceso">
-                Solicitudes de alumnos
-              </Link>
-              <Link to="/profe/codigos" className="acceso">
-                Códigos de descuento
               </Link>
               <Link to="/profe/ejercicios" className="acceso">
                 Biblioteca de ejercicios
               </Link>
-              <Link to="/profe/calendario" className="acceso">
-                La semana de todos
-              </Link>
               <Link to="/profe/ajustes/historial" className="acceso">
                 Historial de cambios
-              </Link>
-              <Link to="/profe/rutinas" className="acceso">
-                + Nueva rutina
               </Link>
             </div>
           </section>

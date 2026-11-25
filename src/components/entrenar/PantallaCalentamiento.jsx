@@ -6,6 +6,7 @@ import {
   relojDeActividad,
   resumenDeCalentamiento,
 } from '../../utils/calentamiento.js'
+import Icono from '../Icono.jsx'
 
 // Primera parte del modo entrenar cuando el profe cargó un calentamiento.
 // Se hace igual que un ejercicio: una actividad por vez (Cinta, Movilidad,
@@ -35,7 +36,7 @@ export default function PantallaCalentamiento({
         <>
           <div className="entrenar-encabezado">
             <span className="entrenar-etiqueta calentamiento-etiqueta">
-              🔥 Calentamiento · {estado.actual + 1} de {resumen.total}
+              <Icono nombre="fuego" /> Calentamiento · {estado.actual + 1} de {resumen.total}
             </span>
             <h1 className="entrenar-titulo">{actividad.nombre}</h1>
             <p className="entrenar-objetivo">{actividad.duracion || 'A tu ritmo'}</p>

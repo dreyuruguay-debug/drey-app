@@ -21,6 +21,7 @@ import {
   borradorAFilas,
   duplicarBloque,
   moverBloque,
+  moverBloqueA,
   quitarBloque,
   reemplazarBloque,
 } from '../utils/bloques.js'
@@ -35,6 +36,8 @@ import { ejerciciosParaCicloNuevo, semanaDelCiclo } from '../utils/ciclos.js'
 import { MAXIMO_SEMANAS } from '../utils/semanas.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import Icono from '../components/Icono.jsx'
+import { PANTALLA_COMPU, useCoincide } from '../components/useCoincide.js'
 import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 import CopiarAVariosAlumnos, { avisarCopia } from '../components/CopiarAVariosAlumnos.jsx'
 
@@ -47,15 +50,21 @@ const ERROR_GUARDAR = 'No pudimos guardar el cambio. Revisá tu conexión y prob
 // ver el cliente, con los controles del profe en cada parte:
 //
 //   Rutina: nombre · grupos musculares          [Editar datos]
-//   🔥 Calentamiento previo                      [Configurar]
+//   Calentamiento previo                         [Configurar]
 //   Ejercicios (bloques numerados)  [↑ ↓ Editar Quitar] + Agregar ejercicios
-//   ⏱️ Pausa entre ejercicios                    [Configurar]
-//   📅 Ciclo (semanas y progresión)              [Configurar]
-//   🧘 Vuelta a la calma (opcional)              [Agregar]
+//   Pausa entre ejercicios                       [Configurar]
+//   Ciclo (semanas y progresión)                 [Configurar]
+//   Vuelta a la calma (opcional)                 [Agregar]
 //   [Guardar rutina]
 //
 // Cada cambio se guarda solo, al momento. Una rutina nueva queda en
-// borrador (el cliente no la ve) hasta que se toca "Guardar rutina".
+// borrador (el cliente no la ve) hasta que se toca "Guardar rutina". En el
+// celular ese botón queda fijo abajo, siempre a la vista.
+//
+// En la compu: los bloques se arrastran con el mouse para cambiarlos de
+// lugar (además de ↑ ↓), y hay atajos de teclado (components/
+// AtajosDeTeclado.jsx): Alt + N agrega ejercicios y Ctrl + Enter guarda la
+// rutina. Dentro del asistente, Enter pasa al casillero siguiente.
 //
 // tipo = 'rutina'    → /profe/rutinas/:id
 // tipo = 'plantilla' → /profe/plantillas/:id
@@ -92,10 +101,29 @@ export default function ProfeRutinaEditor({ tipo }) {
   // ejercicio cuyas series de calentamiento se quieren cargar).
   const [asistente, setAsistente] = useState(null)
   const [copiandoAVarios, setCopiandoAVarios] = useState(false)
+  // Arrastrar bloques (compu): cuál se está llevando y sobre cuál está.
+  const [arrastre, setArrastre] = useState({ desde: null, sobre: null })
+  const enCompu = useCoincide(PANTALLA_COMPU)
 
   useEffect(() => {
     cargar()
   }, [tipo, id])
+
+  // Atajos de teclado del editor (con el asistente cerrado).
+  useEffect(() => {
+    if (asistente || editando || copiandoAVarios || !datos) return undefined
+    function alApretarTecla(event) {
+      if (event.altKey && event.key.toLowerCase() === 'n') {
+        event.preventDefault()
+        setAsistente({ indiceBloque: null, borrador: null })
+      } else if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault()
+        if (!guardandoRutina) finalizar()
+      }
+    }
+    window.addEventListener('keydown', alApretarTecla)
+    return () => window.removeEventListener('keydown', alApretarTecla)
+  })
 
   async function cargar() {
     setCargando(true)
@@ -245,6 +273,14 @@ export default function ProfeRutinaEditor({ tipo }) {
     setMensaje(await aplicarLista(moverBloque(items, indiceBloque, direccion)))
   }
 
+  // Soltó un bloque arrastrado sobre otro: queda en ese lugar.
+  async function soltarBloque(hasta) {
+    const desde = arrastre.desde
+    setArrastre({ desde: null, sobre: null })
+    if (desde === null || desde === hasta) return
+    setMensaje(await aplicarLista(moverBloqueA(items, desde, hasta)))
+  }
+
   async function quitarUnBloque(bloque, indiceBloque) {
     const nombres = bloque.items.map(({ item }) => item.ejercicios?.nombre).join(' + ')
     const seguro = await confirmar({
@@ -335,7 +371,7 @@ export default function ProfeRutinaEditor({ tipo }) {
           }
           className="boton-secundario boton-chico"
         >
-          👁 Ver como alumno
+          <Icono nombre="ojo" /> Ver como alumno
         </Link>
         {esRutina && !esBorrador && (
           <Link to={`/profe/rutinas/${id}/dias`} className="boton-secundario boton-chico">
@@ -444,33 +480,70 @@ export default function ProfeRutinaEditor({ tipo }) {
         {/* Ejercicios */}
         <section className="seccion-rutina seccion-rutina-ejercicios">
           <div className="seccion-rutina-cabecera">
-            <p className="seccion-rutina-titulo">💪 Ejercicios</p>
+            <p className="seccion-rutina-titulo">
+              <Icono nombre="pesa" /> Ejercicios
+            </p>
+            {enCompu && bloques.length > 1 && (
+              <span className="seccion-rutina-ayuda">
+                <Icono nombre="arrastrar" /> Arrastrá los bloques para ordenarlos
+              </span>
+            )}
           </div>
           {bloques.length === 0 ? (
             <p className="profe-vacio">Todavía no hay ejercicios agregados.</p>
           ) : (
             bloques.map((bloque, indiceBloque) => (
-              <BloqueProfe
+              <div
                 key={bloque.items[0].item.id || indiceBloque}
-                bloque={bloque}
-                idsArchivados={idsArchivados}
-                semanasCiclo={semanasCiclo}
-                esPrimero={indiceBloque === 0}
-                esUltimo={indiceBloque === bloques.length - 1}
-                onMover={(direccion) => moverUnBloque(indiceBloque, direccion)}
-                onEditar={() =>
-                  setAsistente({ indiceBloque, borrador: bloqueABorrador(bloque, semanasCiclo) })
-                }
-                onQuitar={() => quitarUnBloque(bloque, indiceBloque)}
-                onDuplicar={() => duplicarUnBloque(indiceBloque)}
-                onEditarCalentamiento={(posicion) =>
-                  setAsistente({
-                    indiceBloque,
-                    borrador: bloqueABorrador(bloque, semanasCiclo),
-                    calentamientoDe: posicion,
-                  })
-                }
-              />
+                className={[
+                  'bloque-arrastrable',
+                  arrastre.desde === indiceBloque ? 'bloque-arrastrando' : '',
+                  arrastre.sobre === indiceBloque && arrastre.desde !== indiceBloque
+                    ? 'bloque-destino'
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                draggable={enCompu}
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = 'move'
+                  setArrastre({ desde: indiceBloque, sobre: indiceBloque })
+                }}
+                onDragOver={(event) => {
+                  if (arrastre.desde === null) return
+                  event.preventDefault()
+                  if (arrastre.sobre !== indiceBloque) {
+                    setArrastre((actual) => ({ ...actual, sobre: indiceBloque }))
+                  }
+                }}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  soltarBloque(indiceBloque)
+                }}
+                onDragEnd={() => setArrastre({ desde: null, sobre: null })}
+                title={enCompu ? 'Arrastralo para cambiarlo de lugar' : undefined}
+              >
+                <BloqueProfe
+                  bloque={bloque}
+                  idsArchivados={idsArchivados}
+                  semanasCiclo={semanasCiclo}
+                  esPrimero={indiceBloque === 0}
+                  esUltimo={indiceBloque === bloques.length - 1}
+                  onMover={(direccion) => moverUnBloque(indiceBloque, direccion)}
+                  onEditar={() =>
+                    setAsistente({ indiceBloque, borrador: bloqueABorrador(bloque, semanasCiclo) })
+                  }
+                  onQuitar={() => quitarUnBloque(bloque, indiceBloque)}
+                  onDuplicar={() => duplicarUnBloque(indiceBloque)}
+                  onEditarCalentamiento={(posicion) =>
+                    setAsistente({
+                      indiceBloque,
+                      borrador: bloqueABorrador(bloque, semanasCiclo),
+                      calentamientoDe: posicion,
+                    })
+                  }
+                />
+              </div>
             ))
           )}
           <button
@@ -485,7 +558,9 @@ export default function ProfeRutinaEditor({ tipo }) {
         {/* Pausa entre ejercicios */}
         <section className="seccion-rutina">
           <div className="seccion-rutina-cabecera">
-            <p className="seccion-rutina-titulo">⏱️ Pausa entre ejercicios</p>
+            <p className="seccion-rutina-titulo">
+              <Icono nombre="reloj" /> Pausa entre ejercicios
+            </p>
             {editando !== 'pausa' && (
               <button
                 type="button"
@@ -535,7 +610,9 @@ export default function ProfeRutinaEditor({ tipo }) {
         {/* Ciclo: semanas y progresión */}
         <section className="seccion-rutina">
           <div className="seccion-rutina-cabecera">
-            <p className="seccion-rutina-titulo">📅 Ciclo por semanas</p>
+            <p className="seccion-rutina-titulo">
+              <Icono nombre="calendario" /> Ciclo por semanas
+            </p>
             {editando !== 'ciclo' && (
               <button
                 type="button"
@@ -622,7 +699,7 @@ export default function ProfeRutinaEditor({ tipo }) {
         />
       </div>
 
-      <div className="editor-guardar-rutina">
+      <div className="editor-guardar-rutina editor-guardar-fijo">
         <p className="profe-nota">
           {esBorrador
             ? 'Los cambios se guardan solos. Cuando esté lista, guardala: el cliente la va a ver y elegís qué días la hace.'
@@ -670,7 +747,7 @@ function SeccionActividadesEditable({
     <section className="seccion-rutina">
       <div className="seccion-rutina-cabecera">
         <p className="seccion-rutina-titulo">
-          {textos.icono} {textos.titulo}
+          <Icono nombre={textos.icono} /> {textos.titulo}
         </p>
         {!abierta && actividades.length > 0 && (
           <button

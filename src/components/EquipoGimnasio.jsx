@@ -185,8 +185,8 @@ export default function EquipoGimnasio({ espacio }) {
             <strong>Los profes pueden habilitar alumnos</strong>
             <small>
               {habilitan
-                ? 'Tus profes habilitan y cobran a sus alumnos. Cada vez que uno habilita, te llega un aviso.'
-                : 'Solo vos habilitás alumnos y confirmás pagos.'}
+                ? 'Prendido: tus profes habilitan y cobran a sus alumnos. Cada vez que uno habilita, te llega un aviso.'
+                : 'Apagado: solo vos habilitás alumnos y confirmás pagos.'}
             </small>
           </span>
           <button
@@ -199,6 +199,22 @@ export default function EquipoGimnasio({ espacio }) {
             onClick={cambiarInterruptor}
           />
         </div>
+        <details className="equipo-interruptor-ayuda">
+          <summary>¿Qué cambia si lo prendo?</summary>
+          <ul>
+            <li>
+              Tus profes ven la sección <strong>Pagos</strong> y pueden habilitar a sus alumnos
+              nuevos y confirmar sus pagos, sin esperarte.
+            </li>
+            <li>
+              Cada alumno habilitado ocupa un cupo del gimnasio, igual que si lo habilitaras vos.
+            </li>
+            <li>
+              A vos te llega un aviso cada vez, y en esta pantalla ves quién habilitó a quién.
+            </li>
+            <li>Lo podés apagar cuando quieras: lo ya habilitado queda como está.</li>
+          </ul>
+        </details>
       </div>
 
       {solicitudes.length > 0 && (

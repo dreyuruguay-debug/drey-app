@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { SUGERENCIAS_ITEMS, actividadVacia } from '../data/actividades.js'
 import { segundosDeDuracion } from '../utils/calentamiento.js'
 import { formatearReloj } from '../utils/entrenamiento.js'
+import Icono from './Icono.jsx'
 
 // Editor del calentamiento previo o de la vuelta a la calma de una
 // rutina. Cada actividad tiene nombre, duración (texto libre: "10 min",
@@ -223,14 +224,14 @@ function AvisoReloj({ duracion }) {
   if (segundos !== null) {
     return (
       <small className="editor-actividad-reloj">
-        ⏱ Reloj de {formatearReloj(segundos)} para el alumno
+        <Icono nombre="reloj" /> Reloj de {formatearReloj(segundos)} para el alumno
       </small>
     )
   }
   return (
     <small className="editor-actividad-reloj editor-actividad-reloj-libre">
-      ⏱ No es un tiempo: el alumno verá un cronómetro libre. Para que baje solo, escribí por ejemplo
-      10 min, 30 s o 1:30.
+      <Icono nombre="reloj" /> No es un tiempo: el alumno verá un cronómetro libre. Para que baje
+      solo, escribí por ejemplo 10 min, 30 s o 1:30.
     </small>
   )
 }

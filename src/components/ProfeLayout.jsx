@@ -21,6 +21,7 @@ import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
 import SelectorEspacio from './SelectorEspacio.jsx'
 import BuscadorGlobal from './BuscadorGlobal.jsx'
+import AtajosDeTeclado from './AtajosDeTeclado.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 import { obtenerFechaHoyISO, sumarDias, textoFechaCorta } from '../utils/dias.js'
 
@@ -396,6 +397,7 @@ export default function ProfeLayout({
               </Link>
             )
           })}
+          {!enPausa && <AtajosDeTeclado />}
         </nav>
       )}
     </div>

@@ -8,6 +8,8 @@ import {
   situacionDelCliente,
 } from '../src/utils/clientes.js'
 import { resumenDrey } from '../src/utils/resumenDrey.js'
+import { moverBloqueA } from '../src/utils/bloques.js'
+import { filtrarHistorial } from '../src/utils/historial.js'
 import { buscarEnTodo, PANTALLAS_DEL_PANEL } from '../src/utils/buscador.js'
 import { armarSemana } from '../src/utils/semanaDeTodos.js'
 
@@ -213,5 +215,59 @@ describe('números de DREY', () => {
       ingresosMes: 1000,
       ingresosMesPasado: 500,
     })
+  })
+})
+
+// Arrastrar bloques en el editor de rutinas (utils/bloques.js).
+describe('arrastrar bloques', () => {
+  const items = [
+    { id: 1, nombre: 'Sentadilla' },
+    { id: 2, nombre: 'Press', grupo: 'g1' },
+    { id: 3, nombre: 'Remo', grupo: 'g1' },
+    { id: 4, nombre: 'Plancha' },
+  ]
+
+  it('lleva un bloque entero (con su superserie) a otro lugar y renumera', () => {
+    const resultado = moverBloqueA(items, 1, 0)
+    expect(resultado.map((fila) => fila.id)).toEqual([2, 3, 1, 4])
+    expect(resultado.map((fila) => fila.orden)).toEqual([0, 1, 2, 3])
+    expect(moverBloqueA(items, 0, 2).map((fila) => fila.id)).toEqual([2, 3, 4, 1])
+  })
+
+  it('soltarlo en el mismo lugar no cambia nada', () => {
+    expect(moverBloqueA(items, 1, 1)).toBe(items)
+  })
+})
+
+// Historial de cambios del Admin (utils/historial.js).
+describe('filtros del historial', () => {
+  const filas = [
+    {
+      id: 1,
+      creado_en: '2026-11-24T15:00:00-03:00',
+      tipo: 'plan',
+      detalle: 'Cambió el precio del Plan seguimiento',
+    },
+    {
+      id: 2,
+      creado_en: '2026-11-20T10:00:00-03:00',
+      tipo: 'cliente',
+      detalle: 'Pasó a Martín Suárez con Sofía',
+    },
+    {
+      id: 3,
+      creado_en: '2026-10-01T10:00:00-03:00',
+      tipo: 'drey',
+      detalle: 'Pago DREY de FitCenter',
+    },
+  ]
+  const hoy = '2026-11-24'
+
+  it('filtra por período, tipo y texto (sin importar tildes)', () => {
+    expect(filtrarHistorial(filas, { periodo: 'hoy', hoy }).map((f) => f.id)).toEqual([1])
+    expect(filtrarHistorial(filas, { periodo: '7', hoy }).map((f) => f.id)).toEqual([1, 2])
+    expect(filtrarHistorial(filas, { tipo: 'drey', hoy }).map((f) => f.id)).toEqual([3])
+    expect(filtrarHistorial(filas, { texto: 'sofia', hoy }).map((f) => f.id)).toEqual([2])
+    expect(filtrarHistorial(filas, { hoy })).toHaveLength(3)
   })
 })

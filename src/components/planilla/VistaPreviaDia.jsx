@@ -6,6 +6,7 @@ import {
   borradorACalentamiento,
   textoSeriesCalentamiento,
 } from '../../utils/seriesCalentamiento.js'
+import Icono from '../Icono.jsx'
 
 // Un día de la planilla, tal como va a quedar en la app: qué rutina crea
 // o actualiza (y qué cambia), sus bloques y ejercicios con lo de cada
@@ -83,7 +84,7 @@ function EjercicioPrevio({ item, semanas }) {
   const calentamiento = textoSeriesCalentamiento(borradorACalentamiento(item))
   const porTiempo = item.porTiempo === true
   const extras = [
-    porTiempo && '⏱ por tiempo',
+    porTiempo && 'por tiempo',
     item.rpe && `RPE ${item.rpe}`,
     item.tempo && `Tempo ${item.tempo}`,
   ].filter(Boolean)
@@ -114,7 +115,11 @@ function EjercicioPrevio({ item, semanas }) {
         </>
       )}
       {calentamiento && <p className="ejercicio-calentamiento">Calentamiento: {calentamiento}</p>}
-      {item.notas && <p className="ejercicio-notas">📝 {item.notas}</p>}
+      {item.notas && (
+        <p className="ejercicio-notas">
+          <Icono nombre="nota" /> {item.notas}
+        </p>
+      )}
     </div>
   )
 }
