@@ -14,6 +14,10 @@ import {
   codigoSugerido,
   normalizarCodigo,
 } from '../services/equipo.js'
+import {
+  esDemasiadosIntentos,
+  MENSAJE_DEMASIADOS_INTENTOS,
+} from '../services/intentosDeCodigo.js'
 import { cargarPlanesDrey } from '../services/suscripcionDrey.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { formatearPrecio } from '../data/planes.js'
@@ -92,26 +96,35 @@ export default function RegistroProfe({ tipo = 'profe' }) {
     }
     const { datos: respuesta, error } = await codigoDisponible(normal)
     if (error) {
-      setEstadoCodigo({ error: true })
-      return null
+      const fallo = {
+        error: true,
+        mensaje: esDemasiadosIntentos(error) ? MENSAJE_DEMASIADOS_INTENTOS : '',
+      }
+      setEstadoCodigo(fallo)
+      return fallo
     }
     setEstadoCodigo(respuesta)
     return respuesta
   }
 
+  // Devuelve '' si está todo bien (o vacío), o el mensaje a mostrar.
   async function revisarGimnasio() {
     const normal = normalizarCodigo(codigoGimnasio)
     if (!normal) {
       setGimnasioEncontrado(null)
-      return true
+      return ''
     }
-    const { datos: encontrado } = await buscarEspacioPorCodigo(normal)
+    const { datos: encontrado, error } = await buscarEspacioPorCodigo(normal)
+    if (esDemasiadosIntentos(error)) {
+      setGimnasioEncontrado({ noExiste: true, mensaje: MENSAJE_DEMASIADOS_INTENTOS })
+      return MENSAJE_DEMASIADOS_INTENTOS
+    }
     if (!encontrado || encontrado.tipo !== 'gimnasio') {
       setGimnasioEncontrado({ noExiste: true })
-      return false
+      return 'No encontramos un gimnasio con ese código. Revisalo o dejalo vacío.'
     }
     setGimnasioEncontrado(encontrado)
-    return true
+    return ''
   }
 
   async function siguiente(event) {
@@ -135,7 +148,7 @@ export default function RegistroProfe({ tipo = 'profe' }) {
     }
     setRevisando(true)
     const respuesta = await revisarCodigo()
-    const gimnasioOk = esGimnasio ? true : await revisarGimnasio()
+    const problemaGimnasio = esGimnasio ? '' : await revisarGimnasio()
     setRevisando(false)
     if (!respuesta?.disponible) {
       setMensaje(
@@ -143,12 +156,12 @@ export default function RegistroProfe({ tipo = 'profe' }) {
           ? 'El código tiene que tener al menos 4 letras o números.'
           : respuesta?.motivo === 'tomado'
             ? `Ese código ya está tomado. Probá con ${respuesta.sugerencia}.`
-            : 'No pudimos revisar el código. Probá de nuevo.',
+            : respuesta?.mensaje || 'No pudimos revisar el código. Probá de nuevo.',
       )
       return
     }
-    if (!gimnasioOk) {
-      setMensaje('No encontramos un gimnasio con ese código. Revisalo o dejalo vacío.')
+    if (problemaGimnasio) {
+      setMensaje(problemaGimnasio)
       return
     }
     if (!aceptaTerminos) {
@@ -292,7 +305,7 @@ export default function RegistroProfe({ tipo = 'profe' }) {
                 }
               >
                 {estadoCodigo.error
-                  ? 'No pudimos revisar el código.'
+                  ? estadoCodigo.mensaje || 'No pudimos revisar el código.'
                   : estadoCodigo.disponible
                     ? `✓ ${estadoCodigo.codigo} está libre`
                     : estadoCodigo.motivo === 'corto'
@@ -325,7 +338,7 @@ export default function RegistroProfe({ tipo = 'profe' }) {
                     }
                   >
                     {gimnasioEncontrado.noExiste
-                      ? 'No encontramos un gimnasio con ese código.'
+                      ? gimnasioEncontrado.mensaje || 'No encontramos un gimnasio con ese código.'
                       : `✓ Le vamos a pedir a ${gimnasioEncontrado.nombre} que te sume a su equipo.`}
                   </p>
                 )}

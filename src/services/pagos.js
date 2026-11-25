@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js'
+import { esDemasiadosIntentos, MENSAJE_DEMASIADOS_INTENTOS } from './intentosDeCodigo.js'
 
 // Códigos de descuento y pagos de los alumnos (supabase/sql/014 y 034).
 // Cada función devuelve datos simples para mostrar. (El cobro automático
@@ -14,6 +15,7 @@ export async function validarCodigo(codigo, planId) {
     p_codigo: codigo.trim(),
     p_plan: planId,
   })
+  if (esDemasiadosIntentos(error)) return { valido: false, mensaje: MENSAJE_DEMASIADOS_INTENTOS }
   if (error) return { valido: false, mensaje: 'No pudimos revisar el código ahora.' }
   return data || { valido: false }
 }

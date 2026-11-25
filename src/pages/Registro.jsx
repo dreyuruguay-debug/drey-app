@@ -21,6 +21,10 @@ import { linkDePago } from '../data/pagos.js'
 import { VERSION_TERMINOS } from '../data/versionLegal.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { validarCodigo } from '../services/pagos.js'
+import {
+  esDemasiadosIntentos,
+  MENSAJE_DEMASIADOS_INTENTOS,
+} from '../services/intentosDeCodigo.js'
 import { cargarCobroDeEspacio, cargarPlanesDeEspacio } from '../services/cobroEspacio.js'
 import { calcularEdad } from '../utils/fechas.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -136,6 +140,9 @@ export default function Registro() {
         setCargandoPlanes(false)
         setPlanesEspacio(error ? null : lista)
         setCobroEspacio(errorCobro ? undefined : cobro || undefined)
+        if (esDemasiadosIntentos(error) || esDemasiadosIntentos(errorCobro)) {
+          setMessage(MENSAJE_DEMASIADOS_INTENTOS)
+        }
         if (!error) {
           setPlanId((actual) => (lista.some((opcion) => opcion.id === actual) ? actual : ''))
           setCodigoValidado(null)
@@ -188,8 +195,12 @@ export default function Registro() {
       return
     }
     setBuscandoCodigo(true)
-    const { datos: encontrado } = await buscarEspacioPorCodigo(codigo)
+    const { datos: encontrado, error } = await buscarEspacioPorCodigo(codigo)
     setBuscandoCodigo(false)
+    if (esDemasiadosIntentos(error)) {
+      setMensajeCodigo(MENSAJE_DEMASIADOS_INTENTOS)
+      return
+    }
     if (!encontrado) {
       setMensajeCodigo('No encontramos ese código. Revisalo con tu profe.')
       return
