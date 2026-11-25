@@ -163,7 +163,7 @@ a.boton-texto {
   border-radius: 50%;
   background: var(--drey-accent);
   color: var(--drey-sobre-accent);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .aviso-global-error .aviso-global-icono {
@@ -193,7 +193,7 @@ a.boton-texto {
   flex: 1;
   min-height: 3rem;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0;
@@ -226,7 +226,7 @@ a.boton-texto {
 /* ---------- Textos y tarjetas comunes ---------- */
 .seccion-etiqueta {
   margin: 0 0 0.6rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -323,7 +323,7 @@ div.tarjeta-rutina {
 }
 
 .tarjeta-rutina-textos small {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -369,7 +369,7 @@ div.tarjeta-rutina {
 
 .chip-chico {
   padding: 0.15rem 0.6rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .chip-alerta {
@@ -452,11 +452,6 @@ div.tarjeta-rutina {
   font-size: 1.2rem;
 }
 
-.inicio .home-aviso-pendiente {
-  margin: 1rem 1.25rem 0;
-  font-size: 0.9rem;
-}
-
 .inicio-semana {
   padding: 1.5rem 1.25rem 0;
 }
@@ -486,7 +481,7 @@ div.tarjeta-rutina {
 }
 
 .week-dot-letra {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .inicio-hoy {
@@ -504,7 +499,7 @@ div.tarjeta-rutina {
 }
 
 .hoy-etiqueta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -563,7 +558,7 @@ div.tarjeta-rutina {
 }
 
 .dato-etiqueta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--drey-texto-suave);
 }

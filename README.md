@@ -481,11 +481,50 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - **`.gitignore`** (claves, `node_modules`, `dist`) y **`.env.example`**
   (modelo de las variables, sin claves).
 
+## Diseño: avisos, gráficas, Inicio del profe y Ajustes (noviembre 2026)
+
+- **Avisos del Inicio del alumno**: en vez de un cartel por aviso
+  (amontonados arriba de "Hoy te toca"), todos van juntos
+  (`utils/avisosInicio.js`, ordenados por importancia: plata y acceso
+  primero).
+  - **Carrusel** (`components/inicio/CarruselAvisos.jsx`): uno por vez,
+    gira solo cada 6 segundos, se desliza con el dedo (en la compu, con
+    las flechitas o el teclado) y no gira mientras el dedo o el mouse
+    está encima. La ✕ lo oculta 12 horas (se guarda en el celular); si en
+    ese rato aparece un aviso nuevo, sale solo ese. Con "reducir
+    movimiento" pedido en el celular, no gira solo.
+  - **Campanita** al lado del avatar (`components/inicio/CampanaAvisos.jsx`):
+    el numerito dice cuántos hay y al tocarla se ven todos, también los
+    ocultos, con "Volver a mostrarlos en el Inicio".
+  - "Hoy te toca" quedó enseguida debajo del carrusel; la racha y la semana
+    van después.
+- **Gráficas** (`components/GraficoProgreso.jsx`): al tocar un punto o una
+  barra aparece un globito con el valor y la fecha ("75 kg · 10/11"); en
+  la compu, también al pasar el mouse. Se usa en Progreso, medidas,
+  estadísticas y la ficha del alumno.
+- **Inicio del profe**: 3 accesos rápidos (Nueva rutina, La semana de
+  todos, Estadísticas; más "Equipo y gimnasios" si corresponde). Las
+  notificaciones y "Cerrar sesión" están solo en Mi cuenta; en la compu,
+  "Mi cuenta" está en la barra lateral. "Progresión" quedó en Clientes.
+- **Ajustes del Admin** (`pages/AdminAjustes.jsx`): en el celular, una
+  lista de secciones con su explicación (como los Ajustes del iPhone);
+  cada una se abre con "← Ajustes" para volver. En la compu, la lista
+  queda a la izquierda y la sección a la derecha. Notificaciones e
+  Historial de cambios están en la misma lista.
+- **Textos más legibles**: los grises de texto tienen contraste de 4,5 a 1
+  o más (`styles/partes/01-colores.css`) y la letra mínima es de 13 px
+  (0,8125rem). Quedan más chicos solo los numeritos dentro de círculos
+  (avisos del menú, "HOY" de la semana), los ejes de las gráficas y los
+  nombres de teclas.
+- `components/useCoincide.js`: saber si la pantalla es de compu o si se
+  pidió reducir movimiento (lo usan la portada, el carrusel y Ajustes).
+
 ## Mejoras de diseño (auditoría de noviembre 2026, tanda 3)
 
 - **Letra mínima de 12 px**: lo que tenía 9–10 px (menú de abajo, pasos
   del registro y de los asistentes, etiquetas chicas, evaluación, ejes de
   las gráficas) pasa a 0,75rem como mínimo (`styles/globals.css`).
+  Después subió a 13 px (ver la sección de arriba).
 - **Confirmaciones con el estilo de DREY**: ninguna pantalla usa más la
   ventanita del navegador (`window.confirm`). Todas usan `useConfirmar()`
   (`components/ConfirmarAccion.jsx`): la hoja de abajo con título, qué va

@@ -203,7 +203,7 @@ textarea {
   background: none;
   border: none;
   color: var(--drey-texto-claro);
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
@@ -213,7 +213,7 @@ textarea {
 
 .auth-message {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-accent-texto);
 }
 
@@ -307,4 +307,17 @@ textarea {
   height: 40px;
   border-radius: 50% 50% 0 0;
   background: var(--drey-invertido-texto);
+}
+
+/* Texto que solo lee el lector de pantalla (no se ve). */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { MOVIMIENTO_REDUCIDO, useCoincide } from '../useCoincide.js'
 
 // Video de fondo de la página de inicio. Elige solo cuál mostrar según
 // la forma de la pantalla: el vertical en el celular (pantalla parada) y
@@ -14,7 +15,7 @@ const FORMA_VERTICAL = '(max-aspect-ratio: 1/1)'
 
 export default function VideoDeFondo({ celular, compu }) {
   const vertical = useCoincide(FORMA_VERTICAL)
-  const quieto = useCoincide('(prefers-reduced-motion: reduce)') || ahorroDeDatos()
+  const quieto = useCoincide(MOVIMIENTO_REDUCIDO) || ahorroDeDatos()
   const elegido = vertical ? celular : compu
   const referencia = useRef(null)
 
@@ -54,23 +55,6 @@ export default function VideoDeFondo({ celular, compu }) {
       disablePictureInPicture
     />
   )
-}
-
-function useCoincide(consulta) {
-  const [coincide, setCoincide] = useState(() => coincideAhora(consulta))
-  useEffect(() => {
-    if (!window.matchMedia) return undefined
-    const lista = window.matchMedia(consulta)
-    const alCambiar = () => setCoincide(lista.matches)
-    alCambiar()
-    lista.addEventListener?.('change', alCambiar)
-    return () => lista.removeEventListener?.('change', alCambiar)
-  }, [consulta])
-  return coincide
-}
-
-function coincideAhora(consulta) {
-  return typeof window !== 'undefined' && Boolean(window.matchMedia?.(consulta).matches)
 }
 
 function ahorroDeDatos() {

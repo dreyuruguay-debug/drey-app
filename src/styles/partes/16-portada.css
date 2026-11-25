@@ -27,7 +27,7 @@
   border-radius: 999px;
   background: var(--drey-amarillo-fondo);
   color: var(--drey-amarillo-texto);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-align: center;
   pointer-events: none;
@@ -78,7 +78,7 @@
 .portada-boton-chico {
   min-height: 2.3rem;
   padding: 0.45rem 0.95rem;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
 }
 
 .portada-boton:focus-visible,
@@ -194,7 +194,7 @@
 
 .portada-saludo {
   margin: 0 0 0.4rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -235,7 +235,7 @@
   border: none;
   background: none;
   color: var(--drey-text);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -315,7 +315,7 @@
 
 .portada-antetitulo {
   margin: 0 0 0.75rem;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -719,12 +719,12 @@
 }
 
 .portada-ajustes-etiqueta {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
 .portada-ajustes-nota {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -735,7 +735,7 @@
 .portada-ajustes-original {
   align-self: flex-start;
   color: var(--drey-accent-texto);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 
@@ -783,7 +783,7 @@
   justify-content: center;
   border: 1px dashed var(--drey-borde-control);
   color: var(--drey-texto-suave);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .portada-ajustes-preguntas {
@@ -837,7 +837,7 @@
     margin: 1.1rem 0 0.25rem;
     padding: 1rem 0.8rem 0;
     border-top: 1px solid var(--drey-borde-suave);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -929,7 +929,7 @@
 }
 
 .corregir-serie-valores small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .corregir-casillero {
@@ -990,7 +990,7 @@
   background: none;
   color: var(--drey-accent-texto);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   cursor: pointer;
 }
@@ -1029,7 +1029,7 @@
   background: none;
   color: var(--drey-texto-suave);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
@@ -1080,7 +1080,7 @@
 /* "⏱ por tiempo" al lado del nombre del ejercicio */
 .corregir-por-tiempo {
   margin-left: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--drey-texto-suave);
   white-space: nowrap;
@@ -1131,7 +1131,7 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-top: 0.5rem;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -1194,7 +1194,7 @@
 
 .entrenar-fallo-texto small {
   font-weight: 500;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -1221,7 +1221,7 @@
   border-radius: 999px;
   background: var(--drey-rojo-fondo);
   color: var(--drey-rojo-texto);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1237,7 +1237,7 @@
   background: none;
   color: var(--drey-texto-suave);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;

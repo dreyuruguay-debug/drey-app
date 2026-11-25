@@ -21,7 +21,7 @@
   padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem;
   background: var(--drey-azul-fondo);
   color: var(--drey-azul-texto);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-align: center;
 }
@@ -58,7 +58,7 @@
 
 .estado-conexion-motivo {
   flex-basis: 100%;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   opacity: 0.85;
 }
@@ -83,13 +83,6 @@
   font-size: 0.9rem;
   line-height: 1.4;
   text-align: center;
-}
-
-/* ---------- Avisos de vencimiento en Inicio ---------- */
-.home-aviso-urgente {
-  background: var(--drey-naranja-fondo);
-  border-color: var(--drey-naranja-trazo);
-  color: var(--drey-text);
 }
 
 /* ---------- Botón para acciones que no se pueden deshacer ---------- */
@@ -148,7 +141,7 @@
 .legal-version,
 .legal-borrador {
   margin: -0.5rem 1.25rem 1rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -253,7 +246,7 @@
 
 .codigo-item-textos small {
   color: var(--drey-texto-suave);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.35;
 }
 
@@ -295,7 +288,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 

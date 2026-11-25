@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import { supabase } from '../services/supabaseClient.js'
-import { cerrarSesion } from '../services/cerrarSesion.js'
 import { clientesDelEspacio, esDuenoDe, espacioActivo, useEspacios } from '../services/espacio.js'
 import { generarResumenesPendientes } from '../services/progreso.js'
 import { obtenerUsuarioActual } from '../services/sesion.js'
@@ -13,10 +12,8 @@ import { cargarActividadClientes } from '../services/actividad.js'
 import { armarTareas, primerosPasos } from '../utils/tareasProfe.js'
 import { semanaDelCiclo } from '../utils/ciclos.js'
 import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
-import InterruptorNotificaciones from '../components/InterruptorNotificaciones.jsx'
 import ResumenEspacio from '../components/ResumenEspacio.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
-import { RUTA_INGRESAR } from '../data/rutas.js'
 
 // Lo último que se mostró queda en memoria (services/memoriaSesion.js):
 // al volver a Inicio se ve al instante y se actualiza por detrás.
@@ -34,10 +31,13 @@ const MEMORIA_PANEL = 'panel-profe'
 // arriba sus números de un vistazo: suscripción DREY, cupos y alumnos
 // (components/ResumenEspacio.jsx, supabase/sql/035).
 //
+// Abajo, solo 3 accesos rápidos (Nueva rutina, La semana de todos y
+// Estadísticas): lo demás está en el menú. Las notificaciones y "Cerrar
+// sesión" están en Mi cuenta (pages/ProfeMiCuenta.jsx).
+//
 // La cuenta Admin tiene su propio Inicio (AdminInicio.jsx); la elige
 // InicioPanel.jsx.
 export default function PanelProfe() {
-  const navigate = useNavigate()
   const guardado = recordado(MEMORIA_PANEL)
   const [cargando, setCargando] = useState(!guardado)
   const [nombre, setNombre] = useState(guardado?.nombre || '')
@@ -154,11 +154,6 @@ export default function PanelProfe() {
     setCargando(false)
   }
 
-  async function salir() {
-    await cerrarSesion()
-    navigate(RUTA_INGRESAR)
-  }
-
   return (
     <ProfeLayout>
       <header className="inicio-saludo inicio-saludo-profe">
@@ -223,23 +218,11 @@ export default function PanelProfe() {
               <Link to="/profe/rutinas" className="acceso acceso-principal">
                 + Nueva rutina
               </Link>
-              <Link to="/profe/ejercicios" className="acceso">
-                + Nuevo ejercicio
-              </Link>
               <Link to="/profe/calendario" className="acceso">
                 La semana de todos
               </Link>
-              <Link to="/profe/progresion" className="acceso">
-                Progresión
-              </Link>
               <Link to="/profe/estadisticas" className="acceso">
                 Estadísticas
-              </Link>
-              <Link to="/profe/mi-perfil" className="acceso">
-                Mi perfil de profe
-              </Link>
-              <Link to="/profe/solicitudes" className="acceso">
-                Solicitudes de alumnos
               </Link>
               {armaEquipo && (
                 <Link to="/profe/equipo" className="acceso">
@@ -249,13 +232,6 @@ export default function PanelProfe() {
             </div>
           </section>
 
-          <div className="lista-tarjetas">
-            <InterruptorNotificaciones textoActivar="Te avisamos en este celular cuando un alumno te pide entrenar con vos, cuando alguien se registra, avisa que pagó o paga con Mercado Pago." />
-          </div>
-
-          <button type="button" className="boton-texto perfil-salir" onClick={salir}>
-            Cerrar sesión
-          </button>
         </>
       )}
     </ProfeLayout>

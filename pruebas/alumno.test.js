@@ -1,9 +1,10 @@
-// Pruebas de lo nuevo del alumno (la racha de semanas) y de cómo arranca
-// la pantalla de entrenar.
+// Pruebas de lo nuevo del alumno (la racha de semanas, los avisos del
+// Inicio) y de cómo arranca la pantalla de entrenar.
 import { describe, expect, it } from 'vitest'
 import { calcularRacha, diasConRutina, sumarDias } from '../src/utils/dias.js'
 import { RECORD_PESO, RECORD_REPS, RECORD_TONELAJE } from '../src/utils/records.js'
 import { prepararEntrenamiento } from '../src/utils/pantallaEntrenar.js'
+import { armarAvisosInicio, avisosVisibles, HORAS_SILENCIO } from '../src/utils/avisosInicio.js'
 
 // Martes 24/11/2026: la semana empieza el lunes 23.
 const HOY = '2026-11-24'
@@ -134,5 +135,63 @@ describe('pantalla de entrenar: cómo arranca', () => {
     const inicio = prepararEntrenamiento({ ...comun, modoPrevia: true, enCurso: { series: [] } })
     expect(inicio.retomado).toBe(false)
     expect(inicio.anteriores).toEqual({})
+  })
+})
+
+// Avisos del Inicio (carrusel y campanita, utils/avisosInicio.js).
+describe('avisos del Inicio', () => {
+  const base = {
+    perfil: { profe_id: 'p1', vencimiento: '2026-11-20' },
+    plan: { tipo: 'al-dia' },
+    cuentaPendiente: false,
+    cuentaDeBaja: false,
+    planBloqueado: false,
+    cartelDelEspacio: false,
+    textoEspacio: '',
+    avanceNuevo: false,
+    tocaMedidas: false,
+    ultimaMedicion: null,
+  }
+
+  it('sin nada pendiente no hay avisos', () => {
+    expect(armarAvisosInicio(base)).toEqual([])
+  })
+
+  it('ordena por importancia: plata y acceso primero', () => {
+    const avisos = armarAvisosInicio({
+      ...base,
+      perfil: { profe_id: null, vencimiento: '2026-11-20' },
+      plan: { tipo: 'gracia', dias: 2 },
+      avanceNuevo: true,
+      tocaMedidas: true,
+    })
+    expect(avisos.map((aviso) => aviso.id)).toEqual([
+      'plan-gracia',
+      'evaluacion',
+      'sin-profe',
+      'medidas',
+    ])
+    expect(avisos[0].tono).toBe('urgente')
+    expect(avisos[0].texto).toContain('Tenés 2 días')
+  })
+
+  it('con el plan vencido y bloqueado no avisa vencimientos (lo dice la tarjeta grande)', () => {
+    const avisos = armarAvisosInicio({ ...base, plan: { tipo: 'gracia', dias: 0 }, planBloqueado: true })
+    expect(avisos).toEqual([])
+  })
+
+  it('la ✕ los oculta 12 horas y después vuelven', () => {
+    const avisos = armarAvisosInicio({ ...base, avanceNuevo: true, tocaMedidas: true })
+    const ahora = Date.UTC(2026, 10, 24, 12)
+    const silencio = { hasta: ahora + HORAS_SILENCIO * 3600 * 1000, ids: ['evaluacion', 'medidas'] }
+    expect(avisosVisibles(avisos, silencio, ahora + 3600 * 1000)).toEqual([])
+    expect(avisosVisibles(avisos, silencio, ahora + 13 * 3600 * 1000)).toHaveLength(2)
+  })
+
+  it('si aparece un aviso nuevo mientras están ocultos, ese sí se muestra', () => {
+    const ahora = Date.UTC(2026, 10, 24, 12)
+    const silencio = { hasta: ahora + HORAS_SILENCIO * 3600 * 1000, ids: ['medidas'] }
+    const avisos = armarAvisosInicio({ ...base, avanceNuevo: true, tocaMedidas: true })
+    expect(avisosVisibles(avisos, silencio, ahora).map((aviso) => aviso.id)).toEqual(['evaluacion'])
   })
 })

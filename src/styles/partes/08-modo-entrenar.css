@@ -111,7 +111,7 @@
 }
 
 .entrenar-etiqueta {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -121,7 +121,7 @@
 .entrenar-etiqueta-chica {
   display: block;
   margin-bottom: 0.4rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -156,7 +156,7 @@
   border-radius: 999px;
   border: 1px solid var(--drey-accent);
   color: var(--drey-accent-texto);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -357,7 +357,7 @@
 }
 
 .entrenar-stepper-valor small {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -413,7 +413,7 @@
 }
 
 .entrenar-pie-texto small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -531,7 +531,7 @@
 .descanso-nota {
   margin: auto 0 0;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -556,7 +556,7 @@
 .calentamiento-nota {
   margin: 0;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -635,7 +635,7 @@
 }
 
 .final-calentamiento-texto small {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -678,7 +678,7 @@
 }
 
 .final-cifras span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -712,7 +712,7 @@
 }
 
 .final-esfuerzo-chip small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -805,11 +805,11 @@
 
 .vista-general-ejercicio-texto small {
   color: var(--drey-texto-suave);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .vista-general-ejercicio-estado {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--drey-texto-suave);
 }

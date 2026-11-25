@@ -20,8 +20,9 @@ import { obtenerFechaHoyISO } from '../utils/dias.js'
 import { RUTA_INGRESAR, RUTA_MOSTRAR_PORTADA } from '../data/rutas.js'
 
 // "Mi cuenta" del profe ("/profe/mi-cuenta"): todo lo de su cuenta en un
-// solo lugar. En el celular se abre desde el menú de abajo; en la compu
-// "Mi perfil" y "Solicitudes" ya están en la barra lateral.
+// solo lugar. En el celular se abre desde el menú de abajo; en la compu,
+// desde "Mi cuenta" en la barra lateral. Las notificaciones y "Cerrar
+// sesión" están solo acá (ya no en el Inicio).
 //
 //   · Mi perfil de profe (lo que ven los alumnos al elegir profe).
 //   · Solicitudes de alumnos (con las que esperan respuesta).

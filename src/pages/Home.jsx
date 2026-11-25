@@ -17,7 +17,7 @@ import {
   precargarRutinasSinConexion,
 } from '../services/datosCliente.js'
 import { precargarPantallas } from '../pantallasDiferidas.js'
-import { estadoDelPlan, textoVence } from '../data/vencimiento.js'
+import { estadoDelPlan } from '../data/vencimiento.js'
 import { necesitaAceptarTerminos } from '../data/versionLegal.js'
 import { tocaMedirse } from '../utils/medidas.js'
 import { semanaDelCiclo } from '../utils/ciclos.js'
@@ -43,6 +43,15 @@ import {
 import { mostrarAviso } from '../services/avisos.js'
 import MensajeDelDia from '../components/MensajeDelDia.jsx'
 import RachaSemanas from '../components/RachaSemanas.jsx'
+import CarruselAvisos from '../components/inicio/CarruselAvisos.jsx'
+import CampanaAvisos from '../components/inicio/CampanaAvisos.jsx'
+import {
+  armarAvisosInicio,
+  avisosVisibles,
+  HORAS_SILENCIO,
+  leerSilencio,
+  silenciarAvisos,
+} from '../utils/avisosInicio.js'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -61,10 +70,12 @@ function leerGuardado() {
   return { usuarioId: usuario.id, inicio, historial }
 }
 
-// Inicio del cliente: una sola acción clara. Arriba el saludo y la
-// semana en puntos; en el medio, "Hoy te toca" con el botón verde grande
-// para empezar el entrenamiento; abajo la racha y el último récord. La
-// primera vez que entra se muestra la bienvenida.
+// Inicio del cliente: una sola acción clara. Arriba el saludo con la
+// campanita de avisos y el carrusel de avisos (uno por vez, gira solo;
+// ver utils/avisosInicio.js); enseguida "Hoy te toca" con el botón verde
+// grande para empezar el entrenamiento; después la racha, la semana en
+// puntos y el último récord. La primera vez que entra se muestra la
+// bienvenida.
 //
 // Si dejó un entrenamiento a medias hoy (en pausa, de cualquier rutina),
 // en su lugar aparece la tarjeta naranja "Entrenamiento en pausa" con el
@@ -101,6 +112,10 @@ export default function Home() {
   // Sirve solo para volver a dibujar Inicio cuando se cancela el
   // entrenamiento a medias (está guardado en el celular, no en un estado).
   const [, setEnCursoCancelados] = useState(0)
+  // Avisos que el alumno ocultó con la ✕ del carrusel (12 horas).
+  const [silencio, setSilencio] = useState(() =>
+    guardado ? leerSilencio(guardado.usuarioId) : null,
+  )
   const [mostrarBienvenida, setMostrarBienvenida] = useState(
     () => Boolean(guardado) && debeVerBienvenida(guardado.usuarioId),
   )
@@ -120,6 +135,7 @@ export default function Home() {
       return
     }
     setUsuarioId(usuario.id)
+    setSilencio(leerSilencio(usuario.id))
 
     const [inicio, historial] = await Promise.all([
       cargarInicioCliente(usuario.id),
@@ -227,6 +243,36 @@ export default function Home() {
   const record = ultimoRecord(sesiones)
   const proximo = proximoDiaConRutina(calendario, diaHoy)
 
+  // Todos los avisos van juntos: en el carrusel (menos los que ocultó con
+  // la ✕) y en la campanita (siempre todos). Ver utils/avisosInicio.js.
+  const avisos = armarAvisosInicio({
+    perfil,
+    plan,
+    cuentaPendiente,
+    cuentaDeBaja,
+    planBloqueado,
+    cartelDelEspacio,
+    textoEspacio,
+    avanceNuevo: Boolean(datos?.avanceNuevo),
+    tocaMedidas:
+      datos?.ultimaMedicion !== undefined &&
+      !planBloqueado &&
+      !cuentaPendiente &&
+      sesiones.length >= 3 &&
+      tocaMedirse(datos.ultimaMedicion, hoy),
+    ultimaMedicion: datos?.ultimaMedicion,
+  })
+  const avisosDelCarrusel = avisosVisibles(avisos, silencio)
+
+  function ocultarAvisos() {
+    setSilencio(silenciarAvisos(usuarioId, avisos.map((aviso) => aviso.id)))
+    mostrarAviso(`Avisos ocultos por ${HORAS_SILENCIO} horas. Siguen en la campanita.`)
+  }
+
+  function volverAMostrarAvisos() {
+    setSilencio(silenciarAvisos(usuarioId, [], 0))
+  }
+
   return (
     <div className="screen has-bottom-nav inicio">
       <TopPattern />
@@ -237,69 +283,22 @@ export default function Home() {
           <h1 className="inicio-hola">Hola, {perfil?.nombre || 'crack'}</h1>
           <p className="inicio-plan">{obtenerPlan(perfil?.plan)?.nombre || 'Sin plan'}</p>
         </div>
-        <Link to="/perfil" className="inicio-avatar" aria-label="Mi perfil">
-          {iniciales(perfil)}
-        </Link>
+        <div className="inicio-cabecera-acciones">
+          <CampanaAvisos
+            avisos={avisos}
+            carruselOculto={avisosDelCarrusel.length < avisos.length}
+            onMostrar={volverAMostrarAvisos}
+          />
+          <Link to="/perfil" className="inicio-avatar" aria-label="Mi perfil">
+            {iniciales(perfil)}
+          </Link>
+        </div>
       </header>
 
       {/* El mensaje del día de su profe y el adorno de las fiestas. */}
       <MensajeDelDia activo={!cargando && !cuentaPendiente && !cuentaDeBaja} />
 
-      {cuentaPendiente && (
-        <Link to="/suscripcion" className="home-aviso-pendiente">
-          {perfil?.aviso_pago
-            ? 'Avisaste tu pago. Tu profe lo está revisando.'
-            : 'Tu cuenta está pendiente. Tocá acá para ver cómo pagar y activarla.'}
-        </Link>
-      )}
-
-      {cartelDelEspacio && (
-        <p className="home-aviso-pendiente home-aviso-espacio" role="status">
-          {textoEspacio}
-        </p>
-      )}
-
-      {!cuentaPendiente && !cuentaDeBaja && !planBloqueado && plan.tipo === 'por-vencer' && (
-        <Link to="/suscripcion" className="home-aviso-pendiente">
-          Tu plan {textoVence(plan.dias)}. Tocá acá para renovarlo.
-        </Link>
-      )}
-
-      {!cuentaDeBaja && !planBloqueado && plan.tipo === 'gracia' && (
-        <Link to="/suscripcion" className="home-aviso-pendiente home-aviso-urgente">
-          Tu plan venció el {textoFechaCorta(perfil.vencimiento)}.{' '}
-          {plan.dias === 0
-            ? 'Hoy es el último día para pagar sin perder el acceso.'
-            : `Tenés ${plan.dias} ${plan.dias === 1 ? 'día' : 'días'} para pagar sin perder el acceso.`}{' '}
-          Tocá acá para pagar.
-        </Link>
-      )}
-
-      {datos?.avanceNuevo && (
-        <Link to="/progreso#avance" className="home-aviso-pendiente home-aviso-avance">
-          📈 Tu profe publicó tu evaluación del mes. Tocá acá para verla.
-        </Link>
-      )}
-
-      {/* Sin profe asignado: a elegir uno (pages/Profes.jsx, SQL 026). */}
-      {perfil && !perfil.profe_id && (
-        <Link to="/profes" className="home-aviso-pendiente home-aviso-profe">
-          👋 Todavía no tenés profe asignado. Tocá acá para conocer a los profes y elegir el tuyo.
-        </Link>
-      )}
-
-      {sesiones.length > 0 && !cuentaPendiente && !cuentaDeBaja && !planBloqueado && (
-        <RachaSemanas racha={racha} />
-      )}
-
-      {diasConEntrenamiento > 0 && (
-        <section className="inicio-semana">
-          <p className="seccion-etiqueta">
-            Esta semana · {diasCumplidos} de {diasConEntrenamiento}
-          </p>
-          <WeekDots dias={dias} diaHoy={diaHoy} />
-        </section>
-      )}
+      <CarruselAvisos avisos={avisosDelCarrusel} onCerrar={ocultarAvisos} />
 
       <section className="inicio-hoy">
         {cuentaDeBaja ? (
@@ -412,6 +411,19 @@ export default function Home() {
         )}
       </section>
 
+      {sesiones.length > 0 && !cuentaPendiente && !cuentaDeBaja && !planBloqueado && (
+        <RachaSemanas racha={racha} />
+      )}
+
+      {diasConEntrenamiento > 0 && (
+        <section className="inicio-semana">
+          <p className="seccion-etiqueta">
+            Esta semana · {diasCumplidos} de {diasConEntrenamiento}
+          </p>
+          <WeekDots dias={dias} diaHoy={diaHoy} />
+        </section>
+      )}
+
       {/* Una invitación por vez: primero instalar DREY en el celular (en
           iPhone, sin instalar no llegan los avisos) y después los avisos. */}
       {instalacion.ofrecerEnInicio ? (
@@ -420,19 +432,6 @@ export default function Home() {
         sesiones.length > 0 &&
         !cuentaPendiente && <InvitacionNotificaciones usuarioId={usuarioId} />
       )}
-
-      {datos?.ultimaMedicion !== undefined &&
-        !planBloqueado &&
-        !cuentaPendiente &&
-        sesiones.length >= 3 &&
-        tocaMedirse(datos.ultimaMedicion, hoy) && (
-          <Link to="/medidas" className="home-aviso-pendiente home-aviso-medidas">
-            📏{' '}
-            {datos.ultimaMedicion
-              ? 'Pasaron 4 semanas desde tus últimas medidas. Tocá acá para cargar las de hoy.'
-              : 'Cargá tus medidas y fotos de hoy: así vas a ver cuánto cambiás.'}
-          </Link>
-        )}
 
       {sesiones.length > 0 && (
         <section className="inicio-datos">

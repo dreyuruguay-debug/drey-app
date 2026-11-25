@@ -28,7 +28,7 @@
 
 .evaluacion-sobretitulo {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -68,7 +68,7 @@
 
 .evaluacion-aclaracion {
   margin: 0.35rem 0 0;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--drey-texto-tenue);
 }
@@ -124,13 +124,13 @@
 }
 
 .evaluacion-cifra-etiqueta {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
 .evaluacion-cifra-cambio,
 .evaluacion-dato-cambio {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   color: var(--drey-texto-suave);
 }
@@ -202,7 +202,7 @@
   border-radius: 999px;
   background: var(--drey-amarillo-fondo);
   color: var(--drey-amarillo-texto);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -212,7 +212,7 @@
   flex: 0 0 auto;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   background: var(--drey-superficie-3);
   color: var(--drey-texto-suave);
@@ -259,7 +259,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.1rem 0.5rem;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
 }
 
 .evaluacion-dato dt {
@@ -286,13 +286,13 @@
 }
 
 .evaluacion-mini-caja small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-tenue);
 }
 
 .evaluacion-tabla td,
 .evaluacion-tabla th {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   white-space: nowrap;
 }
 
@@ -312,7 +312,7 @@
 }
 
 .evaluacion-pie {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--drey-texto-tenue);
 }
@@ -463,12 +463,12 @@
 
 .ajustes-campo-titulo {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
 .evaluacion-ayuda {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-tenue);
 }
 
@@ -482,7 +482,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--drey-texto-claro);
 }
@@ -521,7 +521,7 @@
 
 .evaluacion-sin-drive,
 .evaluacion-drive-estado {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-tenue);
 }
 
@@ -631,7 +631,7 @@
 
 .selector-espacio-textos small {
   color: var(--drey-texto-suave);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .selector-espacio-textos strong {
@@ -852,7 +852,7 @@
   gap: 0.75rem;
   margin: 1.25rem 0 0.75rem;
   color: var(--drey-texto-tenue);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -962,7 +962,7 @@
 
 .resumen-espacio-numero small {
   color: var(--drey-texto-2);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .resumen-espacio-numero.resumen-alerta {

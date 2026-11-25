@@ -75,7 +75,7 @@ const RUTAS_CLIENTES_PROFE = RUTAS_CLIENTES.filter((ruta) => ruta !== '/profe/so
 // "Mi cuenta" del profe (su perfil y las solicitudes de alumnos): en el
 // celular es un botón más del menú de abajo que abre
 // pages/ProfeMiCuenta.jsx; en la compu, un grupo aparte en la barra
-// lateral con "Mi perfil" y "Solicitudes" a un toque.
+// lateral con "Mi cuenta" y "Solicitudes" a un toque.
 //   donde: 'celular' o 'compu' = solo se muestra ahí (si falta, en los dos).
 //   grupo: título de un grupo (solo en la compu), no es un botón.
 const SECCIONES_PROFE = [
@@ -142,9 +142,11 @@ const SECCIONES_PROFE = [
   },
   { grupo: 'Mi cuenta' },
   {
-    to: '/profe/mi-perfil',
-    label: 'Mi perfil',
-    rutas: ['/profe/mi-perfil', '/profe/mi-cuenta'],
+    // En la compu abre "Mi cuenta" (perfil, notificaciones, apariencia y
+    // cerrar sesión), igual que el botón del celular.
+    to: '/profe/mi-cuenta',
+    label: 'Mi cuenta',
+    rutas: ['/profe/mi-cuenta', '/profe/mi-perfil'],
     Icono: IconoCuenta,
     donde: 'compu',
   },

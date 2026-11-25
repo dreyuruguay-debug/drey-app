@@ -107,7 +107,7 @@
 .buscador-grupo-titulo {
   margin: 0;
   padding: 0.5rem 0.75rem 0.25rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -133,7 +133,7 @@
 .buscador-item small {
   flex: none;
   color: var(--drey-texto-suave);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .buscador-item-elegido {
@@ -177,7 +177,7 @@
   max-width: 8.5rem;
   padding: 0.25rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   overflow: hidden;
 }
@@ -266,5 +266,5 @@
 
 .semana-nota-sin-datos {
   margin-top: -0.25rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }

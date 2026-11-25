@@ -173,6 +173,9 @@ export default function ProfeClientes() {
         <Link to="/profe/calendario" className="boton-secundario">
           La semana de todos
         </Link>
+        <Link to="/profe/progresion" className="boton-secundario">
+          Progresión
+        </Link>
         <Link to="/profe/solicitudes" className="boton-secundario">
           Solicitudes{solicitudes > 0 ? ` (${solicitudes})` : ''}
         </Link>

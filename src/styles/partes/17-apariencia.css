@@ -57,7 +57,7 @@
 }
 
 .apariencia-opcion small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -141,7 +141,7 @@
 }
 
 .apariencia-color small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-align: center;
   line-height: 1.2;
 }
@@ -185,7 +185,7 @@
   border-radius: 14px;
   background: var(--drey-verde-fondo);
   color: var(--drey-texto-2);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 

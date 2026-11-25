@@ -29,8 +29,10 @@
   --drey-texto-claro: #e5e5e5;
   --drey-texto-2: #cfcfcf;
   --drey-texto-suave: #a3a3a3;
-  --drey-texto-tenue: #8a8a8a;
-  --drey-texto-apagado: #6b6b6b;
+  /* Todos los grises de texto se leen bien (contraste de 4,5 a 1 o más
+     sobre el fondo y las tarjetas; noviembre 2026). */
+  --drey-texto-tenue: #969696;
+  --drey-texto-apagado: #828282;
   --drey-accent: #3ddc84;
   --drey-accent-texto: #3ddc84;
   --drey-sobre-accent: #0d0d0d;
@@ -111,8 +113,8 @@
   --drey-texto-claro: #2c302d;
   --drey-texto-2: #3b3f3c;
   --drey-texto-suave: #5f6460;
-  --drey-texto-tenue: #6d726e;
-  --drey-texto-apagado: #8b908c;
+  --drey-texto-tenue: #626763;
+  --drey-texto-apagado: #6a6f6b;
   --drey-accent: #3ddc84;
   --drey-accent-texto: #0e8f4a;
   --drey-sobre-accent: #0d0d0d;

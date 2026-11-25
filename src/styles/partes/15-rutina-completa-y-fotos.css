@@ -49,7 +49,7 @@
   border-radius: 999px;
   background: var(--drey-accent);
   color: var(--drey-sobre-accent);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   line-height: 22px;
   text-align: center;
@@ -178,11 +178,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
 }
 
 .medidas-galeria-foto small {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   text-align: center;
 }
 
@@ -230,7 +230,7 @@
 
 .medidas-miniatura figcaption {
   margin-top: 0.2rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--drey-accent-texto);
   text-align: center;
   font-weight: 700;
@@ -246,13 +246,13 @@
   border: none;
   background: rgba(13, 13, 13, 0.8);
   color: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
 .medidas-nota-fotos {
   margin: 0.4rem 0 0.75rem;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
 }
 
 .visor-imagen-foto img {

@@ -14,7 +14,7 @@
   background: none;
   color: var(--drey-amarillo-texto);
   font-family: var(--fuente-texto);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -28,7 +28,7 @@
 .config-calentamiento-ayuda {
   display: block;
   margin: 0.15rem 0 0.5rem;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 
@@ -107,7 +107,7 @@
 }
 
 .visor-contador {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
   font-weight: 700;
 }
@@ -198,7 +198,7 @@
 
 .visor-ayuda {
   margin: 0.6rem 0 0;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
   text-align: center;
 }
@@ -370,10 +370,6 @@
   background: var(--drey-verde-fondo);
 }
 
-.home-aviso-profe {
-  margin-top: 0.6rem;
-}
-
 /* ---------- Mi perfil de profe ---------- */
 .mi-perfil-grilla {
   display: flex;
@@ -414,7 +410,7 @@
   background: var(--drey-superficie-2);
   border: 1px dashed var(--drey-borde-control);
   color: var(--drey-texto-suave);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .mi-perfil-foto-botones {
@@ -452,7 +448,7 @@
 
 .mi-perfil-contador {
   margin: 0.25rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
   text-align: right;
 }
@@ -544,7 +540,7 @@
 }
 
 .solicitud-fila-textos small {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--drey-texto-suave);
 }
 

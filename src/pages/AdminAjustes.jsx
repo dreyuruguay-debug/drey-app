@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import Pestanas from '../components/Pestanas.jsx'
 import Esqueleto from '../components/Esqueleto.jsx'
+import { PANTALLA_COMPU, useCoincide } from '../components/useCoincide.js'
 import AjustesPortada from '../components/AjustesPortada.jsx'
 import AjustesDrive from '../components/AjustesDrive.jsx'
 import AjustesDrey from '../components/AjustesDrey.jsx'
@@ -31,68 +32,162 @@ import { listaDePlanes } from '../data/planes.js'
 //     prueba gratis y datos de cobro de DREY (components/AjustesDrey.jsx,
 //     SQL 032).
 //
-// Arriba, el acceso al administrador de notificaciones (pantalla propia:
-// pages/AdminNotificaciones.jsx, supabase/sql/030).
-const PESTANAS = [
-  { id: 'cobro', label: 'Cobro de alumnos' },
-  { id: 'whatsapp', label: 'WhatsApp' },
-  { id: 'plazos', label: 'Plazos' },
-  { id: 'drey', label: 'DREY' },
-  { id: 'portada', label: 'Portada' },
-  { id: 'drive', label: 'Drive' },
+// Cómo se ve: en el celular, una lista de secciones (como los Ajustes
+// del iPhone); cada fila abre su sección ("?tab=…") con "← Ajustes" para
+// volver. En la compu, la misma lista queda fija a la izquierda como
+// submenú y la sección elegida a la derecha. En la lista también están
+// las Notificaciones (pantalla propia: pages/AdminNotificaciones.jsx,
+// supabase/sql/030) y el Historial de cambios.
+// Las secciones, en el orden de la lista. "to": abre otra pantalla.
+const SECCIONES = [
+  {
+    id: 'notificaciones',
+    label: 'Notificaciones',
+    detalle: 'Qué avisos salen, a quién, a qué hora y con qué texto',
+    to: '/profe/ajustes/notificaciones',
+    icono: 'campana',
+  },
+  { id: 'cobro', label: 'Cobro de alumnos', detalle: 'Planes y datos de cobro', icono: 'pago' },
+  { id: 'whatsapp', label: 'WhatsApp', detalle: 'Link del grupo de la comunidad', icono: 'chat' },
+  {
+    id: 'plazos',
+    label: 'Plazos',
+    detalle: 'Aviso antes de vencer y días de gracia',
+    icono: 'reloj',
+  },
+  { id: 'drey', label: 'DREY', detalle: 'Planes por cupos y prueba gratis', icono: 'drey' },
+  { id: 'portada', label: 'Portada', detalle: 'Textos, videos y fundador', icono: 'portada' },
+  { id: 'drive', label: 'Drive', detalle: 'Carpeta de las evaluaciones', icono: 'nube' },
+  {
+    id: 'historial',
+    label: 'Historial de cambios',
+    detalle: 'Quién cambió qué y cuándo',
+    to: '/profe/ajustes/historial',
+    icono: 'historial',
+  },
 ]
+const SECCION_INICIAL = 'cobro'
 
 export default function AdminAjustes() {
   const config = useConfiguracion()
   const [parametros, setParametros] = useSearchParams()
-  const pestana = PESTANAS.some((item) => item.id === parametros.get('tab'))
-    ? parametros.get('tab')
-    : 'cobro'
+  const enCompu = useCoincide(PANTALLA_COMPU)
+  const elegida = SECCIONES.find((item) => !item.to && item.id === parametros.get('tab'))
+  // En el celular, sin sección elegida se ve solo la lista. En la compu
+  // siempre hay una abierta (la primera, si no se eligió).
+  const seccion = elegida || (enCompu ? SECCIONES.find((item) => item.id === SECCION_INICIAL) : null)
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
     cargarConfiguracion().finally(() => setCargando(false))
   }, [])
 
+  function abrir(id) {
+    // En el celular, "Atrás" del teléfono vuelve a la lista.
+    setParametros({ tab: id }, { replace: enCompu })
+  }
+
+  const lista = <ListaDeAjustes activa={seccion?.id} onAbrir={abrir} />
+
   return (
     <ProfeLayout titulo="Ajustes" soloAdmin>
-      <Link to="/profe/ajustes/notificaciones" className="tarjeta-rutina ajustes-acceso-avisos">
-        <span className="tarjeta-rutina-textos">
-          <strong>🔔 Notificaciones</strong>
-          <small>Qué avisos salen, a quién, a qué hora y con qué texto</small>
-        </span>
-        <span className="tarjeta-flecha" aria-hidden="true">
-          ›
-        </span>
-      </Link>
+      <div className={seccion ? 'ajustes-admin ajustes-admin-abierta' : 'ajustes-admin'}>
+        {(enCompu || !seccion) && lista}
 
-      <Pestanas
-        etiqueta="Sección de ajustes"
-        opciones={PESTANAS}
-        activa={pestana}
-        onCambiar={(id) => setParametros({ tab: id }, { replace: true })}
-      />
-
-      {cargando ? (
-        <Esqueleto />
-      ) : pestana === 'cobro' ? (
-        <SeccionCobro config={config} />
-      ) : pestana === 'whatsapp' ? (
-        <SeccionWhatsapp config={config} />
-      ) : pestana === 'portada' ? (
-        <AjustesPortada />
-      ) : pestana === 'drive' ? (
-        <AjustesDrive />
-      ) : pestana === 'drey' ? (
-        <AjustesDrey config={config} />
-      ) : (
-        <SeccionPlazos config={config} />
-      )}
-
-      <Link to="/profe/ajustes/historial" className="boton-secundario ajustes-historial">
-        Ver historial de cambios
-      </Link>
+        {seccion && (
+          <section className="ajustes-seccion" aria-labelledby="ajustes-seccion-titulo">
+            {!enCompu && (
+              <Link to="/profe/ajustes" className="ajustes-volver">
+                ← Ajustes
+              </Link>
+            )}
+            <h2 id="ajustes-seccion-titulo" className="ajustes-seccion-titulo">
+              {seccion.label}
+            </h2>
+            {cargando ? <Esqueleto /> : <ContenidoDeSeccion id={seccion.id} config={config} />}
+          </section>
+        )}
+      </div>
     </ProfeLayout>
+  )
+}
+
+function ContenidoDeSeccion({ id, config }) {
+  if (id === 'cobro') return <SeccionCobro config={config} />
+  if (id === 'whatsapp') return <SeccionWhatsapp config={config} />
+  if (id === 'portada') return <AjustesPortada />
+  if (id === 'drive') return <AjustesDrive />
+  if (id === 'drey') return <AjustesDrey config={config} />
+  return <SeccionPlazos config={config} />
+}
+
+// La lista de secciones: cada fila con su ícono, nombre y una línea que
+// explica qué hay adentro.
+function ListaDeAjustes({ activa, onAbrir }) {
+  return (
+    <nav className="ajustes-lista" aria-label="Secciones de ajustes">
+      {SECCIONES.map((item) => {
+        const contenido = (
+          <>
+            <span className="ajustes-fila-icono">
+              <IconoAjuste tipo={item.icono} />
+            </span>
+            <span className="ajustes-fila-textos">
+              <strong>{item.label}</strong>
+              <small>{item.detalle}</small>
+            </span>
+            <span className="ajustes-fila-flecha" aria-hidden="true">
+              ›
+            </span>
+          </>
+        )
+        const clase = item.id === activa ? 'ajustes-fila ajustes-fila-activa' : 'ajustes-fila'
+        return item.to ? (
+          <Link key={item.id} to={item.to} className={clase}>
+            {contenido}
+          </Link>
+        ) : (
+          <button
+            key={item.id}
+            type="button"
+            className={clase}
+            onClick={() => onAbrir(item.id)}
+            aria-current={item.id === activa ? 'page' : undefined}
+          >
+            {contenido}
+          </button>
+        )
+      })}
+    </nav>
+  )
+}
+
+const TRAZOS = {
+  campana: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" />,
+  pago: <path d="M2 8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zM2 10h20" />,
+  chat: <path d="M21 12a8 8 0 0 1-11.8 7L3 21l2-6A8 8 0 1 1 21 12z" />,
+  reloj: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2" />,
+  drey: <path d="M4 4h16v16H4zM9 8v8M9 8h3a4 4 0 0 1 0 8H9" />,
+  portada: <path d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6" />,
+  nube: <path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z" />,
+  historial: <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2" />,
+}
+
+function IconoAjuste({ tipo }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {TRAZOS[tipo]}
+    </svg>
   )
 }
 
