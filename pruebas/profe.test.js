@@ -74,3 +74,47 @@ describe('la semana de todos', () => {
     expect(semana.totales).toEqual({ hechos: 1, previstos: 4, faltas: 1, sinEntrenar: 1 })
   })
 })
+
+describe('la semana de todos con el historial del calendario', () => {
+  const clientes = [{ id: 'a1', nombre: 'Lucía' }]
+  const rutinas = { r1: 'Piernas', r2: 'Torso' }
+  // Hasta el 22/11 le tocaba lunes; desde el 23/11, martes (y el lunes nada).
+  const historial = [
+    { cliente_id: 'a1', dia: 'Lunes', rutina_id: 'r1', desde: '2026-11-09' },
+    { cliente_id: 'a1', dia: 'Lunes', rutina_id: null, desde: '2026-11-23' },
+    { cliente_id: 'a1', dia: 'Martes', rutina_id: 'r2', desde: '2026-11-23' },
+  ]
+  const armar = (lunes) =>
+    armarSemana({
+      clientes,
+      calendario: { a1: { Martes: 'r2' } },
+      historial,
+      rutinas,
+      sesiones: [{ cliente_id: 'a1', fecha: '2026-11-04', rutina_id: 'r1' }],
+      lunes,
+      hoy: '2026-11-25',
+    })
+
+  it('las semanas pasadas usan el calendario que valía entonces', () => {
+    const [fila] = armar('2026-11-16').filas
+    expect(fila.celdas[0]).toMatchObject({ estado: 'falto', texto: 'Piernas' }) // lunes 16
+    expect(fila.celdas[1].estado).toBe('descanso') // el martes todavía no tocaba
+    expect([fila.hechos, fila.previstos]).toEqual([0, 1])
+  })
+
+  it('esta semana usa el calendario nuevo', () => {
+    const [fila] = armar('2026-11-23').filas
+    expect(fila.celdas[0].estado).toBe('descanso')
+    expect(fila.celdas[1]).toMatchObject({ estado: 'falto', texto: 'Torso' })
+  })
+
+  it('antes del historial no marca faltas, solo lo que entrenó', () => {
+    const semana = armar('2026-11-02')
+    const [fila] = semana.filas
+    expect(fila.celdas[0].estado).toBe('sin-dato')
+    expect(fila.celdas[2]).toMatchObject({ estado: 'hecho', texto: 'Piernas' }) // miércoles 4
+    expect(semana.sinDatos).toBe(true)
+    expect(semana.totales.faltas).toBe(0)
+    expect(fila.previstos).toBe(0)
+  })
+})

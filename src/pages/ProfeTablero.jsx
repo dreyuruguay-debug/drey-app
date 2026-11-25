@@ -134,35 +134,32 @@ function ContenidoTablero({ tablero }) {
         {tablero.profes.length === 0 ? (
           <p className="profe-vacio">Todavía no hay profes en el equipo.</p>
         ) : (
-          <div className="profe-tabla-wrap">
-            <table className="profe-tabla tablero-profes">
-              <thead>
-                <tr>
-                  <th>Profe</th>
-                  <th>Alumnos activos</th>
-                  <th>Entrenaron esta semana</th>
-                  <th>Dejaron de venir</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tablero.profes.map((profe) => (
-                  <tr key={profe.id}>
-                    <td>
-                      <strong>{profe.nombre}</strong>
-                      {profe.rol === 'dueno' && <small className="tablero-rol"> · dueño</small>}
-                      {masAlumnos?.id === profe.id && (
-                        <span className="chip chip-chico tablero-destacado">Más alumnos</span>
-                      )}
-                    </td>
-                    <td>{profe.activos}</td>
-                    <td>{profe.entrenaron_semana}</td>
-                    <td className={profe.dejaron_de_venir > 0 ? 'texto-alerta' : ''}>
-                      {profe.dejaron_de_venir}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="tablero-profes">
+            {tablero.profes.map((profe) => (
+              <div key={profe.id} className="tablero-profe">
+                <div className="tablero-profe-nombre">
+                  <strong>{profe.nombre}</strong>
+                  {profe.rol === 'dueno' && <small className="tablero-rol">Dueño</small>}
+                  {masAlumnos?.id === profe.id && (
+                    <span className="chip chip-chico tablero-destacado">Más alumnos</span>
+                  )}
+                </div>
+                <dl className="tablero-profe-numeros">
+                  <div>
+                    <dt>Activos</dt>
+                    <dd>{profe.activos}</dd>
+                  </div>
+                  <div>
+                    <dt>Entrenaron esta semana</dt>
+                    <dd>{profe.entrenaron_semana}</dd>
+                  </div>
+                  <div className={profe.dejaron_de_venir > 0 ? 'tablero-profe-alerta' : ''}>
+                    <dt>Dejaron de venir</dt>
+                    <dd>{profe.dejaron_de_venir}</dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
           </div>
         )}
         {tablero.sinProfe > 0 && (

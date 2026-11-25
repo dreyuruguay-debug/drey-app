@@ -1,13 +1,13 @@
--- ESQUEMA ACTUAL DE LA BASE DE DREY (foto al 24/11/2026, después del SQL 042)
+-- ESQUEMA ACTUAL DE LA BASE DE DREY (foto al 24/11/2026, después del SQL 043)
 --
 -- Qué es: TODA la base en un solo archivo (tablas, reglas de permisos,
 -- funciones, triggers, buckets de archivos y los datos iniciales:
 -- ajustes, planes, biblioteca de ejercicios y tipos de aviso). Es la suma
--- de correr los SQL 001 al 042 en orden.
+-- de correr los SQL 001 al 043 en orden.
 --
 -- Para qué sirve:
 --   · CONSULTAR cómo está hoy una tabla o una función, sin tener que
---     buscar en cuál de los 42 archivos se cambió por última vez.
+--     buscar en cuál de los 43 archivos se cambió por última vez.
 --   · ARMAR UNA BASE NUEVA desde cero (por ejemplo, una de prueba): en un
 --     proyecto nuevo de Supabase se corre este archivo una sola vez.
 --
@@ -199,6 +199,35 @@ CREATE FUNCTION public.alumnos_entrenan_hasta(p_espacio uuid) RETURNS date
     SET search_path TO 'public'
     AS $$
   select public.espacio_sin_servicio_desde(p_espacio) + public.dias_alumnos_de_espacio();
+$$;
+
+
+--
+-- Name: anotar_cambio_de_calendario(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.anotar_cambio_de_calendario() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  v_cliente uuid := coalesce(new.cliente_id, old.cliente_id);
+  v_dia text := coalesce(new.dia, old.dia);
+  v_rutina uuid := case when tg_op = 'DELETE' then null else new.rutina_id end;
+begin
+  -- Si cambió de día o de alumno (casi nunca), el día viejo queda libre.
+  if tg_op = 'UPDATE' and (old.cliente_id, old.dia) is distinct from (new.cliente_id, new.dia) then
+    insert into public.calendario_historial (cliente_id, dia, rutina_id, desde)
+    values (old.cliente_id, old.dia, null, public.hoy_uy())
+    on conflict (cliente_id, dia, desde) do update set rutina_id = excluded.rutina_id,
+      creado_en = now();
+  end if;
+  insert into public.calendario_historial (cliente_id, dia, rutina_id, desde)
+  values (v_cliente, v_dia, v_rutina, public.hoy_uy())
+  on conflict (cliente_id, dia, desde) do update set rutina_id = excluded.rutina_id,
+    creado_en = now();
+  return null;
+end;
 $$;
 
 
@@ -5374,6 +5403,34 @@ CREATE TABLE public.calendario_cliente (
 
 
 --
+-- Name: calendario_historial; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.calendario_historial (
+    id bigint NOT NULL,
+    cliente_id uuid NOT NULL,
+    dia text NOT NULL,
+    rutina_id uuid,
+    desde date NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: calendario_historial_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.calendario_historial ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.calendario_historial_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: datos_cobro; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6131,6 +6188,22 @@ ALTER TABLE ONLY public.calendario_cliente
 
 
 --
+-- Name: calendario_historial calendario_historial_cliente_id_dia_desde_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.calendario_historial
+    ADD CONSTRAINT calendario_historial_cliente_id_dia_desde_key UNIQUE (cliente_id, dia, desde);
+
+
+--
+-- Name: calendario_historial calendario_historial_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.calendario_historial
+    ADD CONSTRAINT calendario_historial_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: codigos_descuento codigos_descuento_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6424,6 +6497,13 @@ CREATE INDEX calendario_cliente_rutina_idx ON public.calendario_cliente USING bt
 
 
 --
+-- Name: calendario_historial_cliente_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX calendario_historial_cliente_idx ON public.calendario_historial USING btree (cliente_id, desde);
+
+
+--
 -- Name: codigos_descuento_espacio_codigo_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6673,6 +6753,13 @@ CREATE TRIGGER ajustes_drive_historial BEFORE UPDATE ON public.ajustes_drive FOR
 --
 
 CREATE TRIGGER ajustes_historial AFTER UPDATE ON public.ajustes FOR EACH ROW EXECUTE FUNCTION public.historial_ajustes();
+
+
+--
+-- Name: calendario_cliente calendario_anotar_historial; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER calendario_anotar_historial AFTER INSERT OR DELETE OR UPDATE ON public.calendario_cliente FOR EACH ROW EXECUTE FUNCTION public.anotar_cambio_de_calendario();
 
 
 --
@@ -6949,6 +7036,22 @@ ALTER TABLE ONLY public.calendario_cliente
 
 ALTER TABLE ONLY public.calendario_cliente
     ADD CONSTRAINT calendario_cliente_rutina_id_fkey FOREIGN KEY (rutina_id) REFERENCES public.rutinas(id) ON DELETE SET NULL;
+
+
+--
+-- Name: calendario_historial calendario_historial_cliente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.calendario_historial
+    ADD CONSTRAINT calendario_historial_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.perfiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: calendario_historial calendario_historial_rutina_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.calendario_historial
+    ADD CONSTRAINT calendario_historial_rutina_id_fkey FOREIGN KEY (rutina_id) REFERENCES public.rutinas(id) ON DELETE SET NULL;
 
 
 --
@@ -7459,6 +7562,19 @@ CREATE POLICY "calendario: el profe del cliente lo edita" ON public.calendario_c
 --
 
 ALTER TABLE public.calendario_cliente ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: calendario_historial; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.calendario_historial ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: calendario_historial calendario_historial: el cliente o su profe lo ven; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "calendario_historial: el cliente o su profe lo ven" ON public.calendario_historial FOR SELECT TO authenticated USING (((cliente_id = auth.uid()) OR public.puede_ver_cliente(cliente_id)));
+
 
 --
 -- Name: codigos_descuento codigos: el profe borra los suyos; Type: POLICY; Schema: public; Owner: -
@@ -8270,6 +8386,13 @@ REVOKE ALL ON FUNCTION public.alumno_bloqueado_por_espacio(p_usuario uuid) FROM 
 --
 
 REVOKE ALL ON FUNCTION public.alumnos_entrenan_hasta(p_espacio uuid) FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION anotar_cambio_de_calendario(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.anotar_cambio_de_calendario() FROM PUBLIC;
 
 
 --
@@ -9236,6 +9359,13 @@ GRANT SELECT,UPDATE ON TABLE public.ajustes_drive TO authenticated;
 
 
 --
+-- Name: TABLE calendario_historial; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.calendario_historial TO authenticated;
+
+
+--
 -- Name: TABLE datos_cobro; Type: ACL; Schema: public; Owner: -
 --
 
@@ -9345,6 +9475,9 @@ GRANT SELECT ON TABLE public.tipos_aviso TO authenticated;
 
 --
 -- PostgreSQL database dump complete
+--
+
+
 --
 
 

@@ -258,3 +258,13 @@
   text-align: left;
   cursor: pointer;
 }
+
+/* Días de antes del historial del calendario (SQL 043): no se sabe qué le tocaba. */
+.semana-sin-dato {
+  color: var(--drey-texto-apagado);
+}
+
+.semana-nota-sin-datos {
+  margin-top: -0.25rem;
+  font-size: 0.8rem;
+}

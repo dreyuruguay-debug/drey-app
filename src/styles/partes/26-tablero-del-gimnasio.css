@@ -98,12 +98,75 @@
 }
 
 .tablero-destacado {
-  margin-left: 0.5rem;
   background: rgba(var(--drey-accent-rgb), 0.14);
   color: var(--drey-accent-texto);
 }
 
+/* Profes: una tarjeta por profe (en el celular una debajo de otra). */
+.tablero-profes {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tablero-profe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.tablero-profe-nombre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.tablero-profe-numeros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+/* Cada número va centrado bajo su texto y todos quedan a la misma altura,
+   aunque un texto ocupe dos líneas y otro una. */
+.tablero-profe-numeros > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tablero-profe-numeros dt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  color: var(--drey-texto-suave);
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.tablero-profe-numeros dd {
+  margin: 0.3rem 0 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tablero-profe-alerta dd {
+  color: var(--drey-naranja-texto);
+}
+
 @media (min-width: 1024px) {
+  .tablero-profes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .tablero-numeros {
     grid-template-columns: 2fr repeat(3, minmax(0, 1fr));
   }

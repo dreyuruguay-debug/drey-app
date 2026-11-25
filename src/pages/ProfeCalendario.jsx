@@ -18,8 +18,9 @@ import Esqueleto from '../components/Esqueleto.jsx'
 //
 //   · Cómo viene: qué hizo cada uno cada día (✓ entrenó, ✕ le tocaba y no
 //     vino, el nombre de la rutina si le toca más adelante). Se puede ir a
-//     semanas anteriores con ‹ ›. Para las semanas pasadas, "le tocaba"
-//     es según el calendario de hoy.
+//     semanas anteriores con ‹ ›: cada día se compara con el calendario que
+//     valía ese día (calendario_historial, SQL 043). De antes de que se
+//     guardara el historial solo se ve lo que entrenó (sin marcar faltas).
 //   · Qué le toca: qué rutina le toca a cada uno cada día. Cada celda se
 //     puede cambiar acá mismo (se guarda en "calendario_cliente", igual
 //     que en la ficha del cliente).
@@ -32,10 +33,36 @@ export default function ProfeCalendario() {
   const [calendario, setCalendario] = useState({})
   const [lunes, setLunes] = useState(() => obtenerLunesDeSemana(hoy))
   const [sesiones, setSesiones] = useState([])
+  // Qué le tocaba a cada uno en cada fecha (SQL 043). null = la base
+  // todavía no tiene el historial: se usa el calendario de hoy.
+  const [historial, setHistorial] = useState(null)
 
   useEffect(() => {
     cargarTodo()
   }, [])
+
+  // Qué rutina le tocaba a cada uno y desde cuándo (todo el historial: es
+  // chico y así también se sabe desde qué día hay datos).
+  useEffect(() => {
+    const ids = clientes.map((cliente) => cliente.id)
+    if (!ids.length) {
+      setHistorial([])
+      return undefined
+    }
+    let vigente = true
+    supabase
+      .from('calendario_historial')
+      .select('cliente_id, dia, rutina_id, desde')
+      .in('cliente_id', ids)
+      .then(({ data, error }) => {
+        // Si la tabla todavía no existe (SQL 043 sin correr), se usa el
+        // calendario de hoy para todas las semanas, como antes.
+        if (vigente) setHistorial(error ? null : data || [])
+      })
+    return () => {
+      vigente = false
+    }
+  }, [clientes])
 
   // Lo que entrenaron en la semana elegida.
   useEffect(() => {
@@ -51,7 +78,9 @@ export default function ProfeCalendario() {
       .in('cliente_id', ids)
       .gte('fecha', lunes)
       .lte('fecha', sumarDias(lunes, 6))
-      .then(({ data }) => vigente && setSesiones(data || []))
+      .then(({ data }) => {
+        if (vigente) setSesiones(data || [])
+      })
     return () => {
       vigente = false
     }
@@ -133,12 +162,13 @@ export default function ProfeCalendario() {
       armarSemana({
         clientes,
         calendario,
+        historial,
         rutinas: nombresDeRutinas,
         sesiones,
         lunes,
         hoy,
       }),
-    [clientes, calendario, nombresDeRutinas, sesiones, lunes, hoy],
+    [clientes, calendario, historial, nombresDeRutinas, sesiones, lunes, hoy],
   )
   const esEstaSemana = lunes === obtenerLunesDeSemana(hoy)
 
@@ -185,7 +215,9 @@ export default function ProfeCalendario() {
             </button>
           </div>
           <p className="profe-nota">
-            {semana.totales.hechos} de {semana.totales.previstos} entrenamientos hechos
+            {semana.sinDatos
+              ? `${semana.totales.hechos} entrenamientos hechos`
+              : `${semana.totales.hechos} de ${semana.totales.previstos} entrenamientos hechos`}
             {semana.totales.faltas > 0 &&
               ` · ${semana.totales.faltas} ${semana.totales.faltas === 1 ? 'falta' : 'faltas'}`}
             {semana.totales.sinEntrenar > 0 &&
@@ -193,6 +225,13 @@ export default function ProfeCalendario() {
                 semana.totales.sinEntrenar === 1 ? 'alumno no entrenó' : 'alumnos no entrenaron'
               } todavía`}
           </p>
+          {semana.sinDatos && (
+            <p className="profe-nota semana-nota-sin-datos">
+              De antes del {textoFechaCorta(inicioDelHistorial(historial))} DREY no guardaba qué
+              rutina le tocaba a cada uno: en esos días solo se ve lo que entrenó, sin marcar
+              faltas.
+            </p>
+          )}
           <div className="profe-tabla-wrap">
             <table className="profe-tabla profe-tabla-calendario semana-tabla">
               <thead>
@@ -230,7 +269,9 @@ export default function ProfeCalendario() {
                             : 'semana-total'
                         }
                       >
-                        {hechos} de {previstos}
+                        {previstos > 0
+                          ? `${hechos} de ${previstos}`
+                          : `${hechos} ${hechos === 1 ? 'día' : 'días'}`}
                       </span>
                     </td>
                   </tr>
@@ -303,9 +344,27 @@ export default function ProfeCalendario() {
   )
 }
 
-// Una celda de "Cómo viene": ✓ entrenó · ✕ faltó · rutina que le toca · descanso.
+// Desde cuándo hay historial del calendario (la fecha más vieja), o hoy.
+function inicioDelHistorial(historial) {
+  const fechas = (historial || []).map((fila) => fila.desde).sort()
+  return fechas[0] || obtenerFechaHoyISO()
+}
+
+// Una celda de "Cómo viene": ✓ entrenó · ✕ faltó · rutina que le toca ·
+// descanso · sin datos (de antes del historial).
 function CeldaSemana({ celda }) {
   if (celda.estado === 'descanso') return <span className="semana-celda semana-descanso">·</span>
+  if (celda.estado === 'sin-dato') {
+    return (
+      <span
+        className="semana-celda semana-sin-dato"
+        title="Sin datos de lo que le tocaba ese día"
+        aria-label="Sin datos de lo que le tocaba ese día"
+      >
+        –
+      </span>
+    )
+  }
   const icono = celda.estado === 'hecho' ? '✓' : celda.estado === 'falto' ? '✕' : ''
   const ayuda =
     celda.estado === 'hecho'
