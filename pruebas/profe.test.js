@@ -1,6 +1,13 @@
 // Pruebas de lo nuevo del profe: el buscador del panel y "La semana de
 // todos" (qué hizo cada alumno).
 import { describe, expect, it } from 'vitest'
+import {
+  contarPorFiltro,
+  filtrarClientes,
+  ordenarClientes,
+  situacionDelCliente,
+} from '../src/utils/clientes.js'
+import { resumenDrey } from '../src/utils/resumenDrey.js'
 import { buscarEnTodo, PANTALLAS_DEL_PANEL } from '../src/utils/buscador.js'
 import { armarSemana } from '../src/utils/semanaDeTodos.js'
 
@@ -116,5 +123,95 @@ describe('la semana de todos con el historial del calendario', () => {
     expect(semana.sinDatos).toBe(true)
     expect(semana.totales.faltas).toBe(0)
     expect(fila.previstos).toBe(0)
+  })
+})
+
+// Lista de alumnos del panel (utils/clientes.js): situación, filtros y orden.
+describe('lista de alumnos', () => {
+  const HOY = '2026-11-24'
+  const alumnos = [
+    {
+      id: 'a',
+      nombre: 'Ana',
+      apellido: 'Paz',
+      diasSinEntrenar: 0,
+      estado: 'activo',
+      vencimiento: '2026-12-20',
+      profe_id: 'p1',
+    },
+    {
+      id: 'b',
+      nombre: 'Bruno',
+      apellido: 'Sosa',
+      diasSinEntrenar: 9,
+      estado: 'activo',
+      vencimiento: '2026-12-10',
+      profe_id: null,
+    },
+    {
+      id: 'c',
+      nombre: 'Carla',
+      apellido: 'Ríos',
+      diasSinEntrenar: 2,
+      estado: 'activo',
+      vencimiento: '2026-11-20',
+      profe_id: 'p1',
+    },
+  ]
+
+  it('marca en rojo la cuota vencida (solo para quien cobra) y en naranja al que no entrena', () => {
+    expect(situacionDelCliente(alumnos[2], HOY, { veCuota: true }).tono).toBe('alerta')
+    expect(situacionDelCliente(alumnos[2], HOY, { veCuota: false }).tono).toBe('ok')
+    expect(situacionDelCliente(alumnos[1], HOY).tono).toBe('atencion')
+    expect(situacionDelCliente(alumnos[0], HOY).entreno).toBe('Hoy')
+  })
+
+  it('filtra por chip, búsqueda y profe', () => {
+    expect(filtrarClientes(alumnos, { filtro: 'no-entrenan', hoy: HOY }).map((a) => a.id)).toEqual([
+      'b',
+    ])
+    expect(filtrarClientes(alumnos, { filtro: 'vencidos', hoy: HOY }).map((a) => a.id)).toEqual([
+      'c',
+    ])
+    expect(filtrarClientes(alumnos, { texto: 'car', hoy: HOY }).map((a) => a.id)).toEqual(['c'])
+    expect(filtrarClientes(alumnos, { profe: 'sin', hoy: HOY }).map((a) => a.id)).toEqual(['b'])
+    expect(contarPorFiltro(alumnos, HOY)).toMatchObject({ '': 3, 'no-entrenan': 1, vencidos: 1 })
+  })
+
+  it('ordena por último entreno y deja al final a los que no tienen el dato', () => {
+    const conVacio = [...alumnos, { id: 'd', nombre: 'Dani', apellido: '', diasSinEntrenar: null }]
+    const orden = ordenarClientes(conVacio, { campo: 'entreno', ascendente: false })
+    expect(orden.map((a) => a.id)).toEqual(['b', 'c', 'a', 'd'])
+    expect(ordenarClientes(alumnos, { campo: 'nombre' }).map((a) => a.id)).toEqual(['a', 'b', 'c'])
+  })
+})
+
+// Inicio del Admin (utils/resumenDrey.js).
+describe('números de DREY', () => {
+  it('cuenta los que pagan, las pruebas por terminar y los ingresos del mes', () => {
+    const HOY = '2026-11-24'
+    const espacios = [
+      { id: '1', estadoReal: 'activo', vencimiento: '2026-12-20', cuposTotal: 25, cuposUsados: 10 },
+      { id: '2', estadoReal: 'prueba', pruebaHasta: '2026-11-27', cuposUsados: 2 },
+      { id: '3', estadoReal: 'prueba', pruebaHasta: '2026-12-08', cuposUsados: 1 },
+      { id: '4', estadoReal: 'prueba_terminada' },
+      { id: '5', estadoReal: 'sin_costo', sinCosto: true },
+    ]
+    const pagos = [
+      { monto: 1000, creado_en: '2026-11-05T15:00:00Z' },
+      { monto: 500, creado_en: '2026-10-05T15:00:00Z' },
+    ]
+    const r = resumenDrey(espacios, pagos, HOY)
+    expect(r).toMatchObject({
+      pagan: 1,
+      enPrueba: 2,
+      pruebasPorTerminar: 1,
+      terminaronPrueba: 1,
+      sinCosto: 1,
+      cuposVendidos: 25,
+      cuposOcupados: 13,
+      ingresosMes: 1000,
+      ingresosMesPasado: 500,
+    })
   })
 })

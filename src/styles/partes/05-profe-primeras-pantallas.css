@@ -113,37 +113,8 @@
   color: var(--drey-text);
 }
 
-.profe-cliente-card-inactivo {
-  border: 1px solid var(--drey-accent);
-}
-
-.profe-cliente-inactivo-texto {
-  color: var(--drey-accent-texto);
-  font-weight: 600;
-}
-
 .profe-cliente-flecha {
   font-size: 1.2rem;
-  color: var(--drey-texto-claro);
-}
-
-.profe-aviso-inactivos {
-  background: var(--drey-superficie-alta);
-  border: 1px solid var(--drey-accent);
-  border-radius: 16px;
-  padding: 0.85rem 1.1rem;
-  margin-bottom: 1rem;
-}
-
-.profe-aviso-inactivos-titulo {
-  margin: 0;
-  font-weight: 700;
-  color: var(--drey-accent-texto);
-}
-
-.profe-aviso-inactivos-lista {
-  margin: 0.3rem 0 0;
-  font-size: 0.85rem;
   color: var(--drey-texto-claro);
 }
 

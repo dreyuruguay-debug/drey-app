@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { elegirEspacio, nombreDeEspacio, useEspacios } from '../services/espacio.js'
+import { colorDeEspacio, elegirEspacio, nombreDeEspacio, useEspacios } from '../services/espacio.js'
 
 // Selector de espacio, arriba del panel (tipo Google): "Tus alumnos" /
 // "FitCenter" / "Gimnasio Las Piedras". Cambia con un toque, sin cerrar
 // sesión, y el panel pasa a mostrar lo de ese espacio (services/espacio.js).
 // Solo aparece si el profe trabaja en más de un espacio.
+//
+// Para que siempre se note en qué espacio está (y no cargue una rutina o
+// habilite a alguien en el equivocado), el selector queda fijo arriba al
+// bajar por la pantalla y lleva el color del espacio (colorDeEspacio en
+// services/espacio.js): verde sus alumnos, cada gimnasio el suyo. El
+// mismo color va en la franja finita de arriba de todo (ProfeLayout).
 const ROLES = { dueno: 'Dueño', profe: 'Profe' }
 
 export default function SelectorEspacio() {
@@ -41,7 +47,11 @@ export default function SelectorEspacio() {
   }
 
   return (
-    <div className="selector-espacio" ref={caja}>
+    <div
+      className="selector-espacio"
+      ref={caja}
+      style={{ '--color-espacio': colorDeEspacio(activo, espacios) }}
+    >
       <button
         type="button"
         className="selector-espacio-boton"
@@ -49,6 +59,7 @@ export default function SelectorEspacio() {
         aria-expanded={abierto}
         onClick={() => setAbierto((valor) => !valor)}
       >
+        <span className="selector-espacio-punto" aria-hidden="true" />
         <span className="selector-espacio-textos">
           <small>Estás en</small>
           <strong>{nombreDeEspacio(activo)}</strong>
@@ -73,6 +84,11 @@ export default function SelectorEspacio() {
                   }
                   onClick={() => elegir(espacio.id)}
                 >
+                  <span
+                    className="selector-espacio-punto"
+                    style={{ '--color-espacio': colorDeEspacio(espacio, espacios) }}
+                    aria-hidden="true"
+                  />
                   <span className="selector-espacio-textos">
                     <strong>{nombreDeEspacio(espacio)}</strong>
                     <small>

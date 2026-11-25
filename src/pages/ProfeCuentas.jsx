@@ -38,11 +38,12 @@ import { problemaDeCupo } from '../utils/cupos.js'
 // y Datos de cobro (?tab=datos), en components/CobroDeEspacio.jsx. Cada
 // espacio cobra a sus alumnos con sus planes y sus datos.
 //
-// El Admin tiene además la pestaña "Suscripciones DREY" (?tab=drey): los
-// pagos de los profes y gimnasios a DREY (components/SuscripcionesDrey.jsx).
+// El Admin ("Cobros" en su menú) ve primero las "Suscripciones DREY": lo
+// que pagan los profes y gimnasios a DREY (components/SuscripcionesDrey.jsx);
+// los pagos de los alumnos van en la otra pestaña (?tab=alumnos).
 const PESTANAS_ADMIN = [
-  { id: 'alumnos', label: 'Alumnos' },
   { id: 'drey', label: 'Suscripciones DREY' },
+  { id: 'alumnos', label: 'Pagos de alumnos' },
 ]
 const PESTANAS_DUENO = [
   { id: 'alumnos', label: 'Pagos' },
@@ -65,8 +66,8 @@ export default function ProfeCuentas() {
   const opciones = esAdmin ? PESTANAS_ADMIN : dueno ? PESTANAS_DUENO : []
   const pestana = opciones.some((opcion) => opcion.id === parametros.get('tab'))
     ? parametros.get('tab')
-    : 'alumnos'
-  const titulo = dueno ? 'Cobros' : 'Pagos'
+    : opciones[0]?.id || 'alumnos'
+  const titulo = dueno || esAdmin ? 'Cobros' : 'Pagos'
 
   useEffect(() => {
     cargarClientes()
@@ -156,7 +157,7 @@ export default function ProfeCuentas() {
       etiqueta="Qué ver"
       opciones={opciones}
       activa={pestana}
-      onCambiar={(id) => setParametros(id === 'alumnos' ? {} : { tab: id }, { replace: true })}
+      onCambiar={(id) => setParametros(id === opciones[0].id ? {} : { tab: id }, { replace: true })}
     />
   )
 

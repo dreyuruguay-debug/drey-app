@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Esqueleto from './Esqueleto.jsx'
 import { mostrarAviso } from '../services/avisos.js'
-import { actualizarMisEspacios } from '../services/espacio.js'
+import { actualizarMisEspacios, linkDeRegistro } from '../services/espacio.js'
+import BotonCartelQR from './BotonCartelQR.jsx'
 import {
   cambiarCodigoEspacio,
   cambiarProfesHabilitan,
@@ -19,7 +20,8 @@ import { textoFechaCorta } from '../utils/dias.js'
 
 // Equipo del gimnasio, para su DUEÑO (Equipo → arriba de todo, cuando el
 // espacio elegido es un gimnasio suyo; supabase/sql/033):
-//   · El código del gimnasio para compartir (y cambiarlo).
+//   · El código del gimnasio para compartir (y cambiarlo), y el cartel con
+//     QR para imprimir y pegar en la recepción (components/BotonCartelQR.jsx).
 //   · El interruptor "Los profes pueden habilitar alumnos" (D5).
 //   · Profes que piden sumarse (aceptar o rechazar) e invitaciones por
 //     email.
@@ -89,7 +91,7 @@ export default function EquipoGimnasio({ espacio }) {
   }
 
   async function compartirCodigo() {
-    const link = `${window.location.origin}/registro/alumno?espacio=${espacio.codigo}`
+    const link = linkDeRegistro(espacio.codigo)
     const texto = `Registrate en DREY con el código ${espacio.codigo} de ${espacio.nombre}: ${link}`
     try {
       if (navigator.share) {
@@ -162,6 +164,7 @@ export default function EquipoGimnasio({ espacio }) {
             >
               Compartir link
             </button>
+            <BotonCartelQR nombre={espacio.nombre} codigo={espacio.codigo} />
             <button
               type="button"
               className="boton-texto"

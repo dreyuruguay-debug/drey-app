@@ -212,3 +212,25 @@ export function delEspacioActivo(consulta, { deBaja = false } = {}) {
 export function clientesDelEspacio(columnas = '*', opciones) {
   return delEspacioActivo(supabase.from('perfiles').select(columnas, opciones).match(SOLO_CLIENTES))
 }
+
+// El link para que un alumno se registre ya con el código del espacio
+// (lo comparten el profe y el dueño, y lo lleva el QR del cartel).
+export function linkDeRegistro(codigo) {
+  return `${window.location.origin}/registro/alumno?espacio=${encodeURIComponent(codigo)}`
+}
+
+// Color de cada espacio, para que siempre se note en cuál está trabajando
+// el profe (la franja de arriba del panel y el selector,
+// components/SelectorEspacio.jsx): sus alumnos particulares en el verde
+// de DREY; cada gimnasio con un color propio, siempre el mismo.
+const COLORES_DE_GIMNASIO = ['#7cb8ff', '#f5a54a', '#c49bff', '#ff7aa8', '#4fd1c5', '#e8d44d']
+
+export function colorDeEspacio(espacio, espacios = []) {
+  if (!espacio || espacio.tipo === 'profe') return 'var(--drey-accent)'
+  const gimnasios = espacios
+    .filter((otro) => otro.tipo !== 'profe')
+    .map((otro) => otro.id)
+    .sort()
+  const posicion = Math.max(0, gimnasios.indexOf(espacio.id))
+  return COLORES_DE_GIMNASIO[posicion % COLORES_DE_GIMNASIO.length]
+}

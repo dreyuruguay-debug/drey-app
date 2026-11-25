@@ -5,9 +5,11 @@ import { mostrarAviso } from '../services/avisos.js'
 import {
   actualizarMisEspacios,
   esDuenoDe,
+  linkDeRegistro,
   nombreDeEspacio,
   useEspacios,
 } from '../services/espacio.js'
+import BotonCartelQR from '../components/BotonCartelQR.jsx'
 import {
   cambiarCodigoEspacio,
   cancelarSolicitudMembresia,
@@ -214,7 +216,8 @@ export default function ProfeMisEspacios() {
   )
 }
 
-// Un espacio con su código: copiar el link para alumnos, cambiar el código
+// Un espacio con su código: copiar el link para alumnos, bajar el cartel
+// con QR para imprimir (components/BotonCartelQR.jsx), cambiar el código
 // (el dueño de su espacio personal; el del gimnasio se cambia en Equipo) o
 // salir (profe de un gimnasio).
 function TarjetaEspacio({ espacio, onCambio }) {
@@ -223,7 +226,7 @@ function TarjetaEspacio({ espacio, onCambio }) {
   const [saliendo, setSaliendo] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
-  const link = `${window.location.origin}/registro/alumno?espacio=${espacio.codigo}`
+  const link = linkDeRegistro(espacio.codigo)
   const puedeCambiarCodigo = esDuenoDe(espacio) && espacio.tipo === 'profe'
 
   async function compartir() {
@@ -300,6 +303,7 @@ function TarjetaEspacio({ espacio, onCambio }) {
           <button type="button" className="boton-secundario boton-chico" onClick={compartir}>
             Compartir link para alumnos
           </button>
+          <BotonCartelQR nombre={espacio.nombre} codigo={espacio.codigo} />
           {puedeCambiarCodigo && (
             <button
               type="button"

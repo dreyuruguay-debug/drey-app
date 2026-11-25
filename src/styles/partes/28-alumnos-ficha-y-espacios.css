@@ -1,0 +1,502 @@
+/* ==================================================================
+   Noviembre 2026 (tandas 2 y 3 de diseño): lista de alumnos (tarjetas en
+   el celular, tabla en la compu, asignar un profe a varios), ficha del
+   alumno en 2 columnas, color del espacio activo e Inicio del Admin.
+   ================================================================== */
+
+/* ---------- Lista de alumnos (pages/ProfeClientes.jsx) ---------- */
+.clientes-buscar-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.clientes-buscar-fila .profe-buscador {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.clientes-buscar-fila .boton-secundario {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* Chips para filtrar, con cuántos hay en cada uno. Se deslizan de costado
+   si no entran. */
+.clientes-chips {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.1rem;
+}
+
+.clientes-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.clientes-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clientes-chip-activo {
+  background: var(--drey-invertido-fondo);
+  border-color: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+}
+
+.clientes-chip-numero {
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.clientes-chip-activo .clientes-chip-numero {
+  background: rgba(var(--drey-accent-rgb), 0.35);
+  color: var(--drey-invertido-texto);
+}
+
+/* Tarjeta de cada alumno (celular) */
+.cliente-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  padding-right: 0.6rem;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: var(--drey-superficie-alta);
+}
+
+.cliente-tarjeta-atencion {
+  border-color: var(--drey-naranja-trazo);
+}
+
+.cliente-tarjeta-alerta {
+  border-color: var(--drey-rojo);
+}
+
+.cliente-tarjeta-elegida {
+  border-color: var(--drey-accent);
+  background: var(--drey-verde-fondo);
+}
+
+.cliente-tarjeta-principal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 0 0.85rem 0.9rem;
+  border: none;
+  background: none;
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cliente-tarjeta-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.cliente-tarjeta-textos strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cliente-tarjeta-textos small {
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.cliente-casilla {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 7px;
+  border: 2px solid var(--drey-borde-control);
+  color: var(--drey-sobre-accent);
+  font-weight: 800;
+}
+
+.cliente-casilla-marcada {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+}
+
+/* Iniciales con el puntito de color abajo a la derecha */
+.cliente-avatar {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.cliente-punto {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: 2px solid var(--drey-superficie-alta);
+}
+
+.cliente-punto-ok {
+  background: var(--drey-accent);
+}
+
+.cliente-punto-atencion {
+  background: var(--drey-naranja);
+}
+
+.cliente-punto-alerta {
+  background: var(--drey-rojo);
+}
+
+.cliente-situacion {
+  font-weight: 700;
+}
+
+.cliente-situacion-ok {
+  color: var(--drey-accent-texto);
+}
+
+.cliente-tarjeta-textos .cliente-situacion-atencion,
+.cliente-situacion-atencion {
+  color: var(--drey-naranja-texto);
+}
+
+.cliente-tarjeta-textos .cliente-situacion-alerta,
+.cliente-situacion-alerta {
+  color: var(--drey-rojo-texto);
+}
+
+/* WhatsApp a un toque (44 px para el dedo) */
+.cliente-whatsapp {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-accent-texto);
+}
+
+.cliente-whatsapp:hover {
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+/* Tabla de alumnos (compu) */
+.clientes-tabla-caja {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde-suave);
+  background: var(--drey-superficie);
+}
+
+.clientes-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.clientes-tabla th {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.clientes-tabla-orden {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.clientes-tabla-orden:hover {
+  color: var(--drey-text);
+}
+
+.clientes-tabla td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--drey-borde-suave);
+  vertical-align: middle;
+}
+
+.clientes-tabla tbody tr {
+  cursor: pointer;
+}
+
+.clientes-tabla tbody tr:hover {
+  background: var(--drey-hover);
+}
+
+.clientes-tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.clientes-tabla .clientes-fila-elegida {
+  background: var(--drey-verde-fondo);
+}
+
+.clientes-tabla-alumno {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.clientes-tabla-alumno a {
+  color: var(--drey-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.clientes-tabla-alumno .cliente-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.8125rem;
+}
+
+.clientes-tabla-alumno .cliente-punto {
+  border-color: var(--drey-superficie);
+}
+
+.clientes-tabla-numero {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.clientes-tabla-casilla {
+  width: 2.5rem;
+}
+
+.clientes-tabla-casilla input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--drey-accent);
+  cursor: pointer;
+}
+
+.clientes-tabla-accion .cliente-whatsapp {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+/* Barra para asignar un profe a los elegidos: queda a la vista abajo
+   (arriba del menú en el celular). */
+.barra-asignar {
+  position: sticky;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  z-index: 15;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-accent);
+  background: var(--drey-flotante);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.barra-asignar-cantidad {
+  font-weight: 800;
+}
+
+.barra-asignar select {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.barra-asignar .boton-principal,
+.barra-asignar .boton-texto {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+/* ---------- Ficha del alumno (pages/ProfeClienteDetalle.jsx) ---------- */
+.ficha-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+}
+
+.ficha-resumen-datos {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ficha-resumen-datos dt {
+  color: var(--drey-texto-suave);
+  font-size: 0.8125rem;
+}
+
+.ficha-resumen-datos dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.ficha-resumen-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ficha-resumen-acciones .boton-secundario {
+  min-height: 2.75rem;
+}
+
+@media (min-width: 1024px) {
+  .pantalla-panel .ficha-grilla {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .pantalla-panel .ficha-lateral {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .pantalla-panel .ficha-lateral .ficha-cabecera {
+    flex-wrap: wrap;
+    margin: 0;
+  }
+
+  .pantalla-panel .ficha-lateral .ficha-profe {
+    max-width: none;
+    margin: 0;
+  }
+
+  .pantalla-panel .ficha-principal .pestanas,
+  .pantalla-panel .ficha-principal .ficha-contenido {
+    max-width: none;
+  }
+
+  .barra-asignar {
+    bottom: 1rem;
+  }
+}
+
+/* ---------- Color del espacio activo (components/SelectorEspacio.jsx) ----
+   Con más de un espacio: franja finita arriba de todo y el selector con
+   el color del espacio, fijo arriba al bajar por la pantalla. */
+.panel-con-espacio::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  height: 4px;
+  background: var(--color-espacio);
+}
+
+.selector-espacio {
+  position: sticky;
+  top: 0.6rem;
+  z-index: 25;
+}
+
+.selector-espacio-boton {
+  border-left: 6px solid var(--color-espacio, var(--drey-accent));
+  background: color-mix(
+    in srgb,
+    var(--color-espacio, var(--drey-accent)) 14%,
+    var(--drey-superficie)
+  );
+}
+
+.selector-espacio-boton .selector-espacio-textos {
+  flex: 1;
+}
+
+.selector-espacio-punto {
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--color-espacio, var(--drey-accent));
+}
+
+/* ---------- Inicio del Admin (pages/AdminInicio.jsx) ---------- */
+.admin-alumnos-resumen {
+  margin-top: 1.25rem;
+}
+
+.estadisticas-grilla-chica .dato-valor {
+  font-size: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .pantalla-panel .estadisticas-grilla-chica {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pantalla-panel .clientes-filtros .profe-calendario-select {
+    max-width: 320px;
+  }
+}

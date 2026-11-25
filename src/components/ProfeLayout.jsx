@@ -11,7 +11,12 @@ import {
   verificarProfe,
 } from '../services/accesoProfe.js'
 import { precargarPantallas } from '../pantallasDiferidas.js'
-import { esDuenoDe, refrescarMisEspacios, useEspacios } from '../services/espacio.js'
+import {
+  colorDeEspacio,
+  esDuenoDe,
+  refrescarMisEspacios,
+  useEspacios,
+} from '../services/espacio.js'
 import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
 import SelectorEspacio from './SelectorEspacio.jsx'
@@ -28,7 +33,7 @@ import { obtenerFechaHoyISO, sumarDias, textoFechaCorta } from '../utils/dias.js
 //
 // El profe ve 5 secciones (Inicio, Clientes, Biblioteca, Cobros y Mi
 // cuenta: su perfil y las solicitudes de alumnos). El Admin
-// tiene su propio menú de 5 (Inicio, Clientes, Equipo, Pagos, Ajustes);
+// tiene su propio menú de 5 (Inicio, Espacios, Alumnos, Cobros, Ajustes);
 // la Biblioteca la abre desde su Inicio.
 //
 // soloAdmin: la pantalla es solo para el Admin (Ajustes, Historial). La
@@ -175,6 +180,10 @@ const SECCIONES_PROFE = [
   },
 ]
 
+// El menú del Admin, pensado para el negocio de DREY (noviembre 2026):
+// Inicio · Espacios (profes y gimnasios con su suscripción; los profes en
+// la pestaña "Profes") · Alumnos (todos) · Cobros (lo que pagan los
+// espacios a DREY y los pagos de alumnos) · Ajustes.
 const SECCIONES_ADMIN = [
   {
     to: '/profe',
@@ -184,21 +193,21 @@ const SECCIONES_ADMIN = [
     Icono: IconoInicio,
   },
   {
+    to: '/profe/equipo',
+    label: 'Espacios',
+    rutas: ['/profe/equipo', '/profe/mi-perfil'],
+    Icono: IconoEquipo,
+  },
+  {
     to: '/profe/clientes',
-    label: 'Clientes',
+    label: 'Alumnos',
     rutas: RUTAS_CLIENTES,
     Icono: IconoClientes,
     avisos: 'solicitudes',
   },
   {
-    to: '/profe/equipo',
-    label: 'Equipo',
-    rutas: ['/profe/equipo', '/profe/mi-perfil'],
-    Icono: IconoEquipo,
-  },
-  {
     to: '/profe/cuentas',
-    label: 'Pagos',
+    label: 'Cobros',
     rutas: ['/profe/cuentas', '/profe/codigos'],
     Icono: IconoPagos,
     avisos: 'pagos',
@@ -225,7 +234,7 @@ export default function ProfeLayout({
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
   const [pagosPendientes, setPagosPendientes] = useState(ultimosPagosPendientes)
   const [solicitudesPendientes, setSolicitudesPendientes] = useState(ultimasSolicitudesPendientes)
-  const { activo: espacio } = useEspacios()
+  const { activo: espacio, espacios } = useEspacios()
 
   // El número de "Clientes" se actualiza cuando se responde una solicitud.
   useEffect(() => {
@@ -286,6 +295,9 @@ export default function ProfeLayout({
   const esDueno = !espacio || esDuenoDe(espacio)
   const habilita = esDueno || Boolean(espacio?.profesHabilitan)
   const duenoDeGimnasio = espacio?.tipo === 'gimnasio' && esDueno
+  // Con más de un espacio, arriba de todo va una franja finita del color
+  // del espacio elegido (el mismo del selector).
+  const variosEspacios = !esAdmin && Boolean(espacio) && (espacios?.length || 0) > 1
   const enPausa = !esAdmin && ESTADOS_SIN_SERVICIO.includes(espacio?.estadoReal)
   const rutasEnPausa = esDueno ? RUTAS_EN_PAUSA_DUENO : RUTAS_EN_PAUSA
   const pantallaPermitida = !enPausa || rutasEnPausa.includes(pathname)
@@ -310,7 +322,16 @@ export default function ProfeLayout({
         })
 
   return (
-    <div className={sinMenu ? 'screen pantalla-panel' : 'screen has-bottom-nav pantalla-panel'}>
+    <div
+      className={[
+        'screen pantalla-panel',
+        sinMenu ? '' : 'has-bottom-nav',
+        variosEspacios ? 'panel-con-espacio' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={variosEspacios ? { '--color-espacio': colorDeEspacio(espacio, espacios) } : undefined}
+    >
       <TopPattern />
 
       {volverA && (

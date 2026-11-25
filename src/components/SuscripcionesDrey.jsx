@@ -15,14 +15,14 @@ import { estadoDeEspacio } from '../data/vencimiento.js'
 import { formatearPrecio } from '../data/planes.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 
-// Admin → Pagos → "Suscripciones DREY" (supabase/sql/032): lo que los
+// Admin → Cobros → "Suscripciones DREY" (supabase/sql/032): lo que los
 // profes y gimnasios le pagan a DREY.
 //
 //   · Avisaron que pagaron: ver el comprobante y confirmar (aplica el plan
 //     que eligieron y suma un mes).
 //   · Por vencer o vencidos, en prueba, sin plan y al día.
 //   · Los últimos pagos a DREY.
-// Los cambios a mano (cupos, sin costo, pausar…) están en Equipo →
+// Los cambios a mano (cupos, sin costo, pausar…) están en
 // Espacios.
 export default function SuscripcionesDrey() {
   const [cargando, setCargando] = useState(true)
@@ -108,7 +108,7 @@ export default function SuscripcionesDrey() {
         Lo que los profes y gimnasios le pagan a DREY por sus cupos de alumnos. Para cambiar cupos,
         marcar sin costo o pausar un espacio, andá a{' '}
         <Link to="/profe/equipo?tab=espacios" className="enlace-tabla">
-          Equipo → Espacios
+          Espacios
         </Link>
         .
       </p>
@@ -205,7 +205,7 @@ function TarjetaSuscripcion({ espacio, planes, conConfirmar, onListo }) {
     if (error) {
       mostrarAviso(
         error.message?.includes('no eligió')
-          ? 'Ese espacio todavía no eligió un plan DREY: asignale uno en Equipo → Espacios.'
+          ? 'Ese espacio todavía no eligió un plan DREY: asignale uno en Espacios.'
           : 'No pudimos confirmar el pago. Probá de nuevo.',
         'error',
       )
@@ -273,7 +273,7 @@ function TarjetaSuscripcion({ espacio, planes, conConfirmar, onListo }) {
           <p className="profe-nota">
             {planAPagar
               ? `Se aplica el plan ${planAPagar.nombre} (${planAPagar.cupos} alumnos) y se suma un mes.`
-              : 'Este espacio no eligió plan: asignale uno en Equipo → Espacios antes de confirmar.'}
+              : 'Este espacio no eligió plan: asignale uno en Espacios antes de confirmar.'}
           </p>
           <div className="codigo-fila">
             <label className="ajustes-campo">

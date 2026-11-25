@@ -13,8 +13,8 @@ import { recordado, recordar } from '../services/memoriaSesion.js'
 import { formatearPrecio } from '../data/planes.js'
 import { calcularEstadisticas, desdeParaPagos } from '../utils/estadisticas.js'
 import { cargarEspaciosAdmin, cargarPagosDrey } from '../services/suscripcionDrey.js'
-import { estadoDeEspacio } from '../data/vencimiento.js'
-import { fechaLocalDeMomento, obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
+import { resumenDrey } from '../utils/resumenDrey.js'
+import { obtenerFechaHoyISO, textoFechaLarga } from '../utils/dias.js'
 import { SOLO_CLIENTES } from '../utils/roles.js'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 
@@ -22,10 +22,12 @@ import { RUTA_INGRESAR } from '../data/rutas.js'
 // instante y se actualiza por detrás.
 const MEMORIA_INICIO_ADMIN = 'inicio-admin'
 
-// Inicio del Admin: el resumen del negocio de un vistazo (clientes,
-// ingresos, lo que espera una respuesta) y accesos a todo lo que
-// administra. Los números salen de utils/estadisticas.js, los mismos que
-// en "Estadísticas".
+// Inicio del Admin: el negocio de DREY de un vistazo. Arriba, lo que
+// entra a DREY por los profes y gimnasios (utils/resumenDrey.js): ingreso
+// del mes, espacios que pagan, pruebas gratis (y cuántas terminan esta
+// semana) y suscripciones por vencer. Después, lo que espera una
+// respuesta, y más abajo y más chico, los números de los alumnos de todos
+// los espacios (utils/estadisticas.js, los mismos que en "Estadísticas").
 export default function AdminInicio() {
   const navigate = useNavigate()
   const guardado = recordado(MEMORIA_INICIO_ADMIN)
@@ -62,20 +64,38 @@ export default function AdminInicio() {
         <Esqueleto />
       ) : (
         <>
-          <section className="estadisticas-grilla">
-            <Numero etiqueta="Clientes activos" valor={resumen.activos} />
-            <Numero
-              etiqueta="Ingresos este mes"
-              valor={formatearPrecio(resumen.ingresosMes)}
-              detalle={textoVariacion(resumen.ingresosMes, resumen.ingresosMesPasado)}
-            />
-            <Numero etiqueta="Nuevos este mes" valor={resumen.nuevos} />
-            <Numero
-              etiqueta="Se fueron este mes"
-              valor={resumen.seFueron}
-              alerta={resumen.seFueron > 0}
-            />
-          </section>
+          {resumen.drey && (
+            <section className="drey-resumen">
+              <p className="seccion-etiqueta">DREY este mes · profes y gimnasios</p>
+              <div className="estadisticas-grilla">
+                <Numero
+                  etiqueta="Ingresos de DREY"
+                  valor={formatearPrecio(resumen.drey.ingresosMes)}
+                  detalle={textoVariacion(resumen.drey.ingresosMes, resumen.drey.ingresosMesPasado)}
+                />
+                <Numero
+                  etiqueta="Espacios que pagan"
+                  valor={resumen.drey.pagan}
+                  detalle={`${resumen.drey.cuposVendidos} cupos · ${resumen.drey.cuposOcupados} ocupados`}
+                />
+                <Numero
+                  etiqueta="En prueba gratis"
+                  valor={resumen.drey.enPrueba}
+                  detalle={
+                    resumen.drey.pruebasPorTerminar > 0
+                      ? `${resumen.drey.pruebasPorTerminar} ${resumen.drey.pruebasPorTerminar === 1 ? 'termina' : 'terminan'} esta semana`
+                      : `${resumen.drey.sinCosto} sin costo`
+                  }
+                  alerta={resumen.drey.pruebasPorTerminar > 0}
+                />
+                <Numero
+                  etiqueta="Por vencer o vencidos"
+                  valor={resumen.drey.porVencer}
+                  alerta={resumen.drey.porVencer > 0}
+                />
+              </div>
+            </section>
+          )}
 
           <section className="tareas">
             <p className="seccion-etiqueta">Para atender</p>
@@ -104,32 +124,23 @@ export default function AdminInicio() {
             )}
           </section>
 
-          {resumen.drey && (
-            <section className="drey-resumen">
-              <p className="seccion-etiqueta">DREY · profes y gimnasios</p>
-              <div className="estadisticas-grilla">
-                <Numero
-                  etiqueta="Espacios que pagan"
-                  valor={resumen.drey.pagan}
-                  detalle={`${resumen.drey.enPrueba} en prueba · ${resumen.drey.sinCosto} sin costo`}
-                />
-                <Numero
-                  etiqueta="Ingresos DREY este mes"
-                  valor={formatearPrecio(resumen.drey.ingresosMes)}
-                />
-                <Numero
-                  etiqueta="Cupos vendidos"
-                  valor={resumen.drey.cuposVendidos}
-                  detalle={`${resumen.drey.cuposOcupados} ocupados`}
-                />
-                <Numero
-                  etiqueta="Por vencer o vencidos"
-                  valor={resumen.drey.porVencer}
-                  alerta={resumen.drey.porVencer > 0}
-                />
-              </div>
-            </section>
-          )}
+          <section className="admin-alumnos-resumen">
+            <p className="seccion-etiqueta">Alumnos de todos los espacios</p>
+            <div className="estadisticas-grilla estadisticas-grilla-chica">
+              <Numero etiqueta="Activos" valor={resumen.activos} />
+              <Numero etiqueta="Nuevos este mes" valor={resumen.nuevos} />
+              <Numero
+                etiqueta="Se fueron este mes"
+                valor={resumen.seFueron}
+                alerta={resumen.seFueron > 0}
+              />
+              <Numero
+                etiqueta="Cobrado por los espacios"
+                valor={formatearPrecio(resumen.ingresosMes)}
+                detalle="Lo que pagaron los alumnos este mes"
+              />
+            </div>
+          </section>
 
           <section className="estadisticas-grilla estadisticas-grilla-dos">
             <Numero etiqueta="Profes" valor={resumen.profes} />
@@ -247,7 +258,7 @@ async function cargar() {
         esperanAlta === 1
           ? '1 cuenta espera que la habilites'
           : `${esperanAlta} cuentas esperan que las habilites`,
-      to: '/profe/cuentas',
+      to: '/profe/cuentas?tab=alumnos',
       boton: 'Ver',
     })
   }
@@ -258,7 +269,7 @@ async function cargar() {
           ? '1 cliente avisó que pagó'
           : `${avisaronPago} clientes avisaron que pagaron`,
       detalle: 'Revisá el comprobante y confirmalo.',
-      to: '/profe/cuentas',
+      to: '/profe/cuentas?tab=alumnos',
       boton: 'Ver',
     })
   }
@@ -266,10 +277,10 @@ async function cargar() {
     pendientes.push({
       texto:
         sinProfe === 1
-          ? '1 cliente activo no tiene profe'
-          : `${sinProfe} clientes activos no tienen profe`,
-      detalle: 'Asignales uno desde su ficha o en Equipo → Clientes.',
-      to: '/profe/equipo',
+          ? '1 alumno activo no tiene profe'
+          : `${sinProfe} alumnos activos no tienen profe`,
+      detalle: 'Elegilos en Alumnos y tocá "Asignar a un profe".',
+      to: '/profe/clientes?profe=sin',
       boton: 'Asignar',
     })
   }
@@ -294,6 +305,29 @@ async function cargar() {
           : `${drey.avisaronPago} profes o gimnasios avisaron que le pagaron a DREY`,
       detalle: 'Revisá el comprobante y confirmalo.',
       to: '/profe/cuentas?tab=drey',
+      boton: 'Ver',
+    })
+  }
+  if (drey?.pruebasPorTerminar > 0 || drey?.terminaronPrueba > 0) {
+    const partes = []
+    if (drey.pruebasPorTerminar > 0) {
+      partes.push(
+        drey.pruebasPorTerminar === 1
+          ? '1 prueba gratis termina esta semana'
+          : `${drey.pruebasPorTerminar} pruebas gratis terminan esta semana`,
+      )
+    }
+    if (drey.terminaronPrueba > 0) {
+      partes.push(
+        drey.terminaronPrueba === 1
+          ? '1 espacio terminó la prueba sin elegir plan'
+          : `${drey.terminaronPrueba} espacios terminaron la prueba sin elegir plan`,
+      )
+    }
+    pendientes.push({
+      texto: partes.join(' · '),
+      detalle: 'Buen momento para escribirles y contarles los planes.',
+      to: '/profe/equipo',
       boton: 'Ver',
     })
   }
@@ -325,39 +359,4 @@ function textoVariacion(actual, anterior) {
   if (!anterior) return ''
   const variacion = Math.round(((actual - anterior) / anterior) * 100)
   return `${variacion >= 0 ? '+' : ''}${variacion}% vs. el mes pasado`
-}
-
-// Los números de DREY con los profes y gimnasios (SQL 032).
-function resumenDrey(espacios, pagos, hoy) {
-  const mes = hoy.slice(0, 7)
-  let pagan = 0
-  let enPrueba = 0
-  let sinCosto = 0
-  let porVencer = 0
-  let cuposVendidos = 0
-  let cuposOcupados = 0
-  for (const espacio of espacios) {
-    const { tipo } = estadoDeEspacio(espacio, hoy)
-    cuposOcupados += espacio.cuposUsados || 0
-    if (tipo === 'sin-costo') sinCosto += 1
-    else if (tipo === 'prueba') enPrueba += 1
-    else if (['al-dia', 'por-vencer', 'gracia'].includes(tipo)) {
-      pagan += 1
-      cuposVendidos += espacio.cuposTotal || 0
-    }
-    if (['por-vencer', 'gracia', 'vencido'].includes(tipo) && !espacio.avisoPago) porVencer += 1
-  }
-  const ingresosMes = pagos
-    .filter((pago) => (fechaLocalDeMomento(pago.creado_en) || '').slice(0, 7) === mes)
-    .reduce((total, pago) => total + (pago.monto || 0), 0)
-  return {
-    pagan,
-    enPrueba,
-    sinCosto,
-    porVencer,
-    cuposVendidos,
-    cuposOcupados,
-    ingresosMes,
-    avisaronPago: espacios.filter((espacio) => espacio.avisoPago).length,
-  }
 }

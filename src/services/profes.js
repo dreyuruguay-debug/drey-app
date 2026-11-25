@@ -207,6 +207,32 @@ export async function asignarProfe(clienteId, profeId) {
   return error
 }
 
+// Le asigna el mismo profe a varios alumnos de una vez (lista de
+// alumnos: "Asignar a un profe"). Lo pueden hacer el Admin y el dueño de
+// un gimnasio (con los profes de su gimnasio); la base controla quién
+// puede qué: si no deja cambiar a alguno, ese queda como estaba. Van de
+// a uno, así un alumno que no se puede pasar (por ejemplo, por cupo) no
+// frena a los demás.
+// Devuelve { pasaron, noPasaron, error }: error = el primero que hubo.
+export async function asignarProfeAVarios(clienteIds, profeId) {
+  const resultados = await Promise.all(
+    clienteIds.map((clienteId) =>
+      supabase
+        .from('perfiles')
+        .update({ profe_id: profeId || null })
+        .eq('id', clienteId)
+        .select('id, profe_id'),
+    ),
+  )
+  let pasaron = 0
+  let error = null
+  for (const { data, error: fallo } of resultados) {
+    if (fallo) error = error || fallo
+    else if (data?.[0] && (data[0].profe_id || null) === (profeId || null)) pasaron += 1
+  }
+  return { pasaron, noPasaron: clienteIds.length - pasaron, error }
+}
+
 // Profes para elegir en un selector (Admin): id y nombre.
 export async function cargarListaDeProfes() {
   const { data } = await supabase

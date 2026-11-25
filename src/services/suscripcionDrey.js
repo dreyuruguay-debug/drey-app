@@ -7,7 +7,7 @@ import { normalizarTexto } from '../utils/texto.js'
 // Suscripción DREY: lo que pagan los profes y gimnasios a DREY, por cupos
 // de alumnos (supabase/sql/032). La usan "Suscripción DREY" del panel
 // (pages/ProfeSuscripcionDrey.jsx) y las pantallas del Admin (Ajustes →
-// DREY, Pagos → Suscripciones DREY, Equipo → Espacios).
+// DREY, Cobros → Suscripciones DREY, Espacios).
 //
 // Cada función devuelve { datos, error } o el error (null si salió bien).
 // Lo que cada uno puede hacer lo controla la base.
@@ -220,7 +220,7 @@ export async function registrarPagoDrey(espacioId, { monto, metodo, nota } = {})
   return { datos: data, error }
 }
 
-// Cambios a mano del Admin (Equipo → Espacios).
+// Cambios a mano del Admin (Espacios).
 export async function guardarEspacio(id, cambios) {
   const fila = {}
   if ('nombre' in cambios) fila.nombre = cambios.nombre.trim()

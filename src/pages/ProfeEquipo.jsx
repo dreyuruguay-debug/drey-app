@@ -28,14 +28,17 @@ import { problemaDeCupo } from '../utils/cupos.js'
 //     (clientes activos, quiénes entrenaron esta semana) y puede pasar un
 //     cliente de un profe a otro.
 //
-// El Admin tiene además la pestaña "Espacios" (?tab=espacios): cada profe
-// y gimnasio con su suscripción DREY y sus cupos
-// (components/AdminEspacios.jsx, supabase/sql/032).
+// El Admin ve primero la pestaña "Espacios": cada profe y gimnasio con su
+// suscripción DREY y sus cupos (components/AdminEspacios.jsx,
+// supabase/sql/032); lo de arriba está en la pestaña "Profes".
 //
 // Lo que cada uno puede ver y cambiar lo controla la base de datos.
+// El Admin entra por "Espacios" (menú): primero cada profe y gimnasio con
+// su suscripción DREY; en "Profes", sumar profes, gimnasios y pasar
+// alumnos (?tab=profes).
 const PESTANAS_ADMIN = [
-  { id: 'equipo', label: 'Equipo' },
   { id: 'espacios', label: 'Espacios' },
+  { id: 'profes', label: 'Profes' },
 ]
 
 // Mensajes que manda la base cuando un cambio no se puede hacer (020).
@@ -160,21 +163,23 @@ export default function ProfeEquipo() {
     )
   }
 
-  const pestana = rol.es_admin && parametros.get('tab') === 'espacios' ? 'espacios' : 'equipo'
+  // El Admin: "Espacios" salvo que pida "Profes" (?tab=profes).
+  const pestana = rol.es_admin ? (parametros.get('tab') === 'profes' ? 'profes' : 'espacios') : null
   const pestanas = rol.es_admin && (
     <Pestanas
       etiqueta="Qué ver"
       opciones={PESTANAS_ADMIN}
       activa={pestana}
-      onCambiar={(id) =>
-        setParametros(id === 'espacios' ? { tab: 'espacios' } : {}, { replace: true })
-      }
+      onCambiar={(id) => setParametros(id === 'profes' ? { tab: 'profes' } : {}, { replace: true })}
     />
   )
+  // Para el Admin es una sección del menú (sin "← Volver").
+  const titulo = rol.es_admin ? 'Espacios' : 'Equipo y gimnasios'
+  const volverA = rol.es_admin ? undefined : '/profe'
 
   if (pestana === 'espacios') {
     return (
-      <ProfeLayout titulo="Equipo y gimnasios" volverA="/profe">
+      <ProfeLayout titulo={titulo}>
         {pestanas}
         <AdminEspacios />
       </ProfeLayout>
@@ -182,7 +187,7 @@ export default function ProfeEquipo() {
   }
 
   return (
-    <ProfeLayout titulo="Equipo y gimnasios" volverA="/profe">
+    <ProfeLayout titulo={titulo} volverA={volverA}>
       {pestanas}
       {mensaje && <p className="auth-message">{mensaje}</p>}
 

@@ -481,6 +481,47 @@ subirlas. Ficha del cliente → Rutinas → "Rutinas en Excel"
 - **`.gitignore`** (claves, `node_modules`, `dist`) y **`.env.example`**
   (modelo de las variables, sin claves).
 
+## Diseño: alumnos, ficha, espacios y Admin (noviembre 2026, tandas 2 y 3)
+
+- **Lista de alumnos** (`pages/ProfeClientes.jsx`, cálculos en
+  `utils/clientes.js`, piezas en `components/clientes/`):
+  - Chips para filtrar con cuántos hay: Todos · No entrenan (5 días o
+    más) · Cuota vencida · Cuota al día (los de la cuota, solo el Admin y
+    el dueño del espacio). Se puede entrar filtrado: `?pago=vencidos`,
+    `?filtro=no-entrenan`, `?profe=sin`.
+  - **Celular**: tarjeta con iniciales, puntito de color (verde al día ·
+    naranja no entrena · rojo cuota vencida) y WhatsApp a un toque.
+  - **Compu**: tabla con columnas que se ordenan (nombre, profe, último
+    entreno, vencimiento); tocando la fila se abre la ficha.
+  - **Asignar a un profe a varios** (Admin y dueño de gimnasio): se
+    eligen alumnos (casillas en la compu, botón "Asignar a un profe" en
+    el celular) y se elige el profe. Van de a uno
+    (`asignarProfeAVarios` en `services/profes.js`); la base decide qué
+    se permite y la app avisa cuántos pasaron.
+- **Ficha del alumno en la compu**: 2 columnas. A la izquierda, fijo, el
+  alumno con `components/clientes/FichaResumen.jsx` (último entreno,
+  objetivo, lesiones, celular, WhatsApp, mensaje en la app); a la
+  derecha, las pestañas. En el celular no cambia.
+- **Color del espacio activo**: con más de un espacio, una franja finita
+  arriba de todo y el selector con el color del espacio (verde los
+  alumnos particulares, cada gimnasio el suyo: `colorDeEspacio` en
+  `services/espacio.js`). El selector queda fijo arriba al bajar.
+- **Cartel con QR** (`components/BotonCartelQR.jsx`,
+  `services/cartelQR.js`): en Equipo (dueño) y en Mis espacios. Baja un
+  PDF A4 con el logo y un QR que abre el registro con el código ya puesto
+  (`linkDeRegistro` en `services/espacio.js`). Usa la librería `qrcode`
+  (en `package.json`; Cloudflare la instala sola) y `jspdf`; las dos se
+  bajan recién al tocar el botón.
+- **Admin**:
+  - Menú: Inicio · Espacios (`/profe/equipo`, primero la pestaña Espacios
+    y después Profes) · Alumnos · Cobros (`/profe/cuentas`, primero
+    Suscripciones DREY y después Pagos de alumnos) · Ajustes.
+  - Inicio: primero lo de DREY (`utils/resumenDrey.js`): ingresos del mes
+    comparados con el anterior, espacios que pagan, pruebas gratis y cuántas
+    terminan esta semana, y los que están por vencer. Más abajo, los números
+    de alumnos de todos los espacios. En "Para atender" avisa también de las
+    pruebas que terminan y de los que terminaron la prueba sin plan.
+
 ## Diseño: avisos, gráficas, Inicio del profe y Ajustes (noviembre 2026)
 
 - **Avisos del Inicio del alumno**: en vez de un cartel por aviso

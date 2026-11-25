@@ -27,10 +27,12 @@ import { asignarProfe, cargarListaDeProfes, textoDeErrorProfes } from '../servic
 import { cargarPagos, TEXTO_ESTADO_PAGO } from '../services/pagos.js'
 import { formatearPrecio, listaDePlanes, obtenerPlan } from '../data/planes.js'
 import { esDuenoDe, useEspacios } from '../services/espacio.js'
-import { DIAS_SEMANA, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
+import { DIAS_SEMANA, diasEntre, obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
 import { textoDeEntrenamiento } from '../utils/entrenamientoHecho.js'
 import Esqueleto from '../components/Esqueleto.jsx'
+import FichaResumen from '../components/clientes/FichaResumen.jsx'
+import { PANTALLA_COMPU, useCoincide } from '../components/useCoincide.js'
 import AvisoCupo from '../components/AvisoCupo.jsx'
 import { problemaDeCupo } from '../utils/cupos.js'
 import { useConfirmar } from '../components/ConfirmarAccion.jsx'
@@ -49,6 +51,11 @@ const PESTANAS = [
 // (al alumno y a los profes les llega el aviso, supabase/sql/026).
 // En Progreso, cada uno de los últimos entrenamientos se puede abrir para
 // corregir un peso o una repetición mal anotados (EditorEntrenamiento.jsx).
+//
+// En la compu la ficha va en 2 columnas: a la izquierda, fija, el alumno
+// (nombre, plan, estado, profe y components/clientes/FichaResumen.jsx:
+// último entreno, objetivo, lesiones, celular, WhatsApp); a la derecha,
+// las pestañas. En el celular, todo en una columna como siempre.
 export default function ProfeClienteDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -73,6 +80,7 @@ export default function ProfeClienteDetalle() {
   const [problemaPago, setProblemaPago] = useState(null)
   const { activo: espacio } = useEspacios()
   const sigueVigente = useVigente(id)
+  const enCompu = useCoincide(PANTALLA_COMPU)
 
   useEffect(() => {
     cargarTodo()
@@ -255,291 +263,321 @@ export default function ProfeClienteDetalle() {
 
   return (
     <ProfeLayout volverA="/profe/clientes">
-      <header className="ficha-cabecera">
-        <span className="inicio-avatar inicio-avatar-grande" aria-hidden="true">
-          {`${cliente.nombre?.[0] || ''}${cliente.apellido?.[0] || ''}`.toUpperCase()}
-        </span>
-        <div className="ficha-datos">
-          <h1 className="pagina-titulo pagina-titulo-sin-margen">{nombreCompleto}</h1>
-          <p className="inicio-plan">
-            {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
-            {cliente.vencimiento ? ` · vence ${textoFechaCorta(cliente.vencimiento)}` : ''}
-          </p>
-        </div>
-        <span className={`estado-chip estado-${estado.tono}`}>{estado.texto}</span>
-      </header>
-
-      {esAdmin && (
-        <label className="ficha-profe">
-          <span>Profe</span>
-          <select
-            className="profe-calendario-select"
-            value={cliente.profe_id || ''}
-            onChange={(event) => cambiarProfe(event.target.value || null)}
-            aria-label={`Profe de ${cliente.nombre}`}
-          >
-            <option value="">Sin profe</option>
-            {profes.map((profe) => (
-              <option key={profe.id} value={profe.id}>
-                {profe.nombre} {profe.apellido}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
-      <Pestanas
-        etiqueta="Secciones del cliente"
-        opciones={PESTANAS}
-        activa={pestana}
-        onCambiar={cambiarPestana}
-      />
-
-      <div className="ficha-contenido">
-        {pestana === 'rutinas' && (
-          <ListaRutinasCliente
-            clienteId={id}
-            clienteNombre={cliente.nombre}
-            rutinas={rutinas}
-            cantidades={cantidades}
-            diasPorRutina={diasPorRutina(calendario)}
-            onCambio={() => cargarTodo({ silencioso: true })}
-          />
-        )}
-
-        {pestana === 'semana' && (
-          <>
-            <p className="profe-nota">Elegí qué rutina le toca cada día. Se guarda solo.</p>
-            {rutinasGuardadas.length === 0 && (
-              <p className="profe-vacio">
-                Primero armale una rutina (pestaña Rutinas) y después elegí sus días acá.
+      <div className="ficha-grilla">
+        <aside className="ficha-lateral">
+          <header className="ficha-cabecera">
+            <span className="inicio-avatar inicio-avatar-grande" aria-hidden="true">
+              {`${cliente.nombre?.[0] || ''}${cliente.apellido?.[0] || ''}`.toUpperCase()}
+            </span>
+            <div className="ficha-datos">
+              <h1 className="pagina-titulo pagina-titulo-sin-margen">{nombreCompleto}</h1>
+              <p className="inicio-plan">
+                {obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'}
+                {cliente.vencimiento ? ` · vence ${textoFechaCorta(cliente.vencimiento)}` : ''}
               </p>
-            )}
-            <div className="lista-tarjetas">
-              {DIAS_SEMANA.map((dia) => (
-                <label key={dia} className="dia-fila">
-                  <strong>{dia}</strong>
-                  <select
-                    className="profe-calendario-select"
-                    value={calendario[dia]?.rutina_id || ''}
-                    onChange={(event) => cambiarDia(dia, event.target.value || null)}
-                  >
-                    <option value="">Descanso</option>
-                    {rutinasGuardadas.map((rutina) => (
-                      <option key={rutina.id} value={rutina.id}>
-                        {rutina.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ))}
             </div>
-          </>
-        )}
+            <span className={`estado-chip estado-${estado.tono}`}>{estado.texto}</span>
+          </header>
 
-        {pestana === 'progreso' && (
-          <>
-            <Link to={`/profe/clientes/${id}/progreso`} className="boton-principal">
-              Evaluaciones y gráficas
-            </Link>
-            <Link to={`/profe/clientes/${id}/medidas`} className="boton-secundario ficha-medidas">
-              Medidas y fotos (evaluación inicial)
-            </Link>
-            <p className="seccion-etiqueta">Últimos entrenamientos</p>
-            {sesiones.length === 0 ? (
-              <p className="profe-vacio">Todavía no completó ningún entrenamiento.</p>
-            ) : (
-              <div className="profe-progreso-lista">
-                {sesiones.map((sesion) => (
-                  <div key={sesion.id} className="profe-progreso-item">
-                    <div className="profe-progreso-item-header">
-                      <span className="profe-progreso-fecha">{textoFechaCorta(sesion.fecha)}</span>
-                      <span className="profe-progreso-rutina">
-                        {sesion.rutinas?.nombre || 'Rutina borrada'}
-                      </span>
-                      {textoDeEsfuerzo(sesion.esfuerzo) && (
-                        <span className="profe-progreso-esfuerzo">
-                          {textoDeEsfuerzo(sesion.esfuerzo)}
-                        </span>
-                      )}
-                    </div>
-                    {sesion.comentario && (
-                      <p className="profe-progreso-comentario">"{sesion.comentario}"</p>
-                    )}
-                    <div className="profe-progreso-pie">
-                      <span>
-                        {textoDeEntrenamiento(sesion)}
-                        {sesion.editado_en &&
-                          ` · Corregido el ${textoFechaCorta(sesion.editado_en)}${
-                            sesion.editado_por === id ? ' por el alumno' : ''
-                          }`}
-                      </span>
-                      <button
-                        type="button"
-                        className="boton-secundario boton-chico"
-                        onClick={() => setCorrigiendoId(sesion.id)}
-                      >
-                        Ver y corregir
-                      </button>
-                    </div>
-                  </div>
+          {esAdmin && (
+            <label className="ficha-profe">
+              <span>Profe</span>
+              <select
+                className="profe-calendario-select"
+                value={cliente.profe_id || ''}
+                onChange={(event) => cambiarProfe(event.target.value || null)}
+                aria-label={`Profe de ${cliente.nombre}`}
+              >
+                <option value="">Sin profe</option>
+                {profes.map((profe) => (
+                  <option key={profe.id} value={profe.id}>
+                    {profe.nombre} {profe.apellido}
+                  </option>
                 ))}
-              </div>
-            )}
-            <p className="profe-nota">
-              Si viene levantando fácil, subile el peso objetivo en su rutina (Rutinas → Editar). Si
-              quedó mal anotado un peso o una repetición, o se olvidó de marcar un ejercicio,
-              arreglalo con "Ver y corregir" (el alumno también puede corregir los suyos desde su
-              Progreso).
-            </p>
-          </>
-        )}
+              </select>
+            </label>
+          )}
 
-        {pestana === 'pagos' && (
-          <>
-            {cliente.baja_solicitada_en && (
-              <div className="aviso-baja">
-                <strong>
-                  Pidió la baja de su cuenta el {textoFechaCorta(cliente.baja_solicitada_en)}
-                </strong>
-                <span>
-                  Por la Ley de datos personales hay que borrar su cuenta y sus datos. Hacelo desde
-                  Supabase → Authentication → Users → buscá su email → "Delete user". Se borra todo
-                  lo suyo (rutinas, entrenamientos, pagos).
-                </span>
-              </div>
+          {enCompu && (
+            <FichaResumen
+              cliente={cliente}
+              ultimoEntreno={sesiones[0]?.fecha || null}
+              diasSinEntrenar={
+                sesiones[0] ? Math.max(0, diasEntre(sesiones[0].fecha, obtenerFechaHoyISO())) : null
+              }
+              whatsapp={whatsapp}
+              deBaja={deBaja}
+            />
+          )}
+        </aside>
+
+        <div className="ficha-principal">
+          <Pestanas
+            etiqueta="Secciones del cliente"
+            opciones={PESTANAS}
+            activa={pestana}
+            onCambiar={cambiarPestana}
+          />
+
+          <div className="ficha-contenido">
+            {pestana === 'rutinas' && (
+              <ListaRutinasCliente
+                clienteId={id}
+                clienteNombre={cliente.nombre}
+                rutinas={rutinas}
+                cantidades={cantidades}
+                diasPorRutina={diasPorRutina(calendario)}
+                onCambio={() => cargarTodo({ silencioso: true })}
+              />
             )}
-            <dl className="ficha-datos-lista">
-              <div>
-                <dt>Plan</dt>
-                <dd>
-                  {puedeCambiarPlan ? (
-                    <select
-                      className="profe-calendario-select"
-                      value={cliente.plan || ''}
-                      onChange={(event) => cambiarPlan(event.target.value)}
-                      aria-label="Plan del alumno"
-                    >
-                      <option value="">Sin plan</option>
-                      {planesDelAlumno.map((plan) => (
-                        <option key={plan.id} value={plan.id}>
-                          {plan.nombre} · {formatearPrecio(plan.precioDesdeSegundoMes)}/mes
-                          {plan.activo === false ? ' (oculto)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Estado</dt>
-                <dd>{estado.texto}</dd>
-              </div>
-              <div>
-                <dt>Vence</dt>
-                <dd>
-                  {cliente.vencimiento ? textoFechaCorta(cliente.vencimiento) : 'Sin definir'}
-                </dd>
-              </div>
-              <div>
-                <dt>Celular</dt>
-                <dd>{cliente.celular || '—'}</dd>
-              </div>
-            </dl>
-            <AvisoCupo problema={problemaPago} onCerrar={() => setProblemaPago(null)} />
-            {deBaja && (
-              <div className="aviso-baja">
-                <strong>
-                  Dado de baja
-                  {cliente.baja_en ? ` el ${textoFechaCorta(cliente.baja_en)}` : ''}
-                </strong>
-                <span>
-                  No aparece en tus listas ni puede ver sus rutinas. Conserva su cuenta y su
-                  historial. Si vuelve, tocá “Volver a sumar” y después habilitalo.
-                </span>
-              </div>
-            )}
-            <div className="acciones-columna">
-              {deBaja ? (
-                <button type="button" className="boton-principal" onClick={sumarDeNuevo}>
-                  Volver a sumar
-                </button>
-              ) : cliente.estado === 'pendiente' ? (
-                <button
-                  type="button"
-                  className="boton-principal"
-                  onClick={() => accionDePago(() => habilitarCliente(id))}
-                >
-                  Habilitar cuenta
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={cliente.aviso_pago ? 'boton-principal' : 'boton-secundario'}
-                  onClick={() => accionDePago(() => confirmarPago(id))}
-                >
-                  {cliente.aviso_pago ? 'Confirmar pago (+1 mes)' : 'Registrar un pago (+1 mes)'}
-                </button>
-              )}
-              {cliente.comprobante_nombre && (
-                <button
-                  type="button"
-                  className="boton-secundario"
-                  onClick={async () => {
-                    if (!(await abrirComprobante(cliente.comprobante_nombre))) {
-                      mostrarAviso('No pudimos abrir el comprobante', 'error')
-                    }
-                  }}
-                >
-                  Ver comprobante
-                </button>
-              )}
-              {whatsapp && (
-                <a href={whatsapp} className="boton-secundario" target="_blank" rel="noreferrer">
-                  Escribirle por WhatsApp
-                </a>
-              )}
-              {!deBaja && (
-                <Link to={`/profe/mensajes?cliente=${id}`} className="boton-secundario">
-                  💬 Dejarle un mensaje en la app
-                </Link>
-              )}
-            </div>
-            {!deBaja && (
-              <div className="ficha-dar-de-baja">
-                <p className="profe-nota">
-                  ¿Ya no sigue entrenando? Dalo de baja: sale de tus listas y deja de ver sus
-                  rutinas, pero conserva su cuenta y su historial, y lo podés volver a sumar. El
-                  cupo que ocupa se libera al terminar el período que ya pagaste.
-                </p>
-                <button type="button" className="boton-peligro" onClick={darDeBajaAlAlumno}>
-                  Dar de baja a {cliente.nombre || 'este alumno'}
-                </button>
-              </div>
-            )}
-            {pagos.length > 0 && (
+
+            {pestana === 'semana' && (
               <>
-                <p className="seccion-etiqueta">Pagos</p>
+                <p className="profe-nota">Elegí qué rutina le toca cada día. Se guarda solo.</p>
+                {rutinasGuardadas.length === 0 && (
+                  <p className="profe-vacio">
+                    Primero armale una rutina (pestaña Rutinas) y después elegí sus días acá.
+                  </p>
+                )}
                 <div className="lista-tarjetas">
-                  {pagos.map((pago) => (
-                    <p key={pago.id} className="pago-fila">
-                      <span>{textoFechaCorta(pago.creado_en)}</span>
-                      <span>
-                        {formatearPrecio(pago.monto)}
-                        {pago.codigo ? ` · ${pago.codigo}` : ''}
-                      </span>
-                      <span className={`pago-estado pago-estado-${pago.estado}`}>
-                        {TEXTO_ESTADO_PAGO[pago.estado] || pago.estado}
-                      </span>
-                    </p>
+                  {DIAS_SEMANA.map((dia) => (
+                    <label key={dia} className="dia-fila">
+                      <strong>{dia}</strong>
+                      <select
+                        className="profe-calendario-select"
+                        value={calendario[dia]?.rutina_id || ''}
+                        onChange={(event) => cambiarDia(dia, event.target.value || null)}
+                      >
+                        <option value="">Descanso</option>
+                        {rutinasGuardadas.map((rutina) => (
+                          <option key={rutina.id} value={rutina.id}>
+                            {rutina.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   ))}
                 </div>
               </>
             )}
-          </>
-        )}
+
+            {pestana === 'progreso' && (
+              <>
+                <Link to={`/profe/clientes/${id}/progreso`} className="boton-principal">
+                  Evaluaciones y gráficas
+                </Link>
+                <Link
+                  to={`/profe/clientes/${id}/medidas`}
+                  className="boton-secundario ficha-medidas"
+                >
+                  Medidas y fotos (evaluación inicial)
+                </Link>
+                <p className="seccion-etiqueta">Últimos entrenamientos</p>
+                {sesiones.length === 0 ? (
+                  <p className="profe-vacio">Todavía no completó ningún entrenamiento.</p>
+                ) : (
+                  <div className="profe-progreso-lista">
+                    {sesiones.map((sesion) => (
+                      <div key={sesion.id} className="profe-progreso-item">
+                        <div className="profe-progreso-item-header">
+                          <span className="profe-progreso-fecha">
+                            {textoFechaCorta(sesion.fecha)}
+                          </span>
+                          <span className="profe-progreso-rutina">
+                            {sesion.rutinas?.nombre || 'Rutina borrada'}
+                          </span>
+                          {textoDeEsfuerzo(sesion.esfuerzo) && (
+                            <span className="profe-progreso-esfuerzo">
+                              {textoDeEsfuerzo(sesion.esfuerzo)}
+                            </span>
+                          )}
+                        </div>
+                        {sesion.comentario && (
+                          <p className="profe-progreso-comentario">"{sesion.comentario}"</p>
+                        )}
+                        <div className="profe-progreso-pie">
+                          <span>
+                            {textoDeEntrenamiento(sesion)}
+                            {sesion.editado_en &&
+                              ` · Corregido el ${textoFechaCorta(sesion.editado_en)}${
+                                sesion.editado_por === id ? ' por el alumno' : ''
+                              }`}
+                          </span>
+                          <button
+                            type="button"
+                            className="boton-secundario boton-chico"
+                            onClick={() => setCorrigiendoId(sesion.id)}
+                          >
+                            Ver y corregir
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="profe-nota">
+                  Si viene levantando fácil, subile el peso objetivo en su rutina (Rutinas →
+                  Editar). Si quedó mal anotado un peso o una repetición, o se olvidó de marcar un
+                  ejercicio, arreglalo con "Ver y corregir" (el alumno también puede corregir los
+                  suyos desde su Progreso).
+                </p>
+              </>
+            )}
+
+            {pestana === 'pagos' && (
+              <>
+                {cliente.baja_solicitada_en && (
+                  <div className="aviso-baja">
+                    <strong>
+                      Pidió la baja de su cuenta el {textoFechaCorta(cliente.baja_solicitada_en)}
+                    </strong>
+                    <span>
+                      Por la Ley de datos personales hay que borrar su cuenta y sus datos. Hacelo
+                      desde Supabase → Authentication → Users → buscá su email → "Delete user". Se
+                      borra todo lo suyo (rutinas, entrenamientos, pagos).
+                    </span>
+                  </div>
+                )}
+                <dl className="ficha-datos-lista">
+                  <div>
+                    <dt>Plan</dt>
+                    <dd>
+                      {puedeCambiarPlan ? (
+                        <select
+                          className="profe-calendario-select"
+                          value={cliente.plan || ''}
+                          onChange={(event) => cambiarPlan(event.target.value)}
+                          aria-label="Plan del alumno"
+                        >
+                          <option value="">Sin plan</option>
+                          {planesDelAlumno.map((plan) => (
+                            <option key={plan.id} value={plan.id}>
+                              {plan.nombre} · {formatearPrecio(plan.precioDesdeSegundoMes)}/mes
+                              {plan.activo === false ? ' (oculto)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        obtenerPlan(cliente.plan)?.nombre || cliente.plan || 'Sin plan'
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Estado</dt>
+                    <dd>{estado.texto}</dd>
+                  </div>
+                  <div>
+                    <dt>Vence</dt>
+                    <dd>
+                      {cliente.vencimiento ? textoFechaCorta(cliente.vencimiento) : 'Sin definir'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Celular</dt>
+                    <dd>{cliente.celular || '—'}</dd>
+                  </div>
+                </dl>
+                <AvisoCupo problema={problemaPago} onCerrar={() => setProblemaPago(null)} />
+                {deBaja && (
+                  <div className="aviso-baja">
+                    <strong>
+                      Dado de baja
+                      {cliente.baja_en ? ` el ${textoFechaCorta(cliente.baja_en)}` : ''}
+                    </strong>
+                    <span>
+                      No aparece en tus listas ni puede ver sus rutinas. Conserva su cuenta y su
+                      historial. Si vuelve, tocá “Volver a sumar” y después habilitalo.
+                    </span>
+                  </div>
+                )}
+                <div className="acciones-columna">
+                  {deBaja ? (
+                    <button type="button" className="boton-principal" onClick={sumarDeNuevo}>
+                      Volver a sumar
+                    </button>
+                  ) : cliente.estado === 'pendiente' ? (
+                    <button
+                      type="button"
+                      className="boton-principal"
+                      onClick={() => accionDePago(() => habilitarCliente(id))}
+                    >
+                      Habilitar cuenta
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={cliente.aviso_pago ? 'boton-principal' : 'boton-secundario'}
+                      onClick={() => accionDePago(() => confirmarPago(id))}
+                    >
+                      {cliente.aviso_pago
+                        ? 'Confirmar pago (+1 mes)'
+                        : 'Registrar un pago (+1 mes)'}
+                    </button>
+                  )}
+                  {cliente.comprobante_nombre && (
+                    <button
+                      type="button"
+                      className="boton-secundario"
+                      onClick={async () => {
+                        if (!(await abrirComprobante(cliente.comprobante_nombre))) {
+                          mostrarAviso('No pudimos abrir el comprobante', 'error')
+                        }
+                      }}
+                    >
+                      Ver comprobante
+                    </button>
+                  )}
+                  {whatsapp && (
+                    <a
+                      href={whatsapp}
+                      className="boton-secundario"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Escribirle por WhatsApp
+                    </a>
+                  )}
+                  {!deBaja && (
+                    <Link to={`/profe/mensajes?cliente=${id}`} className="boton-secundario">
+                      💬 Dejarle un mensaje en la app
+                    </Link>
+                  )}
+                </div>
+                {!deBaja && (
+                  <div className="ficha-dar-de-baja">
+                    <p className="profe-nota">
+                      ¿Ya no sigue entrenando? Dalo de baja: sale de tus listas y deja de ver sus
+                      rutinas, pero conserva su cuenta y su historial, y lo podés volver a sumar. El
+                      cupo que ocupa se libera al terminar el período que ya pagaste.
+                    </p>
+                    <button type="button" className="boton-peligro" onClick={darDeBajaAlAlumno}>
+                      Dar de baja a {cliente.nombre || 'este alumno'}
+                    </button>
+                  </div>
+                )}
+                {pagos.length > 0 && (
+                  <>
+                    <p className="seccion-etiqueta">Pagos</p>
+                    <div className="lista-tarjetas">
+                      {pagos.map((pago) => (
+                        <p key={pago.id} className="pago-fila">
+                          <span>{textoFechaCorta(pago.creado_en)}</span>
+                          <span>
+                            {formatearPrecio(pago.monto)}
+                            {pago.codigo ? ` · ${pago.codigo}` : ''}
+                          </span>
+                          <span className={`pago-estado pago-estado-${pago.estado}`}>
+                            {TEXTO_ESTADO_PAGO[pago.estado] || pago.estado}
+                          </span>
+                        </p>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {corrigiendo && (

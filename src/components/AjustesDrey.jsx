@@ -358,8 +358,7 @@ function SeccionPrueba({ config }) {
         </div>
         <p className="profe-nota">
           Vale para los espacios que se crean desde ahora; los que ya están en prueba siguen con su
-          fecha (se cambia a mano en Equipo → Espacios). Los alumnos de la prueba sí cambian para
-          todos.
+          fecha (se cambia a mano en Espacios). Los alumnos de la prueba sí cambian para todos.
         </p>
         {mensaje && <p className="auth-message">{mensaje}</p>}
         <button

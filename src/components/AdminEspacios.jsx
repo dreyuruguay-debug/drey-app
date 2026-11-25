@@ -14,7 +14,7 @@ import { estadoDeEspacio } from '../data/vencimiento.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import { normalizarTexto } from '../utils/texto.js'
 
-// Admin → Equipo → "Espacios" (supabase/sql/032): cada profe y cada
+// Admin → "Espacios" (menú) (supabase/sql/032): cada profe y cada
 // gimnasio con su suscripción DREY. El Admin puede, a mano:
 //   · cambiar el plan, sumar cupos extra o marcarlo "sin costo" (con o
 //     sin tope de alumnos), como Facu;
@@ -77,7 +77,7 @@ export default function AdminEspacios() {
         Cada profe tiene su espacio (sus alumnos particulares) y cada gimnasio el suyo. Los pagos a
         DREY se confirman en{' '}
         <Link to="/profe/cuentas?tab=drey" className="enlace-tabla">
-          Pagos → Suscripciones DREY
+          Cobros → Suscripciones DREY
         </Link>
         .
       </p>
