@@ -44,6 +44,19 @@ export function guardarAvisoDeDescanso(prendido) {
   guardarJSON(CLAVE_PREFERENCIA, Boolean(prendido))
 }
 
+// ¿Suena un "bip" en los últimos 3 segundos del descanso? (en este
+// celular). Viene prendido de entrada. Si el celular está en silencio,
+// no suena igual (solo vibra).
+const CLAVE_SONIDO = 'drey-sonido-descanso'
+
+export function sonidoDeDescansoPrendido() {
+  return leerJSON(CLAVE_SONIDO, true) !== false
+}
+
+export function guardarSonidoDeDescanso(prendido) {
+  guardarJSON(CLAVE_SONIDO, Boolean(prendido))
+}
+
 // Programa el aviso para dentro de "segundos" (reemplaza al anterior).
 // "siguiente": lo que le toca después ("Sentadilla · serie 3"). Si no hay
 // señal no pasa nada: el aviso es una ayuda, no algo indispensable.

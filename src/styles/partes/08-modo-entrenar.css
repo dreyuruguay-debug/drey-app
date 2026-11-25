@@ -1,0 +1,828 @@
+/* ---------- Modo entrenar ---------- */
+.entrenar {
+  max-width: 560px;
+  margin: 0 auto;
+  padding-bottom: 7rem;
+}
+
+.entrenar-previa {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 1.25rem;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.entrenar-previa .boton-texto {
+  width: auto;
+  color: var(--drey-text);
+  padding: 0.5rem;
+}
+
+.entrenar .record-banner {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  border-radius: 14px;
+  z-index: 45;
+}
+
+.entrenar-barra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem 0.75rem;
+}
+
+.entrenar-barra-titulo {
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.entrenar-barra-derecha {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.entrenar-cronometro {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--drey-texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.entrenar-ver-todo {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.entrenar-avance {
+  display: flex;
+  gap: 4px;
+  padding: 0 1.25rem;
+}
+
+.entrenar-avance-tramo {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--drey-superficie-3);
+}
+
+.entrenar-avance-tramo.parcial {
+  background: rgba(var(--drey-accent-rgb), 0.45);
+}
+
+.entrenar-avance-tramo.hecho {
+  background: var(--drey-accent);
+}
+
+.entrenar-avance-tramo.actual {
+  outline: 2px solid var(--drey-text);
+  outline-offset: 1px;
+}
+
+.entrenar-pantalla {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.entrenar-pantalla-centrada {
+  min-height: 70vh;
+  justify-content: center;
+  text-align: center;
+}
+
+.entrenar-etiqueta {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.entrenar-etiqueta-chica {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.entrenar-tarjeta {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.entrenar-bloque {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entrenar-bloque-chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--drey-accent);
+  color: var(--drey-accent-texto);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.entrenar-bloque-texto {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-foto {
+  position: relative;
+  height: 220px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--drey-superficie-2);
+  border: 1px solid var(--drey-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* La foto o el GIF se ve entero (sin recortar cabeza ni pies) sobre
+   fondo blanco, el mismo fondo que traen los GIF de la biblioteca. */
+.entrenar-foto-con-imagen {
+  background: #fff;
+}
+
+.entrenar-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.entrenar-foto-vacia {
+  font-size: 0.85rem;
+  color: var(--drey-texto-tenue);
+}
+
+.entrenar-video {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* Sobre la foto de fondo blanco, el botón del video va oscuro. */
+.entrenar-foto-con-imagen .entrenar-video {
+  background: var(--drey-black);
+  color: #ffffff;
+}
+
+.entrenar-encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.entrenar-objetivo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.entrenar-rpe {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.entrenar-anterior {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-series {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.entrenar-serie {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.2rem;
+  padding: 0 1rem;
+  border-radius: 14px;
+  border: none;
+  background: var(--drey-superficie);
+  color: var(--drey-texto-tenue);
+  font: inherit;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.entrenar-serie:disabled {
+  cursor: default;
+}
+
+.entrenar-serie-hecha {
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-verde);
+  cursor: pointer;
+}
+
+.entrenar-serie-nombre {
+  flex: 1;
+  font-weight: 700;
+}
+
+.entrenar-serie-actual {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid var(--drey-accent);
+  background: var(--drey-superficie-baja);
+  color: var(--drey-text);
+}
+
+.entrenar-serie-titulo {
+  font-weight: 800;
+}
+
+.entrenar-check {
+  flex: 0 0 auto;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.entrenar-check-vacio {
+  background: none;
+  border: 1px solid var(--drey-borde-control);
+}
+
+.entrenar-check-parcial {
+  background: none;
+  border: 2px solid var(--drey-accent);
+}
+
+.entrenar-steppers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.entrenar-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem;
+  border-radius: 12px;
+  background: var(--drey-bg);
+}
+
+.entrenar-stepper button {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.entrenar-stepper-valor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.entrenar-stepper-valor strong {
+  font-size: 1.4rem;
+}
+
+.entrenar-stepper-valor small {
+  font-size: 0.7rem;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-listo {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-verde);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.entrenar-pie {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0.75rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom));
+  background: var(--drey-barra);
+  border-top: 1px solid var(--drey-borde-suave);
+}
+
+.entrenar-flecha {
+  flex: 0 0 auto;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.entrenar-flecha:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.entrenar-pie-texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.entrenar-pie-texto small {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-pie-texto strong {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Descanso a pantalla completa */
+.descanso-pantalla {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  background: var(--drey-bg);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.descanso-pantalla > * {
+  width: 100%;
+  max-width: 440px;
+}
+
+.descanso-pantalla > .entrenar-etiqueta {
+  text-align: center;
+}
+
+/* Reloj grande del modo entrenar (RelojCircular.jsx): lo usan el
+   descanso (verde) y el calentamiento (naranja). */
+.reloj-circular {
+  position: relative;
+  width: 250px;
+  max-width: 70vw;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reloj-circular svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.reloj-circular-fondo {
+  fill: none;
+  stroke: var(--drey-borde-suave);
+  stroke-width: 14;
+}
+
+.reloj-circular-avance {
+  fill: none;
+  stroke: var(--drey-accent);
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.25s linear;
+}
+
+.reloj-circular-calentamiento .reloj-circular-avance {
+  stroke: var(--drey-naranja-trazo);
+}
+
+.reloj-circular-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.reloj-circular-texto strong {
+  font-family: var(--fuente-titulos);
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.reloj-circular-texto span {
+  color: var(--drey-texto-suave);
+}
+
+.descanso-opciones-rango {
+  justify-content: center;
+}
+
+.descanso-botones {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.descanso-sigue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.descanso-sigue strong {
+  font-size: 1.05rem;
+}
+
+.descanso-sigue span:last-child {
+  color: var(--drey-texto-2);
+  font-size: 0.9rem;
+}
+
+.descanso-nota {
+  margin: auto 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+/* Calentamiento (PantallaCalentamiento.jsx): una parte más del
+   entrenamiento, con su reloj grande como el del descanso y sus
+   actividades marcadas como series. El naranja es su color (🔥). */
+.calentamiento-etiqueta {
+  color: var(--drey-naranja-texto);
+}
+
+.calentamiento-reloj {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+}
+
+.calentamiento-sumar {
+  justify-content: center;
+}
+
+.calentamiento-aviso,
+.calentamiento-nota {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.calentamiento-items {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--drey-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.calentamiento-lista .entrenar-etiqueta-chica {
+  margin-bottom: 0.6rem;
+}
+
+.calentamiento-fila:not(:disabled) {
+  color: var(--drey-texto-2);
+  cursor: pointer;
+}
+
+.calentamiento-fila-actual {
+  border: 1px solid var(--drey-naranja-trazo);
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-text);
+}
+
+.calentamiento-fila-actual .entrenar-serie-valor {
+  color: var(--drey-naranja-texto);
+  font-weight: 800;
+}
+
+.calentamiento-check-actual {
+  border-color: var(--drey-naranja-trazo);
+}
+
+.calentamiento-completo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0 0.5rem;
+  text-align: center;
+}
+
+.vista-general-calentamiento .vista-general-bloque {
+  color: var(--drey-naranja-texto);
+}
+
+.vista-general-bloque-estado {
+  margin-left: auto;
+  color: var(--drey-texto-suave);
+  letter-spacing: 0;
+}
+
+.final-calentamiento {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.final-calentamiento.completo {
+  background: var(--drey-verde-fondo);
+  border-color: transparent;
+  color: var(--drey-texto-verde);
+}
+
+.final-calentamiento-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.final-calentamiento-texto small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.final-calentamiento.completo .final-calentamiento-texto small {
+  color: var(--drey-texto-verde-suave);
+}
+
+/* Final del entrenamiento */
+.final-icono {
+  align-self: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-size: 2.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.final-cifras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.final-cifras div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+}
+
+.final-cifras strong {
+  font-size: 1.3rem;
+}
+
+.final-cifras span {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.final-pregunta {
+  margin: 0 0 0.6rem;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.final-esfuerzo-opciones {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.final-esfuerzo-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.6rem 0.2rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  cursor: pointer;
+}
+
+.final-esfuerzo-chip strong {
+  font-size: 1.2rem;
+}
+
+.final-esfuerzo-chip small {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.final-esfuerzo-chip.activo {
+  border-color: var(--drey-accent);
+  background: var(--drey-verde-fondo);
+}
+
+/* Rutina completa (vista general) */
+.vista-general {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow-y: auto;
+  background: var(--drey-bg);
+  padding: 1.25rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.vista-general > * {
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.vista-general-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.vista-general-titulo {
+  margin: 0 0 0.25rem;
+  font-family: var(--fuente-titulos);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.vista-general-descripcion {
+  margin: 0;
+  color: var(--drey-texto-2);
+  font-size: 0.9rem;
+}
+
+.vista-general-grupo {
+  border-color: var(--drey-accent);
+}
+
+.vista-general-bloque {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.vista-general-ejercicio {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.2rem;
+  padding: 0.4rem 0;
+  border: none;
+  border-top: 1px solid var(--drey-borde-suave);
+  background: none;
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vista-general-ejercicio-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.vista-general-ejercicio-texto small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+}
+
+.vista-general-ejercicio-estado {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+}
+
+.vista-general-pausa {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--drey-texto-2);
+}
+
+.vista-general-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}

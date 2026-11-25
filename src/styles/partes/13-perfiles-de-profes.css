@@ -1,0 +1,595 @@
+/* ==================================================================
+   Entrega 30/09/2026: profes con perfil y solicitudes, series de
+   calentamiento a la vista, GIF en grande y panel en la computadora
+   ================================================================== */
+
+/* ---------- Series de calentamiento (editor de rutinas) ---------- */
+.boton-sumar-calentamiento {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+  border: 1px dashed var(--drey-amarillo-trazo);
+  background: none;
+  color: var(--drey-amarillo-texto);
+  font-family: var(--fuente-texto);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boton-sumar-calentamiento-cambiar {
+  border-style: solid;
+  border-color: var(--drey-amarillo-borde);
+  color: var(--drey-texto-suave);
+}
+
+.config-calentamiento-ayuda {
+  display: block;
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.config-calentamiento-enfocado {
+  border-radius: 14px;
+  outline: 2px solid var(--drey-amarillo-trazo);
+  outline-offset: 6px;
+  animation: calentamiento-enfoque 2.4s ease-out 1;
+}
+
+@keyframes calentamiento-enfoque {
+  0% {
+    outline-color: var(--drey-amarillo-trazo);
+  }
+  70% {
+    outline-color: var(--drey-amarillo-trazo);
+  }
+  100% {
+    outline-color: transparent;
+  }
+}
+
+/* ---------- Ver el GIF de un ejercicio en grande ---------- */
+.miniatura-boton {
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: zoom-in;
+  line-height: 0;
+}
+
+.miniatura-lupa {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--drey-black);
+  border: 1px solid var(--drey-borde-control);
+  color: #ffffff;
+  font-size: 0.75rem;
+  line-height: 16px;
+  text-align: center;
+}
+
+.visor-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.visor-caja {
+  width: 100%;
+  max-width: 560px;
+  background: var(--drey-superficie-baja);
+  border: 1px solid var(--drey-borde);
+  border-radius: 22px;
+  padding: 1rem 1rem 0.75rem;
+}
+
+.visor-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.visor-contador {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+  font-weight: 700;
+}
+
+.visor-cerrar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.visor-imagen {
+  position: relative;
+}
+
+.visor-imagen img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 16px;
+  background-color: #fff;
+  background-size: cover;
+  background-position: center;
+}
+
+.visor-flecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(13, 13, 13, 0.75);
+  color: #ffffff;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.visor-flecha:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.visor-flecha-anterior {
+  left: 0.5rem;
+}
+
+.visor-flecha-siguiente {
+  right: 0.5rem;
+}
+
+.visor-nombre {
+  margin: 0.85rem 0 0.2rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.visor-detalle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.visor-video {
+  display: inline-block;
+  margin-top: 0.4rem;
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.visor-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.visor-ayuda {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: var(--drey-texto-suave);
+  text-align: center;
+}
+
+/* ---------- Profes: tarjeta con el perfil público ---------- */
+.tarjeta-profe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde-suave);
+}
+
+.tarjeta-profe-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.tarjeta-profe-foto {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--drey-superficie-3);
+}
+
+.tarjeta-profe-iniciales {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fuente-titulos);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--drey-accent-texto);
+}
+
+.tarjeta-profe-titulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.tarjeta-profe-titulo h3 {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.tarjeta-profe-titulo p {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--drey-texto-suave);
+}
+
+.tarjeta-profe-etiqueta {
+  align-self: flex-start;
+}
+
+.tarjeta-profe-especialidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta-profe-descripcion {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--drey-texto-2);
+  white-space: pre-line;
+}
+
+.tarjeta-profe-mas {
+  display: inline;
+  width: auto;
+  padding: 0 0 0 0.35rem;
+  color: var(--drey-accent-texto);
+  font-size: 0.85rem;
+}
+
+.tarjeta-profe-instagram {
+  align-self: flex-start;
+  color: var(--drey-accent-texto);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.tarjeta-profe-completo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-naranja-texto);
+  font-weight: 700;
+}
+
+.tarjeta-profe-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tarjeta-profe-acciones .estado-chip {
+  align-self: flex-start;
+}
+
+/* ---------- Profes: pantalla del alumno ---------- */
+.profes-contenido {
+  padding: 1.25rem 1.25rem 0;
+}
+
+.profes-nota {
+  margin-top: 0.5rem;
+}
+
+.profes-seccion {
+  margin-bottom: 1.5rem;
+}
+
+.profes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.aviso-solicitud {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-azul-fondo);
+  border: 1px solid var(--drey-azul-texto);
+  font-size: 0.9rem;
+}
+
+.aviso-solicitud-no {
+  background: var(--drey-naranja-fondo);
+  border-color: var(--drey-naranja-trazo);
+}
+
+.aviso-solicitud-cancelar {
+  align-self: flex-start;
+  width: auto;
+  padding: 0.35rem 0 0;
+  color: var(--drey-azul-texto);
+}
+
+.solicitud-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.solicitud-formulario .profe-nota {
+  margin: 0;
+}
+
+.tarjeta-destacada {
+  border-color: var(--drey-accent);
+  background: var(--drey-verde-fondo);
+}
+
+.home-aviso-profe {
+  margin-top: 0.6rem;
+}
+
+/* ---------- Mi perfil de profe ---------- */
+.mi-perfil-grilla {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mi-perfil-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mi-perfil-seccion .chips-lista .chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mi-perfil-foto {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mi-perfil-foto img,
+.mi-perfil-foto-vacia {
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mi-perfil-foto-vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--drey-superficie-2);
+  border: 1px dashed var(--drey-borde-control);
+  color: var(--drey-texto-suave);
+  font-size: 0.75rem;
+}
+
+.mi-perfil-foto-botones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mi-perfil-agregar {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.mi-perfil-agregar .auth-input {
+  flex: 1;
+  margin: 0;
+}
+
+.mi-perfil-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.mi-perfil-campos .auth-input {
+  margin: 0;
+  width: 100%;
+}
+
+.mi-perfil-descripcion {
+  min-height: 9rem;
+}
+
+.mi-perfil-contador {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+  text-align: right;
+}
+
+/* ---------- Solicitudes (panel) ---------- */
+.solicitudes-perfil {
+  margin-bottom: 1.5rem;
+}
+
+.solicitudes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.solicitud {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.solicitud-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.solicitud-cabecera strong {
+  font-size: 1.05rem;
+}
+
+.solicitud-cabecera small,
+.solicitud-datos {
+  font-size: 0.82rem;
+  color: var(--drey-texto-suave);
+}
+
+.solicitud-datos {
+  margin: 0;
+}
+
+.solicitud-mensaje {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: var(--drey-superficie-2);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.solicitud-botones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.solicitud-rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.solicitudes-respondidas {
+  margin-top: 0.5rem;
+}
+
+.solicitud-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+}
+
+.solicitud-fila-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.solicitud-fila-textos small {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.aviso-solicitudes-nuevas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-verde-fondo);
+  border: 1px solid var(--drey-accent);
+  color: var(--drey-text);
+  text-decoration: none;
+}
+
+.aviso-solicitudes-nuevas span {
+  font-size: 0.85rem;
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+}
+
+/* Ficha del cliente: el Admin elige su profe */
+.ficha-profe {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.ficha-profe .profe-calendario-select {
+  flex: 1;
+}
+
+/* El logo del menú solo se ve en la computadora (abajo). */
+.panel-menu-marca {
+  display: none;
+}
+
+.solicitudes-lista + .seccion-etiqueta,
+.profe-vacio + .solicitudes-respondidas {
+  margin-top: 1.5rem;
+}

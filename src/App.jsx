@@ -25,6 +25,7 @@ import {
   NuevaContrasena,
   PrivacidadYDatos,
   ProfeCalendario,
+  ProfeTablero,
   ProfeClienteDetalle,
   ProfeClienteMedidas,
   ProfeClienteProgreso,
@@ -146,6 +147,7 @@ export default function App() {
             <Route path="/profe/clientes/:id/medidas" element={<ProfeClienteMedidas />} />
             <Route path="/profe/clientes/:id/excel" element={<ProfeExcel />} />
             <Route path="/profe/progresion" element={<ProfeProgresion />} />
+            <Route path="/profe/tablero" element={<ProfeTablero />} />
             <Route path="/profe/calendario" element={<ProfeCalendario />} />
             <Route path="/profe/plantillas" element={<ProfePlantillas />} />
             <Route path="/profe/plantillas/nueva" element={<ProfeRutinaNueva tipo="plantilla" />} />

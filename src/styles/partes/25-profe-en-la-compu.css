@@ -1,0 +1,260 @@
+/* ==========================================================================
+   Profe en la compu (noviembre 2026): buscador del panel (Ctrl + K),
+   "La semana de todos" con lo que hizo cada alumno y copiar una rutina a
+   varios alumnos.
+   ========================================================================== */
+
+/* ---------- Buscador (components/BuscadorGlobal.jsx) ---------- */
+.panel-buscar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.panel-buscar svg {
+  stroke: currentColor;
+  flex: none;
+}
+
+.panel-buscar span {
+  flex: 1;
+  text-align: left;
+}
+
+.panel-buscar kbd,
+.buscador kbd {
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--drey-borde-fuerte);
+  font-family: inherit;
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+/* Solo en la compu (en el celular la barra de abajo no tiene lugar). */
+@media (min-width: 1024px) {
+  .pantalla-panel .panel-menu .panel-buscar.panel-solo-compu {
+    display: flex;
+  }
+}
+
+.panel-buscar:hover {
+  border-color: var(--drey-borde-control);
+  color: var(--drey-text);
+}
+
+.buscador-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10vh 1rem 1rem;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.buscador {
+  width: min(640px, 100%);
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-flotante);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.buscador-campo {
+  width: 100%;
+  padding: 1.1rem 1.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--drey-borde);
+  background: transparent;
+  color: var(--drey-text);
+  font: inherit;
+  font-size: 1.05rem;
+  outline: none;
+}
+
+.buscador-resultados {
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.buscador-vacio {
+  margin: 0;
+  padding: 1rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.9rem;
+}
+
+.buscador-grupo + .buscador-grupo {
+  margin-top: 0.35rem;
+}
+
+.buscador-grupo-titulo {
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-tenue);
+}
+
+.buscador-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.buscador-item small {
+  flex: none;
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+}
+
+.buscador-item-elegido {
+  background: rgba(var(--drey-accent-rgb), 0.12);
+}
+
+.buscador-item-elegido strong {
+  color: var(--drey-accent-texto);
+}
+
+/* ---------- La semana de todos: "Cómo viene" (pages/ProfeCalendario.jsx) ---------- */
+.semana-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1rem 0 0.25rem;
+}
+
+.semana-cabecera .boton-chico {
+  min-width: 2.75rem;
+  font-size: 1.1rem;
+}
+
+.semana-tabla td {
+  vertical-align: middle;
+}
+
+.semana-tabla th.semana-hoy {
+  color: var(--drey-accent-texto);
+}
+
+.semana-tabla td.semana-hoy {
+  background: rgba(var(--drey-accent-rgb), 0.06);
+}
+
+.semana-celda {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 8.5rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.semana-celda > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.semana-hecho {
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-verde);
+}
+
+.semana-hecho b {
+  color: var(--drey-accent-texto);
+}
+
+.semana-falto {
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-texto-rojo);
+}
+
+.semana-falto b {
+  color: var(--drey-rojo-texto);
+}
+
+.semana-toca {
+  border: 1px dashed var(--drey-borde-control);
+  color: var(--drey-texto-suave);
+}
+
+.semana-descanso {
+  color: var(--drey-texto-apagado);
+}
+
+.semana-total {
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+}
+
+.semana-total-ok {
+  color: var(--drey-accent-texto);
+}
+
+/* ---------- Copiar a otros alumnos (components/CopiarAVariosAlumnos.jsx) ---------- */
+.copiar-varios-todos {
+  align-self: flex-start;
+  margin: 0.25rem 0;
+}
+
+.copiar-varios-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.35rem 1rem;
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+}
+
+.copiar-varios-alumno {
+  margin: 0;
+}
+
+.copiar-varios-publicar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

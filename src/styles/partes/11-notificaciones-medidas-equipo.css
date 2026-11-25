@@ -1,0 +1,460 @@
+/* ==================================================================
+   Entrega 25/09/2026 (2): notificaciones, medidas, ciclos,
+   estadísticas, gimnasios
+   ================================================================== */
+
+/* ---------- Notificaciones ---------- */
+.notificaciones-tarjeta {
+  width: 100%;
+  text-align: left;
+  font-family: var(--fuente-texto);
+  color: inherit;
+  cursor: pointer;
+}
+
+.notificaciones-tarjeta:disabled {
+  cursor: default;
+}
+
+.interruptor {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--drey-relleno);
+  transition: background 0.2s;
+}
+
+.interruptor::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--drey-white);
+  transition: transform 0.2s;
+}
+
+.interruptor-on {
+  background: var(--drey-accent);
+}
+
+.interruptor-on::after {
+  transform: translateX(20px);
+}
+
+.invitacion-avisos {
+  margin: 1rem 1.25rem 0;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--drey-texto-claro);
+}
+
+.invitacion-avisos p {
+  margin: 0 0 0.75rem;
+}
+
+.invitacion-avisos strong {
+  color: var(--drey-text);
+}
+
+.invitacion-avisos-botones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.invitacion-avisos-botones .boton-texto {
+  width: auto;
+}
+
+/* ---------- Ciclos y peso sugerido ---------- */
+.entrenar-ciclo {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+  letter-spacing: 0.03em;
+}
+
+.entrenar-sugerencia {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-accent-texto);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ejercicio-progresion {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--drey-azul-texto);
+}
+
+.config-progresion {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Medidas ---------- */
+.pagina-cliente-cuerpo {
+  margin: 0 1.25rem;
+}
+
+.progreso-medidas {
+  margin: 0 1.25rem 1rem;
+}
+
+.ficha-medidas {
+  margin-top: 0.6rem;
+}
+
+.home-aviso-medidas {
+  margin-top: 0.6rem;
+  background: var(--drey-azul-fondo);
+  border-color: var(--drey-azul-texto);
+}
+
+.medidas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.medidas-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+
+.medida-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font-family: var(--fuente-texto);
+  text-align: left;
+  cursor: pointer;
+}
+
+.medida-activa {
+  border-color: var(--drey-accent);
+}
+
+.medida-tarjeta strong {
+  font-size: 1.15rem;
+}
+
+.medida-tarjeta small {
+  color: var(--drey-texto-suave);
+  font-size: 0.78rem;
+}
+
+.medida-tarjeta .medida-cambio {
+  color: var(--drey-azul-texto);
+  font-weight: 700;
+}
+
+.medidas-fotos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.medidas-foto {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.medidas-foto img,
+.medidas-foto > span {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--drey-superficie-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+}
+
+.medidas-foto figcaption {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+  text-align: center;
+}
+
+.medicion-fila {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.medicion-fila-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.medicion-fila-textos small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.medicion-notas {
+  font-style: italic;
+}
+
+.medidas-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.medidas-campos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.medidas-campos .editor-campo span,
+.medidas-formulario > .editor-campo span {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.medidas-fotos-carga {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.medidas-adjuntar {
+  padding: 0.7rem 0.4rem;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* ---------- Biblioteca: avance de fotos y videos ---------- */
+.biblioteca-avance {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.barra-avance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.barra-avance-fondo {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--drey-superficie-3);
+  overflow: hidden;
+}
+
+.barra-avance-relleno {
+  display: block;
+  height: 100%;
+  background: var(--drey-accent);
+}
+
+.biblioteca-filtros {
+  margin: 0.25rem 0 0.75rem;
+}
+
+.pago-metodo {
+  display: block;
+  color: var(--drey-texto-suave);
+  font-size: 0.72rem;
+}
+
+/* ---------- Estadísticas ---------- */
+.estadisticas-filtro {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.estadisticas-grilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.estadistica small {
+  color: var(--drey-texto-suave);
+  font-size: 0.75rem;
+}
+
+.estadistica-alerta .dato-valor {
+  color: var(--drey-naranja-texto);
+}
+
+/* ---------- Equipo y gimnasios ---------- */
+.equipo-encontrada {
+  margin-top: 0.6rem;
+}
+
+.equipo-gimnasio-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.equipo-estadisticas {
+  margin: 0.75rem 0 1rem;
+}
+
+.equipo-confirmar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.equipo-confirmar > * {
+  flex: 1;
+}
+
+.equipo-filtro {
+  margin-bottom: 0.6rem;
+}
+
+/* Etiqueta "Admin" en el Inicio del panel (utils/roles.js). */
+.etiqueta-admin {
+  display: inline-block;
+  margin: 0.35rem 0 0.15rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.codigo-item > select {
+  max-width: 45%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Siluetas de carga (components/Esqueleto.jsx): bloques grises con la */
+/* forma de la pantalla y un brillo suave que pasa de izquierda a     */
+/* derecha mientras llegan los datos.                                  */
+/* ------------------------------------------------------------------ */
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.screen > .esqueleto {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.pagina-cliente > .esqueleto {
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+}
+
+.esqueleto-bloque {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.esqueleto-bloque::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--drey-brillo), transparent);
+  animation: esqueleto-brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes esqueleto-brillo {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.esqueleto-tarjeta {
+  height: 4rem;
+}
+
+.esqueleto-tarjeta-grande {
+  height: 12rem;
+  border-radius: 24px;
+}
+
+.esqueleto-titulo {
+  width: 60%;
+  height: 2rem;
+  border-radius: 10px;
+}
+
+.esqueleto-linea {
+  width: 80%;
+  height: 0.9rem;
+  border-radius: 8px;
+}
+
+.esqueleto-corta {
+  width: 40%;
+}
+
+.esqueleto-semana {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.esqueleto-punto {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+}
+
+.esqueleto-inicio {
+  padding-top: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloque::after {
+    animation: none;
+  }
+}

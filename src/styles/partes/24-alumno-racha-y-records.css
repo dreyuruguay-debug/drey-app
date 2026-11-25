@@ -1,0 +1,92 @@
+/* ==========================================================================
+   Alumno (noviembre 2026): racha de semanas, próximo entrenamiento en los
+   días de descanso y sonido al terminar el descanso.
+   ========================================================================== */
+
+/* ---------- Racha (components/RachaSemanas.jsx) ---------- */
+.racha-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 1.25rem 1.25rem 0;
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  background: rgba(var(--drey-accent-rgb), 0.1);
+  border: 1px solid rgba(var(--drey-accent-rgb), 0.35);
+}
+
+.racha-tarjeta-vacia {
+  background: var(--drey-superficie);
+  border-color: var(--drey-borde);
+}
+
+.racha-icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--drey-superficie-2);
+  font-size: 1.6rem;
+}
+
+.racha-textos {
+  min-width: 0;
+}
+
+.racha-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.racha-titulo strong {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--drey-accent-texto);
+}
+
+.racha-tarjeta-vacia .racha-titulo strong {
+  color: var(--drey-text);
+}
+
+.racha-detalle {
+  margin: 0.2rem 0 0;
+  color: var(--drey-texto-2);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* ---------- Día de descanso: el próximo entrenamiento, grande ---------- */
+.hoy-etiqueta-descanso {
+  color: var(--drey-texto-suave);
+}
+
+.hoy-proximo-rutina {
+  margin: -0.4rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}
+
+/* ---------- Descanso: sonido al terminar (PantallaDescanso.jsx) ---------- */
+.descanso-sonido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

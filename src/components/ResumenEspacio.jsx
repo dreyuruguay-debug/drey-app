@@ -97,9 +97,17 @@ export default function ResumenEspacio({ espacio }) {
           </div>
         )}
         {gimnasio && (
-          <Link to="/profe/equipo" className="boton-secundario boton-chico">
-            Ver el equipo y sus alumnos
-          </Link>
+          <>
+            <Link
+              to="/profe/tablero"
+              className="boton-secundario boton-chico resumen-espacio-tablero"
+            >
+              📊 Ver el tablero completo
+            </Link>
+            <Link to="/profe/equipo" className="boton-texto">
+              Ver el equipo y sus alumnos
+            </Link>
+          </>
         )}
       </div>
     </section>

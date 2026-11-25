@@ -28,6 +28,8 @@ export default function PantallaDescanso({
   onListo,
   avisoAlTerminar = false,
   onCambiarAviso,
+  sonido = false,
+  onCambiarSonido,
 }) {
   return (
     <div className="descanso-pantalla" role="dialog" aria-modal="true" aria-label="Descanso">
@@ -91,11 +93,32 @@ export default function PantallaDescanso({
         </div>
       )}
 
-      {onCambiarAviso ? (
-        <InterruptorAvisoDescanso prendido={avisoAlTerminar} onCambiar={onCambiarAviso} />
-      ) : (
-        <p className="descanso-nota">El celular vibra cuando termina el descanso</p>
-      )}
+      <div className="descanso-ajustes">
+        {onCambiarSonido && (
+          <button
+            type="button"
+            className="descanso-sonido"
+            role="switch"
+            aria-checked={sonido}
+            onClick={() => onCambiarSonido(!sonido)}
+          >
+            <span className="descanso-aviso-fin-textos">
+              <strong>{sonido ? '🔊' : '🔇'} Sonido al terminar</strong>
+              <small>Bip en los últimos 3 segundos, además de la vibración.</small>
+            </span>
+            <span
+              className={sonido ? 'interruptor interruptor-on' : 'interruptor'}
+              aria-hidden="true"
+            />
+          </button>
+        )}
+
+        {onCambiarAviso ? (
+          <InterruptorAvisoDescanso prendido={avisoAlTerminar} onCambiar={onCambiarAviso} />
+        ) : (
+          <p className="descanso-nota">El celular vibra cuando termina el descanso</p>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import { useVigente } from '../components/useVigente.js'
 import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import EditorEvaluacion from '../components/evaluacion/EditorEvaluacion.jsx'
 import EditorEvaluacionAnual from '../components/evaluacion/EditorEvaluacionAnual.jsx'
@@ -51,6 +52,7 @@ export default function ProfeClienteProgreso() {
   const [ajustesDrive, setAjustesDrive] = useState(null)
   const [abierta, setAbierta] = useState(null)
   const [ejercicioElegido, setEjercicioElegido] = useState('')
+  const sigueVigente = useVigente(id)
 
   useEffect(() => {
     cargar()
@@ -58,6 +60,7 @@ export default function ProfeClienteProgreso() {
 
   async function cargar({ silencioso = false } = {}) {
     if (!silencioso) setCargando(true)
+    const pedido = id
     await generarResumenesPendientes()
     const [
       { data: perfil },
@@ -84,6 +87,8 @@ export default function ProfeClienteProgreso() {
       cargarAjustesDrive(),
     ])
     const lista = listaResumenes || []
+    // Mientras cargaba, el profe pasó a otro cliente: esto ya no se muestra.
+    if (!sigueVigente(pedido)) return
     setCliente(perfil || null)
     setSesiones(listaSesiones || [])
     setMediciones(listaMediciones || [])

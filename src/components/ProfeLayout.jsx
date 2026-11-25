@@ -15,6 +15,7 @@ import { esDuenoDe, refrescarMisEspacios, useEspacios } from '../services/espaci
 import TopPattern from './TopPattern.jsx'
 import Esqueleto from './Esqueleto.jsx'
 import SelectorEspacio from './SelectorEspacio.jsx'
+import BuscadorGlobal from './BuscadorGlobal.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
 import { obtenerFechaHoyISO, sumarDias, textoFechaCorta } from '../utils/dias.js'
 
@@ -53,7 +54,7 @@ import { obtenerFechaHoyISO, sumarDias, textoFechaCorta } from '../utils/dias.js
 //
 // En la computadora (pantallas anchas) el mismo menú pasa a ser una barra
 // fija a la izquierda y el contenido usa más ancho (ver "Panel en la
-// computadora" en styles/globals.css). En el celular no cambia nada.
+// computadora" en styles/partes/14-panel-en-la-compu.css). En el celular no cambia nada.
 const ESTADOS_SIN_SERVICIO = ['pausado', 'vencido', 'prueba_terminada', 'pendiente']
 const RUTAS_EN_PAUSA = ['/profe/mi-cuenta', '/profe/mi-perfil', '/profe/espacios']
 const RUTAS_EN_PAUSA_DUENO = [...RUTAS_EN_PAUSA, '/profe/suscripcion']
@@ -106,6 +107,14 @@ const SECCIONES_PROFE = [
     rutas: ['/profe/equipo'],
     Icono: IconoEquipo,
     soloDuenoGimnasio: true,
+  },
+  {
+    to: '/profe/tablero',
+    label: 'Tablero',
+    rutas: ['/profe/tablero'],
+    Icono: IconoTablero,
+    soloDuenoGimnasio: true,
+    donde: 'compu',
   },
   {
     to: '/profe/cuentas',
@@ -332,6 +341,7 @@ export default function ProfeLayout({
             <img src="/drey-logo.png" alt="" />
             <span>{esAdmin ? 'Admin' : 'Profe'}</span>
           </div>
+          {!enPausa && <BuscadorGlobal espacioId={espacio?.id} esDueno={duenoDeGimnasio} />}
           {secciones.map(({ to, label, rutas, exacta, Icono, avisos, donde, grupo }) => {
             if (grupo) {
               return (
@@ -503,5 +513,13 @@ function EspacioEnPausa({ espacio, esDueno }) {
         Ir a Suscripción DREY
       </Link>
     </div>
+  )
+}
+
+function IconoTablero() {
+  return (
+    <Svg>
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+    </Svg>
   )
 }

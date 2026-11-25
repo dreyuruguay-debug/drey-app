@@ -45,7 +45,9 @@ export default function InterruptorAvisoDescanso({ prendido, onCambiar }) {
       >
         <span className="descanso-aviso-fin-textos">
           <strong>🔔 Avisarme al terminar</strong>
-          <small>Si salís de DREY, te llega una notificación cuando termina el descanso.</small>
+          <small>
+            Si salís de DREY o se bloquea el celular, te llega una notificación cuando termina.
+          </small>
         </span>
         <span
           className={prendido ? 'interruptor interruptor-on' : 'interruptor'}

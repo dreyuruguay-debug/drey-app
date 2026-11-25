@@ -36,6 +36,7 @@ import { MAXIMO_SEMANAS } from '../utils/semanas.js'
 import { obtenerFechaHoyISO, textoFechaCorta } from '../utils/dias.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { useConfirmar } from '../components/ConfirmarAccion.jsx'
+import CopiarAVariosAlumnos, { avisarCopia } from '../components/CopiarAVariosAlumnos.jsx'
 
 // De 2 a 12 semanas (lo mismo que acepta la planilla de Excel).
 const OPCIONES_SEMANAS = Array.from({ length: MAXIMO_SEMANAS - 1 }, (_, indice) => indice + 2)
@@ -90,6 +91,7 @@ export default function ProfeRutinaEditor({ tipo }) {
   // (indiceBloque null = bloque nuevo; calentamientoDe = posición del
   // ejercicio cuyas series de calentamiento se quieren cargar).
   const [asistente, setAsistente] = useState(null)
+  const [copiandoAVarios, setCopiandoAVarios] = useState(false)
 
   useEffect(() => {
     cargar()
@@ -340,7 +342,29 @@ export default function ProfeRutinaEditor({ tipo }) {
             Asignar días
           </Link>
         )}
+        {!esBorrador && items.length > 0 && (
+          <button
+            type="button"
+            className="boton-secundario boton-chico"
+            onClick={() => setCopiandoAVarios(true)}
+          >
+            {esRutina ? 'Copiar a otros alumnos' : 'Dársela a varios alumnos'}
+          </button>
+        )}
       </div>
+
+      {copiandoAVarios && (
+        <CopiarAVariosAlumnos
+          tipo={esRutina ? 'rutina' : 'plantilla'}
+          origen={{ ...datos, id }}
+          sinCliente={esRutina ? datos.cliente_id : null}
+          onCerrar={() => setCopiandoAVarios(false)}
+          onListo={({ copiadas, fallidas }) => {
+            setCopiandoAVarios(false)
+            avisarCopia(copiadas, fallidas)
+          }}
+        />
+      )}
 
       <div className="rutina-vista">
         {/* Encabezado: nombre y grupos musculares */}

@@ -1,0 +1,245 @@
+/* ==================================================================
+   Panel en la computadora (profe y Admin)
+   ------------------------------------------------------------------
+   Los profes usan mucho la compu: en pantallas anchas (1024 px o más)
+   el menú de abajo pasa a ser una barra fija a la izquierda y el
+   contenido aprovecha el ancho (listas en columnas, editor de rutinas
+   en dos columnas). Todo va dentro de .pantalla-panel (la pone
+   ProfeLayout), así las pantallas del alumno no cambian. En el celular
+   y la tablet el panel se ve igual que siempre.
+   ================================================================== */
+@media (min-width: 1024px) {
+  .pantalla-panel {
+    --ancho-menu-panel: 240px;
+  }
+
+  .pantalla-panel.has-bottom-nav {
+    padding-left: var(--ancho-menu-panel);
+    padding-bottom: 2.5rem;
+  }
+
+  /* Menú lateral */
+  .pantalla-panel .panel-menu {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    width: var(--ancho-menu-panel);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding: 1.25rem 0.9rem;
+    border-top: none;
+    border-right: 1px solid var(--drey-borde-suave);
+    background: var(--drey-barra);
+    overflow-y: auto;
+  }
+
+  .pantalla-panel .panel-menu-marca {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.25rem 0.6rem 1.25rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--drey-borde-suave);
+  }
+
+  .pantalla-panel .panel-menu-marca img {
+    height: 22px;
+    width: auto;
+    filter: var(--drey-logo-filtro);
+  }
+
+  .pantalla-panel .panel-menu-marca span {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--drey-texto-suave);
+  }
+
+  .pantalla-panel .panel-menu .bottom-nav-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    max-width: none;
+    min-height: 2.9rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+  }
+
+  .pantalla-panel .panel-menu .bottom-nav-item:hover {
+    background: var(--drey-hover);
+    color: var(--drey-text);
+  }
+
+  .pantalla-panel .panel-menu .bottom-nav-item-activo,
+  .pantalla-panel .panel-menu .bottom-nav-item-activo:hover {
+    background: var(--drey-verde-fondo);
+    color: var(--drey-accent-texto);
+  }
+
+  .pantalla-panel .panel-menu .bottom-nav-numero {
+    position: static;
+    order: 2;
+    margin-left: auto;
+  }
+
+  /* Contenido más ancho */
+  .pantalla-panel .profe-contenido,
+  .pantalla-panel .profe-topbar {
+    max-width: 1120px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .pantalla-panel .profe-contenido {
+    padding-top: 1.25rem;
+  }
+
+  .pantalla-panel .profe-nota {
+    max-width: 760px;
+  }
+
+  /* Botones: del ancho de su texto, no de punta a punta */
+  .pantalla-panel .profe-contenido > .boton-principal,
+  .pantalla-panel .profe-contenido > .boton-secundario,
+  .pantalla-panel .acciones-columna > .boton-principal,
+  .pantalla-panel .acciones-columna > .boton-secundario,
+  .pantalla-panel .acciones-fila > .boton-principal,
+  .pantalla-panel .acciones-fila > .boton-secundario {
+    width: auto;
+    min-width: 220px;
+    max-width: 420px;
+  }
+
+  .pantalla-panel .acciones-columna {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Inicio del profe y del Admin */
+  .pantalla-panel .tareas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pantalla-panel .tareas > .seccion-etiqueta {
+    grid-column: 1 / -1;
+  }
+
+  .pantalla-panel .accesos-grilla {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .pantalla-panel .estadisticas-grilla {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .pantalla-panel .estadisticas-grilla-dos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 50%;
+  }
+
+  .pantalla-panel .profe-contenido > .perfil-salir,
+  .pantalla-panel .profe-contenido > .apariencia {
+    max-width: 560px;
+  }
+
+  /* Listas de clientes, solicitudes y biblioteca en columnas */
+  .pantalla-panel .clientes-lista,
+  .pantalla-panel .solicitudes-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .pantalla-panel .clientes-lista .profe-cliente-card {
+    margin-bottom: 0;
+  }
+
+  .pantalla-panel .profe-ejercicios-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 0.75rem;
+  }
+
+  .pantalla-panel .profe-ejercicios-lista > * {
+    margin-bottom: 0;
+  }
+
+  /* El formulario para editar un ejercicio ocupa toda la fila */
+  .pantalla-panel .profe-ejercicios-lista > .profe-ejercicio-edicion,
+  .pantalla-panel .profe-ejercicios-lista > .confirmacion-ejercicio {
+    grid-column: 1 / -1;
+  }
+
+  .pantalla-panel .profe-grupos-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .pantalla-panel .profe-buscador {
+    max-width: 560px;
+  }
+
+  .pantalla-panel .profe-form-ejercicio {
+    max-width: 560px;
+  }
+
+  /* Editor de rutinas: ejercicios a la izquierda, lo demás a la derecha */
+  .pantalla-panel .rutina-vista {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+    gap: 1rem 1.25rem;
+    align-items: start;
+  }
+
+  .pantalla-panel .rutina-vista > * {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .pantalla-panel .rutina-vista > .seccion-rutina-ejercicios {
+    grid-column: 1;
+    grid-row: 1 / span 8;
+  }
+
+  /* Ficha del cliente y pantallas de una sola columna */
+  .pantalla-panel .ficha-contenido,
+  .pantalla-panel .ficha-profe,
+  .pantalla-panel .pestanas {
+    max-width: 860px;
+  }
+
+  /* Mi perfil de profe: formulario y "Así te ven" lado a lado */
+  .pantalla-panel .mi-perfil-grilla {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .pantalla-panel .mi-perfil-vista {
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  .pantalla-panel .mi-perfil-formulario > .boton-principal {
+    width: auto;
+    align-self: flex-start;
+    min-width: 240px;
+  }
+
+  /* Tablas: más aire */
+  .pantalla-panel .profe-tabla {
+    font-size: 0.9rem;
+  }
+
+  /* Ventanas (asistente de bloques, visor): centradas en el contenido */
+  .pantalla-panel .asistente-fondo {
+    padding: 2rem;
+  }
+
+}

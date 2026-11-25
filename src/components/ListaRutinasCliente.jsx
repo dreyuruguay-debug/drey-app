@@ -6,6 +6,7 @@ import { mostrarAviso } from '../services/avisos.js'
 import { abreviaturaDia } from '../utils/dias.js'
 import MenuAcciones from './MenuAcciones.jsx'
 import CopiarRutina from './CopiarRutina.jsx'
+import CopiarAVariosAlumnos, { avisarCopia } from './CopiarAVariosAlumnos.jsx'
 import { useConfirmar } from './ConfirmarAccion.jsx'
 
 // Las rutinas de un cliente (pestaña "Rutinas" de su ficha): cada una con
@@ -28,6 +29,8 @@ export default function ListaRutinasCliente({
 }) {
   const navigate = useNavigate()
   const [copiando, setCopiando] = useState(false)
+  // La rutina que se está copiando a otros alumnos (o null).
+  const [aVarios, setAVarios] = useState(null)
   const [confirmar, hojaConfirmar] = useConfirmar()
 
   async function borrar(rutina) {
@@ -135,6 +138,9 @@ export default function ListaRutinasCliente({
                     { texto: 'Ver como alumno', to: `/profe/rutinas/${rutina.id}/vista-previa` },
                     { texto: 'Duplicar', onClick: () => duplicar(rutina) },
                     ...(cantidad
+                      ? [{ texto: 'Copiar a otros alumnos', onClick: () => setAVarios(rutina) }]
+                      : []),
+                    ...(cantidad
                       ? [{ texto: 'Guardar como plantilla', onClick: () => plantilla(rutina) }]
                       : []),
                     { texto: 'Borrar', onClick: () => borrar(rutina), peligro: true },
@@ -166,6 +172,18 @@ export default function ListaRutinasCliente({
         />
       )}
       {hojaConfirmar}
+      {aVarios && (
+        <CopiarAVariosAlumnos
+          tipo="rutina"
+          origen={aVarios}
+          sinCliente={clienteId}
+          onCerrar={() => setAVarios(null)}
+          onListo={({ copiadas, fallidas }) => {
+            setAVarios(null)
+            avisarCopia(copiadas, fallidas)
+          }}
+        />
+      )}
     </div>
   )
 }

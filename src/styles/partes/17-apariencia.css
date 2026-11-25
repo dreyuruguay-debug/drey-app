@@ -1,0 +1,194 @@
+/* ==========================================================================
+   APARIENCIA: modo claro, oscuro o automático (components/SelectorTema.jsx)
+   ========================================================================== */
+.apariencia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.apariencia .seccion-etiqueta {
+  margin: 0;
+}
+
+.apariencia-opciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.apariencia-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border-radius: 18px;
+  border: 2px solid transparent;
+  background: var(--drey-superficie);
+  box-shadow: var(--drey-sombra);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.apariencia-opcion-elegida {
+  border-color: var(--drey-accent);
+}
+
+.apariencia-opcion:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.apariencia-opcion:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 2px;
+}
+
+.apariencia-opcion strong {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.apariencia-opcion small {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+/* Muestra de cómo se ve cada modo: colores fijos a propósito (la del
+   modo claro es clara y la del oscuro, oscura, estés en el modo que estés). */
+.apariencia-muestra {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  height: 54px;
+  padding: 7px;
+  border-radius: 10px;
+  border: 1px solid var(--drey-borde);
+}
+
+.apariencia-muestra i {
+  display: block;
+  height: 7px;
+  border-radius: 4px;
+}
+
+.apariencia-muestra i:first-child {
+  width: 55%;
+  background: var(--drey-accent);
+}
+
+.apariencia-muestra-claro {
+  background: #f3f4f2;
+}
+
+.apariencia-muestra-claro i + i {
+  background: #dfe2dd;
+}
+
+.apariencia-muestra-oscuro {
+  background: #0d0d0d;
+}
+
+.apariencia-muestra-oscuro i + i {
+  background: #2a2a2a;
+}
+
+/* Color a elección: un circulito por color (components/SelectorTema.jsx). */
+.apariencia-colores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  box-shadow: var(--drey-sombra);
+}
+
+.apariencia-colores-titulo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--drey-text);
+}
+
+.apariencia-colores-lista {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem 0.4rem;
+}
+
+.apariencia-color {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.35rem 0.2rem;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  cursor: pointer;
+}
+
+.apariencia-color small {
+  font-size: 0.75rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.apariencia-color-elegido small {
+  color: var(--drey-text);
+  font-weight: 700;
+}
+
+.apariencia-color-circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-sobre-accent);
+}
+
+.apariencia-color-elegido .apariencia-color-circulo {
+  box-shadow:
+    0 0 0 3px var(--drey-superficie),
+    0 0 0 5px var(--drey-accent);
+}
+
+.apariencia-color:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 2px;
+}
+
+@media (min-width: 560px) {
+  .apariencia-colores-lista {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.apariencia-nota {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-2);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.apariencia-nota strong {
+  color: var(--drey-text);
+}

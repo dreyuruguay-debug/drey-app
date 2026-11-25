@@ -82,25 +82,64 @@ export function obtenerLunesDeSemana(fechaISO) {
   return fechaLocalISO(fecha)
 }
 
-// Cuenta cuántas semanas seguidas el cliente entrenó al menos una vez,
-// mirando hacia atrás desde hoy. Si esta semana todavía no entrenó, no
-// la corta de una: empieza a contar desde la semana pasada (recién se
-// corta la racha si pasa una semana ENTERA sin ninguna sesión).
-export function calcularRachaSemanas(fechasDeSesiones) {
-  const semanasConSesion = new Set(fechasDeSesiones.map(obtenerLunesDeSemana))
-  const lunesActual = obtenerLunesDeSemana(obtenerFechaHoyISO())
+// Racha de semanas entrenadas. Una semana CUENTA cuando el alumno
+// entrenó tantos días distintos como días tiene su rutina (si su profe le
+// armó 3 días, 3 entrenamientos en días distintos). Si todavía no tiene
+// días asignados, alcanza con 1.
+//
+// La semana en curso no corta la racha: si todavía no la completó, se
+// cuenta desde la semana pasada (recién se corta cuando termina una
+// semana sin cumplir).
+//
+// Devuelve { semanas, mejor, estaSemana, objetivo, faltan, completaEstaSemana }
+//   semanas: la racha de hoy · mejor: la más larga que tuvo
+//   estaSemana: días distintos que entrenó esta semana
+//   faltan: cuántos le faltan para que esta semana sume
+export function calcularRacha(fechasDeSesiones, diasPorSemana = 1, hoyISO = obtenerFechaHoyISO()) {
+  const objetivo = Math.max(1, Number(diasPorSemana) || 1)
+  const diasPorLunes = new Map()
+  for (const fecha of fechasDeSesiones || []) {
+    if (!fecha) continue
+    const lunes = obtenerLunesDeSemana(fecha)
+    if (!diasPorLunes.has(lunes)) diasPorLunes.set(lunes, new Set())
+    diasPorLunes.get(lunes).add(fecha)
+  }
+  const cumple = (lunes) => (diasPorLunes.get(lunes)?.size || 0) >= objetivo
 
-  const cursor = new Date(`${lunesActual}T00:00:00`)
-  if (!semanasConSesion.has(lunesActual)) {
-    cursor.setDate(cursor.getDate() - 7)
+  const lunesActual = obtenerLunesDeSemana(hoyISO)
+  const completaEstaSemana = cumple(lunesActual)
+  let cursor = completaEstaSemana ? lunesActual : sumarDias(lunesActual, -7)
+  let semanas = 0
+  while (cumple(cursor)) {
+    semanas += 1
+    cursor = sumarDias(cursor, -7)
   }
 
-  let racha = 0
-  while (semanasConSesion.has(fechaLocalISO(cursor))) {
-    racha += 1
-    cursor.setDate(cursor.getDate() - 7)
+  // La más larga: semanas cumplidas una detrás de otra.
+  let mejor = 0
+  let seguidas = 0
+  let anterior = null
+  for (const lunes of [...diasPorLunes.keys()].filter(cumple).sort()) {
+    seguidas = anterior && sumarDias(anterior, 7) === lunes ? seguidas + 1 : 1
+    mejor = Math.max(mejor, seguidas)
+    anterior = lunes
   }
-  return racha
+
+  const estaSemana = diasPorLunes.get(lunesActual)?.size || 0
+  return {
+    semanas,
+    mejor: Math.max(mejor, semanas),
+    estaSemana,
+    objetivo,
+    faltan: Math.max(0, objetivo - estaSemana),
+    completaEstaSemana,
+  }
+}
+
+// Cuántos días de la semana tienen una rutina asignada en el calendario
+// ({ Lunes: { rutina_id }, ... }).
+export function diasConRutina(calendario) {
+  return DIAS_SEMANA.filter((dia) => calendario?.[dia]?.rutina_id).length
 }
 
 const MESES = [

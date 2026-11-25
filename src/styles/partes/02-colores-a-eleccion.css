@@ -1,0 +1,106 @@
+/* ==========================================================================
+   COLORES A ELECCIÓN (Perfil / Mi cuenta → Apariencia → Color)
+   --------------------------------------------------------------------------
+   Cambian solo el color de botones, títulos destacados y marcas de "listo".
+   Los fondos y los textos comunes siguen siendo los del modo claro/oscuro,
+   así todo se sigue leyendo bien. Cada color tiene DOS tonos:
+     · modo oscuro: más brillante, con letra negra encima de los botones.
+     · modo claro: más intenso, con letra blanca encima (contraste 4.5:1 o
+       más, la medida de "se lee bien" de accesibilidad).
+   La página de inicio (.portada) y el PDF quedan siempre con el verde.
+   La lista de colores está también en services/tema.js e index.html.
+   ========================================================================== */
+:root[data-color='rosa'] {
+  --drey-accent: #f472b6;
+  --drey-accent-texto: #f68fc5;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 244, 114, 182;
+  --drey-verde-fondo: #2e1222;
+  --drey-texto-verde: #fbd3e8;
+  --drey-texto-verde-suave: #f5a3cc;
+}
+:root[data-color='rosa'][data-tema='claro'] {
+  --drey-accent: #d6246e;
+  --drey-accent-texto: #be185d;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 214, 36, 110;
+  --drey-verde-fondo: #fce7f1;
+  --drey-texto-verde: #831843;
+  --drey-texto-verde-suave: #a3285f;
+}
+
+:root[data-color='violeta'] {
+  --drey-accent: #a78bfa;
+  --drey-accent-texto: #b49cfb;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 167, 139, 250;
+  --drey-verde-fondo: #1f1838;
+  --drey-texto-verde: #e2dafe;
+  --drey-texto-verde-suave: #c4b5fd;
+}
+:root[data-color='violeta'][data-tema='claro'] {
+  --drey-accent: #7c3aed;
+  --drey-accent-texto: #6d28d9;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 124, 58, 237;
+  --drey-verde-fondo: #efeafe;
+  --drey-texto-verde: #4c1d95;
+  --drey-texto-verde-suave: #5b33b0;
+}
+
+:root[data-color='azul'] {
+  --drey-accent: #60a5fa;
+  --drey-accent-texto: #7ab4fb;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 96, 165, 250;
+  --drey-verde-fondo: #12233d;
+  --drey-texto-verde: #d3e5fd;
+  --drey-texto-verde-suave: #a3c8fb;
+}
+:root[data-color='azul'][data-tema='claro'] {
+  --drey-accent: #2563eb;
+  --drey-accent-texto: #1d4ed8;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 37, 99, 235;
+  --drey-verde-fondo: #e5eefd;
+  --drey-texto-verde: #1e3a8a;
+  --drey-texto-verde-suave: #2b50a8;
+}
+
+:root[data-color='turquesa'] {
+  --drey-accent: #2dd4bf;
+  --drey-accent-texto: #2dd4bf;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 45, 212, 191;
+  --drey-verde-fondo: #0f2a27;
+  --drey-texto-verde: #c9f3ec;
+  --drey-texto-verde-suave: #8fe3d6;
+}
+:root[data-color='turquesa'][data-tema='claro'] {
+  --drey-accent: #0f766e;
+  --drey-accent-texto: #0f766e;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 15, 118, 110;
+  --drey-verde-fondo: #ddf4f0;
+  --drey-texto-verde: #134e4a;
+  --drey-texto-verde-suave: #1f6f68;
+}
+
+:root[data-color='mono'] {
+  --drey-accent: #f2f2f2;
+  --drey-accent-texto: #ffffff;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 242, 242, 242;
+  --drey-verde-fondo: #232323;
+  --drey-texto-verde: #f0f0f0;
+  --drey-texto-verde-suave: #c8c8c8;
+}
+:root[data-color='mono'][data-tema='claro'] {
+  --drey-accent: #101211;
+  --drey-accent-texto: #101211;
+  --drey-sobre-accent: #ffffff;
+  --drey-accent-rgb: 16, 18, 17;
+  --drey-verde-fondo: #e6e9e4;
+  --drey-texto-verde: #101211;
+  --drey-texto-verde-suave: #3b3f3c;
+}

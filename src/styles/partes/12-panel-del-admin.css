@@ -1,0 +1,672 @@
+/* ==================================================================
+   Panel del Admin (26/09/2026): Ajustes, Historial, filtros
+   ================================================================== */
+.ajustes-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.ajustes-tarjeta-oculta {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.ajustes-tarjeta-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ajustes-tarjeta-cabecera small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.ajustes-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.ajustes-nuevo-plan,
+.ajustes-historial {
+  margin-top: 1rem;
+}
+
+.ajustes-historial {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem;
+}
+
+.ajustes-interruptor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ajustes-interruptor-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ajustes-interruptor-texto small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.historial-item {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  font-size: 0.88rem;
+}
+
+.historial-hora {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.historial-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.historial-textos small {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.clientes-filtros {
+  margin: 0.25rem 0 0.5rem;
+}
+
+/* ---------- Entrenamiento en curso o en pausa ----------
+   Naranja = un entrenamiento que ya empezó y quedó a medias: el botón
+   "Seguir entrenamiento" de Inicio, la marca "En pausa" de Mis rutinas
+   y la pantalla "En pausa" del modo entrenar (PantallaPausa.jsx). */
+.boton-seguir {
+  background: var(--drey-naranja);
+  color: var(--drey-sobre-accent);
+}
+
+.hoy-tarjeta-en-curso,
+.tarjeta-rutina-en-curso {
+  border-color: var(--drey-naranja-trazo);
+}
+
+.hoy-etiqueta-en-curso {
+  color: var(--drey-naranja-texto);
+}
+
+.reloj-circular-pausa .reloj-circular-avance {
+  stroke: var(--drey-naranja-trazo);
+}
+
+.pausa-etiqueta {
+  color: var(--drey-naranja-texto);
+}
+
+.pausa-titulo,
+.pausa-avance {
+  text-align: center;
+}
+
+.pausa-avance {
+  margin: 0;
+  font-weight: 700;
+  color: var(--drey-texto-2);
+}
+
+.pausa-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ---------- Series de calentamiento (aproximación) ----------
+   Mismo componente que las series efectivas (PantallaEjercicio.jsx),
+   pero en amarillo: 🟡 calentamiento · 🟢 efectiva. El texto sigue
+   blanco para que se lea bien. */
+.entrenar-series-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-series-titulo-calentamiento {
+  margin-top: 0;
+  color: var(--drey-amarillo-texto);
+}
+
+.entrenar-series-nota {
+  flex-basis: 100%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--drey-text);
+}
+
+/* Pendiente: una línea amarilla a la izquierda la identifica. */
+.entrenar-serie-calentamiento {
+  box-shadow: inset 4px 0 0 var(--drey-amarillo-trazo);
+}
+
+.entrenar-serie-actual.entrenar-serie-calentamiento {
+  border-color: var(--drey-amarillo-trazo);
+  box-shadow: none;
+}
+
+.entrenar-serie-hecha.entrenar-serie-calentamiento {
+  background: var(--drey-amarillo-fondo);
+  color: var(--drey-texto-amarillo);
+}
+
+.entrenar-serie-calentamiento .entrenar-check:not(.entrenar-check-vacio) {
+  background: var(--drey-amarillo);
+}
+
+.boton-calentamiento {
+  background: var(--drey-amarillo);
+  color: var(--drey-sobre-accent);
+}
+
+/* Descanso después de una serie de calentamiento */
+.etiqueta-serie-calentamiento {
+  color: var(--drey-amarillo-texto);
+}
+
+.reloj-circular-serie-calentamiento .reloj-circular-avance {
+  stroke: var(--drey-amarillo-trazo);
+}
+
+.descanso-sigue-calentamiento {
+  border-left: 4px solid var(--drey-amarillo-trazo);
+}
+
+/* Final: series de calentamiento hechas */
+.final-cifras .final-cifra-calentamiento {
+  color: var(--drey-amarillo-texto);
+}
+
+/* Vista general: cuántas de calentamiento lleva */
+.vista-general-calentamiento-series {
+  color: var(--drey-amarillo-texto);
+}
+
+/* Editor del profe: series de calentamiento */
+.config-calentamiento-series {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--drey-amarillo-trazo);
+}
+
+.config-calentamiento-fila {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.config-calentamiento-numero {
+  min-width: 1.5rem;
+  padding-bottom: 0.6rem;
+  font-weight: 800;
+  color: var(--drey-amarillo-texto);
+}
+
+.config-calentamiento-nota {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+/* ---------- Cada semana distinta, tempo y notas (SQL 025) ---------- */
+.entrenar-notas {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.ejercicio-semanas .ejercicio-objetivo {
+  margin-bottom: 0.25rem;
+}
+
+.ejercicio-semanas-lista {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+}
+
+.ejercicio-semanas-lista strong {
+  color: var(--drey-azul-texto);
+  margin-right: 0.2rem;
+}
+
+.ejercicio-notas {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.config-semanas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.config-semanas-fila {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.config-semanas-primera {
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.config-semanas-numero {
+  min-width: 1.8rem;
+  padding-bottom: 0.6rem;
+  font-weight: 800;
+  color: var(--drey-azul-texto);
+}
+
+.config-semanas-primera .config-semanas-numero {
+  padding-bottom: 0;
+}
+
+.config-notas {
+  margin-top: 0.75rem;
+}
+
+.config-notas .form-textarea {
+  min-height: 4rem;
+}
+
+/* ---------- Rutinas en Excel (pages/ProfeExcel.jsx) ---------- */
+.planilla-paso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.planilla-paso-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.profe-nota.planilla-nota {
+  margin: 0;
+}
+
+.planilla-mensaje {
+  margin-bottom: 1rem;
+  color: var(--drey-naranja-texto);
+}
+
+.planilla-rutinas {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planilla-rutinas legend {
+  margin-bottom: 0.4rem;
+}
+
+.planilla-rutina {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+  cursor: pointer;
+}
+
+.planilla-rutina input,
+.planilla-reiniciar input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--drey-accent);
+  flex: 0 0 auto;
+}
+
+.planilla-rutina span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.planilla-rutina small {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.planilla-archivo {
+  display: none;
+}
+
+.planilla-archivo-nombre {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+  word-break: break-all;
+}
+
+.planilla-mensajes {
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  font-size: 0.85rem;
+}
+
+.planilla-errores {
+  background: var(--drey-rojo-fondo);
+  border: 1px solid var(--drey-peligro-suave);
+}
+
+.planilla-avisos {
+  background: var(--drey-amarillo-fondo);
+  border: 1px solid var(--drey-amarillo-borde);
+}
+
+.planilla-mensajes-titulo {
+  margin: 0 0 0.5rem;
+  font-weight: 800;
+}
+
+.planilla-errores .planilla-mensajes-titulo {
+  color: var(--drey-peligro-texto);
+}
+
+.planilla-avisos .planilla-mensajes-titulo {
+  color: var(--drey-amarillo-texto);
+}
+
+.planilla-mensajes ul {
+  list-style: none;
+  margin: 0 0 0.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.planilla-mensajes li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: var(--drey-texto-claro);
+  line-height: 1.35;
+}
+
+.planilla-celda {
+  align-self: flex-start;
+  padding: 0.05rem 0.5rem;
+  border-radius: 6px;
+  background: var(--drey-bg);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--drey-text);
+}
+
+.planilla-revisar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-naranja-trazo);
+  background: var(--drey-naranja-fondo);
+}
+
+.planilla-revisar > .planilla-mensajes-titulo {
+  margin: 0;
+  color: var(--drey-naranja-texto);
+}
+
+.planilla-desconocido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--drey-naranja-borde);
+}
+
+.planilla-desconocido-nombre {
+  margin: 0;
+}
+
+.planilla-desconocido-nombre small {
+  color: var(--drey-texto-suave);
+}
+
+.planilla-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planilla-opcion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planilla-opcion small {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.planilla-resueltos {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--drey-naranja-borde);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.planilla-resueltos li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--drey-texto-claro);
+}
+
+.planilla-dia {
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.planilla-dia summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.planilla-dia summary::-webkit-details-marker {
+  display: none;
+}
+
+.planilla-dia-titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.planilla-dia-titulo small {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.planilla-dia[open] summary {
+  border-bottom: 1px solid var(--drey-borde);
+}
+
+.planilla-dia-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.planilla-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.planilla-bloque-titulo {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.planilla-ejercicio {
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--drey-borde);
+}
+
+.planilla-ejercicio .ejercicio-objetivo {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.planilla-ejercicio-nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.planilla-reiniciar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+  cursor: pointer;
+}
+
+.planilla-listo .planilla-paso-titulo {
+  color: var(--drey-accent-texto);
+}
+
+.planilla-listo-texto {
+  margin: 0;
+}
+
+.planilla-listo-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.planilla-listo-lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+}
+
+.planilla-listo-lista li > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.planilla-listo-lista .acciones-fila {
+  margin: 0;
+}
+
+.planilla-desde-excel {
+  margin: 1rem 0 0;
+}
+
+.planilla-desde-excel a {
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+}

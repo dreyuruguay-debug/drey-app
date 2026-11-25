@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Tablero del gimnasio (noviembre 2026): pages/ProfeTablero.jsx
+   ========================================================================== */
+.tablero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tablero-numeros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.tablero-numero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+  color: var(--drey-text);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.tablero-numero > strong {
+  font-family: var(--fuente-titulos);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tablero-numero > strong em {
+  font-style: normal;
+  font-size: 1.1rem;
+  color: var(--drey-accent-texto);
+}
+
+.tablero-numero > span,
+.tablero-numero > small {
+  color: var(--drey-texto-suave);
+  font-size: 0.85rem;
+}
+
+.tablero-cupos {
+  grid-column: 1 / -1;
+}
+
+.tablero-seccion-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tablero-seccion-cabecera h2 {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+.tablero-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tablero-alumno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.tablero-alumno-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  color: var(--drey-text);
+  text-decoration: none;
+}
+
+.tablero-alumno-textos small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+}
+
+.tablero-rol {
+  color: var(--drey-texto-suave);
+}
+
+.tablero-destacado {
+  margin-left: 0.5rem;
+  background: rgba(var(--drey-accent-rgb), 0.14);
+  color: var(--drey-accent-texto);
+}
+
+@media (min-width: 1024px) {
+  .tablero-numeros {
+    grid-template-columns: 2fr repeat(3, minmax(0, 1fr));
+  }
+
+  .tablero-cupos {
+    grid-column: auto;
+  }
+
+  .tablero-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* "Ver el tablero" en el resumen del Inicio del dueño */
+.resumen-espacio .resumen-espacio-tablero {
+  margin-top: 0.25rem;
+}

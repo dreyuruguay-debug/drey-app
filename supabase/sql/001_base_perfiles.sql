@@ -76,3 +76,27 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- 3) ¿Es profe? (versión del principio) ----------------------------------------------
+-- El SQL 002 ya la usa y la versión de hoy recién se escribe en el 020.
+-- Se crea SOLO si todavía no existe: en la base de hoy no toca nada (ahí
+-- vale la del 020). Sirve para armar una base nueva corriendo los SQL en
+-- orden desde el 001.
+do $$
+begin
+  if not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'es_profe' and p.pronargs = 0
+  ) then
+    create function public.es_profe()
+    returns boolean
+    language sql
+    stable
+    security definer
+    set search_path = public
+    as $f$
+      select coalesce((select es_profe from public.perfiles where id = auth.uid()), false);
+    $f$;
+  end if;
+end;
+$$;

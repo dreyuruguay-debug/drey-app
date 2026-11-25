@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
+import { useVigente } from '../components/useVigente.js'
 import Pestanas from '../components/Pestanas.jsx'
 import ListaRutinasCliente from '../components/ListaRutinasCliente.jsx'
 import { darDeBaja, estaDeBaja, textoDeErrorDeBaja, volverASumar } from '../services/bajas.js'
@@ -71,6 +72,7 @@ export default function ProfeClienteDetalle() {
   // Cupo lleno, suscripción DREY sin pagar o sin permiso (SQL 032).
   const [problemaPago, setProblemaPago] = useState(null)
   const { activo: espacio } = useEspacios()
+  const sigueVigente = useVigente(id)
 
   useEffect(() => {
     cargarTodo()
@@ -108,6 +110,7 @@ export default function ProfeClienteDetalle() {
 
   async function cargarTodo({ silencioso = false } = {}) {
     if (!silencioso) setCargando(true)
+    const pedido = id
     const [{ data: perfil }, resultadoRutinas, { data: listaSesiones }, porDia, listaPagos] =
       await Promise.all([
         supabase.from('perfiles').select('*').eq('id', id).single(),
@@ -121,6 +124,8 @@ export default function ProfeClienteDetalle() {
         cargarCalendarioCliente(id),
         cargarPagos(id, 6),
       ])
+    // Mientras cargaba, el profe pasó a otro cliente: esto ya no se muestra.
+    if (!sigueVigente(pedido)) return
     setCliente(perfil || null)
     setRutinas(resultadoRutinas.rutinas)
     setCantidades(resultadoRutinas.cantidades)

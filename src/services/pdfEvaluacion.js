@@ -14,7 +14,7 @@ import EvaluacionMensual from '../components/evaluacion/EvaluacionMensual.jsx'
 // que alguien arma un PDF (ver vite.config.js: grupo "pdf"), así la app
 // no pesa más para nadie.
 
-const ANCHO_PLANTILLA = 760 // px (ver .evaluacion-pdf en globals.css)
+const ANCHO_PLANTILLA = 760 // px (ver .evaluacion-pdf en styles/partes/20-evaluacion-mensual.css)
 const MARGEN = 28 // pt
 const ESPACIO = 8 // pt entre partes
 const PIE = 22 // pt reservados abajo para el número de página
@@ -48,9 +48,7 @@ export async function crearPdfEvaluacion({
   const raiz = createRoot(escenario)
 
   try {
-    raiz.render(
-      createElement(Plantilla, { resumen, nombreAlumno, nombreProfe, paraPdf: true }),
-    )
+    raiz.render(createElement(Plantilla, { resumen, nombreAlumno, nombreProfe, paraPdf: true }))
     await esperarDibujo(escenario)
 
     const bloques = [...escenario.querySelectorAll('[data-bloque]')]

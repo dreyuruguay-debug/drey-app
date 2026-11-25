@@ -1,0 +1,885 @@
+/* Panel del profe */
+.profe-mensaje-carga {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  color: var(--drey-texto-claro);
+}
+
+.profe-contenido {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3rem;
+}
+
+.profe-titulo {
+  margin: 0 0 0.5rem;
+}
+
+.profe-nota {
+  margin: 0 0 1.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.profe-seccion-label {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--drey-texto-claro);
+}
+
+.profe-vacio {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+  font-style: italic;
+}
+
+.profe-cliente-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--drey-superficie-alta);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.profe-cliente-nombre {
+  margin: 0;
+  font-weight: 700;
+}
+
+.profe-cliente-detalle {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+}
+
+.profe-boton-habilitar {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 0.65rem 1.25rem;
+}
+
+.profe-tabla-wrap {
+  overflow-x: auto;
+}
+
+.profe-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.profe-tabla th {
+  text-align: left;
+  padding: 0.5rem;
+  color: var(--drey-texto-claro);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--drey-borde-fuerte);
+}
+
+.profe-tabla td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--drey-borde-suave);
+}
+
+/* Menú fijo y barra superior del panel del profe (ProfeLayout) */
+.profe-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem 0;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.profe-volver {
+  color: var(--drey-text);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Clientes y rutinas: lista con acceso al detalle */
+.profe-cliente-card-link {
+  text-decoration: none;
+  color: var(--drey-text);
+}
+
+.profe-cliente-card-inactivo {
+  border: 1px solid var(--drey-accent);
+}
+
+.profe-cliente-inactivo-texto {
+  color: var(--drey-accent-texto);
+  font-weight: 600;
+}
+
+.profe-cliente-flecha {
+  font-size: 1.2rem;
+  color: var(--drey-texto-claro);
+}
+
+.profe-aviso-inactivos {
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-accent);
+  border-radius: 16px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.profe-aviso-inactivos-titulo {
+  margin: 0;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}
+
+.profe-aviso-inactivos-lista {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+/* Biblioteca de ejercicios */
+.profe-grupos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.profe-grupo-card {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-superficie-alta);
+  color: var(--drey-text);
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.profe-grupo-card-activo {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent-texto);
+}
+
+.profe-buscador {
+  margin-bottom: 1rem;
+}
+
+.profe-ejercicios-lista {
+  margin-bottom: 1rem;
+}
+
+.profe-ejercicio-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--drey-superficie-alta);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.profe-ejercicio-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+/* Los nombres largos (por ejemplo "Extensión de Gemelo Aislado sentado
+   con Mancuerna") se ven enteros, en dos o tres renglones: cortados con
+   "…" varios quedarían iguales. */
+.profe-ejercicio-item-info span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.profe-ejercicio-foto-mini {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.profe-ejercicio-item-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+}
+
+.profe-ejercicio-edicion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-accent);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.profe-ejercicio-edicion-botones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profe-imagen-actual {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.profe-ejercicio-foto-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.profe-adjuntar-imagen {
+  display: block;
+  text-align: center;
+  background: none;
+  border: 1px dashed var(--drey-borde-control);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+  cursor: pointer;
+}
+
+.profe-ejercicio-borrar {
+  background: none;
+  border: none;
+  color: var(--drey-peligro-texto);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profe-ejercicio-agregar {
+  background: none;
+  border: none;
+  color: var(--drey-accent-texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Biblioteca protegida (supabase/sql/024): "Archivar" no es peligroso
+   (el ejercicio sigue en las rutinas), por eso va en gris y no en rojo. */
+.profe-ejercicio-archivar {
+  background: none;
+  border: none;
+  color: var(--drey-texto-suave);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.confirmacion-ejercicio {
+  border-color: var(--drey-naranja-trazo);
+}
+
+.confirmacion-ejercicio .profe-ejercicio-edicion-botones {
+  flex-wrap: wrap;
+}
+
+.confirmacion-ejercicio .boton-peligro {
+  width: auto;
+}
+
+.confirmacion-ejercicio-titulo {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.confirmacion-ejercicio-texto {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--drey-texto-2);
+}
+
+.profe-cerrar-selector:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Etiqueta chica al lado de un nombre (por ejemplo "Archivado" en una
+   rutina). */
+.estado-chip.estado-chip-chico {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.profe-form-ejercicio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 360px;
+}
+
+/* Detalle de cliente: rutinas, ejercicios y calendario */
+
+.profe-input-tabla {
+  width: 3.5rem;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 8px;
+  color: var(--drey-text);
+  padding: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.profe-boton-agregar-ejercicio {
+  margin-top: 0.75rem;
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px dashed var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-accent-texto);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.profe-cerrar-selector {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--drey-texto-claro);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profe-calendario-select {
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 8px;
+  color: var(--drey-text);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* Vista semanal de todos los clientes (ProfeCalendario) */
+.profe-tabla-calendario th,
+.profe-tabla-calendario td {
+  white-space: nowrap;
+}
+
+.profe-tabla-calendario .profe-calendario-select {
+  max-width: 8.5rem;
+}
+
+.profe-tabla-cliente-link {
+  color: var(--drey-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.profe-tabla-cliente-link:hover {
+  color: var(--drey-accent-texto);
+}
+
+.profe-tabla-sin-rutinas {
+  color: var(--drey-texto-claro);
+}
+
+/* Progreso reciente (detalle de cliente, panel del profe) */
+.profe-progreso-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.profe-progreso-item {
+  background: var(--drey-superficie-alta);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.profe-progreso-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.profe-progreso-fecha {
+  font-size: 0.75rem;
+  color: var(--drey-texto-claro);
+  text-transform: capitalize;
+}
+
+.profe-progreso-rutina {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.profe-progreso-esfuerzo {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--drey-accent-texto);
+}
+
+.profe-progreso-comentario {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+  font-style: italic;
+}
+
+/* Botón "Ver comprobante" (Cuentas y pagos) */
+.profe-cliente-acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.profe-ver-comprobante {
+  background: none;
+  border: none;
+  color: var(--drey-accent-texto);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* Botón ⓘ y ventana con la explicación de un método de entrenamiento */
+.info-metodo-boton {
+  background: none;
+  border: 1px solid var(--drey-borde-control);
+  border-radius: 50%;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  color: var(--drey-texto-claro);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.info-metodo-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1rem;
+}
+
+.info-metodo-caja {
+  width: 100%;
+  max-width: 420px;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-metodo-titulo {
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.info-metodo-texto {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--drey-texto-claro);
+  line-height: 1.45;
+}
+
+.info-metodo-google {
+  color: var(--drey-accent-texto);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+/* Lista de rutinas / plantillas en el panel del profe ("Ver rutinas") */
+.rutinas-lista-profe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.profe-rutina-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--drey-superficie-alta);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+}
+
+.profe-rutina-tarjeta-info {
+  color: inherit;
+  text-decoration: none;
+  flex: 1 1 200px;
+}
+
+.profe-grupo-card-musculos {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--drey-texto-apagado);
+}
+
+.categorias-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Editor de rutina del profe: datos de arriba y controles compartidos */
+.editor-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.editor-datos-nombre {
+  font-weight: 700;
+}
+
+.editor-ejercicio-categorias {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  color: var(--drey-texto-apagado);
+}
+
+.editor-ejercicio-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.editor-mover {
+  background: var(--drey-superficie-3);
+  border: none;
+  border-radius: 8px;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--drey-text);
+  cursor: pointer;
+}
+
+.editor-mover:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.editor-campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+}
+
+.editor-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--drey-texto-claro);
+}
+
+.editor-campo-ancho {
+  flex: 1 1 160px;
+}
+
+/* Rutina del cliente: bloques de varios ejercicios (biserie, circuito...) */
+
+.bloque-grupo {
+  max-width: 930px;
+  margin: 0 auto 1.5rem;
+  padding: 0.9rem 0 0.1rem;
+  border-left: 3px solid var(--drey-accent);
+  background: rgba(var(--drey-accent-rgb), 0.04);
+  border-radius: 0 16px 16px 0;
+}
+
+.bloque-cabecera {
+  max-width: 900px;
+  margin: 0 auto 0.75rem;
+  padding: 0 1.5rem;
+}
+
+.bloque-cabecera-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--drey-accent-texto);
+}
+
+.bloque-instruccion {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+}
+
+.bloque-banner {
+  background: var(--drey-invertido-fondo);
+}
+
+/* Tabla de series en celulares: más compacta para que entre en pantalla
+   sin deslizar hacia los costados (los botones + y − siguen cómodos). */
+@media (max-width: 480px) {
+  .ejercicio-bloque,
+.bloque-cabecera {
+    padding: 0 0.75rem;
+  }
+
+  
+
+  
+
+  
+
+  
+
+  
+}
+
+/* Gráficos de progresión (GraficoProgreso) */
+.grafico {
+  margin: 0 0 1rem;
+  background: var(--drey-superficie-baja);
+  border-radius: 16px;
+  padding: 0.75rem 0.5rem 0.25rem;
+}
+
+.grafico-titulo {
+  padding: 0 0.5rem 0.4rem;
+  font-size: 0.75rem;
+  color: var(--drey-texto-claro);
+}
+
+.grafico-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grafico-guia {
+  stroke: var(--drey-borde);
+  stroke-width: 1;
+}
+
+.grafico-eje {
+  fill: var(--drey-texto-apagado);
+  font-size: 11px;
+}
+
+.grafico-linea {
+  fill: none;
+  stroke: var(--drey-accent-texto);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.grafico-punto {
+  fill: var(--drey-bg);
+  stroke: var(--drey-accent);
+  stroke-width: 2;
+}
+
+.grafico-barra {
+  fill: var(--drey-accent);
+  opacity: 0.85;
+}
+
+/* Progresión en el panel del profe */
+.progreso-selector {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.resumen-caja {
+  background: var(--drey-superficie-baja);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.resumen-estado {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--drey-amarillo-texto);
+}
+
+.resumen-estado-publicado {
+  color: var(--drey-accent-texto);
+}
+
+.resumen-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+/* Resumen de 4 semanas (profe y cliente) */
+.resumen-progreso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resumen-periodo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.resumen-cifras {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.resumen-cifra {
+  display: flex;
+  flex-direction: column;
+  background: var(--drey-superficie-2);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+}
+
+.resumen-cifra-valor {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}
+
+.resumen-cifra-etiqueta {
+  font-size: 0.7rem;
+  color: var(--drey-texto-claro);
+}
+
+.resumen-tabla td,
+.resumen-tabla th {
+  font-size: 0.8rem;
+}
+
+.resumen-sube {
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+}
+
+.resumen-baja {
+  color: var(--drey-peligro-texto);
+  font-weight: 700;
+}
+
+.resumen-comentario {
+  margin: 0;
+  padding: 0.75rem;
+  background: rgba(var(--drey-accent-rgb), 0.08);
+  border-left: 3px solid var(--drey-accent);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.85rem;
+}
+
+.resumen-comentario span {
+  font-weight: 700;
+}
+
+/* "Notificación de avance" en Mis datos */
+.avance-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 2rem;
+}
+
+.avance-item {
+  background: var(--drey-superficie-baja);
+  border-radius: 16px;
+  padding: 0.25rem 0.9rem 0.9rem;
+}
+
+.avance-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 0;
+  background: none;
+  border: none;
+  color: var(--drey-text);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.avance-nuevo {
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.avance-flecha {
+  margin-left: auto;
+  color: var(--drey-texto-apagado);
+  font-size: 0.7rem;
+}
+
+.home-aviso-avance {
+  margin-top: 0.6rem;
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TopPattern from '../components/TopPattern.jsx'
-import Cronometro from '../components/entrenar/Cronometro.jsx'
+import BarraEntrenar from '../components/entrenar/BarraEntrenar.jsx'
 import PantallaCalentamiento from '../components/entrenar/PantallaCalentamiento.jsx'
 import PantallaEjercicio from '../components/entrenar/PantallaEjercicio.jsx'
 import PantallaDescanso from '../components/entrenar/PantallaDescanso.jsx'
@@ -10,7 +10,13 @@ import PantallaPausa from '../components/entrenar/PantallaPausa.jsx'
 import PieEntrenar from '../components/entrenar/PieEntrenar.jsx'
 import VistaGeneral from '../components/entrenar/VistaGeneral.jsx'
 import { useAvisoDeDescanso } from '../components/entrenar/useAvisoDeDescanso.js'
-import { avisoDeDescansoPrendido, guardarAvisoDeDescanso } from '../services/avisosAlumno.js'
+import {
+  avisoDeDescansoPrendido,
+  guardarAvisoDeDescanso,
+  guardarSonidoDeDescanso,
+  sonidoDeDescansoPrendido,
+} from '../services/avisosAlumno.js'
+import { bip, prepararSonido } from '../utils/sonido.js'
 import { cargarRutinaCompleta } from '../services/rutinas.js'
 import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import {
@@ -33,9 +39,7 @@ import {
   cambiarValorDeSerie,
   construirTurnos,
   contarSeries,
-  crearSeriesIniciales,
   descansoDespuesDe,
-  estadoDeEjercicio,
   etiquetaDeSerie,
   mejorSerieAnterior,
   turnoSiguiente,
@@ -45,10 +49,8 @@ import { TIPO_CALENTAMIENTO, esSerieDeCalentamiento } from '../utils/seriesCalen
 import {
   actividadCorriendo,
   completarActividad,
-  crearCalentamiento,
   elegirActividad,
   empezarActividad,
-  mismoCalentamiento,
   pausarActividad,
   resumenDeCalentamiento,
   sumarTiempo,
@@ -69,18 +71,15 @@ import {
 } from '../utils/descanso.js'
 import { formatearNumero, formatearPeso } from '../utils/progreso.js'
 import { esPorTiempo, pasoDeSegundos, textoDeSerie } from '../utils/porTiempo.js'
+import { esRecordDeTiempo, recordDeSerie, sumarSerieAMarca } from '../utils/records.js'
+import { semanaDelCiclo } from '../utils/ciclos.js'
 import {
-  RECORD_PESO,
-  RECORD_REPS,
-  RECORD_SEGUNDOS,
-  RECORD_TONELAJE,
-  esRecordDeTiempo,
-  mejorTiempoDeRutina,
-  mejoresMarcas,
-  recordDeSerie,
-  sumarSerieAMarca,
-} from '../utils/records.js'
-import { ejerciciosDeLaSemana, semanaDelCiclo, sugerenciaParaHoy } from '../utils/ciclos.js'
+  huella,
+  prepararEntrenamiento,
+  textoDeRecord,
+  tituloDelDescanso,
+  yaEmpezo,
+} from '../utils/pantallaEntrenar.js'
 import Esqueleto from '../components/Esqueleto.jsx'
 import { useConfirmar } from '../components/ConfirmarAccion.jsx'
 import { RUTA_INGRESAR } from '../data/rutas.js'
@@ -180,6 +179,7 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   const [descanso, setDescanso] = useState(null)
   // "Avisarme al terminar" el descanso (se recuerda en el celular).
   const [avisoDescanso, setAvisoDescanso] = useState(() => avisoDeDescansoPrendido())
+  const [sonidoDescanso, setSonidoDescanso] = useState(() => sonidoDeDescansoPrendido())
   const [ahora, setAhora] = useState(() => Date.now())
   const [aviso, setAviso] = useState(null)
   const [vistaGeneral, setVistaGeneral] = useState(parametros.get('vista') === 'completa')
@@ -249,10 +249,23 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     setAvisoDescanso(prendido)
     guardarAvisoDeDescanso(prendido)
   }
+  function cambiarSonidoDescanso(prendido) {
+    if (prendido) prepararSonido()
+    setSonidoDescanso(prendido)
+    guardarSonidoDeDescanso(prendido)
+  }
+
+  // Últimos 3 segundos: un bip corto por segundo; al terminar, uno largo
+  // y la vibración (si DREY está a la vista; si no, llega la notificación).
   useEffect(() => {
-    if (descanso && restante === 0) {
+    if (!descanso) return
+    const suena = sonidoDescanso && !modoPrevia && document.visibilityState === 'visible'
+    if (restante === 0) {
       navigator.vibrate?.(VIBRACION_FIN_TIEMPO)
+      if (suena) bip(1320, 0.5)
       setDescanso(null)
+    } else if (restante <= 3 && suena) {
+      bip(880, 0.12)
     }
   }, [descanso, restante])
 
@@ -366,110 +379,41 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     )
   }
 
-  // Arma la pantalla con la rutina, sus ejercicios y el historial de
-  // entrenamientos (del más viejo al más nuevo). Si la rutina tiene ciclo,
-  // cada ejercicio trae lo que toca esta semana (utils/ciclos.js).
+  // Arma la pantalla con lo cargado (ver prepararEntrenamiento en
+  // utils/pantallaEntrenar.js: retoma un entrenamiento a medias si hay).
   function armarPantalla(datos, ejerciciosGuardados, historialSesiones) {
-    const lista = ejerciciosDeLaSemana(ejerciciosGuardados, datos, hoy)
-    let mejores = {}
-    let anteriores = {}
-
+    const inicio = prepararEntrenamiento({
+      datos,
+      ejerciciosGuardados,
+      historialSesiones,
+      rutinaId: id,
+      hoy,
+      ahora: Date.now(),
+      modoPrevia,
+      enCurso: modoPrevia ? null : leerEnCurso(id, hoy),
+      vistaCompleta: parametros.get('vista') === 'completa',
+    })
     if (!modoPrevia) {
-      // Del más nuevo al más viejo.
-      const sesiones = [...historialSesiones].reverse()
-
-      // "La vez pasada": la última vez que hizo ESTA rutina.
-      const ultima = sesiones.find((sesion) => sesion.rutina_id === id)
-      const anterior = {}
-      for (const item of ultima?.detalle || []) anterior[item.ejercicio_id] = item.series || []
-      setAnteriorPorEjercicio(anterior)
-      anteriores = anterior
-
-      // Mejor marca histórica de cada ejercicio (en cualquier rutina),
-      // para avisar si hoy hace un récord, y el mejor tiempo de esta rutina.
-      mejores = mejoresMarcas(sesiones)
-      setMejorTiempo(mejorTiempoDeRutina(sesiones, id))
+      setAnteriorPorEjercicio(inicio.anteriores)
+      setMejorTiempo(inicio.mejorTiempo)
     }
-
-    setRutina(datos || null)
-    setEjercicios(lista)
-
-    // Peso sugerido para hoy en cada ejercicio (ciclo o progresión).
-    const sugeridas = lista.map((ejercicio) =>
-      sugerenciaParaHoy(ejercicio, datos, anteriores[ejercicio.ejercicio_id], hoy),
-    )
-    setSugerencias(sugeridas)
-    const iniciales = crearSeriesIniciales(lista, sugeridas)
-    const enCurso = modoPrevia ? null : leerEnCurso(id, hoy)
-    if (enCurso && mismaForma(enCurso.series, iniciales)) {
-      const mismo = mismoCalentamiento(enCurso.calentamiento, datos?.calentamiento)
-      const guardado = {
-        ...enCurso,
-        calentamiento: mismo ? enCurso.calentamiento : crearCalentamiento(datos?.calentamiento),
-        pausa: enCurso.pausa && {
-          ...enCurso.pausa,
-          calentamientoCorria: mismo && enCurso.pausa.calentamientoCorria,
-        },
-      }
-      // Si había llegado al final sin guardar, vuelve al final (con el
-      // tiempo frenado). Si no, sigue solo desde donde quedó (el tiempo en
-      // pausa no cuenta). Si el profe cambió el calentamiento, arranca de
-      // cero.
-      const enFinal = enCurso.fase === 'final'
-      const retomado = enFinal
-        ? pausarEnCurso(guardado, Date.now())
-        : reanudarEnCurso(guardado, Date.now())
-      setSeries(enCurso.series)
-      setCalentamiento(retomado.calentamiento)
-      // enCalentamiento no existía antes del 28/09/2026 (se guardaba
-      // "calentamientoHecho"): se respeta lo de un entrenamiento a medias.
-      setEnCalentamiento(
-        Boolean(retomado.calentamiento) && (enCurso.enCalentamiento ?? !enCurso.calentamientoHecho),
-      )
-      setReloj(retomado.reloj)
-      setPausa(retomado.pausa)
-      setFase(enFinal ? 'final' : 'entrenando')
-      setVisible(Math.min(enCurso.visible || 0, Math.max(0, lista.length - 1)))
-      setRecords(enCurso.records || 0)
-      // Retomó un entrenamiento pausado: cuenta como "ya empezó".
-      estadoInicial.current = null
-      // Lo que ya hizo hoy también cuenta como marca, así no se festeja
-      // dos veces el mismo récord al volver de una pausa.
-      lista.forEach((ejercicio, indice) => {
-        for (const serie of enCurso.series[indice]) {
-          if (!serie.hecha || esSerieDeCalentamiento(serie)) continue
-          mejores[ejercicio.ejercicio_id] = sumarSerieAMarca(
-            mejores[ejercicio.ejercicio_id],
-            serie,
-          )
-        }
-      })
+    setRutina(inicio.rutina)
+    setEjercicios(inicio.ejercicios)
+    setSugerencias(inicio.sugerencias)
+    setSeries(inicio.series)
+    setCalentamiento(inicio.calentamiento)
+    setEnCalentamiento(inicio.enCalentamiento)
+    setReloj(inicio.reloj)
+    setPausa(inicio.pausa)
+    setVisible(inicio.visible)
+    if (inicio.retomado) {
+      setFase(inicio.fase)
+      setRecords(inicio.records)
       // Ya está entrenando: no es "solo mirar".
       setSoloMirando(false)
-    } else {
-      const nuevo = crearCalentamiento(datos?.calentamiento)
-      // El tiempo arranca cuando empieza a entrenar: con calentamiento, al
-      // tocar "Empezar"; sin calentamiento, al abrir la rutina (o al cerrar
-      // "Ver la rutina", si entró a mirarla antes).
-      const relojInicial =
-        nuevo || parametros.get('vista') === 'completa' ? relojParado() : relojEnMarcha(Date.now())
-      setSeries(iniciales)
-      setCalentamiento(nuevo)
-      setEnCalentamiento(Boolean(nuevo))
-      setReloj(relojInicial)
-      setPausa(null)
-      setVisible(0)
-      estadoInicial.current = {
-        series: iniciales,
-        calentamiento: nuevo,
-        enCalentamiento: Boolean(nuevo),
-        reloj: relojInicial,
-        pausa: null,
-        visible: 0,
-        fase: 'entrenando',
-      }
     }
-    setMejoresPorEjercicio(mejores)
+    estadoInicial.current = inicio.estadoInicial
+    setMejoresPorEjercicio(inicio.mejores)
     setCargando(false)
   }
 
@@ -522,6 +466,9 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
   // la marca (el cronómetro de una serie por tiempo pasa los segundos que
   // aguantó: { reps }).
   function marcarSerie(exIndex, serieIndex, cambios = null) {
+    // El navegador deja sonar solo después de un toque: se prepara acá el
+    // bip del final del descanso.
+    if (sonidoDescanso) prepararSonido()
     const relojActual = iniciarReloj()
     const hecha = !series[exIndex][serieIndex].hecha
     const nuevas = series.map((filas, i) =>
@@ -891,7 +838,11 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
     const segundosTotales = segundosDeReloj(reloj, Date.now())
     const recordDeTiempo =
       !modoPrevia &&
-      esRecordDeTiempo(segundosTotales, mejorTiempo, totalSeries > 0 && seriesHechas === totalSeries)
+      esRecordDeTiempo(
+        segundosTotales,
+        mejorTiempo,
+        totalSeries > 0 && seriesHechas === totalSeries,
+      )
     return (
       <div className="screen entrenar">
         {avisoPrevia}
@@ -948,68 +899,18 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
         </div>
       )}
 
-      <header className="entrenar-barra">
-        <button type="button" className="boton-secundario boton-chico" onClick={tocarPausar}>
-          {modoPrevia || !empezado ? 'Salir' : 'Pausar'}
-        </button>
-        <span className="entrenar-barra-titulo">
-          {enCalentamiento ? 'Calentamiento' : `Ejercicio ${visible + 1} de ${ejercicios.length}`}
-          {ciclo && (
-            <small className="entrenar-ciclo">
-              Semana {ciclo.semana} de {ciclo.total}
-            </small>
-          )}
-        </span>
-        <span className="entrenar-barra-derecha">
-          <Cronometro reloj={reloj} />
-          <button
-            type="button"
-            className="entrenar-ver-todo"
-            onClick={() => setVistaGeneral(true)}
-            aria-label="Ver toda la rutina"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
-            </svg>
-          </button>
-        </span>
-      </header>
-
-      {/* Un tramo por ejercicio y, primero, uno para el calentamiento
-          (cuenta igual que un ejercicio). */}
-      <div className="entrenar-avance" aria-hidden="true">
-        {resumenCalentamiento && (
-          <span
-            className={claseDeTramo(
-              resumenCalentamiento.completo,
-              resumenCalentamiento.hechas > 0,
-              enCalentamiento,
-            )}
-          />
-        )}
-        {series.map((filas, indice) => {
-          const estado = estadoDeEjercicio(filas)
-          return (
-            <span
-              key={indice}
-              className={claseDeTramo(
-                estado.completo,
-                estado.empezado,
-                indice === visible && !enCalentamiento,
-              )}
-            />
-          )
-        })}
-      </div>
+      <BarraEntrenar
+        textoSalir={modoPrevia || !empezado ? 'Salir' : 'Pausar'}
+        enCalentamiento={enCalentamiento}
+        visible={visible}
+        cantidad={ejercicios.length}
+        ciclo={ciclo}
+        reloj={reloj}
+        series={series}
+        resumenCalentamiento={resumenCalentamiento}
+        onSalir={tocarPausar}
+        onVerTodo={() => setVistaGeneral(true)}
+      />
 
       {enCalentamiento ? (
         <>
@@ -1114,6 +1015,8 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
           onListo={() => setDescanso(null)}
           avisoAlTerminar={avisoDescanso}
           onCambiarAviso={modoPrevia ? undefined : cambiarAvisoDescanso}
+          sonido={sonidoDescanso}
+          onCambiarSonido={modoPrevia ? undefined : cambiarSonidoDescanso}
         />
       )}
 
@@ -1133,73 +1036,4 @@ export default function RutinaDetalle({ modoPrevia = false, tipo = 'rutina' }) {
       {hojaConfirmar}
     </div>
   )
-}
-
-// true si el alumno ya arrancó: marcó alguna serie o empezó el
-// calentamiento. Desde ahí se guarda en el celular lo que va haciendo.
-function yaEmpezo(series, calentamiento) {
-  return (
-    series.some((filas) => filas.some((serie) => serie.hecha)) ||
-    Boolean(resumenDeCalentamiento(calentamiento)?.empezado)
-  )
-}
-
-// "🏆 ¡Récord de tonelaje en Sentadilla! 90 kg × 12 = 1.080 kg".
-function textoDeRecord(record, fila, nombre) {
-  const kg = formatearPeso(fila.kg)
-  switch (record.tipo) {
-    case RECORD_PESO:
-      return `🏆 ¡Récord de peso en ${nombre}! ${kg} kg`
-    case RECORD_TONELAJE:
-      return `🏆 ¡Récord de tonelaje en ${nombre}! ${kg} kg × ${fila.reps} = ${formatearNumero(record.valor)} kg`
-    case RECORD_SEGUNDOS:
-      return `🏆 ¡Récord de tiempo en ${nombre}! ${record.valor} seg`
-    case RECORD_REPS:
-    default:
-      return `🏆 ¡Récord de repeticiones en ${nombre}! ${record.valor} reps`
-  }
-}
-
-// Clase de un tramo de la barra de avance (calentamiento o ejercicio).
-function claseDeTramo(completo, parcial, actual) {
-  let clase = 'entrenar-avance-tramo'
-  if (completo) clase += ' hecho'
-  else if (parcial) clase += ' parcial'
-  if (actual) clase += ' actual'
-  return clase
-}
-
-// Resumen de lo que se muestra (rutina, ejercicios y entrenamientos),
-// para saber si lo que llegó del servidor es distinto a lo guardado.
-// (Un entrenamiento corregido cuenta como distinto: cambia "La vez
-// pasada" y los récords.)
-function huella({ rutina, ejercicios }, sesiones) {
-  return JSON.stringify([
-    rutina,
-    ejercicios,
-    sesiones.map((sesion) => [sesion.id, sesion.editado_en || '']),
-  ])
-}
-
-// true si el progreso guardado corresponde a esta misma rutina (mismos
-// ejercicios y series); si el profe la cambió, se arranca de cero.
-// (Mismas series de calentamiento y efectivas en cada ejercicio.)
-function mismaForma(guardadas, iniciales) {
-  return (
-    Array.isArray(guardadas) &&
-    guardadas.length === iniciales.length &&
-    guardadas.every(
-      (filas, i) =>
-        filas?.length === iniciales[i].length &&
-        filas.every(
-          (serie, j) => esSerieDeCalentamiento(serie) === esSerieDeCalentamiento(iniciales[i][j]),
-        ),
-    )
-  )
-}
-
-// Título de la pantalla de descanso según la serie que terminó.
-function tituloDelDescanso(turno) {
-  if (turno?.tipo === TIPO_CALENTAMIENTO) return 'Descanso de calentamiento'
-  return turno?.finDeBloque ? 'Cambio de ejercicio' : 'Descansá'
 }

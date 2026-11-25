@@ -4,6 +4,7 @@ import { obtenerUsuarioActual, usuarioGuardado } from '../services/sesion.js'
 import {
   cargarHistorial,
   historialGuardado,
+  inicioGuardado,
   misRutinasGuardadas,
 } from '../services/datosCliente.js'
 import TopPattern from '../components/TopPattern.jsx'
@@ -12,7 +13,7 @@ import GraficoProgreso from '../components/GraficoProgreso.jsx'
 import NotificacionAvance from '../components/NotificacionAvance.jsx'
 import EntrenamientosHechos from '../components/EntrenamientosHechos.jsx'
 import EvaluacionesAnualesAlumno from '../components/evaluacion/EvaluacionesAnualesAlumno.jsx'
-import { calcularRachaSemanas, textoFechaCorta } from '../utils/dias.js'
+import { calcularRacha, diasConRutina, textoFechaCorta } from '../utils/dias.js'
 import {
   ejerciciosEntrenados,
   formatearNumero,
@@ -71,7 +72,14 @@ export default function Progreso() {
     () => (elegido ? progresoDeEjercicio(sesiones, elegido) : []),
     [sesiones, elegido],
   )
-  const racha = calcularRachaSemanas(sesiones.map((sesion) => sesion.fecha))
+  // La misma racha que en Inicio: semanas cumpliendo los días de su rutina.
+  const racha = useMemo(() => {
+    const calendario = usuarioId ? inicioGuardado(usuarioId)?.calendario : null
+    return calcularRacha(
+      sesiones.map((sesion) => sesion.fecha),
+      diasConRutina(calendario),
+    ).semanas
+  }, [sesiones, usuarioId])
   // Nombre de cada rutina (de la copia guardada en el celular), para
   // titular los entrenamientos.
   const nombresDeRutinas = useMemo(() => {

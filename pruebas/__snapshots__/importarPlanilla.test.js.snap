@@ -1,0 +1,413 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`planilla de Excel: ayudas > reconoce los métodos escritos de distintas formas 1`] = `null`;
+
+exports[`planilla de Excel: ida y vuelta > avisa con hoja y celda cuando unas repeticiones no se entienden 1`] = `
+[
+  {
+    "celda": "Ejercicios!G5",
+    "fila": 5,
+    "hoja": "Ejercicios",
+    "texto": "Semana 1, el ejercicio: las repeticiones no son válidas (un número, como 10; un rango, como 8-12; o segundos, como 30 seg; dice "muchas").",
+  },
+]
+`;
+
+exports[`planilla de Excel: ida y vuelta > lee sin errores la planilla que arma la app 1`] = `
+{
+  "advertencias": [
+    {
+      "celda": "Rutina!C17",
+      "fila": 17,
+      "hoja": "Rutina",
+      "texto": "Día 1: "piernas" no es un grupo muscular de la app: se muestra como texto.",
+    },
+  ],
+  "archivo": {
+    "clienteId": "cliente-1",
+    "clienteNombre": "Lucía Pereira",
+    "esDeOtroCliente": false,
+    "idsValidos": true,
+    "version": 1,
+  },
+  "desconocidos": [],
+  "destinos": {},
+  "errores": [],
+  "programa": {
+    "cliente": {
+      "id": "cliente-1",
+      "nombre": "Lucía Pereira",
+    },
+    "dias": [
+      {
+        "bloques": [
+          {
+            "codigo": "A",
+            "conErrores": false,
+            "config": {},
+            "descansoMax": 150,
+            "descansoMin": 120,
+            "ejercicios": [
+              {
+                "calentamiento": false,
+                "calentamientoDescanso": 60,
+                "calentamientoNota": "",
+                "calentamientoSeries": [],
+                "ejercicio": {
+                  "categoria": "Piernas",
+                  "id": "e-sentadilla",
+                  "nombre": "Sentadilla",
+                },
+                "id": "f1",
+                "kg": 60,
+                "notas": "",
+                "planilla": {
+                  "conErrores": false,
+                  "fila": 5,
+                  "lugar": {
+                    "columna": 4,
+                    "fila": 5,
+                    "hoja": "Ejercicios",
+                  },
+                  "nombre": "",
+                  "orden": 1,
+                },
+                "porTiempo": false,
+                "progresionKg": "",
+                "progresionReps": "",
+                "repsDesde": 8,
+                "repsHasta": 10,
+                "rpe": "",
+                "semanasPlan": [
+                  {
+                    "kg": 60,
+                    "repsDesde": 8,
+                    "repsHasta": 10,
+                    "series": 4,
+                  },
+                  {
+                    "kg": 60,
+                    "repsDesde": 8,
+                    "repsHasta": 10,
+                    "series": 4,
+                  },
+                ],
+                "series": 4,
+                "tempo": "",
+              },
+            ],
+            "grupo": null,
+            "lugar": {
+              "columna": 4,
+              "fila": 5,
+              "hoja": "Ejercicios",
+            },
+            "metodo": "normal",
+          },
+          {
+            "codigo": "B",
+            "conErrores": false,
+            "config": {},
+            "descansoMax": 90,
+            "descansoMin": 90,
+            "ejercicios": [
+              {
+                "calentamiento": false,
+                "calentamientoDescanso": 60,
+                "calentamientoNota": "",
+                "calentamientoSeries": [],
+                "ejercicio": {
+                  "categoria": "Abdomen",
+                  "id": "e-plancha",
+                  "nombre": "Plancha",
+                },
+                "id": "f2",
+                "kg": "",
+                "notas": "",
+                "planilla": {
+                  "conErrores": false,
+                  "fila": 6,
+                  "lugar": {
+                    "columna": 4,
+                    "fila": 6,
+                    "hoja": "Ejercicios",
+                  },
+                  "nombre": "",
+                  "orden": 2,
+                },
+                "porTiempo": false,
+                "progresionKg": "",
+                "progresionReps": "",
+                "repsDesde": 30,
+                "repsHasta": "",
+                "rpe": "",
+                "semanasPlan": [
+                  {
+                    "kg": "",
+                    "repsDesde": 30,
+                    "repsHasta": "",
+                    "series": 4,
+                  },
+                  {
+                    "kg": "",
+                    "repsDesde": 30,
+                    "repsHasta": "",
+                    "series": 4,
+                  },
+                ],
+                "series": 4,
+                "tempo": "",
+              },
+            ],
+            "grupo": null,
+            "lugar": {
+              "columna": 4,
+              "fila": 6,
+              "hoja": "Ejercicios",
+            },
+            "metodo": "normal",
+          },
+        ],
+        "calentamiento": [
+          {
+            "duracion": "",
+            "items": [],
+            "nombre": "Bici",
+          },
+        ],
+        "descripcion": "Foco en técnica",
+        "grupos": [],
+        "musculos": "piernas",
+        "nombre": "Día 1 · Piernas",
+        "numero": 1,
+        "pausaMax": 90,
+        "pausaMin": 60,
+        "rutinaId": "rutina-1",
+        "vueltaCalma": [
+          {
+            "duracion": "",
+            "items": [],
+            "nombre": "Estirar",
+          },
+        ],
+      },
+      {
+        "bloques": [
+          {
+            "codigo": "A",
+            "conErrores": false,
+            "config": {},
+            "descansoMax": 90,
+            "descansoMin": 90,
+            "ejercicios": [
+              {
+                "calentamiento": false,
+                "calentamientoDescanso": 60,
+                "calentamientoNota": "",
+                "calentamientoSeries": [],
+                "ejercicio": {
+                  "categoria": "Pecho",
+                  "id": "e-banca",
+                  "nombre": "Press banca",
+                },
+                "id": "f3",
+                "kg": 40,
+                "notas": "",
+                "planilla": {
+                  "conErrores": false,
+                  "fila": 9,
+                  "lugar": {
+                    "columna": 4,
+                    "fila": 9,
+                    "hoja": "Ejercicios",
+                  },
+                  "nombre": "",
+                  "orden": 1,
+                },
+                "porTiempo": false,
+                "progresionKg": "",
+                "progresionReps": "",
+                "repsDesde": 8,
+                "repsHasta": 10,
+                "rpe": "",
+                "semanasPlan": [
+                  {
+                    "kg": 40,
+                    "repsDesde": 8,
+                    "repsHasta": 10,
+                    "series": 4,
+                  },
+                  {
+                    "kg": 40,
+                    "repsDesde": 8,
+                    "repsHasta": 10,
+                    "series": 4,
+                  },
+                ],
+                "series": 4,
+                "tempo": "",
+              },
+              {
+                "calentamiento": false,
+                "calentamientoDescanso": 60,
+                "calentamientoNota": "",
+                "calentamientoSeries": [],
+                "ejercicio": {
+                  "categoria": "Espalda",
+                  "id": "e-remo",
+                  "nombre": "Remo con barra",
+                },
+                "id": "f4",
+                "kg": 40,
+                "notas": "",
+                "planilla": {
+                  "conErrores": false,
+                  "fila": 10,
+                  "lugar": {
+                    "columna": 4,
+                    "fila": 10,
+                    "hoja": "Ejercicios",
+                  },
+                  "nombre": "",
+                  "orden": 2,
+                },
+                "porTiempo": false,
+                "progresionKg": "",
+                "progresionReps": "",
+                "repsDesde": 8,
+                "repsHasta": 10,
+                "rpe": "",
+                "semanasPlan": [
+                  {
+                    "kg": 40,
+                    "repsDesde": 8,
+                    "repsHasta": 10,
+                    "series": 4,
+                  },
+                  {
+                    "kg": 40,
+                    "repsDesde": 8,
+                    "repsHasta": 10,
+                    "series": 4,
+                  },
+                ],
+                "series": 4,
+                "tempo": "",
+              },
+            ],
+            "grupo": null,
+            "lugar": {
+              "columna": 4,
+              "fila": 9,
+              "hoja": "Ejercicios",
+            },
+            "metodo": "biserie",
+          },
+          {
+            "codigo": "B",
+            "conErrores": false,
+            "config": {},
+            "descansoMax": 90,
+            "descansoMin": 90,
+            "ejercicios": [
+              {
+                "calentamiento": false,
+                "calentamientoDescanso": 60,
+                "calentamientoNota": "",
+                "calentamientoSeries": [],
+                "ejercicio": {
+                  "categoria": "Brazos",
+                  "id": "e-curl",
+                  "nombre": "Curl de bíceps",
+                },
+                "id": "f5",
+                "kg": 40,
+                "notas": "",
+                "planilla": {
+                  "conErrores": false,
+                  "fila": 11,
+                  "lugar": {
+                    "columna": 4,
+                    "fila": 11,
+                    "hoja": "Ejercicios",
+                  },
+                  "nombre": "",
+                  "orden": 3,
+                },
+                "porTiempo": false,
+                "progresionKg": "",
+                "progresionReps": "",
+                "repsDesde": 12,
+                "repsHasta": "",
+                "rpe": "",
+                "semanasPlan": [
+                  {
+                    "kg": 40,
+                    "repsDesde": 12,
+                    "repsHasta": "",
+                    "series": 3,
+                  },
+                  {
+                    "kg": 40,
+                    "repsDesde": 12,
+                    "repsHasta": "",
+                    "series": 3,
+                  },
+                ],
+                "series": 3,
+                "tempo": "",
+              },
+            ],
+            "grupo": null,
+            "lugar": {
+              "columna": 4,
+              "fila": 11,
+              "hoja": "Ejercicios",
+            },
+            "metodo": "normal",
+          },
+        ],
+        "calentamiento": [],
+        "descripcion": "",
+        "grupos": [
+          "Pecho",
+          "Espalda",
+        ],
+        "musculos": "Pecho · Espalda",
+        "nombre": "Día 2 · Torso",
+        "numero": 2,
+        "pausaMax": null,
+        "pausaMin": null,
+        "rutinaId": "rutina-2",
+        "vueltaCalma": [],
+      },
+    ],
+    "semanas": 3,
+  },
+}
+`;
+
+exports[`planilla de Excel: ida y vuelta > pide resolver un ejercicio que no está en la biblioteca 1`] = `
+[
+  {
+    "clave": "sentadilla bulgara",
+    "filas": [
+      5,
+    ],
+    "lugar": {
+      "columna": 4,
+      "fila": 5,
+      "hoja": "Ejercicios",
+    },
+    "motivo": "no-existe",
+    "nombre": "Sentadilla búlgara",
+    "opciones": [
+      {
+        "categoria": "Piernas",
+        "id": "e-sentadilla",
+        "nombre": "Sentadilla",
+      },
+    ],
+  },
+]
+`;

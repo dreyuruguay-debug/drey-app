@@ -17,7 +17,7 @@ import { guardarJSON, leerJSON } from '../utils/almacenLocal.js'
 // { automatico: true/false, fijo: 'claro' | 'oscuro', color: 'verde' | ... }.
 // El modo queda marcado en <html data-tema="claro|oscuro">, el color en
 // <html data-color="verde|rosa|..."> y los colores salen de las variables
-// de styles/globals.css (bloque "COLORES A ELECCIÓN").
+// de styles/partes/02-colores-a-eleccion.css.
 //
 // IMPORTANTE: index.html tiene una copia chiquita de esta misma regla
 // para pintar el modo y el color correctos antes de que cargue la app (sin
@@ -35,8 +35,8 @@ const DURACION_TRANSICION_MS = 400
 
 // Colores a elección. "muestra" es solo el circulito del selector (el tono
 // de modo claro y el de modo oscuro); los colores reales de la app están en
-// styles/globals.css. Para sumar uno: agregarlo acá, en globals.css (sus
-// dos bloques) y en la lista de index.html.
+// styles/partes/02-colores-a-eleccion.css. Para sumar uno: agregarlo acá,
+// en ese archivo (sus dos bloques) y en la lista de index.html.
 // No hay rojo, naranja ni amarillo a propósito: en DREY ya significan
 // errores / "Llegué al fallo", avisos de atención y series de calentamiento.
 export const COLOR_POR_DEFECTO = 'verde'

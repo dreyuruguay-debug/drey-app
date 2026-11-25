@@ -1,0 +1,135 @@
+/* ============================================================
+   Valoración antropométrica y evaluación del año (noviembre 2026)
+   ============================================================ */
+
+/* Las dos tablas de la valoración (components/medidas/TablaAntropometrica.jsx) */
+.antropometria {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.antropometria-tabla {
+  font-variant-numeric: tabular-nums;
+}
+
+.antropometria-tabla th,
+.antropometria-tabla td {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.antropometria-tabla tbody th {
+  text-align: left;
+  font-weight: 700;
+}
+
+.antropometria-pliegues thead th:first-child {
+  text-align: left;
+}
+
+.antropometria-suma th,
+.antropometria-suma td {
+  font-weight: 800;
+  border-top: 2px solid var(--drey-borde-fuerte);
+}
+
+/* Sección "Valoración antropométrica" del formulario de medidas y
+   "Valoración antropométrica en Excel" */
+.medidas-antropometria,
+.planilla-medidas {
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.medidas-antropometria summary,
+.planilla-medidas summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.medidas-antropometria[open] summary,
+.planilla-medidas[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.medidas-suma-pliegues {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+}
+
+.planilla-medidas .profe-nota {
+  margin: 0 0 0.75rem;
+}
+
+.planilla-medidas-errores {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  text-align: left;
+  font-weight: 400;
+}
+
+.planilla-medidas-plan {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+}
+
+.planilla-medidas-plan p {
+  margin: 0 0 0.6rem;
+}
+
+.planilla-medidas-plan .profe-nota {
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* Evaluación del año (components/evaluacion/EditorEvaluacionAnual.jsx) */
+.evaluacion-anual-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.evaluacion-anual-cabecera .editor-campo {
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+}
+
+.evaluacion-anual-cabecera .boton-chico {
+  margin-left: auto;
+  width: auto;
+}
+
+.evaluacion-anual-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 1rem 0;
+}
+
+.evaluacion-anual-textos .editor-campo {
+  flex: 0 0 auto;
+}
+
+.evaluacion-anual-textos .form-textarea {
+  min-height: 6.5rem;
+}
+
+.evaluacion-anual .acciones-fila {
+  margin-top: 1rem;
+}
+
+.evaluacion-anual-tabla td:first-child {
+  text-align: left;
+}
+
+.evaluacion-anual-tabla .evaluacion-record {
+  margin-left: 0.4rem;
+}

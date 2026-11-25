@@ -1,0 +1,1582 @@
+/* ==================================================================
+   Página de inicio (01/10/2026): pages/Portada.jsx
+   Video a pantalla completa con el logo animado, la bienvenida y los
+   botones; debajo, las secciones que aparecen al bajar. Los textos los
+   cambia el Admin en Ajustes → Portada.
+   ================================================================== */
+.portada {
+  min-height: 100vh;
+  background: var(--drey-bg);
+  color: var(--drey-text);
+}
+
+.portada-esperando {
+  min-height: 100vh;
+  background: var(--drey-bg);
+}
+
+.portada-aviso-previa {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: var(--drey-amarillo-fondo);
+  color: var(--drey-amarillo-texto);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ---------- Botones de la portada ---------- */
+.portada-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2rem;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.portada-boton-lleno {
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+}
+
+.portada-boton-lleno:hover {
+  background: var(--drey-accent);
+}
+
+.portada-boton-borde {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.7);
+  color: var(--drey-text);
+  backdrop-filter: blur(4px);
+}
+
+.portada-boton-borde:hover {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent-texto);
+}
+
+.portada-boton-chico {
+  min-height: 2.3rem;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.7rem;
+}
+
+.portada-boton:focus-visible,
+.portada-conocenos:focus-visible,
+.portada-pregunta summary:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 3px;
+}
+
+.portada-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.portada-botones .portada-boton {
+  min-width: 190px;
+}
+
+/* Debajo de los botones: acceso para profes y gimnasios. */
+.portada-para-profes {
+  margin: 1.1rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.portada-para-profes a {
+  color: var(--drey-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.portada-para-profes a:hover,
+.portada-para-profes a:focus-visible {
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .portada-botones {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin-inline: auto;
+  }
+}
+
+/* ---------- Video de arriba ---------- */
+.portada-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(2rem + env(safe-area-inset-top)) 1.25rem 7rem;
+  overflow: hidden;
+  text-align: center;
+}
+
+.portada-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--drey-bg);
+}
+
+/* Oscurece el video para que los textos se lean bien. */
+.portada-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 13, 13, 0.55) 0%,
+    rgba(13, 13, 13, 0.25) 35%,
+    rgba(13, 13, 13, 0.55) 65%,
+    rgba(13, 13, 13, 0.96) 100%
+  );
+}
+
+.portada-hero-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 760px;
+}
+
+.portada-logo {
+  display: block;
+  width: min(72vw, 360px);
+  height: auto;
+  margin: 0 auto 1rem;
+}
+
+.portada-hero-textos {
+  transition: opacity 0.4s ease;
+}
+
+/* La primera vez, mientras llegan los textos del Admin. */
+.portada-esperando-textos {
+  opacity: 0;
+}
+
+.portada-saludo {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+/* Más chico que el logo, para que no compita con él. */
+.portada-titulo {
+  max-width: 18ch;
+  margin: 0 auto;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(1.85rem, 4.2vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.portada-subtitulo {
+  max-width: 40ch;
+  margin: 0.85rem auto 0;
+  color: var(--drey-texto-claro);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.portada-conocenos {
+  position: absolute;
+  left: 50%;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  color: var(--drey-text);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.portada-conocenos svg {
+  animation: portada-rebote 1.8s ease-in-out infinite;
+}
+
+@keyframes portada-rebote {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- Barra fija de arriba (aparece al bajar) ---------- */
+.portada-barra {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: calc(0.7rem + env(safe-area-inset-top)) 1.25rem 0.7rem;
+  background: rgba(13, 13, 13, 0.88);
+  border-bottom: 1px solid var(--drey-borde);
+  backdrop-filter: blur(10px);
+  transform: translateY(-110%);
+  transition: transform 0.3s ease;
+}
+
+.portada-barra-visible {
+  transform: none;
+}
+
+.portada-barra-logo {
+  display: flex;
+  flex: 0 0 auto;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.portada-barra-logo img {
+  width: auto;
+  height: 22px;
+}
+
+.portada-barra-botones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ---------- Secciones ---------- */
+.portada-contenido {
+  scroll-margin-top: 3.5rem;
+}
+
+.portada-seccion {
+  padding: 5rem 1.5rem;
+  border-top: 1px solid var(--drey-borde);
+}
+
+.portada-seccion-interior {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.portada-antetitulo {
+  margin: 0 0 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.portada-h2 {
+  max-width: 18ch;
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.portada-destacada .portada-h2 {
+  max-width: 20ch;
+  font-size: clamp(2.3rem, 6vw, 4.4rem);
+}
+
+.portada-texto {
+  max-width: 60ch;
+  margin: 1.1rem 0 0;
+  color: var(--drey-texto-claro);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+@media (max-width: 520px) {
+  .portada-seccion {
+    padding: 3.75rem 1.25rem;
+  }
+}
+
+/* Aparecer al bajar (components/portada/Aparece.jsx) */
+.aparece {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.aparece-visto {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aparece {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .portada-conocenos svg {
+    animation: none;
+  }
+}
+
+/* Cómo funciona: 3 pasos */
+.portada-pasos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portada-paso {
+  min-width: 0;
+  padding: 1.5rem 1.4rem 1.6rem;
+  border-radius: 18px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.portada-paso-numero {
+  display: block;
+  margin-bottom: 0.85rem;
+  font-family: var(--fuente-titulos);
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--drey-accent-texto);
+}
+
+.portada-paso h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+.portada-paso p {
+  margin: 0;
+  color: var(--drey-texto-suave);
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+/* Fundador */
+.portada-fundador {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 3rem;
+  align-items: center;
+}
+
+.portada-fundador-sin-foto {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.portada-fundador-foto {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 20px;
+  background: var(--drey-superficie);
+}
+
+.portada-fundador-textos {
+  min-width: 0;
+}
+
+.portada-cita {
+  max-width: 28ch;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.portada-cita::before,
+.portada-cita::after {
+  color: var(--drey-accent-texto);
+}
+
+.portada-cita::before {
+  content: '“';
+}
+
+.portada-cita::after {
+  content: '”';
+}
+
+.portada-firma {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 1.2rem 0 0;
+}
+
+.portada-firma span {
+  color: var(--drey-texto-suave);
+  font-size: 0.9rem;
+}
+
+/* Profes (usa la misma tarjeta que "Elegí tu profe") */
+.portada-profes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.25rem;
+  align-items: start;
+}
+
+/* Planes */
+.portada-planes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.25rem;
+}
+
+.portada-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1.6rem 1.4rem;
+  border-radius: 18px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-bg);
+}
+
+.portada-plan-destacado {
+  border-color: var(--drey-accent);
+  background: linear-gradient(180deg, var(--drey-verde-fondo), var(--drey-bg) 70%);
+}
+
+.portada-plan h3 {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.portada-plan-descripcion {
+  min-height: 2.8em;
+  margin: 0 0 0.6rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.portada-plan-precio {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.portada-plan-precio small {
+  font-family: var(--fuente-texto);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--drey-texto-suave);
+}
+
+.portada-plan-siguiente {
+  margin: 0 0 0.9rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.85rem;
+}
+
+.portada-plan .portada-boton {
+  margin-top: auto;
+}
+
+/* Para profes y gimnasios */
+.portada-sumate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.portada-sumate-boton {
+  margin-top: 1.5rem;
+}
+
+.portada-lista-tilde {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portada-lista-tilde li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0.75rem;
+  color: var(--drey-texto-claro);
+  line-height: 1.5;
+}
+
+.portada-lista-tilde li::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--drey-verde-fondo)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233ddc84' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E")
+    center / 13px no-repeat;
+}
+
+/* Preguntas frecuentes */
+.portada-preguntas {
+  max-width: 760px;
+  margin-top: 2rem;
+  border-top: 1px solid var(--drey-borde);
+}
+
+.portada-pregunta {
+  border-bottom: 1px solid var(--drey-borde);
+}
+
+.portada-pregunta summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.portada-pregunta summary::-webkit-details-marker {
+  display: none;
+}
+
+.portada-pregunta summary::after {
+  content: '+';
+  flex: 0 0 auto;
+  color: var(--drey-accent-texto);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.portada-pregunta[open] summary::after {
+  content: '–';
+}
+
+.portada-pregunta p {
+  max-width: 62ch;
+  margin: 0 0 1.1rem;
+  color: var(--drey-texto-suave);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* Cierre y pie */
+.portada-cierre {
+  text-align: center;
+}
+
+.portada-cierre .portada-h2 {
+  max-width: 16ch;
+  margin-inline: auto;
+}
+
+.portada-pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: calc(1040px + 3rem);
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem calc(2.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--drey-borde);
+  color: var(--drey-texto-suave);
+  font-size: 0.82rem;
+}
+
+.portada-pie nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+}
+
+.portada-pie a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.portada-pie a:hover {
+  color: var(--drey-text);
+}
+
+/* Celular: todo en una columna */
+@media (max-width: 760px) {
+  .portada-pasos,
+  .portada-profes,
+  .portada-planes,
+  .portada-fundador,
+  .portada-sumate {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portada-fundador {
+    gap: 1.75rem;
+  }
+
+  .portada-fundador-foto {
+    max-width: 420px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  .portada-profes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Ajustes → Portada (components/AjustesPortada.jsx) ---------- */
+.portada-ajustes-ver {
+  margin: 0.25rem 0 1rem;
+}
+
+.portada-ajustes-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.portada-ajustes-etiqueta {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.portada-ajustes-nota {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.portada-ajustes-pendiente {
+  color: var(--drey-amarillo-texto) !important;
+}
+
+.portada-ajustes-original {
+  align-self: flex-start;
+  color: var(--drey-accent-texto);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.portada-ajustes-videos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.portada-ajustes-archivo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.portada-ajustes-archivo-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.portada-ajustes-vista {
+  flex: 0 0 auto;
+  width: 112px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--drey-superficie-2);
+}
+
+.portada-ajustes-vista-vertical {
+  width: 54px;
+  height: 96px;
+}
+
+.portada-ajustes-vista-foto {
+  width: 72px;
+  height: 90px;
+}
+
+.portada-ajustes-vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--drey-borde-control);
+  color: var(--drey-texto-suave);
+  font-size: 0.72rem;
+}
+
+.portada-ajustes-preguntas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.portada-ajustes-pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+}
+
+.portada-ajustes-pregunta .profe-ejercicio-borrar {
+  align-self: flex-start;
+}
+
+@media (max-width: 520px) {
+  .portada-ajustes-videos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Menú del profe: "Mi cuenta" (components/ProfeLayout.jsx) ----------
+   En el celular: un botón "Mi cuenta" en el menú de abajo.
+   En la compu: un grupo "Mi cuenta" con "Mi perfil" y "Solicitudes". */
+.panel-menu .panel-solo-compu {
+  display: none;
+}
+
+/* Con 5 botones, que "Mi cuenta" no se parta en dos renglones. */
+.panel-menu .bottom-nav-item span {
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .pantalla-panel .panel-menu .panel-solo-celular {
+    display: none;
+  }
+
+  .pantalla-panel .panel-menu .bottom-nav-item.panel-solo-compu {
+    display: flex;
+  }
+
+  .pantalla-panel .panel-menu .panel-menu-grupo {
+    display: block;
+    margin: 1.1rem 0 0.25rem;
+    padding: 1rem 0.8rem 0;
+    border-top: 1px solid var(--drey-borde-suave);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--drey-texto-suave);
+  }
+}
+
+/* ---------- Corregir un entrenamiento ya guardado ----------
+   components/EditorEntrenamiento.jsx (la ventana, igual para el alumno y
+   el profe) y components/EntrenamientosHechos.jsx (la lista del alumno
+   en Progreso). La ventana usa la hoja del asistente (.asistente-hoja). */
+.corregir-hoja {
+  max-width: 520px;
+  margin: auto 0;
+}
+
+.corregir-subtitulo {
+  margin: -0.5rem 0 0;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}
+
+.corregir-hoja .profe-nota {
+  margin: 0;
+}
+
+.corregir-ejercicio {
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+}
+
+.corregir-ejercicio-nombre {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.corregir-series {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.corregir-serie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.65rem;
+  border-radius: 10px;
+  background: var(--drey-bg);
+  border-left: 3px solid var(--drey-accent);
+}
+
+.corregir-serie-calentamiento {
+  border-left-color: var(--drey-amarillo-trazo);
+}
+
+.corregir-serie-pendiente {
+  border-left-color: var(--drey-borde-control);
+}
+
+.corregir-serie-nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.corregir-serie-valores {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--drey-texto-suave);
+}
+
+.corregir-serie-valores label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.corregir-serie-valores small {
+  font-size: 0.75rem;
+}
+
+.corregir-casillero {
+  width: 3.7rem;
+  min-height: 2.6rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 10px;
+  background: var(--drey-superficie-alta);
+  color: var(--drey-text);
+  font-family: var(--fuente-texto);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.corregir-casillero:focus {
+  outline: none;
+  border-color: var(--drey-accent);
+}
+
+.corregir-serie-sin-hacer {
+  margin: 0;
+  padding-right: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.corregir-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Completar lo que se olvidó de marcar (12/10/2026): "✓ Hecha" en las
+   series que no hizo, "Marcar todo hecho" en el ejercicio, "+ Agregar
+   serie" y "Quitar" / "Deshacer" para lo marcado o agregado recién. */
+.corregir-ejercicio-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.corregir-ejercicio-cabecera .corregir-ejercicio-nombre {
+  margin: 0;
+}
+
+.corregir-marcar-todo,
+.corregir-la-hice,
+.corregir-agregar-serie {
+  flex: 0 0 auto;
+  min-height: 2.2rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--drey-accent);
+  border-radius: 999px;
+  background: none;
+  color: var(--drey-accent-texto);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.corregir-la-hice {
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+.corregir-agregar-serie {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-style: dashed;
+}
+
+.corregir-serie-pendiente-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.corregir-serie-pendiente-acciones .corregir-serie-sin-hacer {
+  padding-right: 0;
+}
+
+.corregir-serie-nueva {
+  outline: 1px dashed var(--drey-accent);
+  outline-offset: -1px;
+}
+
+.corregir-deshacer {
+  display: block;
+  margin-top: 0.1rem;
+  padding: 0.15rem 0;
+  border: none;
+  background: none;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Celulares angostos: menos margen, para que entren los dos casilleros. */
+@media (max-width: 400px) {
+  .corregir-hoja {
+    padding: 1rem 0.75rem;
+  }
+
+  .corregir-ejercicio {
+    padding: 0.75rem 0.6rem;
+  }
+
+  .corregir-casillero {
+    width: 3.3rem;
+  }
+}
+
+/* Cómo se sintió y lo que le escribió al profe (arriba de la ventana) */
+.corregir-sensacion {
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+}
+
+.corregir-sensacion strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--drey-accent-texto);
+}
+
+.corregir-sensacion p {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--drey-texto-claro);
+  overflow-wrap: anywhere;
+}
+
+.corregir-sensacion strong + p {
+  margin-top: 0.35rem;
+}
+
+/* "⏱ por tiempo" al lado del nombre del ejercicio */
+.corregir-por-tiempo {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+  white-space: nowrap;
+}
+
+/* "Borrar este entrenamiento" (al pie de la ventana) */
+.corregir-borrar {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--drey-borde);
+}
+
+.corregir-borrar .profe-nota {
+  margin: 0 0 0.6rem;
+}
+
+/* Lista "Tus entrenamientos" (Progreso del alumno) */
+.entrenamiento-comentario {
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+
+.entrenamientos-nota {
+  margin: 0 0 0.6rem;
+}
+
+.entrenamiento-fecha {
+  flex: 0 0 auto;
+  min-width: 2.8rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--drey-accent-texto);
+}
+
+.entrenamiento-corregir {
+  flex: 0 0 auto;
+  color: var(--drey-texto-suave);
+  font-size: 1.1rem;
+}
+
+/* "Ver y corregir" en los últimos entrenamientos (ficha del alumno) */
+.profe-progreso-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+/* ------------------------------------------------------------------ */
+/* Llegué al fallo (08/10/2026)                                        */
+/* Interruptor en la serie que toca del modo entrenar, marca "Fallo"   */
+/* en las series hechas y botón en la ventana para corregir.           */
+/* ------------------------------------------------------------------ */
+
+.entrenar-fallo-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entrenar-fallo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.1rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 12px;
+  background: var(--drey-superficie-alta);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.entrenar-fallo:focus-visible {
+  outline: 2px solid var(--drey-rojo-texto);
+  outline-offset: 2px;
+}
+
+.entrenar-fallo-casilla {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--drey-borde-control);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.entrenar-fallo-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.entrenar-fallo-texto small {
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.entrenar-fallo-activo {
+  border-color: var(--drey-rojo-texto);
+  background: var(--drey-rojo-fondo);
+}
+
+.entrenar-fallo-activo .entrenar-fallo-casilla {
+  border-color: var(--drey-rojo-texto);
+  background: var(--drey-rojo);
+  color: var(--drey-sobre-accent);
+}
+
+.entrenar-fallo-activo .entrenar-fallo-texto small {
+  color: var(--drey-texto-rojo);
+}
+
+.marca-fallo {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-rojo-texto);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.corregir-fallo {
+  flex: 0 0 auto;
+  min-height: 2.2rem;
+  margin-left: auto;
+  padding: 0 0.55rem;
+  border: 1px dashed var(--drey-borde-control);
+  border-radius: 999px;
+  background: none;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.corregir-fallo-activo {
+  padding: 0 0.15rem;
+  border: none;
+}
+
+.corregir-fallo-activo .marca-fallo {
+  padding: 0.35rem 0.6rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hoja que sube desde abajo (08/10/2026, general desde 16/10/2026)   */
+/* components/HojaInferior.jsx. La usan "Iniciar sesión" de la página */
+/* de inicio (portada/HojaIngreso.jsx, sobre el video) y la guía para */
+/* instalar DREY (instalar/GuiaInstalacion.jsx). En la compu, centrada.*/
+/* ------------------------------------------------------------------ */
+
+.hoja-inferior-capa {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hoja-inferior-fondo {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  animation: hoja-inferior-aparece 0.25s ease both;
+}
+
+.hoja-inferior {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100dvh - var(--hoja-teclado, 0px) - 1rem);
+  margin-bottom: var(--hoja-teclado, 0px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--drey-borde);
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+  animation: hoja-inferior-sube 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: margin-bottom 0.15s ease;
+}
+
+@keyframes hoja-inferior-sube {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes hoja-inferior-aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hoja-inferior:focus {
+  outline: none;
+}
+
+.hoja-inferior-agarre {
+  align-self: center;
+  width: 44px;
+  height: 5px;
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+  background: var(--drey-relleno);
+}
+
+.hoja-inferior-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.hoja-inferior-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Confirmar una acción (components/ConfirmarAccion.jsx): el texto de qué
+   pasa y los dos botones, uno arriba del otro. */
+.confirmar-texto {
+  margin: 0 0 1.25rem;
+  color: var(--drey-texto-suave);
+  line-height: 1.5;
+}
+
+.confirmar-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.confirmar-botones .boton-secundario,
+.confirmar-botones .boton-principal {
+  width: 100%;
+}
+
+.hoja-inferior-cerrar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--drey-superficie-3);
+  color: var(--drey-text);
+  cursor: pointer;
+}
+
+/* En la compu: la hoja centrada, con las cuatro puntas redondeadas. */
+@media (min-width: 720px) and (min-height: 600px) {
+  .hoja-inferior-capa {
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  .hoja-inferior {
+    max-width: 440px;
+    margin-bottom: 0;
+    padding: 1.25rem 1.75rem 1.75rem;
+    border: 1px solid var(--drey-borde);
+    border-radius: 24px;
+    animation-name: hoja-inferior-aparece-centrada;
+  }
+
+  .hoja-inferior-agarre {
+    display: none;
+  }
+}
+
+@keyframes hoja-inferior-aparece-centrada {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoja-inferior,
+  .hoja-inferior-fondo {
+    animation: none;
+  }
+}
+
+/* El formulario (components/FormularioIngreso.jsx) */
+.ingreso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ingreso-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ingreso-etiqueta {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--drey-texto-suave);
+}
+
+.ingreso-input-con-ojo {
+  position: relative;
+  display: block;
+}
+
+.ingreso-input {
+  width: 100%;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  border: 1.5px solid var(--drey-borde);
+  border-radius: 14px;
+  background: var(--drey-bg);
+  color: var(--drey-text);
+  font: inherit;
+  font-size: 1rem; /* 16 px: el iPhone no hace zoom al tocar el campo */
+  transition: border-color 0.2s;
+}
+
+.ingreso-input-con-ojo .ingreso-input {
+  padding-right: 3rem;
+}
+
+.ingreso-input::placeholder {
+  color: var(--drey-texto-tenue);
+}
+
+.ingreso-input:focus {
+  outline: none;
+  border-color: var(--drey-accent);
+}
+
+.ingreso-ojo {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--drey-texto-tenue);
+  cursor: pointer;
+}
+
+.ingreso-olvide {
+  align-self: flex-end;
+  min-height: 2.2rem;
+  margin-top: -0.3rem;
+  padding: 0.25rem 0.2rem;
+  border: none;
+  background: none;
+  color: var(--drey-texto-claro);
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.ingreso-mensaje {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  background: var(--drey-verde-fondo);
+  color: var(--drey-texto-verde);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.ingreso-mensaje-error {
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-texto-rojo);
+}
+
+.ingreso-entrar {
+  min-height: 3.4rem;
+  border: none;
+  border-radius: 16px;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ingreso-entrar:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ingreso-enlace {
+  align-self: center;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--drey-texto-suave);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ingreso-enlace strong {
+  color: var(--drey-text);
+}
+
+.ingreso-enlace:hover strong {
+  color: var(--drey-accent-texto);
+}
+
+.hoja-inferior-cerrar:focus-visible,
+.ingreso-olvide:focus-visible,
+.ingreso-enlace:focus-visible,
+.ingreso-ojo:focus-visible,
+.ingreso-entrar:focus-visible {
+  outline: 2px solid var(--drey-accent);
+  outline-offset: 2px;
+}
+
+/* "Volver a mi cuenta" / "Compartir DREY" (con la sesión abierta) */
+.portada-entrada {
+  width: 100%;
+  animation: hoja-inferior-aparece 0.28s ease both;
+}
+
+.portada-entrada-aviso {
+  min-height: 1.2rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}

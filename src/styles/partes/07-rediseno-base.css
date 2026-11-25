@@ -1,0 +1,825 @@
+/* ==================================================================
+   Rediseño 24/09/2026: más simple de usar (alumno y profe)
+   Regla: un solo botón verde (principal) por pantalla.
+   ================================================================== */
+
+/* ---------- Botones ---------- */
+.pill-button,
+.boton-principal {
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-weight: 800;
+}
+
+.boton-principal,
+.boton-secundario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 16px;
+  border: none;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.boton-principal {
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+.boton-secundario {
+  background: none;
+  border: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-text);
+  font-weight: 700;
+}
+
+.boton-principal:disabled,
+.boton-secundario:disabled,
+.pill-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.boton-chico {
+  width: auto;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.boton-grande {
+  min-height: 4rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.35rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 18px;
+}
+
+.boton-texto {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.75rem;
+  color: var(--drey-texto-suave);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.boton-texto {
+  color: var(--drey-accent-texto);
+}
+
+/* El botón de ingresar / registrarse también es el verde principal */
+.auth-submit {
+  width: 100%;
+  min-height: 3.4rem;
+  border-radius: 16px;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.volver-enlace {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: var(--drey-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.acciones-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.acciones-fila .boton-principal,
+.acciones-fila .boton-secundario:not(.boton-chico) {
+  flex: 1 1 160px;
+}
+
+.acciones-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+/* ---------- Aviso "✓ Guardado" ---------- */
+.aviso-global {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.8rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1.1rem;
+  border-radius: 14px;
+  background: var(--drey-verde-fondo);
+  border: 1px solid var(--drey-accent);
+  color: var(--drey-texto-verde);
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: aviso-entrada 0.2s ease-out;
+}
+
+.aviso-global-error {
+  background: var(--drey-rojo-fondo);
+  border-color: var(--drey-peligro);
+  color: var(--drey-texto-rojo);
+}
+
+.aviso-global-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-size: 0.8rem;
+}
+
+.aviso-global-error .aviso-global-icono {
+  background: var(--drey-peligro);
+}
+
+@keyframes aviso-entrada {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ---------- Menú de abajo (alumno y profe) ---------- */
+.bottom-nav {
+  background: var(--drey-barra);
+  border-top: 1px solid var(--drey-borde-suave);
+  padding: 0.55rem 0.5rem calc(0.8rem + env(safe-area-inset-bottom));
+}
+
+.bottom-nav-item {
+  position: relative;
+  flex: 1;
+  min-height: 3rem;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--drey-texto-suave);
+}
+
+.bottom-nav-item-activo {
+  color: var(--drey-accent-texto);
+  font-weight: 800;
+}
+
+.bottom-nav-numero {
+  position: absolute;
+  top: 0;
+  left: calc(50% + 0.35rem);
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--drey-naranja);
+  color: var(--drey-sobre-accent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* ---------- Textos y tarjetas comunes ---------- */
+.seccion-etiqueta {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-suave);
+}
+
+.pagina-cliente {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pagina-cliente > .lista-tarjetas,
+.pagina-cliente > .hoy-tarjeta,
+.pagina-cliente > .tu-semana,
+.pagina-cliente > .bloque-pagina,
+.pagina-cliente > .inicio-datos,
+.pagina-cliente > .perfil-cabecera,
+.pagina-cliente > .apariencia,
+.pagina-cliente > .perfil-salir {
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+}
+
+.pagina-titulo {
+  margin: 1.25rem 1.25rem 1rem;
+  font-family: var(--fuente-titulos);
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+}
+
+.pagina-titulo-sin-margen {
+  margin: 0;
+}
+
+.profe-contenido .pagina-titulo {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.bloque-pagina {
+  margin-top: 1.5rem;
+}
+
+.lista-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.tarjeta-rutina {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 4rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid transparent;
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+}
+
+div.tarjeta-rutina {
+  cursor: default;
+}
+
+.tarjeta-rutina-hoy {
+  border-color: var(--drey-accent);
+}
+
+.tarjeta-borrador {
+  border: 1px dashed var(--drey-naranja-borde);
+}
+
+.tarjeta-rutina-textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tarjeta-rutina-textos strong {
+  font-size: 1rem;
+}
+
+.tarjeta-rutina-textos small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.tarjeta-rutina-textos .chips-lista {
+  margin-top: 0.3rem;
+}
+
+.tarjeta-flecha {
+  flex: 0 0 auto;
+  color: var(--drey-texto-suave);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.texto-alerta,
+.tarjeta-rutina-textos small.texto-alerta {
+  color: var(--drey-naranja-texto);
+  font-weight: 600;
+}
+
+.tarjeta-vacia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  border: 1px dashed var(--drey-borde-fuerte);
+  color: var(--drey-texto-suave);
+  font-size: 0.9rem;
+}
+
+.tarjeta-vacia strong {
+  color: var(--drey-text);
+  font-size: 1rem;
+}
+
+.chip-dato {
+  background: var(--drey-superficie-3);
+  border-color: var(--drey-superficie-3);
+  font-weight: 700;
+  cursor: default;
+}
+
+.chip-chico {
+  padding: 0.15rem 0.6rem;
+  font-size: 0.72rem;
+}
+
+.chip-alerta {
+  border-color: var(--drey-naranja-trazo);
+  color: var(--drey-naranja-texto);
+  background: none;
+  cursor: default;
+}
+
+.avatar-chico {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: var(--drey-superficie-2);
+  border: 1px solid var(--drey-borde-fuerte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+/* ---------- Inicio (alumno y profe) ---------- */
+.inicio {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.inicio-saludo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+}
+
+.inicio-saludo-profe {
+  padding: 0.5rem 0 1.25rem;
+}
+
+.inicio-fecha {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-suave);
+}
+
+.inicio-hola {
+  margin: 0.1rem 0;
+  font-family: var(--fuente-titulos);
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.inicio-plan {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--drey-texto-2);
+}
+
+.inicio-avatar {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
+  color: var(--drey-text);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.inicio-avatar-grande {
+  width: 3.6rem;
+  height: 3.6rem;
+  font-size: 1.2rem;
+}
+
+.inicio .home-aviso-pendiente {
+  margin: 1rem 1.25rem 0;
+  font-size: 0.9rem;
+}
+
+.inicio-semana {
+  padding: 1.5rem 1.25rem 0;
+}
+
+.inicio-semana .week-dots {
+  justify-content: space-between;
+  padding: 0;
+}
+
+.week-dot {
+  width: 2.35rem;
+  height: 2.35rem;
+  font-size: 0.95rem;
+}
+
+.week-dot-hoy {
+  box-shadow: none;
+  border: 2px solid var(--drey-accent);
+  color: var(--drey-accent-texto);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.week-dot-hoy.week-dot-cumplido {
+  color: var(--drey-sobre-accent);
+  font-size: 0.95rem;
+}
+
+.week-dot-letra {
+  font-size: 0.75rem;
+}
+
+.inicio-hoy {
+  padding: 1.25rem 1.25rem 0;
+}
+
+.hoy-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.35rem;
+  border-radius: 24px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.hoy-etiqueta {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.hoy-nombre {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hoy-mensaje-titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.hoy-mensaje-texto {
+  margin: 0;
+  color: var(--drey-texto-2);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.inicio-datos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0;
+}
+
+.pagina-cliente > .inicio-datos {
+  padding: 0;
+}
+
+.inicio-datos-tres {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dato-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.dato-etiqueta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--drey-texto-suave);
+}
+
+.dato-valor {
+  font-size: 1.15rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Mis rutinas / Progreso / Perfil (alumno) ---------- */
+.tu-semana {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tu-semana-dia {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  background: var(--drey-superficie);
+  font-size: 0.9rem;
+}
+
+.tu-semana-dia span:first-child {
+  font-weight: 700;
+}
+
+.tu-semana-hoy {
+  outline: 1px solid var(--drey-accent);
+}
+
+.tu-semana-descanso {
+  color: var(--drey-texto-suave);
+}
+
+.tarjeta-record {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+}
+
+.tarjeta-record-icono {
+  font-size: 1.3rem;
+}
+
+.tarjeta-record-valor {
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.perfil-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0 1.25rem;
+}
+
+.perfil-salir {
+  margin-top: 1rem;
+  color: var(--drey-peligro-texto);
+}
+
+.pagina-cliente .grafico {
+  margin-top: 0.5rem;
+}
+
+/* ---------- Bienvenida ---------- */
+.bienvenida {
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.bienvenida-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bienvenida-marca {
+  font-family: var(--fuente-titulos);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.bienvenida-saltar {
+  background: none;
+  border: none;
+  color: var(--drey-texto-suave);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.bienvenida-dibujo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+}
+
+.bienvenida-titulo {
+  margin: 0 0 0.75rem;
+  font-family: var(--fuente-titulos);
+  font-size: 2.5rem;
+  line-height: 1;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bienvenida-texto {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--drey-texto-2);
+}
+
+.bienvenida-puntos {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.bienvenida-punto {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--drey-relleno);
+  transition: width 0.2s;
+}
+
+.bienvenida-punto-activo {
+  width: 1.6rem;
+  background: var(--drey-accent);
+}
+
+.dibujo-celular {
+  width: 210px;
+  height: 300px;
+  box-sizing: border-box;
+  padding: 24px 18px;
+  border-radius: 32px;
+  border: 2px solid var(--drey-borde-fuerte);
+  background: var(--drey-superficie-baja);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.dibujo-linea {
+  display: block;
+  height: 8px;
+  flex: 1;
+  border-radius: 4px;
+  background: var(--drey-relleno);
+}
+
+.dibujo-linea-corta {
+  flex: none;
+  width: 65%;
+}
+
+.dibujo-foto,
+.dibujo-tarjeta {
+  height: 70px;
+  border-radius: 14px;
+  background: var(--drey-superficie-2);
+}
+
+.dibujo-tarjeta {
+  height: 100px;
+  border: 1px solid var(--drey-borde);
+}
+
+.dibujo-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border-radius: 12px;
+  background: var(--drey-superficie-alta);
+}
+
+.dibujo-fila-hecha {
+  background: var(--drey-verde-fondo);
+}
+
+.dibujo-fila-actual {
+  border: 2px solid var(--drey-accent);
+  background: none;
+}
+
+.dibujo-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--drey-accent);
+  flex: 0 0 auto;
+}
+
+.dibujo-check-vacio {
+  background: none;
+  border: 1px solid var(--drey-borde-control);
+  box-sizing: border-box;
+}
+
+.dibujo-boton {
+  margin-top: auto;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--drey-accent);
+}
+
+.dibujo-semana {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.dibujo-dia {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px dashed var(--drey-borde-fuerte);
+}
+
+.dibujo-dia-hecho {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+}
+
+.dibujo-barras {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 4px;
+}
+
+.dibujo-barra {
+  flex: 1;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--drey-accent);
+  opacity: 0.85;
+}

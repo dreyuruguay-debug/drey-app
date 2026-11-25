@@ -27,7 +27,8 @@ import {
   obtenerNombreDiaHoy,
   obtenerFechaDeDiaEstaSemana,
   obtenerFechaHoyISO,
-  calcularRachaSemanas,
+  calcularRacha,
+  diasConRutina,
   proximoDiaConRutina,
   textoFechaCorta,
   textoFechaLarga,
@@ -41,6 +42,7 @@ import {
 } from '../utils/entrenamientoEnCurso.js'
 import { mostrarAviso } from '../services/avisos.js'
 import MensajeDelDia from '../components/MensajeDelDia.jsx'
+import RachaSemanas from '../components/RachaSemanas.jsx'
 import { marcarBienvenidaVista, yaVioBienvenida } from '../utils/bienvenida.js'
 import { formatearNumero, ultimoRecord } from '../utils/progreso.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -217,7 +219,11 @@ export default function Home() {
   const diasConEntrenamiento = dias.filter((item) => item.cumplido !== null).length
   const diasCumplidos = dias.filter((item) => item.cumplido === true).length
   const entrenoHoy = fechasConSesion.has(hoy)
-  const racha = calcularRachaSemanas(sesiones.map((sesion) => sesion.fecha))
+  const racha = calcularRacha(
+    sesiones.map((sesion) => sesion.fecha),
+    diasConRutina(calendario),
+    hoy,
+  )
   const record = ultimoRecord(sesiones)
   const proximo = proximoDiaConRutina(calendario, diaHoy)
 
@@ -280,6 +286,10 @@ export default function Home() {
         <Link to="/profes" className="home-aviso-pendiente home-aviso-profe">
           👋 Todavía no tenés profe asignado. Tocá acá para conocer a los profes y elegir el tuyo.
         </Link>
+      )}
+
+      {sesiones.length > 0 && !cuentaPendiente && !cuentaDeBaja && !planBloqueado && (
+        <RachaSemanas racha={racha} />
       )}
 
       {diasConEntrenamiento > 0 && (
@@ -377,16 +387,26 @@ export default function Home() {
             texto="Tu profe todavía no te asignó días. Entrá a tus rutinas y elegí una."
             accion={{ texto: 'Ver mis rutinas', to: '/rutinas' }}
           />
+        ) : proximo ? (
+          <div className="hoy-tarjeta hoy-tarjeta-descanso">
+            <span className="hoy-etiqueta hoy-etiqueta-descanso">
+              Hoy descansás · Próximo entrenamiento
+            </span>
+            <h2 className="hoy-nombre">{proximo.dia}</h2>
+            {proximo.fila.rutinas?.nombre && (
+              <p className="hoy-proximo-rutina">{proximo.fila.rutinas.nombre}</p>
+            )}
+            <p className="hoy-mensaje-texto">
+              Recuperá bien: el descanso también es entrenamiento.
+            </p>
+            <Link to="/rutinas" className="boton-secundario">
+              Quiero entrenar igual
+            </Link>
+          </div>
         ) : (
           <TarjetaMensaje
             titulo="Hoy es día de descanso"
-            texto={
-              proximo
-                ? `Recuperá bien. Próximo entrenamiento: ${proximo.dia}${
-                    proximo.fila.rutinas?.nombre ? ` · ${proximo.fila.rutinas.nombre}` : ''
-                  }.`
-                : 'Aprovechá para recuperar. Mañana seguimos.'
-            }
+            texto="Aprovechá para recuperar. Mañana seguimos."
             accion={{ texto: 'Quiero entrenar igual', to: '/rutinas', secundaria: true }}
           />
         )}
@@ -417,9 +437,9 @@ export default function Home() {
       {sesiones.length > 0 && (
         <section className="inicio-datos">
           <div className="dato-tarjeta">
-            <span className="dato-etiqueta">Racha</span>
+            <span className="dato-etiqueta">Tu mejor racha</span>
             <strong className="dato-valor">
-              {racha} {racha === 1 ? 'semana' : 'semanas'}
+              {racha.mejor} {racha.mejor === 1 ? 'semana' : 'semanas'}
             </strong>
           </div>
           <Link to="/progreso" className="dato-tarjeta">

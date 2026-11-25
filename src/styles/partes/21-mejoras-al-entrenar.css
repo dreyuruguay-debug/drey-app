@@ -1,0 +1,108 @@
+/* ============================================================
+   Mejoras al entrenar (noviembre 2026)
+   ============================================================ */
+
+/* Texto-botón para lo que no se puede deshacer ("Cancelar entrenamiento") */
+.boton-texto-peligro {
+  color: var(--drey-peligro-texto);
+}
+
+.boton-texto-peligro:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* "Estás mirando la rutina" (rutina completa abierta sin entrenar) */
+.vista-general-solo-mirar {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Mirando sin entrenar, los ejercicios no son botones */
+div.vista-general-ejercicio-boton,
+div.vista-general-ejercicio {
+  cursor: default;
+}
+
+/* "🏆 ¡Récord de tiempo!" en el final del entrenamiento */
+.final-record-tiempo {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Cronómetro de una serie por tiempo (plancha): components/entrenar/CronometroDeSerie.jsx */
+.cronometro-serie {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  border-radius: 16px;
+  border: 2px solid var(--drey-accent);
+  background: var(--drey-superficie);
+  text-align: center;
+}
+
+.cronometro-serie-preparando {
+  border-color: var(--drey-naranja-trazo);
+}
+
+.cronometro-serie-etiqueta {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-accent-texto);
+}
+
+.cronometro-serie-preparando .cronometro-serie-etiqueta {
+  color: var(--drey-naranja-texto);
+}
+
+.cronometro-serie-numero {
+  font-family: var(--fuente-titulos);
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro-serie-barra {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--drey-relleno);
+  overflow: hidden;
+}
+
+.cronometro-serie-barra span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--drey-accent);
+  transition: width 0.1s linear;
+}
+
+/* "Se mide por: Repeticiones / Tiempo" en el asistente de bloques */
+.config-medida {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.config-medida-nota {
+  margin: 0;
+}

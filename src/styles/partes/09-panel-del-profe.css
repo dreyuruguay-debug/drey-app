@@ -1,0 +1,430 @@
+/* ---------- Panel del profe ---------- */
+.profe-topbar {
+  padding-top: 1rem;
+}
+
+.profe-volver {
+  font-size: 0.95rem;
+}
+
+.profe-contenido {
+  padding-bottom: 2rem;
+}
+
+.tareas,
+.primeros-pasos,
+.accesos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.tarea {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-azul-fondo);
+}
+
+.tarea-urgente {
+  border-color: var(--drey-naranja-fondo);
+}
+
+.tarea-ok {
+  border-color: var(--drey-verde-fondo);
+}
+
+.tarea-icono {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+}
+
+.tarea-icono-urgente {
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-naranja-texto);
+}
+
+.tarea-icono-ok {
+  background: var(--drey-verde-fondo);
+  color: var(--drey-accent-texto);
+  font-weight: 800;
+}
+
+.tarea-textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.tarea-textos strong {
+  font-size: 0.95rem;
+}
+
+.tarea-textos small {
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.tarea-nivel {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-naranja-texto);
+}
+
+.paso-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.2rem;
+  padding: 0 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.paso-item-hecho {
+  color: var(--drey-texto-suave);
+  text-decoration: line-through;
+}
+
+.paso-numero {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  border: 2px solid var(--drey-accent);
+  color: var(--drey-accent-texto);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.paso-item-hecho .paso-numero {
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+.accesos-grilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.acceso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.4rem;
+  padding: 0.5rem;
+  border-radius: 16px;
+  border: 1px dashed var(--drey-borde-fuerte);
+  color: var(--drey-text);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.acceso-principal {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent-texto);
+  font-weight: 800;
+}
+
+/* Pestañas */
+.pestanas {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+}
+
+.pestana {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.6rem;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  color: var(--drey-texto-2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.pestana-activa {
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+  font-weight: 800;
+}
+
+/* Ficha del cliente */
+.ficha-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.ficha-datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.estado-chip {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.estado-ok {
+  background: var(--drey-verde-fondo);
+  color: var(--drey-accent-texto);
+}
+
+.estado-alerta {
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-naranja-texto);
+}
+
+.estado-neutro {
+  background: var(--drey-superficie-3);
+  color: var(--drey-texto-2);
+}
+
+.ficha-contenido .seccion-etiqueta {
+  margin-top: 1.5rem;
+}
+
+.dia-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.4rem;
+  padding: 0 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+}
+
+.dia-fila select {
+  min-height: 2.5rem;
+  max-width: 60%;
+}
+
+.ficha-datos-lista {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.ficha-datos-lista div {
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-superficie);
+}
+
+.ficha-datos-lista dt {
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.ficha-datos-lista dd {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
+}
+
+.enlace-tabla {
+  color: var(--drey-text);
+  font-weight: 700;
+}
+
+/* Menú ⋯ */
+.menu-acciones {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.menu-acciones-boton {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--drey-borde-fuerte);
+  background: none;
+  color: var(--drey-text);
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.menu-acciones-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+}
+
+.menu-acciones-lista {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 36;
+  min-width: 13rem;
+  padding: 0.35rem;
+  border-radius: 14px;
+  background: var(--drey-flotante);
+  border: 1px solid var(--drey-borde-fuerte);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-acciones-item {
+  display: block;
+  width: 100%;
+  min-height: 2.8rem;
+  padding: 0.6rem 0.8rem;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--drey-text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.menu-acciones-item:hover,
+.menu-acciones-item:focus-visible {
+  background: var(--drey-hover);
+}
+
+.menu-acciones-item.peligro {
+  color: var(--drey-peligro-texto);
+}
+
+/* Asignar días */
+.dias-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dia-opcion {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0 1rem;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: var(--drey-superficie);
+  color: var(--drey-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dia-opcion small {
+  justify-self: end;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+  text-align: right;
+}
+
+.dia-opcion-activa {
+  border-color: var(--drey-accent);
+  background: var(--drey-verde-fondo);
+}
+
+.dia-opcion-activa small {
+  color: var(--drey-texto-verde);
+}
+
+.dia-check {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--drey-borde-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.dia-opcion-activa .dia-check {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+/* Casilleros del profe un poco más grandes, cómodos en el celular */
+.profe-input-tabla,
+.profe-calendario-select {
+  min-height: 2.5rem;
+}
+
+@media (max-width: 380px) {
+  .inicio-datos-tres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .final-esfuerzo-chip small {
+    display: none;
+  }
+}
+
+.descanso-aviso {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-weight: 800;
+  text-align: center;
+  animation: record-banner-entrada 0.25s ease-out;
+}
+
+.bloque-profe-cabecera .editor-ejercicio-acciones {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* En la computadora el menú de abajo no se estira de punta a punta */
+.bottom-nav {
+  justify-content: center;
+}
+
+.bottom-nav-item {
+  max-width: 180px;
+}

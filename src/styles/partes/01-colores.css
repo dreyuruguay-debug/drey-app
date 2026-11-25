@@ -1,0 +1,173 @@
+/* ==========================================================================
+   COLORES DE DREY: MODO OSCURO Y MODO CLARO
+   --------------------------------------------------------------------------
+   Toda la app usa estas variables en vez de colores fijos. El modo lo
+   elige cada usuario en Perfil / Mi cuenta → Apariencia (automático por
+   horario, claro u oscuro; ver services/tema.js) y queda marcado en
+   <html data-tema="claro"> o "oscuro".
+
+   · :root               → modo OSCURO (el diseño original de DREY).
+   · [data-tema="claro"]  → modo CLARO: mismos nombres, otros valores.
+   · .portada (página de inicio con video) queda siempre oscura.
+   · [data-color="rosa"] etc. → color a elección de botones y textos
+     destacados (bloque "COLORES A ELECCIÓN", más abajo). Sin elegir nada
+     queda el verde de DREY de estos dos bloques.
+
+   Para agregar un color nuevo: definirlo en los DOS bloques.
+   ========================================================================== */
+:root,
+.portada,
+.portada-esperando {
+  /* Colores de la marca (fijos, no cambian con el modo) */
+  --drey-black: #0d0d0d;
+  --drey-white: #ffffff;
+  --drey-green: #3ddc84;
+
+  /* Fondo de la página, textos y verde de la marca */
+  --drey-bg: #0d0d0d;
+  --drey-text: #ffffff;
+  --drey-texto-claro: #e5e5e5;
+  --drey-texto-2: #cfcfcf;
+  --drey-texto-suave: #a3a3a3;
+  --drey-texto-tenue: #8a8a8a;
+  --drey-texto-apagado: #6b6b6b;
+  --drey-accent: #3ddc84;
+  --drey-accent-texto: #3ddc84;
+  --drey-sobre-accent: #0d0d0d;
+  /* El mismo acento en números R, G, B, para fondos transparentes:
+     rgba(var(--drey-accent-rgb), 0.1) */
+  --drey-accent-rgb: 61, 220, 132;
+  /* Elementos "al revés" (fondo del color del texto): chips y pestañas elegidas */
+  --drey-invertido-fondo: #ffffff;
+  --drey-invertido-texto: #0d0d0d;
+
+  /* Superficies: tarjetas, barras, menús */
+  --drey-superficie: #161616;
+  --drey-superficie-baja: #141414;
+  --drey-superficie-alta: #1a1a1a;
+  --drey-superficie-2: #1f1f1f;
+  --drey-superficie-3: #262626;
+  --drey-flotante: #1c1c1c;
+  --drey-hover: #1a1a1a;
+  --drey-barra: #111111;
+  --drey-relleno: #3a3a3a;
+  --drey-pildora: #4d4d4d;
+  --drey-degradado-1: #4d4d4d;
+  --drey-degradado-2: #202020;
+  --drey-campo-fondo: #ffffff;
+  --drey-campo-borde: transparent;
+  --drey-sombra: none;
+  --drey-brillo: rgba(255, 255, 255, 0.05);
+
+  /* Bordes, de más suave a más marcado */
+  --drey-borde-suave: #222222;
+  --drey-borde: #2a2a2a;
+  --drey-borde-fuerte: #333333;
+  --drey-borde-control: #444444;
+
+  /* Avisos: verde (listo), naranja (en curso / atención), azul (info),
+     amarillo (series de calentamiento) y rojo ("Llegué al fallo", errores).
+     El color "base" es para rellenos, el "-texto" para letras y el
+     "-trazo" para bordes y anillos de los relojes. */
+  --drey-verde-fondo: #10261a;
+  --drey-texto-verde: #cfeedd;
+  --drey-texto-verde-suave: #9fd8b8;
+  --drey-naranja: #f5a54a;
+  --drey-naranja-texto: #f5a54a;
+  --drey-naranja-fondo: #3d2a12;
+  --drey-naranja-borde: #4a3419;
+  --drey-naranja-trazo: #f5a54a;
+  --drey-azul: #7cb8ff;
+  --drey-azul-texto: #7cb8ff;
+  --drey-azul-fondo: #1c2d42;
+  --drey-amarillo: #f5d547;
+  --drey-amarillo-texto: #f5d547;
+  --drey-amarillo-fondo: #2c2710;
+  --drey-amarillo-borde: #4a4320;
+  --drey-amarillo-trazo: #f5d547;
+  --drey-texto-amarillo: #f3eac2;
+  --drey-rojo: #ff6b5a;
+  --drey-rojo-texto: #ff6b5a;
+  --drey-rojo-fondo: #3a1613;
+  --drey-texto-rojo: #ffd2cc;
+  --drey-peligro: #e05656;
+  --drey-peligro-texto: #f08a8a;
+  --drey-peligro-suave: #5c2626;
+
+  /* Imágenes del logo (blancas): en modo claro se invierten */
+  --drey-logo-filtro: none;
+  --drey-franja-filtro: none;
+
+  --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --fuente-texto: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+
+/* MODO CLARO: blanco y gris cálido, el mismo verde DREY. Los textos
+   verdes, naranjas, etc. son más oscuros para que se lean sobre blanco. */
+:root[data-tema='claro'] {
+  --drey-bg: #f3f4f2;
+  --drey-text: #101211;
+  --drey-texto-claro: #2c302d;
+  --drey-texto-2: #3b3f3c;
+  --drey-texto-suave: #5f6460;
+  --drey-texto-tenue: #6d726e;
+  --drey-texto-apagado: #8b908c;
+  --drey-accent: #3ddc84;
+  --drey-accent-texto: #0e8f4a;
+  --drey-sobre-accent: #0d0d0d;
+  --drey-accent-rgb: 61, 220, 132;
+  --drey-invertido-fondo: #101211;
+  --drey-invertido-texto: #ffffff;
+
+  --drey-superficie: #ffffff;
+  --drey-superficie-baja: #ffffff;
+  --drey-superficie-alta: #ffffff;
+  --drey-superficie-2: #eef0ec;
+  --drey-superficie-3: #e6e9e4;
+  --drey-flotante: #ffffff;
+  --drey-hover: #eceeea;
+  --drey-barra: #ffffff;
+  --drey-relleno: #cdd2cb;
+  --drey-pildora: #e2e5df;
+  --drey-degradado-1: #ffffff;
+  --drey-degradado-2: #eceeea;
+  --drey-campo-fondo: #ffffff;
+  --drey-campo-borde: #cfd3cd;
+  --drey-sombra: 0 1px 2px rgba(16, 18, 17, 0.06), 0 2px 8px rgba(16, 18, 17, 0.04);
+  --drey-brillo: rgba(255, 255, 255, 0.7);
+
+  --drey-borde-suave: #e8eae6;
+  --drey-borde: #e1e4df;
+  --drey-borde-fuerte: #d4d8d2;
+  --drey-borde-control: #b3b9b2;
+
+  --drey-verde-fondo: #e3f6ea;
+  --drey-texto-verde: #0b5e33;
+  --drey-texto-verde-suave: #2e7a52;
+  --drey-naranja: #f5a54a;
+  --drey-naranja-texto: #b05f08;
+  --drey-naranja-fondo: #fdf0e0;
+  --drey-naranja-borde: #ebc597;
+  --drey-naranja-trazo: #ee8a1c;
+  --drey-azul: #7cb8ff;
+  --drey-azul-texto: #1f68c7;
+  --drey-azul-fondo: #e4effc;
+  --drey-amarillo: #f5d547;
+  --drey-amarillo-texto: #8a6a00;
+  --drey-amarillo-fondo: #fcf5d4;
+  --drey-amarillo-borde: #e3d48a;
+  --drey-amarillo-trazo: #e0b20f;
+  --drey-texto-amarillo: #6b5600;
+  --drey-rojo: #e5533f;
+  --drey-rojo-texto: #c0362a;
+  --drey-rojo-fondo: #fde6e2;
+  --drey-texto-rojo: #8f1f14;
+  --drey-peligro: #d23f3f;
+  --drey-peligro-texto: #c0392b;
+  --drey-peligro-suave: #f0b9b5;
+
+  --drey-logo-filtro: invert(1);
+  --drey-franja-filtro: invert(1);
+  color-scheme: light;
+}

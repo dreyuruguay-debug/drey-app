@@ -1,0 +1,310 @@
+/* Al cambiar de modo, los colores pasan suave (no de golpe). La clase la
+   pone services/tema.js solo durante el cambio. */
+html.drey-cambiando-tema *,
+html.drey-cambiando-tema *::before,
+html.drey-cambiando-tema *::after {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    fill 0.35s ease,
+    stroke 0.35s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.drey-cambiando-tema *,
+  html.drey-cambiando-tema *::before,
+  html.drey-cambiando-tema *::after {
+    transition: none !important;
+  }
+}
+
+/* Modo claro: sombra suave en las tarjetas para que se despeguen del
+   fondo (en modo oscuro --drey-sombra es "none" y no cambia nada). */
+.tarjeta-rutina,
+.hoy-tarjeta,
+.dato-tarjeta,
+.tarjeta-record,
+.entrenar-tarjeta,
+.tarea,
+.grafico,
+.resumen-caja,
+.avance-item,
+.plan-card,
+.comunidad-post,
+.profe-cliente-card,
+.profe-rutina-tarjeta,
+.profe-ejercicio-item,
+.profe-progreso-item,
+.seccion-rutina,
+.config-bloque,
+.codigo-item,
+.medida-tarjeta,
+.medicion-fila,
+.ajustes-tarjeta,
+.historial-item,
+.tarjeta-profe,
+.solicitud,
+.solicitud-fila,
+.ficha-profe,
+.corregir-ejercicio,
+.dia-fila,
+.paso-item,
+.planilla-dia {
+  box-shadow: var(--drey-sombra);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--drey-bg);
+  color: var(--drey-text);
+  font-family: var(--fuente-texto);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.screen {
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+/* Botones tipo píldora, reutilizados en varias pantallas */
+.pill-button {
+  display: block;
+  text-align: center;
+  background: var(--drey-pildora);
+  color: var(--drey-text);
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.buttons-single {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.85rem;
+  padding: 0 1.5rem;
+}
+
+.buttons-single .pill-button {
+  max-width: 320px;
+}
+
+@media (min-width: 720px) {
+  .buttons-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 900px;
+  }
+}
+
+/* Pantallas de login/registro: logo arriba, formulario centrado.
+   La tipografía exacta del logo (ver diseño original) queda pendiente
+   de confirmar (Fase 0); por ahora se aproxima con letter-spacing. */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.auth-logo {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+}
+
+.auth-logo-img {
+  display: block;
+  width: 220px;
+  max-width: 60vw;
+  height: auto;
+  margin: 0 auto;
+  /* Logo blanco: en modo claro se ve negro. */
+  filter: var(--drey-logo-filtro);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--drey-campo-fondo);
+  /* Borde fino solo en modo claro (campo blanco sobre fondo claro). */
+  box-shadow: inset 0 0 0 1px var(--drey-campo-borde);
+  color: #111;
+  font-size: 0.95rem;
+}
+
+.auth-input-wrap .auth-input {
+  padding-right: 2.75rem;
+}
+
+.auth-input::placeholder {
+  color: #888;
+}
+
+.auth-eye-btn {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  line-height: 0;
+  padding: 0;
+}
+
+.auth-forgot {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--drey-texto-claro);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  margin-top: -0.25rem;
+}
+
+.auth-message {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--drey-accent-texto);
+}
+
+.auth-submit {
+  background: none;
+  border: none;
+  color: var(--drey-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.auth-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.auth-switch {
+  background: none;
+  border: none;
+  color: var(--drey-texto-claro);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+
+/* Franja decorativa DREY (TopPattern), arriba de todas las pantallas
+   del cliente y del profe. Es una sola imagen (el logo recortado) que
+   se repite como fondo y se anima desplazándose todo el tiempo, a
+   velocidad lenta y pareja — un detalle visual, no interactivo. */
+.top-pattern {
+  height: 32px;
+  border-bottom: 1px solid var(--drey-borde-suave);
+  background-image: url('/drey-tile.png');
+  background-repeat: repeat-x;
+  background-size: 104px 32px;
+  animation: top-pattern-scroll 6s linear infinite;
+  /* La imagen es negra con el logo gris: en modo claro se invierte. */
+  filter: var(--drey-franja-filtro);
+}
+
+@keyframes top-pattern-scroll {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: -104px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-pattern {
+    animation: none;
+  }
+}
+
+/* Ícono de perfil genérico (ProfileIcon) */
+.profile-avatar {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--drey-invertido-fondo);
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.profile-avatar-head {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--drey-invertido-texto);
+}
+
+.profile-avatar-body {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 40px;
+  border-radius: 50% 50% 0 0;
+  background: var(--drey-invertido-texto);
+}

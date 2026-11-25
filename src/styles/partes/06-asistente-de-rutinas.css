@@ -1,0 +1,669 @@
+/* ------------------------------------------------------------------
+   Rutinas del profe: asistente paso a paso (010)
+   ------------------------------------------------------------------ */
+
+/* Botón "+ Agregar…" con borde punteado también cuando es un enlace */
+a.profe-boton-agregar-ejercicio {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.profe-boton-agregar-ejercicio:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.profe-ejercicio-agregar:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Pasos del asistente dentro del panel */
+.asistente-pasos-pagina {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.asistente-paso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.asistente-pregunta {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.asistente-pregunta-metodo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.asistente-metodo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--drey-accent-texto);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.asistente-plantilla {
+  margin-top: 0.5rem;
+}
+
+.asistente-plantilla select {
+  width: 100%;
+}
+
+.asistente-botones {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.asistente-siguiente {
+  width: auto;
+  min-width: 10rem;
+}
+
+.asistente-siguiente:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Chips: sugerencias, filtros y opciones Sí/No */
+.chips-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 999px;
+  color: var(--drey-text);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.chip-activo {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+}
+
+.chip-sugerencia {
+  background: none;
+  border-style: dashed;
+  color: var(--drey-texto-claro);
+}
+
+.chip-quitable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: default;
+}
+
+.chip-quitable button {
+  background: none;
+  border: none;
+  color: var(--drey-texto-claro);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+/* Paso 2: grupos musculares (selección múltiple) */
+.selector-grupos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.selector-grupo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: var(--drey-superficie-alta);
+  border: 1px solid transparent;
+  color: var(--drey-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selector-grupo-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 6px;
+  border: 1px solid var(--drey-borde-control);
+  font-size: 0.8rem;
+}
+
+.selector-grupo-activo {
+  border-color: var(--drey-accent);
+}
+
+.selector-grupo-activo .selector-grupo-check {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-weight: 700;
+}
+
+/* Paso 3: la rutina tal como la ve el cliente, con controles */
+.rutina-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rutina-vista-cabecera,
+.seccion-rutina {
+  background: var(--drey-superficie-baja);
+  border: 1px solid var(--drey-borde-suave);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.rutina-vista-etiqueta {
+  margin: 0 0 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-apagado);
+}
+
+.rutina-vista-cabecera .rutina-detalle-titulo {
+  margin-bottom: 0.5rem;
+}
+
+.rutina-grupos {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.rutina-grupos strong {
+  color: var(--drey-text);
+}
+
+.rutina-vista-descripcion {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.seccion-rutina-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.seccion-rutina-titulo {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.seccion-rutina-valor {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* En la rutina del cliente, las secciones van alineadas con los ejercicios */
+
+.editor-guardar-rutina {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.editor-guardar-rutina .pill-button:disabled {
+  opacity: 0.5;
+}
+
+/* Calentamiento previo / vuelta a la calma */
+.actividades-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.actividad-nombre {
+  margin: 0;
+  font-weight: 600;
+}
+
+.actividad-duracion {
+  font-weight: 400;
+  color: var(--drey-texto-claro);
+}
+
+.actividad-items {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.editor-actividades {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.editor-actividad {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-suave);
+}
+
+.editor-actividad-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.editor-actividad-nombre {
+  flex: 2 1 160px;
+}
+
+.editor-actividad-duracion {
+  flex: 1 1 120px;
+}
+
+/* Qué reloj verá el alumno en el calentamiento (EditorActividades.jsx) */
+.editor-actividad-reloj {
+  font-size: 0.78rem;
+  color: var(--drey-texto-suave);
+}
+
+.editor-actividad-reloj-libre {
+  color: var(--drey-naranja-texto);
+}
+
+.editor-actividad-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.editor-actividad-agregar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.editor-actividad-agregar-item .auth-input {
+  flex: 1;
+}
+
+.editor-acciones {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.editor-boton-listo {
+  width: auto;
+  min-width: 7rem;
+  padding: 0.7rem 1.25rem;
+}
+
+/* Rango mínimo → máximo (descansos y pausas) */
+.editor-rango {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.editor-rango-etiqueta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-texto-claro);
+}
+
+.editor-rango-campos {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.editor-rango-flecha {
+  padding-bottom: 0.4rem;
+  color: var(--drey-texto-apagado);
+}
+
+.editor-rango-input {
+  width: 5rem;
+}
+
+/* Bloques de ejercicios en el editor (se ven como en la rutina del cliente) */
+.bloque-profe {
+  margin-bottom: 1rem;
+}
+
+.bloque-profe.bloque-grupo {
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.bloque-profe .bloque-cabecera,
+.bloque-profe .ejercicio-bloque {
+  padding: 0;
+  max-width: none;
+}
+
+.bloque-profe .ejercicio-bloque {
+  margin-bottom: 0.75rem;
+}
+
+.bloque-profe-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.bloque-profe-instruccion {
+  margin: -0.25rem 0 0.6rem;
+}
+
+.ejercicio-calentamiento {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--drey-amarillo-texto);
+}
+
+.bloque-descanso {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+}
+
+/* Ventana del asistente para agregar ejercicios */
+.asistente-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: rgba(0, 0, 0, 0.75);
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.asistente-hoja {
+  width: 100%;
+  max-width: 640px;
+  background: var(--drey-bg);
+  border: 1px solid var(--drey-borde-suave);
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.asistente-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.asistente-titulo {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.asistente-cerrar {
+  background: var(--drey-superficie-3);
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  color: var(--drey-text);
+  cursor: pointer;
+}
+
+.asistente-hoja .registro-pasos {
+  align-self: center;
+}
+
+/* Paso "Tipo" */
+.tipos-bloque {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.6rem;
+}
+
+.tipo-bloque {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 14px;
+  background: var(--drey-superficie-alta);
+  border: 1px solid transparent;
+}
+
+.tipo-bloque-activo {
+  border-color: var(--drey-accent);
+}
+
+.tipo-bloque-boton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem;
+  background: none;
+  border: none;
+  color: var(--drey-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tipo-bloque .info-metodo-boton {
+  margin: 0.7rem 0.7rem 0 0;
+}
+
+.tipo-bloque-nombre {
+  font-weight: 700;
+}
+
+.tipo-bloque-resumen {
+  font-size: 0.75rem;
+  color: var(--drey-texto-claro);
+}
+
+.asistente-otros-toggle {
+  margin: 0.25rem 0 0;
+  padding: 0.5rem 0;
+}
+
+/* Paso "Ejercicios" */
+.asistente-elegidos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.asistente-elegido {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--drey-accent);
+  background: rgba(var(--drey-accent-rgb), 0.06);
+}
+
+.asistente-elegido-nombre {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.selector-ejercicios .profe-buscador {
+  margin-bottom: 0.6rem;
+}
+
+.selector-ejercicios-nota {
+  margin: 0.6rem 0 0.5rem;
+}
+
+.selector-ejercicios .profe-ejercicios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.selector-item-elegido {
+  outline: 1px solid var(--drey-accent);
+}
+
+.selector-item-categorias {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--drey-texto-apagado);
+  font-weight: 400;
+}
+
+.selector-elegir {
+  flex: 0 0 auto;
+  min-width: 4.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--drey-borde-control);
+  background: none;
+  color: var(--drey-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selector-elegir-activo {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+.selector-elegir:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Paso "Configurar" */
+.config-ejercicio,
+.config-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 14px;
+  background: var(--drey-superficie-baja);
+  border: 1px solid var(--drey-borde-suave);
+}
+
+.config-ejercicio-nombre {
+  padding: 0.7rem 1.1rem;
+}
+
+.config-ejercicio-campos .profe-input-tabla {
+  width: 4rem;
+}
+
+.config-reps {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.config-ejercicio-campos .config-input-ancho {
+  width: 5.5rem;
+}
+
+.config-input-detalle {
+  width: 100%;
+}
+
+.config-calentamiento {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.config-bloque-titulo {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-texto-claro);
+}
+
+@media (max-width: 480px) {
+  .asistente-fondo {
+    padding: 0;
+  }
+
+  .asistente-hoja {
+    min-height: 100%;
+    border-radius: 0;
+    border: none;
+    padding: 1rem;
+  }
+
+  .tipos-bloque,
+  .selector-grupos {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  
+}

@@ -1,0 +1,595 @@
+/* Pantalla de Rutinas: tarjetas + Organización */
+
+.organizacion-toggle {
+  display: block;
+  margin: 1.5rem auto 0;
+  background: none;
+  border: none;
+  color: var(--drey-text);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+/* Pantalla de una rutina en curso (RutinaDetalle) */
+
+.rutina-detalle-titulo {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.ejercicio-bloque {
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
+  padding: 0 1.5rem;
+}
+
+.ejercicio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: var(--drey-pildora);
+  border-radius: 999px;
+  padding: 0.9rem 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.ejercicio-objetivo {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.descanso-chip {
+  background: none;
+  border: 1px solid var(--drey-borde-control);
+  border-radius: 999px;
+  color: var(--drey-text);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.descanso-chip-activo {
+  background: var(--drey-invertido-fondo);
+  color: var(--drey-invertido-texto);
+  border-color: var(--drey-invertido-fondo);
+  font-weight: 700;
+}
+
+/* Cartel de récord personal (RutinaDetalle): aparece pegado arriba,
+   debajo de la franja animada, cuando el cliente supera su mejor
+   marca histórica de un ejercicio. Se oculta solo a los pocos segundos. */
+.record-banner {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+  font-weight: 700;
+  text-align: center;
+  animation: record-banner-entrada 0.25s ease-out;
+}
+
+@keyframes record-banner-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Barra de navegación fija abajo (BottomNav), en las pantallas
+   principales del cliente */
+.has-bottom-nav {
+  padding-bottom: 5.5rem;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--drey-barra);
+  border-top: 1px solid var(--drey-borde-suave);
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--drey-texto-tenue);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+}
+
+.bottom-nav-item svg {
+  stroke: currentColor;
+}
+
+.bottom-nav-item-activo {
+  color: var(--drey-accent-texto);
+}
+
+/* Aviso de cuenta pendiente en Inicio */
+.home-aviso-pendiente {
+  display: block;
+  margin: 1rem 1.5rem 0;
+  padding: 0.85rem 1rem;
+  background: rgba(var(--drey-accent-rgb), 0.12);
+  border: 1px solid var(--drey-accent);
+  border-radius: 14px;
+  color: var(--drey-text);
+  text-decoration: none;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* Puntos de la semana (WeekDots), reemplaza la barra fina de progreso
+   en Inicio por algo más legible de un vistazo */
+.week-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.week-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.week-dot {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--drey-borde-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--drey-text);
+}
+
+.week-dot-cumplido {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+.week-dot-descanso {
+  border-style: dashed;
+  color: var(--drey-texto-apagado);
+}
+
+.week-dot-hoy {
+  box-shadow: 0 0 0 2px var(--drey-text);
+}
+
+.week-dot-letra {
+  font-size: 0.7rem;
+  color: var(--drey-texto-claro);
+}
+
+/* Pantalla "Más": lista simple de accesos */
+
+.auth-input:disabled {
+  opacity: 0.6;
+}
+
+/* Pantalla de Registro: formulario largo, ya no centrado verticalmente */
+.registro-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem 1.5rem 3rem;
+  text-align: center;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: left;
+}
+
+.form-section-label {
+  margin: 0.5rem 0 -0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-claro);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+@media (min-width: 480px) {
+  .form-row {
+    flex-direction: row;
+  }
+
+  .form-row > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 70px;
+  border-radius: 16px;
+  border: none;
+  background: var(--drey-campo-fondo);
+  box-shadow: inset 0 0 0 1px var(--drey-campo-borde);
+  color: #111;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.form-textarea::placeholder {
+  color: #888;
+}
+
+.registro-edad {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+}
+
+/* Selector de plan (Registro) */
+.plan-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+  background: var(--drey-superficie-alta);
+  border: 1px solid var(--drey-borde-fuerte);
+  border-radius: 16px;
+  padding: 0.9rem 1.1rem;
+  color: var(--drey-text);
+  cursor: pointer;
+}
+
+.plan-card-activo {
+  border-color: var(--drey-accent);
+  background: rgba(var(--drey-accent-rgb), 0.08);
+}
+
+.plan-card-nombre {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.plan-card-descripcion {
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.plan-card-precio {
+  margin-top: 0.3rem;
+  font-weight: 700;
+}
+
+.plan-card-precio-siguiente {
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+}
+
+.form-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+  text-align: left;
+  cursor: pointer;
+}
+
+.form-checkbox-row input {
+  margin-top: 0.2rem;
+  flex: 0 0 auto;
+}
+
+/* Pasos del registro (1 Tus datos · 2 Tu plan · 3 Tu profe · 4 Pago) */
+.registro-pasos {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registro-paso {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--drey-texto-apagado);
+}
+
+.registro-paso-numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  border: 1px solid var(--drey-borde-control);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.registro-paso-actual {
+  color: var(--drey-text);
+}
+
+.registro-paso-actual .registro-paso-numero {
+  border-color: var(--drey-accent);
+  color: var(--drey-accent-texto);
+}
+
+.registro-paso-hecho .registro-paso-numero {
+  background: var(--drey-accent);
+  border-color: var(--drey-accent);
+  color: var(--drey-sobre-accent);
+}
+
+.registro-boton-secundario {
+  background: none;
+  border: none;
+  padding: 0.6rem;
+  color: var(--drey-texto-claro);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.registro-boton-secundario:disabled {
+  opacity: 0.5;
+}
+
+.pago-etiqueta {
+  font-weight: 700;
+  color: var(--drey-text);
+  text-transform: capitalize;
+}
+
+.registro-gracias-titulo {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.registro-gracias-texto {
+  margin: 0;
+  max-width: 320px;
+  color: var(--drey-texto-claro);
+}
+
+.registro-gracias-boton {
+  max-width: 260px;
+}
+
+/* Pantalla de Suscripción */
+.suscripcion-contenido {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.suscripcion-titulo {
+  margin: 0 0 1rem;
+}
+
+.suscripcion-plan-card {
+  background: linear-gradient(var(--drey-degradado-1), var(--drey-degradado-2));
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.suscripcion-plan-nombre {
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.suscripcion-plan-descripcion {
+  margin: 0.2rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.suscripcion-plan-precio {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--drey-accent-texto);
+}
+
+.suscripcion-vencimiento {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.suscripcion-bloque {
+  margin-bottom: 1.25rem;
+}
+
+.suscripcion-bloque-titulo {
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.suscripcion-bloque-texto {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.suscripcion-pendiente {
+  font-style: italic;
+}
+
+.suscripcion-boton-desactivado {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.suscripcion-form-pago {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.suscripcion-adjuntar {
+  display: block;
+  text-align: center;
+  background: none;
+  border: 1px dashed var(--drey-borde-control);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+  cursor: pointer;
+}
+
+/* Pantalla de Comunidad y beneficios */
+.comunidad-contenido {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.comunidad-titulo {
+  margin: 0 0 1rem;
+}
+
+.comunidad-seccion-label {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--drey-texto-claro);
+}
+
+.comunidad-post {
+  background: var(--drey-superficie-alta);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.85rem;
+}
+
+.comunidad-post-texto {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.comunidad-novedad-firma {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--drey-texto-tenue);
+}
+
+.comunidad-vacio {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--drey-texto-suave);
+}
+
+.comunidad-codigos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.comunidad-codigo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--drey-superficie-alta);
+  border: 1px dashed var(--drey-accent);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+}
+
+.comunidad-codigo-valor {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--drey-accent-texto);
+}
+
+.comunidad-codigo-descripcion {
+  font-size: 0.8rem;
+  color: var(--drey-texto-claro);
+  text-align: right;
+}
+
+.comunidad-whatsapp {
+  background: #25d366;
+  color: var(--drey-sobre-accent);
+}
+
+/* Pantalla de Mis datos */
+.misdatos-contenido {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.misdatos-titulo {
+  margin: 0 0 1.25rem;
+}

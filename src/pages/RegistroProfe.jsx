@@ -14,10 +14,7 @@ import {
   codigoSugerido,
   normalizarCodigo,
 } from '../services/equipo.js'
-import {
-  esDemasiadosIntentos,
-  MENSAJE_DEMASIADOS_INTENTOS,
-} from '../services/intentosDeCodigo.js'
+import { esDemasiadosIntentos, MENSAJE_DEMASIADOS_INTENTOS } from '../services/intentosDeCodigo.js'
 import { cargarPlanesDrey } from '../services/suscripcionDrey.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { formatearPrecio } from '../data/planes.js'

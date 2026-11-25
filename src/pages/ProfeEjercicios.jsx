@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import ProfeLayout from '../components/ProfeLayout.jsx'
 import BibliotecaTabs from '../components/BibliotecaTabs.jsx'
 import ConfirmacionEjercicio from '../components/ConfirmacionEjercicio.jsx'
@@ -62,7 +63,9 @@ export default function ProfeEjercicios() {
   const [ejercicios, setEjercicios] = useState(() => bibliotecaRecordada() || [])
   const [cargando, setCargando] = useState(() => !bibliotecaRecordada())
   const [esAdmin, setEsAdmin] = useState(esAdminConocido)
-  const [busqueda, setBusqueda] = useState('')
+  // Desde el buscador del panel llega con ?buscar=Nombre.
+  const [parametros] = useSearchParams()
+  const [busqueda, setBusqueda] = useState(() => parametros.get('buscar') || '')
   const [categoriaActiva, setCategoriaActiva] = useState(CATEGORIAS[0].nombre)
   const [filtro, setFiltro] = useState('todos')
 

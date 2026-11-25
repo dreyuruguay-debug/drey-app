@@ -21,10 +21,7 @@ import { linkDePago } from '../data/pagos.js'
 import { VERSION_TERMINOS } from '../data/versionLegal.js'
 import { cargarConfiguracion, useConfiguracion } from '../services/configuracion.js'
 import { validarCodigo } from '../services/pagos.js'
-import {
-  esDemasiadosIntentos,
-  MENSAJE_DEMASIADOS_INTENTOS,
-} from '../services/intentosDeCodigo.js'
+import { esDemasiadosIntentos, MENSAJE_DEMASIADOS_INTENTOS } from '../services/intentosDeCodigo.js'
 import { cargarCobroDeEspacio, cargarPlanesDeEspacio } from '../services/cobroEspacio.js'
 import { calcularEdad } from '../utils/fechas.js'
 import Esqueleto from '../components/Esqueleto.jsx'
@@ -411,9 +408,7 @@ export default function Registro() {
             {/* Lo más común: el profe o el gimnasio le pasó su código.
                 Va primero y destacado; la lista queda abajo. */}
             <div className="registro-codigo-caja">
-              <p className="registro-codigo-caja-titulo">
-                ¿Tu profe o gimnasio te pasó un código?
-              </p>
+              <p className="registro-codigo-caja-titulo">¿Tu profe o gimnasio te pasó un código?</p>
               <p className="registro-codigo-caja-ayuda">
                 Escribilo acá y te anotamos directo con él.
               </p>

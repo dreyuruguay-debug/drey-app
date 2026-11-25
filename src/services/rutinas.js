@@ -222,6 +222,34 @@ export async function duplicarRutina(rutina, clienteDestinoId, nombre) {
   return { data, error: errorCopia }
 }
 
+// Copia una rutina (o una plantilla) a varios alumnos a la vez: a cada
+// uno le queda una rutina nueva con los mismos datos y ejercicios.
+//   publicar: true → la ven ya (como al tocar "Guardar rutina"); si la
+//             rutina tiene ciclo, el ciclo de cada uno arranca hoy.
+//             false → queda en borrador para revisarla antes.
+//   alAvanzar(hechas, total): para mostrar "Copiando 3 de 8…".
+// Devuelve { copiadas: [clienteId], fallidas: [clienteId] }. Si falla con
+// uno, sigue con los demás.
+export async function copiarAVariosAlumnos(tipo, origen, clienteIds, { publicar, hoy, alAvanzar }) {
+  const copiadas = []
+  const fallidas = []
+  const datos = soloCampos(origen, CAMPOS_RUTINA)
+  for (const clienteId of clienteIds) {
+    const { data, error } = await crearRutina('rutina', datos, clienteId)
+    let fallo = error
+    if (!fallo) fallo = await copiarEjercicios(tipo, origen.id, 'rutina', data.id)
+    if (!fallo && publicar) {
+      const cambios = datos.ciclo_semanas
+        ? { publicada: true, ciclo_inicio: hoy }
+        : { publicada: true }
+      fallo = (await actualizarRutina('rutina', data.id, cambios)).error
+    }
+    ;(fallo ? fallidas : copiadas).push(clienteId)
+    alAvanzar?.(copiadas.length + fallidas.length, clienteIds.length)
+  }
+  return { copiadas, fallidas }
+}
+
 // --- Calendario semanal (qué rutina toca cada día) ---
 
 // Calendario de un cliente como { Lunes: fila, ... }; cada fila trae el

@@ -49,6 +49,7 @@ export const ProfeEjercicios = pantallaDiferida(() => import('./pages/ProfeEjerc
 export const ProfeClientes = pantallaDiferida(() => import('./pages/ProfeClientes.jsx'))
 export const ProfeClienteDetalle = pantallaDiferida(() => import('./pages/ProfeClienteDetalle.jsx'))
 export const ProfeCalendario = pantallaDiferida(() => import('./pages/ProfeCalendario.jsx'))
+export const ProfeTablero = pantallaDiferida(() => import('./pages/ProfeTablero.jsx'))
 export const ProfePlantillas = pantallaDiferida(() => import('./pages/ProfePlantillas.jsx'))
 export const ProfeRutinas = pantallaDiferida(() => import('./pages/ProfeRutinas.jsx'))
 export const ProfeRutinaNueva = pantallaDiferida(() => import('./pages/ProfeRutinaNueva.jsx'))

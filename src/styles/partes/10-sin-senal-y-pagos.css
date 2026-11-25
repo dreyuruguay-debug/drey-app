@@ -1,0 +1,317 @@
+/* ==================================================================
+   Entrega 25/09/2026: sin señal, privacidad, vencimientos, errores,
+   Mercado Pago y códigos de descuento
+   ================================================================== */
+
+.pagina-cliente > .volver-enlace,
+.pagina-cliente > .profe-nota {
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+}
+
+.pagina-cliente > .volver-enlace {
+  margin-top: 1.25rem;
+}
+
+/* ---------- Sin señal ---------- */
+.estado-conexion {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.estado-conexion.sin-senal {
+  background: var(--drey-superficie-3);
+  color: var(--drey-texto-claro);
+}
+
+.estado-conexion.con-problema {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-rojo-texto);
+}
+
+.estado-conexion-boton {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.estado-conexion-boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.estado-conexion-motivo {
+  flex-basis: 100%;
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.final-error-guardar {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-rojo-fondo);
+  color: var(--drey-rojo-texto);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.final-sin-senal {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--drey-azul-fondo);
+  color: var(--drey-azul-texto);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ---------- Avisos de vencimiento en Inicio ---------- */
+.home-aviso-urgente {
+  background: var(--drey-naranja-fondo);
+  border-color: var(--drey-naranja-trazo);
+  color: var(--drey-text);
+}
+
+/* ---------- Botón para acciones que no se pueden deshacer ---------- */
+.boton-peligro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 16px;
+  border: 1px solid var(--drey-peligro);
+  background: rgba(229, 72, 77, 0.12);
+  color: var(--drey-peligro-texto);
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.boton-peligro:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.boton-texto-plano {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ---------- Privacidad ---------- */
+.consentimiento {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.consentimiento a {
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+}
+
+.legal {
+  padding-bottom: 4rem;
+}
+
+.legal > .volver-enlace {
+  margin: 1.25rem 1.25rem 0;
+}
+
+.legal-version,
+.legal-borrador {
+  margin: -0.5rem 1.25rem 1rem;
+  font-size: 0.8rem;
+  color: var(--drey-texto-suave);
+}
+
+.legal-borrador {
+  margin-top: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  background: var(--drey-naranja-fondo);
+  color: var(--drey-naranja-texto);
+  font-weight: 700;
+}
+
+.legal-seccion {
+  margin: 0 1.25rem 1.25rem;
+}
+
+.legal-seccion h2 {
+  margin: 0 0 0.4rem;
+  font-family: var(--fuente-titulos);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.legal-seccion p {
+  margin: 0 0 0.6rem;
+  color: var(--drey-texto-claro);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* ---------- Pantalla de error ---------- */
+.pantalla-error .boton-principal {
+  max-width: 320px;
+  margin-top: 1.25rem;
+}
+
+/* ---------- Suscripción: vencimiento y pagos ---------- */
+.suscripcion-vencida {
+  color: var(--drey-naranja-texto);
+  font-weight: 700;
+}
+
+.pago-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.pago-estado {
+  font-weight: 700;
+}
+
+.pago-estado-aprobado {
+  color: var(--drey-accent-texto);
+}
+
+.pago-estado-rechazado,
+.pago-estado-cancelado {
+  color: var(--drey-naranja-texto);
+}
+
+.registro-codigo-ok {
+  color: var(--drey-accent-texto);
+  font-weight: 700;
+}
+
+/* ---------- Pagos del profe y códigos de descuento ---------- */
+.pagos-codigos {
+  margin-bottom: 1.25rem;
+}
+
+.codigo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: var(--drey-superficie);
+  border: 1px solid var(--drey-borde);
+}
+
+.codigo-pausado {
+  opacity: 0.55;
+}
+
+.codigo-item-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.codigo-item-textos strong {
+  font-family: var(--fuente-titulos);
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+
+.codigo-item-textos small {
+  color: var(--drey-texto-suave);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.codigo-item-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.codigo-item-acciones .boton-peligro {
+  width: auto;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.codigo-borrar {
+  width: auto;
+  padding: 0.5rem;
+}
+
+.codigo-form {
+  max-width: 420px;
+}
+
+.codigo-fila {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.codigo-fila > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.codigo-vence {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--drey-texto-suave);
+}
+
+.aviso-baja {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--drey-peligro);
+  background: rgba(229, 72, 77, 0.1);
+  font-size: 0.85rem;
+  color: var(--drey-texto-claro);
+}
+
+.aviso-baja strong {
+  color: var(--drey-peligro-texto);
+}
